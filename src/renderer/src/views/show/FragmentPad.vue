@@ -1,0 +1,194 @@
+<script setup lang="ts">
+import { computed } from 'vue'
+import { autoplayCountdown } from '@shared/autoplay'
+import type { AutoplayAction, ShowCommand } from '@shared/ipc'
+import type { Round } from '@shared/types'
+import { formatTime } from '../../lib/format'
+import { useNow } from '../../lib/use-now'
+import { useSession } from '../../stores/session'
+
+const props = defineProps<{ round: Round }>()
+const api = window.pubquiz
+const session = useSession()
+const send = (command: ShowCommand) => api.command(command)
+
+const playing = computed(() => session.state.fragment)
+const ap = computed(() => session.state.autoplay)
+const now = useNow(100, () => playing.value !== null || ap.value.status === 'gap')
+
+const progress = computed(() => {
+  const f = playing.value
+  if (!f?.duration) return 0
+  return Math.min(1, (now.value - f.startedAt) / 1000 / f.duration)
+})
+const remaining = computed(() => {
+  const f = playing.value
+  return f?.duration ? Math.max(0, f.duration - (now.value - f.startedAt) / 1000) : null
+})
+
+const status = computed(() => {
+  const a = ap.value
+  if (a.status === 'idle' || a.roundId !== props.round.id) return null
+  if (a.status === 'playing')
+    return `Reeks: fragment ${a.index + 1}${a.holdAfter ? ' (stopt hierna)' : ''}`
+  if (a.status === 'gap')
+    return `Reeks: fragment ${a.nextIndex + 1} over ${autoplayCountdown(a, now.value)} s`
+  return `Reeks gepauzeerd, volgende: fragment ${a.nextIndex + 1}`
+})
+
+function autoplay(action: AutoplayAction) {
+  send({ type: 'autoplay', action })
+}
+
+function click(id: string) {
+  if (playing.value?.fragmentId === id) send({ type: 'stopFragment' })
+  else send({ type: 'playFragment', fragmentId: id })
+}
+</script>
+
+<template>
+  <section class="card pad">
+    <header class="card-head">
+      <h3 class="grow">Fragmenten</h3>
+      <span v-if="status" class="pill pill-accent">{{ status }}</span>
+      <template v-if="ap.status === 'idle'">
+        <button class="btn btn-primary btn-sm" @click="autoplay('start')">
+          ▶ Speel reeks <span class="kbd">A</span>
+        </button>
+      </template>
+      <template v-else>
+        <button
+          v-if="ap.status === 'paused' || (ap.status === 'playing' && ap.holdAfter)"
+          class="btn btn-sm"
+          @click="autoplay('resume')"
+        >
+          Hervat <span class="kbd">A</span>
+        </button>
+        <button v-else class="btn btn-sm" @click="autoplay('pause')">
+          Pauze <span class="kbd">A</span>
+        </button>
+        <button class="btn btn-sm" @click="autoplay('skip')">
+          Volgende <span class="kbd">S</span>
+        </button>
+        <button class="btn btn-sm btn-danger" @click="autoplay('stop')">Stop reeks</button>
+      </template>
+      <button
+        class="btn btn-ghost btn-sm"
+        title="Gespeeld-markeringen wissen"
+        @click="send({ type: 'resetPlayed' })"
+      >
+        Reset
+      </button>
+    </header>
+
+    <div class="card-body grid">
+      <button
+        v-for="(f, i) in round.fragments"
+        :key="f.id"
+        class="frag"
+        :class="{
+          on: playing?.fragmentId === f.id,
+          played: session.state.played.includes(f.id) && playing?.fragmentId !== f.id
+        }"
+        @click="click(f.id)"
+      >
+        <span class="frag-top">
+          <span class="frag-num mono">{{ i + 1 }}</span>
+          <span v-if="i < 9" class="kbd">{{ i + 1 }}</span>
+        </span>
+        <span class="frag-label">{{ f.label }}</span>
+        <span v-if="f.answer" class="frag-answer">{{ f.answer }}</span>
+        <span v-if="playing?.fragmentId === f.id" class="frag-time mono">
+          {{ remaining !== null ? `-${formatTime(remaining)}` : 'speelt…' }}
+        </span>
+        <span v-else-if="session.state.played.includes(f.id)" class="frag-time">✓ gespeeld</span>
+        <span
+          v-if="playing?.fragmentId === f.id"
+          class="bar"
+          :style="{ transform: `scaleX(${progress})` }"
+        />
+      </button>
+    </div>
+  </section>
+</template>
+
+<style scoped>
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.frag {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-height: 92px;
+  padding: 10px 12px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-lg);
+  background: var(--panel-2);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.frag:hover {
+  border-color: var(--muted);
+}
+
+.frag.on {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.frag.played {
+  opacity: 0.55;
+}
+
+.frag-top {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.frag-num {
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.frag.on .frag-num {
+  color: var(--accent);
+}
+
+.frag-label {
+  font-weight: 600;
+}
+
+.frag-answer {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.frag-time {
+  margin-top: auto;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 4px;
+  background: var(--accent);
+  transform-origin: left;
+}
+</style>

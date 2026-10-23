@@ -1,0 +1,512 @@
+<script setup lang="ts">
+import { computed, nextTick, ref, watch } from 'vue'
+import {
+  assetsIn,
+  createFolder,
+  deleteFolder,
+  moveToFolder,
+  naturalCompare
+} from '@shared/media-folders'
+import { findAssetUsages } from '@shared/resolve'
+import type { MediaAsset, MediaKind } from '@shared/types'
+import Icon from '../../components/Icon.vue'
+import MediaThumb from '../../components/MediaThumb.vue'
+import MediaTile from '../../components/MediaTile.vue'
+import Popover from '../../components/Popover.vue'
+import { formatTime } from '../../lib/format'
+import { useMediaImport } from '../../lib/use-media-import'
+import { usePreviewPlayer } from '../../lib/use-preview-player'
+import { useSession } from '../../stores/session'
+
+const ASSET_TYPE = 'application/x-pubquiz-asset'
+
+const session = useSession()
+const quiz = computed(() => session.quiz!)
+const { importFiles, pathsFromDrop } = useMediaImport()
+const preview = usePreviewPlayer()
+const filter = ref<MediaKind | 'all'>('all')
+const openFolderId = ref<string | null>(null)
+const folderTitle = ref<HTMLInputElement | null>(null)
+const dropFolder = ref<string | null>(null)
+
+const FILTERS: { value: MediaKind | 'all'; label: string }[] = [
+  { value: 'all', label: 'Alles' },
+  { value: 'video', label: "Video's" },
+  { value: 'image', label: 'Beelden' },
+  { value: 'audio', label: 'Geluid' }
+]
+
+const folder = computed(() => quiz.value.folders.find((f) => f.id === openFolderId.value) ?? null)
+watch(folder, (f) => {
+  if (!f) openFolderId.value = null
+})
+
+const matches = (a: MediaAsset) => filter.value === 'all' || a.kind === filter.value
+const here = computed(() => assetsIn(quiz.value, openFolderId.value).filter(matches))
+const visual = computed(() => here.value.filter((a) => a.kind !== 'audio'))
+const sounds = computed(() => here.value.filter((a) => a.kind === 'audio'))
+
+const folderTiles = computed(() =>
+  openFolderId.value
+    ? []
+    : [...quiz.value.folders]
+        .sort((a, b) => naturalCompare(a.name, b.name))
+        .map((f) => {
+          const assets = assetsIn(quiz.value, f.id)
+          // Beeld eerst, dan geluid: de mozaïek toont liefst echte thumbnails.
+          const mosaic = [
+            ...assets.filter((a) => a.kind !== 'audio'),
+            ...assets.filter((a) => a.kind === 'audio')
+          ].slice(0, 4)
+          return { folder: f, count: assets.length, mosaic }
+        })
+)
+
+const isEmpty = computed(
+  () => !folderTiles.value.length && !visual.value.length && !sounds.value.length
+)
+
+function plural(n: number) {
+  return `${n} ${n === 1 ? 'bestand' : 'bestanden'}`
+}
+
+async function newFolder() {
+  const names = new Set(quiz.value.folders.map((f) => f.name))
+  let name = 'Nieuwe map'
+  for (let n = 2; names.has(name); n++) name = `Nieuwe map ${n}`
+  openFolderId.value = createFolder(quiz.value, name).id
+  await nextTick()
+  folderTitle.value?.focus()
+  folderTitle.value?.select()
+}
+
+function removeFolder(close: () => void) {
+  close()
+  const f = folder.value
+  if (!f || !confirm(`Map "${f.name}" verwijderen? De bestanden blijven in Media.`)) return
+  deleteFolder(quiz.value, f.id)
+  openFolderId.value = null
+}
+
+function remove(asset: MediaAsset) {
+  const used = findAssetUsages(quiz.value, asset.id)
+  if (used.length) {
+    session.notify({
+      level: 'warning',
+      message: `“${asset.name}” is in gebruik: ${used.join(', ')}`
+    })
+    return
+  }
+  quiz.value.assets = quiz.value.assets.filter((a) => a.id !== asset.id)
+}
+
+// ── Slepen ──────────────────────────────────────────────────────────────────
+
+function draggedAsset(event: DragEvent): MediaAsset | null {
+  const id = event.dataTransfer?.getData(ASSET_TYPE)
+  return quiz.value.assets.find((a) => a.id === id) ?? null
+}
+
+function isAssetDrag(event: DragEvent) {
+  return [...(event.dataTransfer?.types ?? [])].includes(ASSET_TYPE)
+}
+
+function onFolderDragOver(event: DragEvent, folderId: string) {
+  if (!isAssetDrag(event)) return
+  event.preventDefault()
+  dropFolder.value = folderId
+}
+
+function onFolderDrop(event: DragEvent, folderId: string | null) {
+  dropFolder.value = null
+  const asset = draggedAsset(event)
+  if (!asset) return
+  event.preventDefault()
+  event.stopPropagation()
+  moveToFolder(asset, folderId)
+}
+
+/** Bestanden uit Finder: in de open map (de editor zelf importeert alleen in de hoofdmap). */
+async function onFilesDrop(event: DragEvent) {
+  const paths = pathsFromDrop(event)
+  if (!paths.length) return
+  event.stopPropagation()
+  await importFiles(paths, openFolderId.value)
+}
+
+function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
+  event.dataTransfer?.setData(ASSET_TYPE, asset.id)
+}
+</script>
+
+<template>
+  <div class="page" @drop.prevent="onFilesDrop">
+    <header class="head">
+      <template v-if="folder">
+        <button
+          class="crumb"
+          :class="{ drop: dropFolder === 'root' }"
+          title="Terug naar Media (sleep een bestand hierheen om het uit de map te halen)"
+          @click="openFolderId = null"
+          @dragover="isAssetDrag($event) && ($event.preventDefault(), (dropFolder = 'root'))"
+          @dragleave="dropFolder = null"
+          @drop="onFolderDrop($event, null)"
+        >
+          <Icon name="left" :size="18" /> Media
+        </button>
+        <input
+          ref="folderTitle"
+          v-model="folder.name"
+          class="quiet folder-title"
+          aria-label="Naam van de map"
+        />
+        <span class="count">{{ plural(assetsIn(quiz, folder.id).length) }}</span>
+        <Popover :width="190">
+          <template #trigger="{ toggle }">
+            <button class="btn btn-ghost btn-sm btn-icon" aria-label="Meer" @click="toggle">
+              <Icon name="more" />
+            </button>
+          </template>
+          <template #default="{ close }">
+            <button class="menu-item danger" @click="removeFolder(close)">
+              <Icon name="trash" /> Verwijder map
+            </button>
+          </template>
+        </Popover>
+      </template>
+      <h2 v-else>Media</h2>
+
+      <span class="grow" />
+      <div class="filters">
+        <button
+          v-for="f in FILTERS"
+          :key="f.value"
+          class="btn btn-sm"
+          :class="filter === f.value ? 'active' : 'btn-ghost'"
+          @click="filter = f.value"
+        >
+          {{ f.label }}
+        </button>
+      </div>
+      <button v-if="!folder" class="btn btn-ghost" @click="newFolder">
+        <Icon name="folder-plus" /> Nieuwe map
+      </button>
+      <button class="btn" @click="importFiles(undefined, openFolderId)">
+        <Icon name="upload" /> Importeer
+      </button>
+    </header>
+
+    <div v-if="isEmpty" class="empty">
+      <template v-if="folder"
+        >Deze map is leeg. Sleep er bestanden of een map uit Finder heen.</template
+      >
+      <template v-else>
+        Sleep video's, muziek, afbeeldingen of hele mappen hierheen. Ze worden in de quizmap
+        bewaard.
+      </template>
+    </div>
+
+    <section v-if="folderTiles.length" class="grid">
+      <button
+        v-for="t in folderTiles"
+        :key="t.folder.id"
+        class="folder"
+        :class="{ drop: dropFolder === t.folder.id }"
+        @click="openFolderId = t.folder.id"
+        @dragover="onFolderDragOver($event, t.folder.id)"
+        @dragleave="dropFolder = null"
+        @drop="onFolderDrop($event, t.folder.id)"
+      >
+        <span class="mosaic" :class="`n${t.mosaic.length}`">
+          <MediaThumb v-for="a in t.mosaic" :key="a.id" :asset="a" class="mosaic-cell" />
+          <Icon v-if="!t.mosaic.length" name="folder" :size="34" class="folder-icon" />
+        </span>
+        <span class="folder-name">{{ t.folder.name }}</span>
+        <span class="folder-meta">{{ plural(t.count) }}</span>
+      </button>
+    </section>
+
+    <section v-if="visual.length" class="grid">
+      <MediaTile
+        v-for="a in visual"
+        :key="a.id"
+        :asset="a"
+        @move="moveToFolder(a, $event)"
+        @remove="remove(a)"
+      />
+    </section>
+
+    <section v-if="sounds.length" class="sounds">
+      <div
+        v-for="a in sounds"
+        :key="a.id"
+        class="sound"
+        :class="{ playing: preview.playingId.value === a.id }"
+        draggable="true"
+        @dragstart="onSoundDragStart($event, a)"
+      >
+        <button
+          class="play"
+          :aria-label="preview.playingId.value === a.id ? 'Stop' : 'Luister'"
+          @click="preview.toggle(a.id, a)"
+        >
+          <Icon :name="preview.playingId.value === a.id ? 'stop' : 'play'" :size="12" />
+        </button>
+        <span class="name grow">{{ a.name }}</span>
+        <span v-if="findAssetUsages(quiz, a.id).length" class="used">in gebruik</span>
+        <span class="meta mono">{{ formatTime(a.duration) }}</span>
+        <Popover align="right" :width="200" class="sound-menu">
+          <template #trigger="{ toggle }">
+            <button class="btn btn-ghost btn-sm btn-icon" aria-label="Meer" @click="toggle">
+              <Icon name="more" />
+            </button>
+          </template>
+          <template #default="{ close }">
+            <div class="menu-label">Verplaats naar</div>
+            <button v-if="a.folderId" class="menu-item" @click="(close(), moveToFolder(a, null))">
+              <Icon name="images" /> Media (geen map)
+            </button>
+            <button
+              v-for="f in quiz.folders.filter((x) => x.id !== a.folderId)"
+              :key="f.id"
+              class="menu-item"
+              @click="(close(), moveToFolder(a, f.id))"
+            >
+              <Icon name="folder" /> {{ f.name }}
+            </button>
+            <button class="menu-item danger" @click="(close(), remove(a))">
+              <Icon name="trash" /> Verwijder uit quiz
+            </button>
+          </template>
+        </Popover>
+      </div>
+    </section>
+
+    <p class="tip faint">
+      Soepelste loops: H.264- of HEVC-video met “faststart” en zonder geluidsspoor.
+    </p>
+  </div>
+</template>
+
+<style scoped>
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 1080px;
+  min-height: 100%;
+  margin: 0 auto;
+  padding: 32px 40px 80px;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 40px;
+}
+
+.crumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 32px;
+  padding: 0 10px 0 4px;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.crumb:hover,
+.crumb.drop {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.crumb.drop {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.folder-title {
+  width: auto;
+  min-width: 4ch;
+  max-width: 360px;
+  margin: 0;
+  font: 650 22px var(--display);
+  field-sizing: content;
+}
+
+.count {
+  color: var(--faint);
+  font-weight: 600;
+}
+
+.filters {
+  display: flex;
+  gap: 2px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px 16px;
+}
+
+.folder {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.mosaic {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 3px;
+  aspect-ratio: 16 / 9;
+  margin-bottom: 6px;
+  padding: 3px;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: var(--surface-2);
+  transition: box-shadow 0.12s;
+}
+
+.folder:hover .mosaic {
+  box-shadow: 0 0 0 2px var(--surface-4);
+}
+
+.folder.drop .mosaic {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+.mosaic-cell {
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+}
+
+.mosaic.n1 .mosaic-cell {
+  grid-area: 1 / 1 / 3 / 3;
+}
+
+.mosaic.n2 .mosaic-cell {
+  grid-row: 1 / 3;
+}
+
+.mosaic.n3 .mosaic-cell:first-child {
+  grid-row: 1 / 3;
+}
+
+.mosaic.n0 {
+  display: grid;
+  place-items: center;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+}
+
+.folder-icon {
+  color: var(--faint);
+}
+
+.folder-name {
+  font-weight: 600;
+}
+
+.folder-meta {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.sounds {
+  display: flex;
+  flex-direction: column;
+}
+
+.sound {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 0 6px 0 10px;
+  border-radius: var(--radius);
+}
+
+.sound:hover {
+  background: var(--surface-1);
+}
+
+.sound.playing .name {
+  color: var(--accent);
+}
+
+.play {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--surface-3);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.sound.playing .play {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.name {
+  font-weight: 550;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.meta {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.used {
+  color: var(--accent);
+  font-size: 12px;
+}
+
+.sound-menu {
+  visibility: hidden;
+}
+
+.sound:hover .sound-menu,
+.sound-menu:focus-within {
+  visibility: visible;
+}
+
+.menu-label {
+  padding: 4px 10px 6px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.menu-item.danger {
+  margin-top: 4px;
+  color: var(--live);
+}
+
+.tip {
+  margin-top: auto;
+  font-size: 12px;
+}
+</style>

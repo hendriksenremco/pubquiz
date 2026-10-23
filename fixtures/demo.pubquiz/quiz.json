@@ -1,0 +1,472 @@
+{
+  "schemaVersion": 2,
+  "id": "demo",
+  "title": "Demo-pubquiz",
+  "folders": [
+    {
+      "id": "loops",
+      "name": "Loops"
+    },
+    {
+      "id": "fragmenten",
+      "name": "Fragmenten"
+    }
+  ],
+  "assets": [
+    {
+      "id": "loop",
+      "kind": "video",
+      "file": "media/default-loop.mp4",
+      "name": "default-loop.mp4",
+      "duration": 8,
+      "folderId": "loops"
+    },
+    {
+      "id": "music-loop",
+      "kind": "video",
+      "file": "media/music-loop.mp4",
+      "name": "music-loop.mp4",
+      "duration": 8,
+      "folderId": "loops"
+    },
+    {
+      "id": "pause-loop",
+      "kind": "video",
+      "file": "media/pause-loop.mp4",
+      "name": "pause-loop.mp4",
+      "duration": 8,
+      "folderId": "loops"
+    },
+    {
+      "id": "logo",
+      "kind": "image",
+      "file": "media/logo.png",
+      "name": "logo.png"
+    },
+    {
+      "id": "bg",
+      "kind": "audio",
+      "file": "media/background.m4a",
+      "name": "background.m4a",
+      "duration": 30
+    },
+    {
+      "id": "bg-break",
+      "kind": "audio",
+      "file": "media/background-break.m4a",
+      "name": "background-break.m4a",
+      "duration": 30
+    },
+    {
+      "id": "frag1",
+      "kind": "audio",
+      "file": "media/fragment-1.m4a",
+      "name": "fragment-1.m4a",
+      "duration": 6,
+      "folderId": "fragmenten"
+    },
+    {
+      "id": "frag2",
+      "kind": "audio",
+      "file": "media/fragment-2.m4a",
+      "name": "fragment-2.m4a",
+      "duration": 6,
+      "folderId": "fragmenten"
+    },
+    {
+      "id": "frag3",
+      "kind": "audio",
+      "file": "media/fragment-3.m4a",
+      "name": "fragment-3.m4a",
+      "duration": 6,
+      "folderId": "fragmenten"
+    },
+    {
+      "id": "frag4",
+      "kind": "audio",
+      "file": "media/fragment-4.m4a",
+      "name": "fragment-4.m4a",
+      "duration": 6,
+      "folderId": "fragmenten"
+    },
+    {
+      "id": "frag5",
+      "kind": "audio",
+      "file": "media/fragment-5.m4a",
+      "name": "fragment-5.m4a",
+      "duration": 6,
+      "folderId": "fragmenten"
+    },
+    {
+      "id": "frag6",
+      "kind": "audio",
+      "file": "media/fragment-6.m4a",
+      "name": "fragment-6.m4a",
+      "duration": 6,
+      "folderId": "fragmenten"
+    },
+    {
+      "id": "frag7",
+      "kind": "audio",
+      "file": "media/fragment-7.m4a",
+      "name": "fragment-7.m4a",
+      "duration": 6,
+      "folderId": "fragmenten"
+    },
+    {
+      "id": "frag8",
+      "kind": "audio",
+      "file": "media/fragment-8.m4a",
+      "name": "fragment-8.m4a",
+      "duration": 6,
+      "folderId": "fragmenten"
+    }
+  ],
+  "screens": [
+    {
+      "id": "beamer",
+      "name": "Beamer",
+      "default": {
+        "type": "video",
+        "assetId": "loop",
+        "volume": 0.8
+      }
+    },
+    {
+      "id": "tv",
+      "name": "TV bar",
+      "default": {
+        "type": "image",
+        "assetId": "logo"
+      }
+    }
+  ],
+  "channels": [
+    {
+      "id": "zaal",
+      "name": "Zaal",
+      "volume": 0.9
+    },
+    {
+      "id": "fragmenten",
+      "name": "Fragmenten",
+      "volume": 1
+    }
+  ],
+  "background": {
+    "assetId": "bg",
+    "channelId": "zaal",
+    "volume": 0.6,
+    "duckTo": 0.2
+  },
+  "rounds": [
+    {
+      "id": "r1",
+      "title": "Ronde 1: algemeen",
+      "hostNotes": "Vragen staan op papier. Antwoorden: zie map.",
+      "screens": {},
+      "mutedScreens": [],
+      "slides": [
+        {
+          "id": "r1-s0",
+          "layout": "title",
+          "title": "Ronde 1",
+          "body": "Algemene kennis",
+          "targetScreens": "all",
+          "backdrop": "dim"
+        },
+        {
+          "id": "r1-s1",
+          "layout": "question",
+          "title": "Vraag 1",
+          "body": "Wat is de hoofdstad van Australië?",
+          "targetScreens": "all",
+          "backdrop": "dim"
+        },
+        {
+          "id": "r1-s2",
+          "layout": "number",
+          "title": "2",
+          "targetScreens": "all",
+          "backdrop": "over-video"
+        }
+      ],
+      "background": "duck",
+      "fragments": [],
+      "autoplay": {
+        "gapSeconds": 4,
+        "countdownOnScreen": true,
+        "showFragmentNumber": true
+      }
+    },
+    {
+      "id": "r2",
+      "title": "Ronde 2: muziek",
+      "hostNotes": "Speel de 8 fragmenten; achtergrond staat op pauze.",
+      "screens": {
+        "beamer": {
+          "type": "video",
+          "assetId": "music-loop"
+        }
+      },
+      "mutedScreens": [],
+      "slides": [
+        {
+          "id": "r2-s0",
+          "layout": "title",
+          "title": "Ronde 2",
+          "body": "Muziek: 8 fragmenten",
+          "targetScreens": "all",
+          "backdrop": "dim"
+        }
+      ],
+      "background": "pause",
+      "fragments": [
+        {
+          "id": "r2-f1",
+          "label": "Fragment 1",
+          "assetId": "frag1",
+          "channelId": "fragmenten",
+          "start": 0,
+          "end": 5,
+          "fadeIn": 0,
+          "fadeOut": 0.5,
+          "answer": "Antwoord 1"
+        },
+        {
+          "id": "r2-f2",
+          "label": "Fragment 2",
+          "assetId": "frag2",
+          "channelId": "fragmenten",
+          "start": 0,
+          "end": 5,
+          "fadeIn": 0,
+          "fadeOut": 0.5,
+          "answer": "Antwoord 2"
+        },
+        {
+          "id": "r2-f3",
+          "label": "Fragment 3",
+          "assetId": "frag3",
+          "channelId": "fragmenten",
+          "start": 0,
+          "end": 5,
+          "fadeIn": 0,
+          "fadeOut": 0.5,
+          "answer": "Antwoord 3"
+        },
+        {
+          "id": "r2-f4",
+          "label": "Fragment 4",
+          "assetId": "frag4",
+          "channelId": "fragmenten",
+          "start": 0,
+          "end": 5,
+          "fadeIn": 0,
+          "fadeOut": 0.5,
+          "answer": "Antwoord 4"
+        },
+        {
+          "id": "r2-f5",
+          "label": "Fragment 5",
+          "assetId": "frag5",
+          "channelId": "fragmenten",
+          "start": 0,
+          "end": 5,
+          "fadeIn": 0,
+          "fadeOut": 0.5,
+          "answer": "Antwoord 5"
+        },
+        {
+          "id": "r2-f6",
+          "label": "Fragment 6",
+          "assetId": "frag6",
+          "channelId": "fragmenten",
+          "start": 0,
+          "end": 5,
+          "fadeIn": 0,
+          "fadeOut": 0.5,
+          "answer": "Antwoord 6"
+        },
+        {
+          "id": "r2-f7",
+          "label": "Fragment 7",
+          "assetId": "frag7",
+          "channelId": "fragmenten",
+          "start": 0,
+          "end": 5,
+          "fadeIn": 0,
+          "fadeOut": 0.5,
+          "answer": "Antwoord 7"
+        },
+        {
+          "id": "r2-f8",
+          "label": "Fragment 8",
+          "assetId": "frag8",
+          "channelId": "fragmenten",
+          "start": 0,
+          "end": 5,
+          "fadeIn": 0,
+          "fadeOut": 0.5,
+          "answer": "Antwoord 8"
+        }
+      ],
+      "autoplay": {
+        "gapSeconds": 4,
+        "countdownOnScreen": true,
+        "showFragmentNumber": true
+      }
+    },
+    {
+      "id": "r3",
+      "title": "Pauze",
+      "screens": {
+        "beamer": {
+          "type": "video",
+          "assetId": "pause-loop"
+        },
+        "tv": {
+          "type": "video",
+          "assetId": "pause-loop"
+        }
+      },
+      "mutedScreens": [],
+      "slides": [
+        {
+          "id": "r3-s0",
+          "layout": "title",
+          "title": "Pauze",
+          "body": "Tot zo!",
+          "targetScreens": "all",
+          "backdrop": "dim"
+        }
+      ],
+      "background": {
+        "replaceAssetId": "bg-break"
+      },
+      "fragments": [],
+      "autoplay": {
+        "gapSeconds": 4,
+        "countdownOnScreen": true,
+        "showFragmentNumber": true
+      }
+    },
+    {
+      "id": "r4",
+      "title": "Ronde 4: intro’s",
+      "screens": {
+        "beamer": {
+          "type": "video",
+          "assetId": "music-loop"
+        }
+      },
+      "mutedScreens": [],
+      "slides": [
+        {
+          "id": "r4-s0",
+          "layout": "title",
+          "title": "Ronde 4",
+          "body": "Herken de intro",
+          "targetScreens": "all",
+          "backdrop": "dim"
+        }
+      ],
+      "background": "duck",
+      "fragments": [
+        {
+          "id": "r4-f8",
+          "label": "Fragment 8",
+          "assetId": "frag8",
+          "channelId": "fragmenten",
+          "start": 0,
+          "end": 5,
+          "fadeIn": 0,
+          "fadeOut": 0.5,
+          "answer": "Antwoord 8"
+        },
+        {
+          "id": "r4-f7",
+          "label": "Fragment 7",
+          "assetId": "frag7",
+          "channelId": "fragmenten",
+          "start": 0,
+          "end": 5,
+          "fadeIn": 0,
+          "fadeOut": 0.5,
+          "answer": "Antwoord 7"
+        },
+        {
+          "id": "r4-f6",
+          "label": "Fragment 6",
+          "assetId": "frag6",
+          "channelId": "fragmenten",
+          "start": 0,
+          "end": 5,
+          "fadeIn": 0,
+          "fadeOut": 0.5,
+          "answer": "Antwoord 6"
+        },
+        {
+          "id": "r4-f5",
+          "label": "Fragment 5",
+          "assetId": "frag5",
+          "channelId": "fragmenten",
+          "start": 0,
+          "end": 5,
+          "fadeIn": 0,
+          "fadeOut": 0.5,
+          "answer": "Antwoord 5"
+        },
+        {
+          "id": "r4-f4",
+          "label": "Fragment 4",
+          "assetId": "frag4",
+          "channelId": "fragmenten",
+          "start": 0,
+          "end": 5,
+          "fadeIn": 0,
+          "fadeOut": 0.5,
+          "answer": "Antwoord 4"
+        },
+        {
+          "id": "r4-f3",
+          "label": "Fragment 3",
+          "assetId": "frag3",
+          "channelId": "fragmenten",
+          "start": 0,
+          "end": 5,
+          "fadeIn": 0,
+          "fadeOut": 0.5,
+          "answer": "Antwoord 3"
+        },
+        {
+          "id": "r4-f2",
+          "label": "Fragment 2",
+          "assetId": "frag2",
+          "channelId": "fragmenten",
+          "start": 0,
+          "end": 5,
+          "fadeIn": 0,
+          "fadeOut": 0.5,
+          "answer": "Antwoord 2"
+        },
+        {
+          "id": "r4-f1",
+          "label": "Fragment 1",
+          "assetId": "frag1",
+          "channelId": "fragmenten",
+          "start": 0,
+          "end": 5,
+          "fadeIn": 0,
+          "fadeOut": 0.5,
+          "answer": "Antwoord 1"
+        }
+      ],
+      "autoplay": {
+        "gapSeconds": 3,
+        "countdownOnScreen": true,
+        "showFragmentNumber": true
+      }
+    }
+  ]
+}
