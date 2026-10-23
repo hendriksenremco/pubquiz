@@ -22,11 +22,13 @@ watch(round, (r) => {
 const PRESET_HINTS: Record<RoundPreset, string> = {
   normal: 'Vragen met slides',
   music: 'Fragmenten, achtergrond pauzeert',
-  break: 'Eigen sfeer op de schermen'
+  pictures: 'Een reeks afbeeldingen, genummerd in beeld',
+  break: 'Eigen sfeer op de schermen',
+  answers: 'Vragen, afbeeldingen en fragmenten met hun antwoord'
 }
 
 function addRound(preset: RoundPreset, close: () => void) {
-  const r = createRound(preset, quiz.value.rounds.length + 1)
+  const r = createRound(preset, quiz.value.rounds.length + 1, quiz.value)
   quiz.value.rounds.push(r)
   selected.value = r.id
   close()
@@ -51,6 +53,9 @@ function remove(id: string, close: () => void) {
   const r = quiz.value.rounds.find((x) => x.id === id)
   if (!r || !confirm(`Ronde "${r.title}" verwijderen?`)) return
   quiz.value.rounds = quiz.value.rounds.filter((x) => x.id !== id)
+  for (const other of quiz.value.rounds) {
+    other.answersFor = other.answersFor.filter((x) => x !== id)
+  }
 }
 
 // Rondes herschikken door te slepen.

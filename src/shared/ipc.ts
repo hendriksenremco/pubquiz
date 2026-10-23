@@ -14,6 +14,11 @@ export type ShowCommand =
   | { type: 'playFragment'; fragmentId: string }
   | { type: 'stopFragment' }
   | { type: 'autoplay'; action: AutoplayAction }
+  /** Antwoordenronde: volgende/vorige stap, of stoppen. */
+  | { type: 'answers'; action: 'next' | 'prev' | 'stop' }
+  | { type: 'answerAt'; index: number }
+  /** Slide-loop van de ronde pauzeren of laten doorgaan. */
+  | { type: 'slideLoop'; paused: boolean }
   /** `id`: een audiokanaal of een scherm (videogeluid). */
   | { type: 'setVolume'; id: string; volume: number }
   | { type: 'toggleBackground' }

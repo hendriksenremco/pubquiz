@@ -1,7 +1,8 @@
+import { stepAnswers, type AnswerAction } from '@shared/answers'
 import { AUTOPLAY_IDLE, stepAutoplay, type AutoplayEvent } from '@shared/autoplay'
 import { createShowState, newId } from '@shared/factory'
 import type { AudioEngineEvent, AutoplayAction, ShowCommand } from '@shared/ipc'
-import { findAsset, findRound } from '@shared/resolve'
+import { answerItems, findAsset, findRound, loopActive, nextLoopSlide } from '@shared/resolve'
 import type { Fragment, Quiz, Round, ShowState } from '@shared/types'
 
 export interface ShowHost {
@@ -15,6 +16,7 @@ const RESTORABLE = [
   'lastRoundId',
   'slideIndex',
   'played',
+  'answered',
   'blackout',
   'backgroundEnabled',
   'volumes'
@@ -65,6 +67,8 @@ export class ShowController {
         break
       case 'endRound':
         this.stopPlayback()
+        s.answer = null
+        s.loopPaused = false
         s.activeRoundId = null
         s.slideIndex = -1
         break
@@ -75,14 +79,24 @@ export class ShowController {
         if (next) this.startRound(quiz, next.id)
         break
       }
+      // Met de hand bladeren zet de loop-timer opnieuw; in een loop gaat → na de laatste naar de eerste.
       case 'setSlide':
         if (round) s.slideIndex = clamp(command.index, -1, round.slides.length - 1)
+        s.loopUntil = null
         break
       case 'nextSlide':
-        if (round && s.slideIndex < round.slides.length - 1) s.slideIndex++
+        if (round && loopActive(round, s.slideIndex))
+          s.slideIndex = nextLoopSlide(round, s.slideIndex)
+        else if (round && s.slideIndex < round.slides.length - 1) s.slideIndex++
+        s.loopUntil = null
         break
       case 'prevSlide':
         if (round && s.slideIndex > -1) s.slideIndex--
+        s.loopUntil = null
+        break
+      case 'slideLoop':
+        s.loopPaused = command.paused
+        s.loopUntil = null
         break
       case 'playFragment': {
         const fragment = round?.fragments.find((f) => f.id === command.fragmentId)
@@ -96,6 +110,12 @@ export class ShowController {
         break
       case 'autoplay':
         if (round) this.autoplay(quiz, round, command.action)
+        break
+      case 'answers':
+        if (round) this.answers(quiz, round, command.action)
+        break
+      case 'answerAt':
+        if (round) this.answers(quiz, round, { goto: command.index })
         break
       case 'setVolume':
         s.volumes = { ...s.volumes, [command.id]: clamp(command.volume, 0, 1) }
@@ -171,6 +191,14 @@ export class ShowController {
       if (s.autoplay.status !== 'idle' && s.autoplay.roundId !== s.activeRoundId) {
         s.autoplay = AUTOPLAY_IDLE
       }
+      if (
+        s.answer &&
+        (s.answer.roundId !== s.activeRoundId ||
+          !round ||
+          s.answer.index >= answerItems(quiz, round).length)
+      ) {
+        s.answer = null
+      }
       const screenIds = new Set(quiz.screens.map((x) => x.id))
       s.blackout = s.blackout.filter((id) => screenIds.has(id))
     }
@@ -186,6 +214,8 @@ export class ShowController {
     const round = findRound(quiz, roundId)
     if (!round || this.state.activeRoundId === roundId) return
     this.stopPlayback()
+    this.state.answer = null
+    this.state.loopPaused = false
     this.state.activeRoundId = round.id
     this.state.lastRoundId = round.id
     this.state.slideIndex = round.slides.length > 0 ? 0 : -1
@@ -215,6 +245,7 @@ export class ShowController {
   private autoplay(quiz: Quiz, round: Round, action: AutoplayAction): void {
     const now = this.clock()
     if (action === 'start') {
+      this.state.answer = null
       const firstUnplayed = round.fragments.findIndex((f) => !this.state.played.includes(f.id))
       this.stepAutoplay(quiz, round, {
         type: 'start',
@@ -225,6 +256,22 @@ export class ShowController {
       return
     }
     this.stepAutoplay(quiz, round, action === 'stop' ? { type: 'stop' } : { type: action, now })
+  }
+
+  private answers(quiz: Quiz, round: Round, action: AnswerAction): void {
+    const items = answerItems(quiz, round)
+    const current = this.state.answer?.roundId === round.id ? this.state.answer : null
+    const step = stepAnswers(current, action, round.id, items.length)
+    this.state.answer = step.answer
+    this.state.autoplay = AUTOPLAY_IDLE
+    if (step.stopCurrent) this.state.fragment = null
+    const shown = step.answer?.revealed ? items[step.answer.index]?.id : undefined
+    if (shown && !this.state.answered.includes(shown)) {
+      this.state.answered = [...this.state.answered, shown]
+    }
+    // Een fragment speelt opnieuw; een vraag of afbeelding staat alleen in beeld.
+    const item = step.play !== null ? items[step.play] : undefined
+    if (item?.fragment) this.startFragment(quiz, item.round, item.fragment)
   }
 
   private stepAutoplay(quiz: Quiz, round: Round, event: AutoplayEvent): void {
@@ -240,15 +287,42 @@ export class ShowController {
 
   private tick(): void {
     const quiz = this.host.quiz()
-    const ap = this.state.autoplay
-    const round = quiz && ap.status === 'gap' ? findRound(quiz, ap.roundId) : null
-    if (!quiz || !round || ap.status !== 'gap' || this.clock() < ap.until) return
-    this.stepAutoplay(quiz, round, { type: 'tick', now: this.clock() })
-    this.publish()
+    if (!quiz) return
+    const s = this.state
+    const now = this.clock()
+    let changed = false
+
+    const ap = s.autoplay
+    const apRound = ap.status === 'gap' ? findRound(quiz, ap.roundId) : null
+    if (ap.status === 'gap' && apRound && now >= ap.until) {
+      this.stepAutoplay(quiz, apRound, { type: 'tick', now })
+      changed = true
+    }
+
+    const round = findRound(quiz, s.activeRoundId)
+    if (round && s.loopUntil !== null && now >= s.loopUntil) {
+      s.slideIndex = nextLoopSlide(round, s.slideIndex)
+      s.loopUntil = null
+      changed = true
+    }
+    if (changed) this.publish()
+  }
+
+  /** Zet de loop-timer als de ronde op een loop-slide staat, en haalt hem weg als dat niet zo is. */
+  private syncLoop(): void {
+    const s = this.state
+    const quiz = this.host.quiz()
+    const round = quiz ? findRound(quiz, s.activeRoundId) : null
+    if (!s.live || s.loopPaused || s.answer || !round || !loopActive(round, s.slideIndex)) {
+      s.loopUntil = null
+      return
+    }
+    s.loopUntil ??= this.clock() + round.slideLoopSeconds! * 1000
   }
 
   private publish(): void {
-    const needsTicker = this.state.autoplay.status === 'gap'
+    this.syncLoop()
+    const needsTicker = this.state.autoplay.status === 'gap' || this.state.loopUntil !== null
     if (needsTicker && !this.ticker) this.ticker = setInterval(() => this.tick(), TICK_MS)
     if (!needsTicker && this.ticker) this.dispose()
     this.host.publish(this.state)

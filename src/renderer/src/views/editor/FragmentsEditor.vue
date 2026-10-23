@@ -5,6 +5,7 @@ import { groupByFolder, naturalCompare } from '@shared/media-folders'
 import { findAsset } from '@shared/resolve'
 import type { Fragment, MediaAsset, Round } from '@shared/types'
 import Icon from '../../components/Icon.vue'
+import ImageChip from '../../components/ImageChip.vue'
 import MediaPicker from '../../components/MediaPicker.vue'
 import Popover from '../../components/Popover.vue'
 import TimeInput from '../../components/TimeInput.vue'
@@ -250,9 +251,13 @@ function numberFrom(event: Event, fallback: number): number {
             <input v-model="f.label" class="input input-sm" />
           </label>
           <label class="field wide">
-            <span class="label">Antwoord, alleen voor jou</span>
+            <span class="label">Antwoord, voor de antwoordenronde</span>
             <input v-model="f.answer" class="input input-sm" placeholder="Artiest – titel" />
           </label>
+          <div class="field wide">
+            <span class="label">Afbeelding bij het antwoord</span>
+            <ImageChip v-model="f.answerImageAssetId" label="Afbeelding" class="answer-image" />
+          </div>
           <label class="field wide">
             <span class="label">Bestand</span>
             <MediaPicker v-model="f.assetId" :kinds="['audio']" size="sm" />
@@ -350,10 +355,6 @@ function numberFrom(event: Event, fallback: number): number {
   padding: 4px 10px 6px;
   font-size: 12px;
   line-height: 1.45;
-}
-
-.number-chip.dimmed .chip-key {
-  color: var(--faint);
 }
 
 .series-row {

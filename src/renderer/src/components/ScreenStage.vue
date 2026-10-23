@@ -206,16 +206,34 @@ onBeforeUnmount(() => {
         v-if="resolved.slide"
         :key="resolved.slide.id"
         :slide="resolved.slide"
+        :number="resolved.slideNumber"
         :quiz="quiz"
       />
     </Transition>
 
     <Transition name="fade">
       <!-- Het grote getal is altijd het fragmentnummer; de pauze telt klein eronder af. -->
-      <div v-if="resolved.overlay" class="overlay" :class="resolved.overlay.kind">
+      <!-- Nummer en aftellen wisselen in hetzelfde hoekvak; het antwoord fadet als eigen kaart in. -->
+      <div
+        v-if="resolved.overlay"
+        :key="resolved.overlay.kind === 'answer' ? 'answer' : 'corner'"
+        class="overlay"
+        :class="[
+          resolved.overlay.kind,
+          resolved.overlay.kind === 'answer' ? resolved.overlay.placement : null
+        ]"
+      >
         <template v-if="resolved.overlay.kind === 'fragment'">
+          <div v-if="resolved.overlay.context" class="ov-context">
+            {{ resolved.overlay.context }}
+          </div>
           <div class="ov-label">Fragment</div>
           <div class="ov-number">{{ resolved.overlay.number }}</div>
+        </template>
+        <!-- Antwoordenronde: het moment van de avond, dus groot en in het midden. -->
+        <template v-else-if="resolved.overlay.kind === 'answer'">
+          <div class="ov-context">{{ resolved.overlay.context }}</div>
+          <div class="ov-answer">{{ resolved.overlay.answer }}</div>
         </template>
         <template v-else>
           <div class="ov-label">Volgende</div>
@@ -276,6 +294,77 @@ onBeforeUnmount(() => {
   color: #fff;
   font-family: var(--font);
   backdrop-filter: blur(1cqh);
+}
+
+.ov-context {
+  max-width: 40cqw;
+  margin-bottom: 0.6cqh;
+  overflow: hidden;
+  font-size: 2.6cqh;
+  font-weight: 600;
+  opacity: 0.65;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.overlay.answer {
+  left: 8cqw;
+  right: 8cqw;
+  top: 50%;
+  bottom: auto;
+  padding: 5cqh 6cqw;
+  text-align: center;
+  transform: translateY(-50%);
+}
+
+.overlay.answer .ov-context {
+  max-width: none;
+  margin-bottom: 1.6cqh;
+  font-size: 3.4cqh;
+  color: var(--accent);
+  opacity: 1;
+  white-space: normal;
+}
+
+.ov-answer {
+  font-family: var(--display);
+  font-size: 9cqh;
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+/* Onder een vraag of afbeelding: die blijft zichtbaar. */
+.overlay.answer.bottom {
+  top: auto;
+  bottom: 5cqh;
+  padding: 3cqh 5cqw;
+  transform: none;
+}
+
+.overlay.answer.bottom .ov-context {
+  margin-bottom: 1cqh;
+  font-size: 2.8cqh;
+}
+
+.overlay.answer.bottom .ov-answer {
+  font-size: 7cqh;
+}
+
+/* Het antwoord komt iets naar voren bij het onthullen. */
+.overlay.answer.fade-enter-active {
+  transition:
+    opacity 0.4s ease,
+    transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.overlay.answer.fade-enter-from {
+  transform: translateY(-50%) scale(0.94);
+}
+
+.overlay.answer.bottom.fade-enter-from {
+  transform: scale(0.94);
 }
 
 .ov-label {

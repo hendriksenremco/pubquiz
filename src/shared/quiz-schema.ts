@@ -66,7 +66,9 @@ export const FragmentSchema = z.object({
   end: seconds.optional(),
   fadeIn: seconds.optional(),
   fadeOut: seconds.optional(),
-  answer: z.string().optional()
+  answer: z.string().optional(),
+  /** Getoond bij het antwoord in de antwoordenronde, bv. de albumhoes. */
+  answerImageAssetId: id.optional()
 })
 
 export const SlideBackdropSchema = z.union([
@@ -77,12 +79,16 @@ export const SlideBackdropSchema = z.union([
 
 export const SlideSchema = z.object({
   id,
-  layout: z.enum(['title', 'question', 'number']),
+  layout: z.enum(['title', 'question', 'number', 'image']),
   title: z.string().optional(),
   body: z.string().optional(),
   imageAssetId: id.optional(),
   targetScreens: z.union([z.literal('all'), z.array(id)]),
-  backdrop: SlideBackdropSchema
+  backdrop: SlideBackdropSchema,
+  /** Voor de antwoordenronde (vraag-, nummer- en afbeeldingsslides). */
+  answer: z.string().optional(),
+  /** Afbeelding die bij het antwoord de vraag vervangt, bv. de hele foto na een uitsnede. */
+  answerImageAssetId: id.optional()
 })
 
 export const RoundBackgroundSchema = z.union([
@@ -106,6 +112,10 @@ export const RoundSchema = z.object({
   mutedScreens: z.array(id).default([]),
   /** Schermen die het nummer tonen van het fragment dat speelt (handmatig of in de reeks). */
   fragmentScreens: z.array(id),
+  /** Antwoordenronde: rondes waarvan je hier de fragmenten met hun antwoord langsloopt. */
+  answersFor: z.array(id).default([]),
+  /** Slides (na de titel) wisselen vanzelf elke zoveel seconden, eindeloos; null = handmatig. */
+  slideLoopSeconds: z.number().min(1).nullable().default(null),
   slides: z.array(SlideSchema),
   background: RoundBackgroundSchema,
   fragments: z.array(FragmentSchema),
