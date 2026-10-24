@@ -31,6 +31,7 @@ Crasht de app tijdens een show, dan biedt hij bij de volgende start aan om te he
 ```sh
 pnpm install
 pnpm demo          # genereert fixtures/demo.pubquiz (testvideo's en -tonen via ffmpeg)
+pnpm tour          # genereert fixtures/rondleiding.pubquiz: een quiz die alle functies laat zien en uitlegt
 pnpm dev           # app met hot reload
 pnpm test          # unit-tests (vitest)
 pnpm test:e2e      # bouwt en test de echte app met Playwright: onzichtbaar, gedempt, eigen instellingenmap

@@ -20,11 +20,18 @@ export function tempDir(prefix: string): string {
  * afhangen van wat er (bv. in een draaiende dev-app) aan de fixture is gewijzigd.
  */
 export function copyFixture(): string {
-  const target = join(tempDir('quiz'), 'demo.pubquiz')
-  cpSync(join(root, 'fixtures', 'demo.pubquiz', 'media'), join(target, 'media'), {
-    recursive: true
-  })
-  execFileSync(process.execPath, [join(root, 'scripts', 'make-demo.mjs'), '--quiz-only', target])
+  return copyQuiz('demo.pubquiz', 'make-demo.mjs')
+}
+
+/** Zelfde voor de rondleiding (fixtures/rondleiding.pubquiz, gemaakt met `pnpm tour`). */
+export function copyTour(): string {
+  return copyQuiz('rondleiding.pubquiz', 'make-tour.mjs')
+}
+
+function copyQuiz(folder: string, script: string): string {
+  const target = join(tempDir('quiz'), folder)
+  cpSync(join(root, 'fixtures', folder, 'media'), join(target, 'media'), { recursive: true })
+  execFileSync(process.execPath, [join(root, 'scripts', script), '--quiz-only', target])
   return target
 }
 
