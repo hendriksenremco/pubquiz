@@ -27,6 +27,11 @@ const backdrop = computed(() => {
       <div class="number">{{ slide.title }}</div>
       <div v-if="slide.body" class="sub">{{ slide.body }}</div>
     </template>
+    <!-- Vraag die de quizmaster voorleest: in beeld alleen het nummer. -->
+    <template v-else-if="slide.layout === 'question' && slide.numberOnly">
+      <div class="eyebrow-big">Vraag</div>
+      <div class="number">{{ number ?? slide.title }}</div>
+    </template>
     <template v-else-if="slide.layout === 'image'">
       <img v-if="image" class="full-image" :src="image" alt="" />
       <div v-if="number" class="image-number">{{ number }}</div>

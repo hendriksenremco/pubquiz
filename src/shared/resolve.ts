@@ -106,8 +106,10 @@ export function resolveScreen(
   const item = answering && state.answer ? answerItems(quiz, round!)[state.answer.index] : null
   const answerImage =
     item?.answerImageAssetId && state.answer?.revealed ? answerImageSlide(item) : null
+  // Bij de antwoorden staat de vraag wél in beeld, ook als tijdens de ronde alleen het nummer stond.
+  const answerSlide = item?.slide?.numberOnly ? { ...item.slide, numberOnly: false } : item?.slide
   const slide = answering
-    ? (answerImage ?? item?.slide ?? null)
+    ? (answerImage ?? answerSlide ?? null)
     : candidate && slideTargets(candidate, screenId)
       ? candidate
       : null

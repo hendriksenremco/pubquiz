@@ -276,9 +276,15 @@ describe('resolveScreen', () => {
     const answering = (index: number, revealed: boolean) =>
       state({ activeRoundId: 'ans', answer: { roundId: 'ans', index, revealed } })
 
-    // De vraag (in r1 alleen voor de TV) staat op het antwoordscherm, nog zonder antwoord.
+    // De vraag (in r1 alleen voor de TV) staat op het antwoordscherm, nog zonder antwoord. Ook
+    // als de ronde zelf alleen het nummer toonde: bij de antwoorden staat de vraag erbij.
+    q.rounds[0].slides[1].numberOnly = true
     const question = resolveScreen(q, answering(0, false), 'beamer')
     expect(question.slide?.id).toBe('s2')
+    expect(question.slide?.numberOnly).toBe(false)
+    expect(
+      resolveScreen(q, state({ activeRoundId: 'r1', slideIndex: 1 }), 'tv').slide?.numberOnly
+    ).toBe(true)
     expect(question.slideNumber).toBe(1)
     expect(question.overlay).toBeNull()
 

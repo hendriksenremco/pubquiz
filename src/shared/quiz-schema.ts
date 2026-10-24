@@ -85,6 +85,8 @@ export const SlideSchema = z.object({
   imageAssetId: id.optional(),
   targetScreens: z.union([z.literal('all'), z.array(id)]),
   backdrop: SlideBackdropSchema,
+  /** Vraagslide met alleen het nummer in beeld: de quizmaster leest de vraag zelf voor. */
+  numberOnly: z.boolean().optional(),
   /** Voor de antwoordenronde (vraag-, nummer- en afbeeldingsslides). */
   answer: z.string().optional(),
   /** Afbeelding die bij het antwoord de vraag vervangt, bv. de hele foto na een uitsnede. */

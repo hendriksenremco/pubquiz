@@ -29,9 +29,11 @@ const LAYOUTS: { value: Slide['layout']; label: string }[] = [
 
 function add(layout: Slide['layout'], close: () => void) {
   const n = props.round.slides.filter((s) => s.layout === layout).length + 1
+  // Een nieuwe vraag toont net als de vorige vraag de vraag zelf, of alleen het nummer.
+  const lastQuestion = props.round.slides.findLast((s) => s.layout === 'question')
   const next =
     layout === 'question'
-      ? createSlide('question', `Vraag ${n}`)
+      ? { ...createSlide('question', `Vraag ${n}`), numberOnly: lastQuestion?.numberOnly }
       : layout === 'number'
         ? createSlide('number', String(n))
         : layout === 'image'
@@ -39,6 +41,11 @@ function add(layout: Slide['layout'], close: () => void) {
           : createSlide('title', props.round.title)
   props.round.slides.splice(selected.value + 1, 0, next)
   selected.value = selected.value + 1
+  close()
+}
+
+function setNumberOnly(on: boolean, close: () => void) {
+  if (slide.value) slide.value.numberOnly = on || undefined
   close()
 }
 
@@ -299,7 +306,13 @@ function targetText(s: Slide): string {
         v-model="slide.body"
         class="quiet slide-body"
         rows="2"
-        :placeholder="slide.layout === 'question' ? 'Vraagtekst' : 'Ondertitel'"
+        :placeholder="
+          slide.layout !== 'question'
+            ? 'Ondertitel'
+            : slide.numberOnly
+              ? 'Vraagtekst, alleen voor jou (en de pdf)'
+              : 'Vraagtekst'
+        "
         aria-label="Tekst"
       />
 
@@ -315,6 +328,38 @@ function targetText(s: Slide): string {
       </div>
 
       <div class="options">
+        <Popover v-if="slide.layout === 'question'" :width="250">
+          <template #trigger="{ open, toggle }">
+            <button type="button" class="chip small shown-chip" :class="{ open }" @click="toggle">
+              <span class="chip-key">In beeld</span>
+              <span class="chip-value">{{
+                slide.numberOnly ? 'alleen het nummer' : 'de vraag'
+              }}</span>
+              <Icon name="chevron" :size="13" class="chev" />
+            </button>
+          </template>
+          <template #default="{ close }">
+            <button
+              class="menu-item"
+              :class="{ on: !slide.numberOnly }"
+              @click="setNumberOnly(false, close)"
+            >
+              <span class="grow">De vraag</span>
+              <Icon v-if="!slide.numberOnly" name="check" />
+            </button>
+            <button
+              class="menu-item"
+              :class="{ on: slide.numberOnly }"
+              @click="setNumberOnly(true, close)"
+            >
+              <span class="grow">
+                Alleen het nummer
+                <span class="menu-hint">Jij leest de vraag voor</span>
+              </span>
+              <Icon v-if="slide.numberOnly" name="check" />
+            </button>
+          </template>
+        </Popover>
         <Popover :width="220">
           <template #trigger="{ open, toggle }">
             <button type="button" class="chip small" :class="{ open }" @click="toggle">

@@ -44,6 +44,16 @@ const addRound = async (preset: string) => {
   await operator.locator('.menu-item', { hasText: preset }).click()
 }
 
+test('een vraag kan alleen zijn nummer in beeld tonen', async () => {
+  await operator.locator('.sidebar .round').first().click()
+  await operator.locator('.strip .thumb').nth(1).click()
+  await operator.locator('.shown-chip').click()
+  await operator.locator('.menu-item', { hasText: 'Alleen het nummer' }).click()
+  await expect(operator.locator('.shown-chip')).toContainText('alleen het nummer')
+  await expect(operator.locator('.thumb.on .slide .number')).toHaveText('1')
+  await expect(operator.locator('.thumb.on .slide .body')).toHaveCount(0)
+})
+
 test('een afbeeldingenronde vul je in één keer met een map uit Media', async () => {
   await addRound('Afbeeldingenronde')
   await expect(operator.locator('#round-title')).toHaveValue('Ronde 5: afbeeldingen')
@@ -93,6 +103,14 @@ test('live: eerst de vraag, afbeelding of het fragment, dan het antwoord', async
   await operator.getByRole('button', { name: 'Start show' }).click()
   const beamer = await windowFor(app, 'screen/beamer')
   const tv = await windowFor(app, 'screen/tv')
+
+  // Ronde 1: vraag 1 met alleen het nummer in beeld.
+  await operator.locator('.rounds .round').first().click()
+  await operator.keyboard.press('ArrowRight')
+  await expect(beamer.locator('.slide.layout-question .number')).toHaveText('1')
+  await expect(beamer.locator('.slide .body')).toHaveCount(0)
+  await beamer.waitForTimeout(500)
+  await beamer.screenshot({ path: 'test-results/question-number-only.png' })
 
   // De afbeeldingenronde zelf: → naar de eerste afbeelding, daarna gaat de loop vanzelf rond.
   await operator.locator('.rounds .round').nth(4).click()
