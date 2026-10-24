@@ -1,5 +1,5 @@
 import { stepAnswers, type AnswerAction } from '@shared/answers'
-import { AUTOPLAY_IDLE, stepAutoplay, type AutoplayEvent } from '@shared/autoplay'
+import { AUTOPLAY_IDLE, adjacentFragment, stepAutoplay, type AutoplayEvent } from '@shared/autoplay'
 import { createShowState, newId } from '@shared/factory'
 import type { AudioEngineEvent, AutoplayAction, ShowCommand } from '@shared/ipc'
 import { answerItems, findAsset, findRound, loopActive, nextLoopSlide } from '@shared/resolve'
@@ -15,6 +15,7 @@ const RESTORABLE = [
   'activeRoundId',
   'lastRoundId',
   'slideIndex',
+  'lastFragmentId',
   'played',
   'answered',
   'blackout',
@@ -108,6 +109,9 @@ export class ShowController {
       case 'stopFragment':
         this.stopPlayback()
         break
+      case 'stepFragment':
+        if (round) this.stepFragment(quiz, round, command.direction)
+        break
       case 'autoplay':
         if (round) this.autoplay(quiz, round, command.action)
         break
@@ -136,6 +140,7 @@ export class ShowController {
       case 'resetPlayed': {
         const ids = new Set(round?.fragments.map((f) => f.id))
         s.played = s.played.filter((id) => !ids.has(id))
+        if (s.lastFragmentId && ids.has(s.lastFragmentId)) s.lastFragmentId = null
         break
       }
     }
@@ -237,8 +242,24 @@ export class ShowController {
       startedAt: this.clock(),
       duration: end !== undefined ? Math.max(0, end - start) : null
     }
+    this.state.lastFragmentId = fragment.id
     if (!this.state.played.includes(fragment.id)) {
       this.state.played = [...this.state.played, fragment.id]
+    }
+  }
+
+  private stepFragment(quiz: Quiz, round: Round, direction: 'next' | 'prev'): void {
+    const ids = round.fragments.map((f) => f.id)
+    const target = adjacentFragment(ids, this.state.lastFragmentId, direction)
+    if (target === null) return
+    // Loopt de reeks, dan gaat die vanaf dit fragment verder; anders speelt alleen dit fragment.
+    const ap = this.state.autoplay
+    if (ap.status !== 'idle' && ap.roundId === round.id) {
+      const now = this.clock()
+      this.stepAutoplay(quiz, round, { type: 'start', roundId: round.id, fromIndex: target, now })
+    } else {
+      this.state.autoplay = AUTOPLAY_IDLE
+      this.startFragment(quiz, round, round.fragments[target])
     }
   }
 

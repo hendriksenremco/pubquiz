@@ -121,6 +121,7 @@ export function createShowState(): ShowState {
     lastRoundId: null,
     slideIndex: -1,
     fragment: null,
+    lastFragmentId: null,
     played: [],
     autoplay: AUTOPLAY_IDLE,
     answer: null,

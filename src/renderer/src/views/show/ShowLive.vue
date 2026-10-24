@@ -19,14 +19,19 @@ const state = computed(() => session.state)
 const round = computed(() => activeRound(quiz.value, state.value))
 const send = (command: ShowCommand) => api.command(command)
 
-/** In een antwoordenronde bedienen ← → (en een presenter-clicker) de antwoorden in plaats van de slides. */
+/**
+ * Wat ← → (en een presenter-clicker) bedienen: in een antwoordenronde de antwoorden, in een ronde
+ * met fragmenten de fragmenten, anders de slides.
+ */
 const hasAnswers = computed(() => !!round.value && answerItems(quiz.value, round.value).length > 0)
-const step = (direction: 'next' | 'prev') =>
-  send(
-    hasAnswers.value
-      ? { type: 'answers', action: direction }
-      : { type: direction === 'next' ? 'nextSlide' : 'prevSlide' }
-  )
+const arrows = computed(() =>
+  hasAnswers.value ? 'answers' : round.value?.fragments.length ? 'fragments' : 'slides'
+)
+function step(direction: 'next' | 'prev') {
+  if (arrows.value === 'answers') send({ type: 'answers', action: direction })
+  else if (arrows.value === 'fragments') send({ type: 'stepFragment', direction })
+  else send({ type: direction === 'next' ? 'nextSlide' : 'prevSlide' })
+}
 
 // Slide-loop: de timer loopt in main; hier alleen tonen en pauzeren.
 const now = useNow(250, () => state.value.loopUntil !== null)
@@ -121,8 +126,14 @@ function onKey(event: KeyboardEvent) {
 onMounted(() => window.addEventListener('keydown', onKey))
 onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 
-const SHORTCUTS: [string, string][] = [
-  ['← →', 'Vorige/volgende slide of antwoord'],
+const ARROWS = {
+  answers: 'Vorige/volgende stap in de antwoorden',
+  fragments: 'Vorig/volgend fragment',
+  slides: 'Vorige/volgende slide'
+} as const
+
+const shortcuts = computed((): [string, string][] => [
+  ['← →', ARROWS[arrows.value]],
   ['Enter', 'Start volgende ronde'],
   ['E', 'Einde ronde'],
   ['1–9', 'Speel fragment'],
@@ -132,7 +143,7 @@ const SHORTCUTS: [string, string][] = [
   ['B', 'Beeld op zwart / terug'],
   ['M', 'Geluid uit / aan'],
   ['L', 'Loop van de slides pauzeren / verder']
-]
+])
 </script>
 
 <template>
@@ -286,7 +297,11 @@ const SHORTCUTS: [string, string][] = [
         </section>
 
         <AnswersPad v-if="round && hasAnswers" :round="round" />
-        <FragmentPad v-if="round && round.fragments.length" :round="round" />
+        <FragmentPad
+          v-if="round && round.fragments.length"
+          :round="round"
+          :arrows="arrows === 'fragments'"
+        />
 
         <div v-if="!round" class="between">
           <p>
@@ -305,7 +320,7 @@ const SHORTCUTS: [string, string][] = [
         <section class="card">
           <header class="card-head"><h3>Sneltoetsen</h3></header>
           <div class="card-body shortcuts">
-            <template v-for="[k, label] in SHORTCUTS" :key="k">
+            <template v-for="[k, label] in shortcuts" :key="k">
               <span class="kbd">{{ k }}</span>
               <span class="muted">{{ label }}</span>
             </template>

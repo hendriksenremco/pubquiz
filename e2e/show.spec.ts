@@ -184,6 +184,29 @@ test('autoplay toont fragmentnummer en countdown op het scherm', async () => {
   await expect(beamer.locator('.overlay')).toHaveCount(0)
 })
 
+test('bladert met de pijltjes door de fragmenten', async () => {
+  // Fragment 1 en 2 zijn al gestart (de cijfertoets en de reeks): → gaat verder met 3.
+  const frag = (n: number) => operator.locator('.frag').nth(n - 1)
+  await expect(operator.locator('.shortcuts')).toContainText('Vorig/volgend fragment')
+  await expect(frag(3)).toHaveClass(/upcoming/)
+  await expect(frag(3).locator('.frag-next')).toContainText('Volgende')
+
+  await operator.keyboard.press('ArrowRight')
+  await expect(frag(3)).toHaveClass(/on/)
+  await expect(frag(4)).toHaveClass(/upcoming/)
+  await operator.keyboard.press('ArrowRight')
+  await expect(frag(4)).toHaveClass(/on/)
+  await expect(frag(3)).not.toHaveClass(/on/)
+  await operator.waitForTimeout(300)
+  await operator.screenshot({ path: 'test-results/show-fragment-arrows.png' })
+
+  await operator.keyboard.press('ArrowLeft')
+  await expect(frag(3)).toHaveClass(/on/)
+  await expect(frag(4)).toHaveClass(/upcoming/)
+  await operator.keyboard.press(' ')
+  await expect(operator.locator('.frag.on')).toHaveCount(0)
+})
+
 test('stop show sluit de schermen', async () => {
   operator.once('dialog', (d) => d.accept())
   await operator.getByRole('button', { name: 'Stop show' }).click()

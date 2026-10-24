@@ -14,6 +14,8 @@ export type ShowCommand =
   | { type: 'prevSlide' }
   | { type: 'playFragment'; fragmentId: string }
   | { type: 'stopFragment' }
+  /** Het volgende of vorige fragment (← →); loopt de reeks, dan gaat die vanaf daar verder. */
+  | { type: 'stepFragment'; direction: 'next' | 'prev' }
   | { type: 'autoplay'; action: AutoplayAction }
   /** Antwoordenronde: volgende/vorige stap, of stoppen. */
   | { type: 'answers'; action: 'next' | 'prev' | 'stop' }
