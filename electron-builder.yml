@@ -1,5 +1,5 @@
 appId: com.gutsgusto.pubquiz
-productName: Pubquiz
+productName: Quizmeister
 directories:
   buildResources: build
 files:
@@ -22,8 +22,8 @@ extraResources:
     to: Rondleiding.pubquiz
 fileAssociations:
   - ext: pubquiz
-    name: Pubquiz
-    description: Pubquiz
+    name: Quizmeister-quiz
+    description: Quizmeister-quiz
     role: Editor
     isPackage: true
 mac:
@@ -34,5 +34,5 @@ mac:
   identity: null
   notarize: false
 dmg:
-  artifactName: ${name}-${version}.${ext}
+  artifactName: Quizmeister-${version}.${ext}
 npmRebuild: false

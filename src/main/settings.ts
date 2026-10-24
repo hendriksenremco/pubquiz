@@ -156,6 +156,24 @@ export class Settings {
   }
 }
 
+/**
+ * Eén keer bij de nieuwe naam: instellingen en herstelgegevens overnemen uit de map van de
+ * werknaam (Application Support/Pubquiz), zodat recente quizzen en koppelingen blijven.
+ */
+export async function adoptSettings(from: string, to: string): Promise<void> {
+  if (await exists(join(to, 'settings.json'))) return
+  await fs.mkdir(to, { recursive: true })
+  for (const file of ['settings.json', 'recovery.json']) {
+    await fs.copyFile(join(from, file), join(to, file), fs.constants.COPYFILE_EXCL).catch(() => {})
+  }
+}
+
+const exists = (path: string) =>
+  fs.access(path).then(
+    () => true,
+    () => false
+  )
+
 /** Zoekt het display bij een doel: eerst op id, dan op naam (ids veranderen soms na opnieuw aansluiten). */
 export function findDisplay<T extends { id: number; label: string }>(
   target: ScreenTarget | undefined,

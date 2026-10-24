@@ -1,9 +1,9 @@
-import { mkdtempSync, rmSync } from 'fs'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
 import { describe, expect, it } from 'vitest'
 import { createQuiz } from '@shared/factory'
-import { findDisplay, Settings } from './settings'
+import { adoptSettings, findDisplay, Settings } from './settings'
 
 const displays = [
   { id: 1, label: 'Built-in Retina Display' },
@@ -80,6 +80,31 @@ describe('Settings.setTour', () => {
       expect(full.recent.at(-1)).toBe('/lib/Rondleiding.pubquiz')
       expect(full.recent).not.toContain('/q/0')
       await Promise.all([settings, again, full].map((s) => s.whenSaved()))
+    } finally {
+      rmSync(dir, { recursive: true, force: true })
+    }
+  })
+})
+
+describe('adoptSettings', () => {
+  it('neemt instellingen één keer over uit de map van de oude naam', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'pubquiz-adopt-'))
+    const from = join(dir, 'Pubquiz')
+    const to = join(dir, 'Quizmeister')
+    try {
+      mkdirSync(from)
+      writeFileSync(join(from, 'settings.json'), JSON.stringify({ recent: ['/q/a'] }))
+      await adoptSettings(from, to)
+      expect((await Settings.load(to)).recent).toEqual(['/q/a'])
+
+      // Daarna niet meer: wat in de nieuwe map staat, blijft staan.
+      writeFileSync(join(from, 'settings.json'), JSON.stringify({ recent: ['/q/b'] }))
+      await adoptSettings(from, to)
+      expect((await Settings.load(to)).recent).toEqual(['/q/a'])
+
+      // Geen oude map: niets aan de hand.
+      await adoptSettings(join(dir, 'bestaat-niet'), join(dir, 'Nieuw'))
+      expect((await Settings.load(join(dir, 'Nieuw'))).recent).toEqual([])
     } finally {
       rmSync(dir, { recursive: true, force: true })
     }

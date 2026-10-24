@@ -1,4 +1,4 @@
-# Pubquiz
+# Quizmeister
 
 Desktop-app (macOS) om pubquizen in elkaar te klikken en live te draaien:
 

@@ -115,7 +115,7 @@ watch(
         </nav>
         <div class="spacer" />
       </template>
-      <span v-else class="brand">Pubquiz</span>
+      <span v-else class="brand">Quizmeister</span>
     </header>
 
     <main v-if="session.ready" class="body">

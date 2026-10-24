@@ -9,7 +9,7 @@ import { handleMediaProtocol, registerMediaScheme } from './media-protocol'
 import { buildMenu } from './menu'
 import { configurePermissions } from './permissions'
 import { QUIZ_EXT } from './quiz-files'
-import { Settings } from './settings'
+import { adoptSettings, Settings } from './settings'
 import { createAudioWindow, createOperatorWindow, headless } from './windows'
 
 registerMediaScheme()
@@ -51,6 +51,10 @@ app.whenReady().then(async () => {
   else if (!app.isPackaged) app.dock?.setIcon(join(__dirname, '../../resources/icon.png'))
   configurePermissions(session.defaultSession, process.env['ELECTRON_RENDERER_URL'])
 
+  // De app heette eerst Pubquiz; zijn instellingen verhuizen één keer mee.
+  if (!process.env['PUBQUIZ_USER_DATA']) {
+    await adoptSettings(join(app.getPath('appData'), 'Pubquiz'), app.getPath('userData'))
+  }
   const settings = await Settings.load(app.getPath('userData'))
   // PUBQUIZ_LIBRARY: voor tests, zodat er niets in Documenten belandt.
   // Niet "Pubquiz": macOS negeert hoofdletters, dus dat zou dezelfde map zijn als de broncode in

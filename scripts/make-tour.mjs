@@ -422,7 +422,7 @@ ffmpeg('logo.png', [
   ...still('1280x720'),
   '-vf',
   `format=rgb24,geq=r='15+60*${center}':g='20+38*${center}':b='32+14*${center}',` +
-    `drawtext=${fontfile}text='Pubquiz':fontcolor=0xffa53d:fontsize=64:x=56:y=44`
+    `drawtext=${fontfile}text='Quizmeister':fontcolor=0xffa53d:fontsize=64:x=56:y=44`
 ])
 
 /** Gekleurde schijven op een doorzichtige achtergrond: [x als deel van de breedte, rgb]. */
@@ -611,7 +611,7 @@ const quiz = {
         slide(
           'welkom-1',
           'title',
-          'Welkom bij Pubquiz',
+          'Welkom bij Quizmeister',
           'Een korte quiz die laat zien wat de app kan.\nDruk op → voor de volgende slide.',
           beamerOnly
         ),
