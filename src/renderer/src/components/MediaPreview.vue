@@ -232,8 +232,12 @@ onBeforeUnmount(() => {
   pointer-events: none;
 }
 
+/* Los van de inhoud: een staande of 4:3-foto mag het vak niet hoger maken, anders schuift de
+   informatie eronder uit beeld. */
 .stage video,
 .stage img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: contain;

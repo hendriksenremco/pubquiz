@@ -1,5 +1,5 @@
 import { expect, test, type ElectronApplication, type Page } from '@playwright/test'
-import { readFileSync, rmSync } from 'fs'
+import { readFileSync, rmSync, writeFileSync } from 'fs'
 import { dirname, join } from 'path'
 import { copyFixture, launch, tempDir } from './helpers'
 
@@ -8,9 +8,19 @@ let operator: Page
 let userData: string
 let quizDir: string
 
+/** 60 × 80 pixels, oranje. */
+const PORTRAIT_PNG =
+  'iVBORw0KGgoAAAANSUhEUgAAADwAAABQCAIAAADKqIEEAAAAVklEQVR42u3OAQkAAAgDsBczrjm1hSAMFmCZrnciLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tfWkBWVI8zkmlRqcAAAAASUVORK5CYII='
+
 test.beforeAll(async () => {
   userData = tempDir('userdata')
   quizDir = copyFixture()
+  // Een staande foto: mag in het grote voorbeeld de informatie eronder niet wegduwen.
+  writeFileSync(join(quizDir, 'media', 'staand.png'), Buffer.from(PORTRAIT_PNG, 'base64'))
+  const file = join(quizDir, 'quiz.json')
+  const quiz = JSON.parse(readFileSync(file, 'utf8'))
+  quiz.assets.push({ id: 'staand', kind: 'image', file: 'media/staand.png', name: 'staand.png' })
+  writeFileSync(file, JSON.stringify(quiz))
   ;({ app, operator } = await launch(userData, quizDir))
 })
 
@@ -146,6 +156,13 @@ test('toont een bestand groot als voorbeeld en bladert verder', async () => {
   await operator.locator('.tile-item .frame').first().click()
   await expect(dialog).toHaveAccessibleName('Voorbeeld: logo.png')
   await expect(dialog.locator('.meta')).toContainText(/Afbeelding.*\d+ × \d+/)
+  await dialog.getByRole('button', { name: 'Volgende' }).click()
+  await expect(dialog).toHaveAccessibleName('Voorbeeld: staand.png')
+  await expect(dialog.locator('.meta')).toContainText('60 × 80')
+  // De informatie en knoppen blijven in beeld, ook bij een staande foto.
+  await expect(dialog.locator('.info')).toBeInViewport({ ratio: 1 })
+  await operator.waitForTimeout(400) // infaden afwachten voor de screenshot
+  await operator.screenshot({ path: 'test-results/media-preview-portrait.png' })
   await dialog.getByRole('button', { name: 'Volgende' }).click()
   await expect(dialog).toHaveAccessibleName('Voorbeeld: background.m4a')
   await expect
