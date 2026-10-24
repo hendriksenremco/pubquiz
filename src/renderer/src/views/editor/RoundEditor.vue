@@ -16,6 +16,7 @@ import FragmentsEditor from './FragmentsEditor.vue'
 import SlidesEditor from './SlidesEditor.vue'
 
 const props = defineProps<{ round: Round }>()
+const emit = defineEmits<{ duplicate: []; remove: [] }>()
 const session = useSession()
 const quiz = computed(() => session.quiz!)
 const selectedSlide = ref(props.round.slides.length > 0 ? 0 : -1)
@@ -170,7 +171,15 @@ const bgText = computed(() => {
         </div>
 
         <div class="hero-text">
-          <span class="position">{{ position }}</span>
+          <div class="hero-top">
+            <span class="position grow">{{ position }}</span>
+            <button class="btn btn-ghost btn-sm" @click="emit('duplicate')">
+              <Icon name="copy" :size="14" /> Dupliceer
+            </button>
+            <button class="btn btn-ghost btn-sm danger" @click="emit('remove')">
+              <Icon name="trash" :size="14" /> Verwijder
+            </button>
+          </div>
           <input
             id="round-title"
             v-model="round.title"
@@ -345,6 +354,17 @@ const bgText = computed(() => {
   flex-direction: column;
   min-width: 0;
   padding-bottom: 4px;
+}
+
+.hero-top {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: -8px;
+}
+
+.hero-top .danger {
+  color: var(--live);
 }
 
 .position {

@@ -50,17 +50,16 @@ function pageSizeMm(file: string): [number, number] {
 }
 
 test('maakt het antwoordformulier, de antwoorden en de vragenkaarten als pdf', async () => {
-  await operator.getByRole('button', { name: 'Quizmenu' }).click()
-  await operator.locator('.menu-item', { hasText: 'Formulieren en kaarten' }).click()
-  const dialog = operator.getByRole('dialog', { name: 'Formulieren en kaarten' })
+  await operator.locator('.nav-item', { hasText: 'Afdrukken' }).click()
+  const dialog = operator.locator('.print')
   // Alleen rondes met iets om in te vullen; de pauze niet.
-  await expect(dialog.locator('.rounds .option-title')).toHaveText([
+  await expect(dialog.locator('label.option .option-title')).toHaveText([
     'Ronde 1: algemeen',
     'Ronde 2: muziek',
     'Ronde 4: intro’s'
   ])
   await operator.waitForTimeout(200)
-  await operator.screenshot({ path: 'test-results/forms-dialog.png' })
+  await operator.screenshot({ path: 'test-results/print-page.png' })
 
   await dialog.getByRole('button', { name: 'Antwoordformulier opslaan' }).click()
   const sheet = await saved('Demo-pubquiz – antwoordformulier.pdf')
@@ -78,4 +77,30 @@ test('maakt het antwoordformulier, de antwoorden en de vragenkaarten als pdf', a
   const cards = await saved('Demo-pubquiz – vragenkaarten.pdf')
   expect(pageSizeMm(cards)).toEqual([148, 105])
   expect(pageCount(cards)).toBe(3)
+})
+
+test('acties staan zichtbaar in beeld, niet achter drie stippen', async () => {
+  await operator.locator('.nav-item', { hasText: 'Quiz' }).click()
+  for (const name of ['Nieuwe quiz op basis van deze', 'Exporteer als zip', 'Toon in Finder']) {
+    await expect(operator.getByRole('button', { name })).toBeVisible()
+  }
+  await expect(operator.getByRole('button', { name: 'Verwijder scherm' })).toHaveCount(2)
+  await operator.waitForTimeout(300)
+  await operator.screenshot({ path: 'test-results/quiz-actions.png' })
+
+  // Ronde dupliceren en verwijderen vanaf de rondepagina.
+  const rounds = operator.locator('.sidebar .round')
+  await rounds.first().click()
+  await operator.getByRole('button', { name: 'Dupliceer' }).click()
+  await expect(rounds).toHaveCount(5)
+  await expect(operator.locator('#round-title')).toHaveValue('Ronde 1: algemeen (kopie)')
+  await operator.screenshot({ path: 'test-results/round-actions.png' })
+  operator.once('dialog', (d) => d.accept())
+  await operator.getByRole('button', { name: 'Verwijder', exact: true }).click()
+  await expect(rounds).toHaveCount(4)
+
+  await operator.locator('.nav-item', { hasText: 'Media' }).click()
+  await expect(operator.getByRole('button', { name: 'Verwijder uit quiz' }).first()).toBeVisible()
+  await operator.screenshot({ path: 'test-results/media-actions.png' })
+  await expect(operator.getByRole('button', { name: 'Meer' })).toHaveCount(0)
 })

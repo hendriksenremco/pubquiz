@@ -60,14 +60,13 @@ function openCard(q: RecentQuiz) {
   if (q.exists) emit('open', q.path, 'edit')
 }
 
-async function forget(q: RecentQuiz, close: () => void) {
-  close()
+async function forget(q: RecentQuiz) {
   await api.removeRecent(q.path)
   await load()
 }
 
-function createFrom(q: RecentQuiz, close: () => void) {
-  close()
+function createFrom(q: RecentQuiz, close?: () => void) {
+  close?.()
   emit('createFrom', q.path, q.title)
 }
 
@@ -76,8 +75,7 @@ function createEmpty(close: () => void) {
   emit('create')
 }
 
-function reveal(q: RecentQuiz, close: () => void) {
-  close()
+function reveal(q: RecentQuiz) {
   void api.revealQuiz(q.path)
 }
 </script>
@@ -181,25 +179,16 @@ function reveal(q: RecentQuiz, close: () => void) {
           <span v-if="q.exists" class="card-meta faint">{{ edited(q) }}</span>
           <span v-else class="card-meta">Niet gevonden in {{ folderOf(q.path) }}</span>
 
-          <div class="card-menu" @click.stop>
-            <Popover align="right" :width="250">
-              <template #trigger="{ toggle }">
-                <button class="menu-btn" aria-label="Meer" @click="toggle">
-                  <Icon name="more" :size="16" />
-                </button>
-              </template>
-              <template #default="{ close }">
-                <button v-if="q.exists" class="menu-item" @click="createFrom(q, close)">
-                  <Icon name="copy" /> Nieuwe quiz op basis van deze…
-                </button>
-                <button v-if="q.exists" class="menu-item" @click="reveal(q, close)">
-                  <Icon name="folder" /> Toon in Finder
-                </button>
-                <button class="menu-item" @click="forget(q, close)">
-                  <Icon name="x" /> Verwijder uit lijst
-                </button>
-              </template>
-            </Popover>
+          <div class="card-actions" @click.stop @keydown.stop>
+            <button v-if="q.exists" class="card-action" @click="createFrom(q)">
+              <Icon name="copy" :size="13" /> Op basis van
+            </button>
+            <button v-if="q.exists" class="card-action" @click="reveal(q)">
+              <Icon name="folder" :size="13" /> Finder
+            </button>
+            <button class="card-action" title="Verwijder uit deze lijst" @click="forget(q)">
+              <Icon name="x" :size="13" /> Uit lijst
+            </button>
           </div>
         </div>
       </div>
@@ -341,16 +330,32 @@ function reveal(q: RecentQuiz, close: () => void) {
   text-overflow: ellipsis;
 }
 
-.card-menu {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  opacity: 0;
+.card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin: 6px 0 0 -8px;
 }
 
-.card:hover .card-menu,
-.card-menu:focus-within {
-  opacity: 1;
+.card-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 26px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 550;
+  cursor: pointer;
+}
+
+.card-action:hover {
+  background: var(--surface-2);
+  color: var(--text);
 }
 
 .menu-label {
@@ -369,17 +374,5 @@ function reveal(q: RecentQuiz, close: () => void) {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-}
-
-.menu-btn {
-  display: grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  border: 0;
-  border-radius: 8px;
-  background: rgba(15, 20, 32, 0.78);
-  color: var(--text);
-  cursor: pointer;
 }
 </style>

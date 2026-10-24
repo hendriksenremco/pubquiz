@@ -71,9 +71,7 @@ test('dashboard: een verplaatste quiz is te herkennen en uit de lijst te halen',
     await expect(card).toContainText('Niet gevonden')
     await operator.screenshot({ path: 'test-results/home-missing.png' })
 
-    await card.hover()
-    await card.getByRole('button', { name: 'Meer' }).click()
-    await operator.getByRole('button', { name: 'Verwijder uit lijst' }).click()
+    await card.getByRole('button', { name: 'Uit lijst' }).click()
     await expect(card).toHaveCount(0)
   } finally {
     await app.close()

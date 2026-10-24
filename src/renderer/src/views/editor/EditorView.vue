@@ -6,17 +6,20 @@ import Popover from '../../components/Popover.vue'
 import { useMediaImport } from '../../lib/use-media-import'
 import { useSession } from '../../stores/session'
 import MediaLibrary from './MediaLibrary.vue'
+import PrintPanel from './PrintPanel.vue'
 import RoundEditor from './RoundEditor.vue'
 import SetupPanel from './SetupPanel.vue'
 
 const session = useSession()
 const quiz = computed(() => session.quiz!)
-const selected = ref<'setup' | 'media' | string>('setup')
+const emit = defineEmits<{ createFromCurrent: [] }>()
+const selected = ref<'setup' | 'media' | 'print' | string>('setup')
+const PAGES = ['setup', 'media', 'print']
 const { importFiles, pathsFromDrop } = useMediaImport()
 
 const round = computed(() => quiz.value.rounds.find((r) => r.id === selected.value) ?? null)
 watch(round, (r) => {
-  if (!r && selected.value !== 'setup' && selected.value !== 'media') selected.value = 'setup'
+  if (!r && !PAGES.includes(selected.value)) selected.value = 'setup'
 })
 
 const PRESET_HINTS: Record<RoundPreset, string> = {
@@ -34,8 +37,7 @@ function addRound(preset: RoundPreset, close: () => void) {
   close()
 }
 
-function duplicate(id: string, close: () => void) {
-  close()
+function duplicate(id: string) {
   const index = quiz.value.rounds.findIndex((r) => r.id === id)
   const source = quiz.value.rounds[index]
   if (!source) return
@@ -48,8 +50,7 @@ function duplicate(id: string, close: () => void) {
   selected.value = copy.id
 }
 
-function remove(id: string, close: () => void) {
-  close()
+function remove(id: string) {
   const r = quiz.value.rounds.find((x) => x.id === id)
   if (!r || !confirm(`Ronde "${r.title}" verwijderen?`)) return
   quiz.value.rounds = quiz.value.rounds.filter((x) => x.id !== id)
@@ -129,6 +130,10 @@ function onDropCapture() {
           <span class="grow">Media</span>
           <span class="badge">{{ quiz.assets.length }}</span>
         </button>
+        <button class="nav-item" :class="{ on: selected === 'print' }" @click="selected = 'print'">
+          <Icon name="text" />
+          <span class="grow">Afdrukken</span>
+        </button>
       </nav>
 
       <div class="rounds-head">
@@ -175,30 +180,22 @@ function onDropCapture() {
         >
           <span class="num mono">{{ i + 1 }}</span>
           <span class="round-title grow">{{ r.title || 'Naamloze ronde' }}</span>
-          <Popover align="right" :width="170" class="round-menu" @click.stop>
-            <template #trigger="{ toggle }">
-              <button class="btn btn-ghost btn-sm btn-icon" aria-label="Meer" @click.stop="toggle">
-                <Icon name="more" />
-              </button>
-            </template>
-            <template #default="{ close }">
-              <button class="menu-item" @click.stop="duplicate(r.id, close)">
-                <Icon name="copy" /> Dupliceer
-              </button>
-              <button class="menu-item danger" @click.stop="remove(r.id, close)">
-                <Icon name="trash" /> Verwijder
-              </button>
-            </template>
-          </Popover>
         </div>
         <p v-if="!quiz.rounds.length" class="muted hint">Nog geen rondes. Voeg er een toe met +.</p>
       </div>
     </aside>
 
     <section class="main scroll">
-      <SetupPanel v-if="selected === 'setup'" />
+      <SetupPanel v-if="selected === 'setup'" @create-from-current="emit('createFromCurrent')" />
       <MediaLibrary v-else-if="selected === 'media'" />
-      <RoundEditor v-else-if="round" :key="round.id" :round="round" />
+      <PrintPanel v-else-if="selected === 'print'" />
+      <RoundEditor
+        v-else-if="round"
+        :key="round.id"
+        :round="round"
+        @duplicate="duplicate(round.id)"
+        @remove="remove(round.id)"
+      />
     </section>
 
     <Transition name="fade">
@@ -317,19 +314,6 @@ function onDropCapture() {
 
 .round.drop {
   box-shadow: inset 0 2px 0 var(--accent);
-}
-
-.round-menu {
-  visibility: hidden;
-}
-
-.round:hover .round-menu,
-.round.on .round-menu {
-  visibility: visible;
-}
-
-.menu-item.danger {
-  color: var(--live);
 }
 
 .hint {

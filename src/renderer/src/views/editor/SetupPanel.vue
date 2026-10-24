@@ -7,15 +7,21 @@ import ContentChip from '../../components/ContentChip.vue'
 import Icon from '../../components/Icon.vue'
 import MediaPicker from '../../components/MediaPicker.vue'
 import PageHero from '../../components/PageHero.vue'
-import Popover from '../../components/Popover.vue'
 import StagePreview from '../../components/StagePreview.vue'
 import { useAmbient } from '../../lib/ambient'
 import { percent } from '../../lib/format'
 import { usePreviewPlayer } from '../../lib/use-preview-player'
 import { useSession } from '../../stores/session'
 
+const emit = defineEmits<{ createFromCurrent: [] }>()
+const api = window.pubquiz
 const session = useSession()
 const quiz = computed(() => session.quiz!)
+
+function exportZip() {
+  session.flush()
+  void api.exportZip()
+}
 const preview = usePreviewPlayer()
 
 const ambient = useAmbient(() => {
@@ -35,8 +41,7 @@ function addScreen() {
   quiz.value.screens.push(createScreenSlot(`Scherm ${quiz.value.screens.length + 1}`))
 }
 
-function removeScreen(id: string, close: () => void) {
-  close()
+function removeScreen(id: string) {
   const slot = quiz.value.screens.find((s) => s.id === id)
   if (
     !slot ||
@@ -102,6 +107,17 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
         aria-label="Naam van de quiz"
       />
       <p class="muted summary">{{ summary }}</p>
+      <div class="quiz-actions">
+        <button class="btn btn-ghost btn-sm" @click="emit('createFromCurrent')">
+          <Icon name="copy" :size="14" /> Nieuwe quiz op basis van deze
+        </button>
+        <button class="btn btn-ghost btn-sm" @click="exportZip">
+          <Icon name="upload" :size="14" /> Exporteer als zip
+        </button>
+        <button class="btn btn-ghost btn-sm" @click="api.revealQuiz()">
+          <Icon name="folder" :size="14" /> Toon in Finder
+        </button>
+      </div>
     </PageHero>
 
     <div class="body">
@@ -119,18 +135,14 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
                 class="quiet screen-name"
                 aria-label="Naam van het scherm"
               />
-              <Popover align="right" :width="170">
-                <template #trigger="{ toggle }">
-                  <button class="btn btn-ghost btn-sm btn-icon" aria-label="Meer" @click="toggle">
-                    <Icon name="more" />
-                  </button>
-                </template>
-                <template #default="{ close }">
-                  <button class="menu-item danger" @click="removeScreen(slot.id, close)">
-                    <Icon name="trash" /> Verwijder scherm
-                  </button>
-                </template>
-              </Popover>
+              <button
+                class="btn btn-ghost btn-sm btn-icon remove-screen"
+                aria-label="Verwijder scherm"
+                title="Verwijder scherm"
+                @click="removeScreen(slot.id)"
+              >
+                <Icon name="trash" :size="14" />
+              </button>
             </div>
             <ContentChip v-model="slot.default" label="Toont" />
           </div>
@@ -257,6 +269,21 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
 .summary {
   margin-top: 6px;
   font-size: 14px;
+}
+
+.quiz-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 14px 0 0 -10px;
+}
+
+.remove-screen {
+  color: var(--muted);
+}
+
+.remove-screen:hover {
+  color: var(--live);
 }
 
 .body {
@@ -441,9 +468,5 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
   margin-top: auto;
   padding-top: 10px;
   font-size: 12px;
-}
-
-.menu-item.danger {
-  color: var(--live);
 }
 </style>
