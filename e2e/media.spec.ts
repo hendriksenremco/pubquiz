@@ -175,6 +175,22 @@ test('toont een bestand groot als voorbeeld en bladert verder', async () => {
   await operator.waitForTimeout(700) // gloed laten infaden voor de screenshot
   await operator.screenshot({ path: 'test-results/media-preview.png' })
 
+  // Eigen bediening, niet die van macOS: pauzeren, spoelen met de tijdbalk.
+  const video = dialog.locator('video')
+  expect(await video.evaluate((v: HTMLVideoElement) => v.controls)).toBe(false)
+  await dialog.getByRole('button', { name: 'Pauzeer' }).click()
+  await expect.poll(() => video.evaluate((v: HTMLVideoElement) => v.paused)).toBe(true)
+  await expect(dialog.getByRole('button', { name: 'Speel af' })).toBeVisible()
+  await dialog.getByLabel('Positie').fill('4')
+  await expect
+    .poll(() => video.evaluate((v: HTMLVideoElement) => Math.round(v.currentTime)))
+    .toBe(4)
+  await expect(dialog.locator('.transport .time').first()).toHaveText('0:04')
+  await expect(dialog.locator('.transport .time').last()).toHaveText('0:08')
+  // Klikken op de video speelt weer af.
+  await video.click()
+  await expect.poll(() => video.evaluate((v: HTMLVideoElement) => v.paused)).toBe(false)
+
   await operator.keyboard.press('ArrowRight')
   await expect(dialog).toHaveAccessibleName(`Voorbeeld: ${names[1]}`)
   await operator.keyboard.press('ArrowLeft')
@@ -200,6 +216,9 @@ test('toont een bestand groot als voorbeeld en bladert verder', async () => {
   await expect
     .poll(() => dialog.locator('audio').evaluate((a: HTMLAudioElement) => a.paused))
     .toBe(false)
+  await expect(dialog.getByRole('button', { name: 'Pauzeer' })).toBeVisible()
+  await expect(dialog.locator('.transport .time').last()).toHaveText('0:30')
+  await operator.waitForTimeout(300)
   await operator.screenshot({ path: 'test-results/media-preview-sound.png' })
   await dialog.getByRole('button', { name: 'Sluiten' }).click()
   await expect(dialog).toHaveCount(0)
