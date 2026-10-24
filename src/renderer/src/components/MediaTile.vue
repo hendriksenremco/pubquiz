@@ -8,16 +8,18 @@ import { usePreviewPlayer } from '../lib/use-preview-player'
 import { useSession } from '../stores/session'
 import Icon from './Icon.vue'
 
-/** Video of afbeelding in de mediabibliotheek; video's zijn hier af te spelen, alles groot te bekijken. */
+/**
+ * Video of afbeelding in de mediabibliotheek; video's zijn hier af te spelen, alles groot te
+ * bekijken. Naar een map verplaatsen gaat door de tegel te slepen.
+ */
 const props = defineProps<{ asset: MediaAsset }>()
-const emit = defineEmits<{ move: [folderId: string | null]; remove: []; preview: [] }>()
+const emit = defineEmits<{ remove: []; preview: [] }>()
 
 const session = useSession()
 const preview = usePreviewPlayer()
 const video = ref<HTMLVideoElement | null>(null)
 const playing = computed(() => preview.playingId.value === props.asset.id)
 const used = computed(() => findAssetUsages(session.quiz!, props.asset.id).length > 0)
-const folders = computed(() => session.quiz?.folders ?? [])
 
 function toggle() {
   if (playing.value) return preview.stop()
@@ -35,10 +37,6 @@ watch(playing, (on) => {
     el.currentTime = 1
   }
 })
-
-function move(event: Event) {
-  emit('move', (event.target as HTMLSelectElement).value || null)
-}
 
 function onDragStart(event: DragEvent) {
   event.dataTransfer?.setData('application/x-pubquiz-asset', props.asset.id)
@@ -88,13 +86,6 @@ function onDragStart(event: DragEvent) {
         }}
         <span v-if="used" class="used">in gebruik</span>
       </span>
-      <label v-if="folders.length" class="tile-folder" title="Map">
-        <Icon name="folder" :size="12" />
-        <select :value="asset.folderId ?? ''" aria-label="Map" @change="move">
-          <option value="">Geen map</option>
-          <option v-for="f in folders" :key="f.id" :value="f.id">{{ f.name }}</option>
-        </select>
-      </label>
     </figcaption>
   </figure>
 </template>
@@ -106,6 +97,12 @@ function onDragStart(event: DragEvent) {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  transition: opacity 0.12s;
+}
+
+/* Wordt versleept: de plek blijft zichtbaar, de tegel zelf hangt aan de muis. */
+.tile-item.dragging {
+  opacity: 0.35;
 }
 
 .frame {
@@ -178,29 +175,6 @@ function onDragStart(event: DragEvent) {
 .remove:hover {
   background: var(--live);
   color: #fff;
-}
-
-.tile-folder {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  margin-top: 4px;
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.tile-folder select {
-  min-width: 0;
-  padding: 2px 0;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
-}
-
-.tile-folder:hover {
-  color: var(--text);
 }
 
 figcaption {

@@ -89,9 +89,11 @@ test('toont mappen en maakt een nieuwe map', async () => {
   await expect(operator.locator('.folder-name')).toHaveText(['Fragmenten', 'Loops', 'Pauzemuziek'])
 })
 
-test('verplaatst een bestand naar een map', async () => {
+test('verplaatst een bestand naar een map door het te slepen', async () => {
+  // Geen keuzelijstje meer onder de bestanden: verplaatsen gaat door te slepen.
+  await expect(operator.getByLabel('Map', { exact: true })).toHaveCount(0)
   const row = operator.locator('.sound', { hasText: 'background-break.m4a' })
-  await row.getByLabel('Map').selectOption({ label: 'Pauzemuziek' })
+  await row.dragTo(operator.locator('.folder', { hasText: 'Pauzemuziek' }))
   await expect(row).toHaveCount(0)
 
   await operator.locator('.folder', { hasText: 'Pauzemuziek' }).click()
@@ -103,7 +105,37 @@ test('verplaatst een bestand naar een map', async () => {
       return quiz.assets.find((a: { id: string }) => a.id === 'bg-break')?.folderId === folder?.id
     })
     .toBe(true)
+
+  // Tijdens het slepen verschijnt onderin waar het heen kan: ook een andere of een nieuwe map.
+  const box = (await operator.locator('.sound').first().boundingBox())!
+  await operator.mouse.move(box.x + 200, box.y + box.height / 2)
+  await operator.mouse.down()
+  await operator.mouse.move(box.x + 260, box.y + 120, { steps: 6 })
+  const dock = operator.getByRole('group', { name: 'Verplaats naar' })
+  await expect(dock.locator('.dock-target')).toHaveText([
+    'Media',
+    'Fragmenten',
+    'Loops',
+    'Nieuwe map'
+  ])
+  await dock.locator('.dock-target', { hasText: 'Nieuwe map' }).hover()
+  await expect(dock.locator('.dock-target.drop')).toHaveText('Nieuwe map')
+  await operator.waitForTimeout(400) // infaden afwachten voor de screenshot
+  await operator.screenshot({ path: 'test-results/media-drag-dock.png' })
+  await operator.mouse.up()
+
+  // De nieuwe map staat open met het bestand erin, klaar om een naam te geven.
+  await expect(dock).toHaveCount(0)
+  await expect(operator.getByLabel('Naam van de map')).toHaveValue('Nieuwe map')
+  await expect(operator.getByLabel('Naam van de map')).toBeFocused()
+  await expect(operator.locator('.sound .name')).toHaveText(['background-break.m4a'])
   await operator.locator('.crumb').click()
+  await expect(operator.locator('.folder-name')).toHaveText([
+    'Fragmenten',
+    'Loops',
+    'Nieuwe map',
+    'Pauzemuziek'
+  ])
 })
 
 test('speelt een video af als voorbeeld', async () => {
