@@ -5,6 +5,7 @@ import type { MediaKind } from '@shared/types'
 import { formatTime } from '../lib/format'
 import { useMediaImport } from '../lib/use-media-import'
 import { useSession } from '../stores/session'
+import Select, { type SelectOption } from './Select.vue'
 
 const props = withDefaults(
   defineProps<{ kinds: MediaKind[]; placeholder?: string; size?: 'sm' | 'md' }>(),
@@ -31,13 +32,23 @@ const groups = computed(() =>
   }))
 )
 
-async function onChange(event: Event) {
-  const select = event.target as HTMLSelectElement
-  if (select.value !== IMPORT) {
-    model.value = select.value || undefined
+/** Per map een kopje; onderaan importeren. */
+const options = computed((): SelectOption[] => [
+  ...groups.value.flatMap((g) =>
+    g.assets.map((a) => ({
+      value: a.id,
+      label: `${a.name}${a.duration ? ` · ${formatTime(a.duration)}` : ''}`,
+      group: g.label
+    }))
+  ),
+  { value: IMPORT, label: 'Importeer bestand…' }
+])
+
+async function onChange(value: string | undefined) {
+  if (value !== IMPORT) {
+    model.value = value || undefined
     return
   }
-  select.value = model.value ?? ''
   const added = await importFiles()
   const match = added.find((a) => props.kinds.includes(a.kind))
   if (match) model.value = match.id
@@ -45,20 +56,11 @@ async function onChange(event: Event) {
 </script>
 
 <template>
-  <select
-    class="select"
-    :class="{ 'input-sm': size === 'sm' }"
-    :value="model ?? ''"
-    @change="onChange"
-  >
-    <option value="" disabled>{{ placeholder }}</option>
-    <template v-for="group in groups" :key="group.key">
-      <optgroup :label="group.label">
-        <option v-for="a in group.assets" :key="a.id" :value="a.id">
-          {{ a.name }}{{ a.duration ? ` · ${formatTime(a.duration)}` : '' }}
-        </option>
-      </optgroup>
-    </template>
-    <option :value="IMPORT">Importeer bestand…</option>
-  </select>
+  <Select
+    :model-value="model ?? ''"
+    :options="options"
+    :placeholder="placeholder"
+    :size="size"
+    @update:model-value="onChange"
+  />
 </template>

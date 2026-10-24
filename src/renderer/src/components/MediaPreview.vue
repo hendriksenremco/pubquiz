@@ -3,6 +3,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { findAssetUsages } from '@shared/resolve'
 import type { MediaAsset } from '@shared/types'
 import { useAmbient } from '../lib/ambient'
+import { vFill } from '../lib/fill'
 import { formatTime } from '../lib/format'
 import { urlFor } from '../lib/media'
 import { usePreviewPlayer } from '../lib/use-preview-player'
@@ -10,8 +11,9 @@ import { useSession } from '../stores/session'
 import Icon from './Icon.vue'
 
 /**
- * Groot voorbeeld van een bestand uit Media, zoals Quick Look: video en geluid spelen met geluid
- * en een tijdbalk. Bladeren met ← →, sluiten met Escape of door naast het beeld te klikken.
+ * Groot voorbeeld van een bestand uit Media, zoals Quick Look: video en geluid spelen met geluid,
+ * met een eigen bediening (geen die van macOS). Bladeren met ← →, spatie speelt of pauzeert,
+ * sluiten met Escape of door naast het beeld te klikken.
  */
 const props = defineProps<{ items: MediaAsset[] }>()
 const id = defineModel<string | null>('id', { required: true })
@@ -21,6 +23,9 @@ const player = usePreviewPlayer()
 const root = ref<HTMLElement | null>(null)
 const media = ref<HTMLMediaElement | null>(null)
 const size = ref<[number, number] | null>(null)
+const paused = ref(true)
+const current = ref(0)
+const length = ref<number | null>(null)
 
 const index = computed(() => props.items.findIndex((a) => a.id === id.value))
 const asset = computed(() => props.items[index.value] ?? null)
@@ -36,9 +41,12 @@ const claimId = computed(() => `preview:${id.value}`)
 
 watch(
   () => asset.value?.id,
-  (current) => {
+  (shown) => {
     size.value = null
-    if (!current) return close()
+    paused.value = true
+    current.value = 0
+    length.value = null
+    if (!shown) return close()
     if (asset.value!.kind === 'image') player.stop()
     else player.claim(claimId.value)
   },
@@ -70,6 +78,25 @@ function onImageLoad(event: Event) {
   size.value = [el.naturalWidth, el.naturalHeight]
 }
 
+// Tijd en knop volgen het afspelen; tijdens het spelen per beeld, zodat de balk vloeiend loopt.
+let frame = 0
+function sync() {
+  const el = media.value
+  if (!el) return
+  paused.value = el.paused
+  current.value = el.currentTime
+  length.value = Number.isFinite(el.duration) ? el.duration : null
+  cancelAnimationFrame(frame)
+  if (!el.paused) frame = requestAnimationFrame(sync)
+}
+
+function seek(event: Event) {
+  const el = media.value
+  if (!el) return
+  el.currentTime = Number((event.target as HTMLInputElement).value)
+  current.value = el.currentTime
+}
+
 function togglePlay() {
   const el = media.value
   if (!el) return
@@ -99,6 +126,7 @@ onMounted(async () => {
 })
 onBeforeUnmount(() => {
   document.removeEventListener('keydown', onKey)
+  cancelAnimationFrame(frame)
   if (player.playingId.value?.startsWith('preview:')) player.stop()
   returnFocus?.focus()
 })
@@ -129,13 +157,15 @@ onBeforeUnmount(() => {
             :key="asset.id"
             ref="media"
             :src="urlFor(asset)"
-            controls
             autoplay
             loop
             playsinline
             disablepictureinpicture
-            controlslist="nodownload noplaybackrate noremoteplayback"
-            @loadedmetadata="onVideoMeta"
+            @loadedmetadata="(onVideoMeta($event), sync())"
+            @play="sync"
+            @pause="sync"
+            @seeked="sync"
+            @click="togglePlay"
           />
           <img
             v-else-if="asset.kind === 'image'"
@@ -150,11 +180,40 @@ onBeforeUnmount(() => {
               :key="asset.id"
               ref="media"
               :src="urlFor(asset)"
-              controls
               autoplay
-              controlslist="nodownload noplaybackrate"
+              @loadedmetadata="sync"
+              @play="sync"
+              @pause="sync"
+              @ended="sync"
+              @seeked="sync"
             />
           </div>
+        </div>
+
+        <!-- Bij een afbeelding onzichtbaar maar op zijn plek: dan verspringt het beeld niet. -->
+        <div class="transport" :class="{ idle: asset.kind === 'image' }">
+          <button
+            class="btn btn-icon toggle"
+            :aria-label="paused ? 'Speel af' : 'Pauzeer'"
+            :disabled="asset.kind === 'image'"
+            @click="togglePlay"
+          >
+            <Icon :name="paused ? 'play' : 'pause'" :size="15" />
+          </button>
+          <span class="time mono">{{ formatTime(current) }}</span>
+          <input
+            v-fill
+            class="scrub"
+            type="range"
+            min="0"
+            :max="length ?? 1"
+            step="0.01"
+            :value="current"
+            :disabled="!length"
+            aria-label="Positie"
+            @input="seek"
+          />
+          <span class="time mono">{{ formatTime(length) }}</span>
         </div>
 
         <footer class="info">
@@ -207,9 +266,48 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   gap: 18px;
-  /* 16:9, zo groot als het venster toelaat; de onderbalk krijgt de rest. */
-  width: min(1200px, 100%, (100vh - 64px - 150px) * 16 / 9);
+  /* 16:9, zo groot als het venster toelaat; de bediening en de onderbalk krijgen de rest. */
+  width: min(1200px, 100%, (100vh - 64px - 210px) * 16 / 9);
   outline: none;
+}
+
+.stage video {
+  cursor: pointer;
+}
+
+.transport {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: -4px;
+}
+
+.transport.idle {
+  visibility: hidden;
+}
+
+.toggle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.toggle:hover:not(:disabled) {
+  background: var(--accent);
+  filter: brightness(1.08);
+}
+
+.time {
+  min-width: 40px;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.scrub {
+  flex: 1;
 }
 
 .stage {

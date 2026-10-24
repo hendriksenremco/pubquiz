@@ -1,7 +1,7 @@
 import { expect, test, type ElectronApplication, type Page } from '@playwright/test'
 import { rmSync } from 'fs'
 import { dirname } from 'path'
-import { copyFixture, launch, tempDir, useWindowedScreens, windowFor } from './helpers'
+import { confirmIn, copyFixture, launch, tempDir, useWindowedScreens, windowFor } from './helpers'
 
 let app: ElectronApplication
 let operator: Page
@@ -65,7 +65,10 @@ test('kiest bij Show waar het videogeluid heen gaat', async () => {
   await useWindowedScreens(operator)
   const beamer = operator.locator('.screen').first()
   await expect(beamer.getByText('Videogeluid via')).toBeVisible()
-  await expect(beamer.locator('select.sound-target')).toHaveValue('auto')
+  await expect(beamer.locator('.sound-target [role="combobox"]')).toHaveAttribute(
+    'data-value',
+    'auto'
+  )
   // De TV toont alleen een afbeelding: geen geluidskeuze.
   await expect(operator.locator('.screen').nth(1).getByText('Videogeluid via')).toHaveCount(0)
   await operator.screenshot({ path: 'test-results/screen-sound-prepare.png' })
@@ -123,7 +126,7 @@ test('speelt het videogeluid alleen op het scherm, duckt bij een fragment en zwi
     )
     .toBe(true)
 
-  operator.once('dialog', (d) => d.accept())
   await operator.getByRole('button', { name: 'Stop show' }).click()
+  await confirmIn(operator, 'Stop show')
   await expect.poll(() => app.windows().some((w) => w.url().includes('#/screen/'))).toBe(false)
 })

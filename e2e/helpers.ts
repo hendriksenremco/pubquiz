@@ -2,6 +2,7 @@ import {
   _electron as electron,
   expect,
   type ElectronApplication,
+  type Locator,
   type Page
 } from '@playwright/test'
 import { execFileSync } from 'child_process'
@@ -91,9 +92,20 @@ export async function audio(app: ElectronApplication): Promise<AudioSnapshot> {
   )
 }
 
+/** Beantwoordt de vraag in het bevestigingsvenster van de app (ConfirmHost). */
+export async function confirmIn(page: Page, button: string) {
+  await page.getByRole('dialog').getByRole('button', { name: button, exact: true }).click()
+}
+
+/** Kiest een optie in een keuzelijst van de app (Select.vue). */
+export async function choose(page: Page, combobox: Locator, option: string | RegExp) {
+  await combobox.click()
+  await page.getByRole('listbox').getByRole('option', { name: option, exact: true }).click()
+}
+
 /** Zet alle scherm-slots op "venster op deze laptop", zodat tests geen externe displays overnemen. */
 export async function useWindowedScreens(operator: Page) {
-  for (const select of await operator.locator('.screen select.screen-target').all()) {
-    await select.selectOption('window')
+  for (const box of await operator.locator('.screen .screen-target [role="combobox"]').all()) {
+    await choose(operator, box, 'Venster op deze laptop (om te testen)')
   }
 }

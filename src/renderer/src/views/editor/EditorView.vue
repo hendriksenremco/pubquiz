@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue'
 import { createRound, newId, ROUND_PRESETS, type RoundPreset } from '@shared/factory'
 import Icon from '../../components/Icon.vue'
 import Popover from '../../components/Popover.vue'
+import { ask } from '../../lib/confirm'
 import { useMediaImport } from '../../lib/use-media-import'
 import { useSession } from '../../stores/session'
 import MediaLibrary from './MediaLibrary.vue'
@@ -50,9 +51,15 @@ function duplicate(id: string) {
   selected.value = copy.id
 }
 
-function remove(id: string) {
+async function remove(id: string) {
   const r = quiz.value.rounds.find((x) => x.id === id)
-  if (!r || !confirm(`Ronde "${r.title}" verwijderen?`)) return
+  if (!r) return
+  const ok = await ask({
+    title: `Ronde “${r.title}” verwijderen?`,
+    confirm: 'Verwijder',
+    danger: true
+  })
+  if (!ok) return
   quiz.value.rounds = quiz.value.rounds.filter((x) => x.id !== id)
   for (const other of quiz.value.rounds) {
     other.answersFor = other.answersFor.filter((x) => x !== id)

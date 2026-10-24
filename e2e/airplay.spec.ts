@@ -26,12 +26,14 @@ test('AirPlay in de buurt: schermen in de lijst, met hulp bij verbinden', async 
     })
 
     await operator.getByRole('button', { name: 'Show', exact: true }).click()
-    const select = operator.locator('.screen select.screen-target').first()
-    const options = await select.locator('option').allTextContents()
+    await operator.locator('.screen .screen-target [role="combobox"]').first().click()
+    const list = operator.getByRole('listbox')
+    const options = await list.getByRole('option').allTextContents()
     expect(options.map((o) => o.trim())).toContain('BEAMER-KANTINE')
     expect(options.map((o) => o.trim())).not.toContain('Studio')
+    await expect(list).toContainText('AirPlay in de buurt')
 
-    await select.selectOption('ap:BEAMER-KANTINE')
+    await list.getByRole('option', { name: 'BEAMER-KANTINE' }).click()
     await expect(operator.locator('.airplay-hint').first()).toContainText(
       'Nog niet verbonden. Kies in Beeldschermen'
     )
@@ -43,7 +45,7 @@ test('AirPlay in de buurt: schermen in de lijst, met hulp bij verbinden', async 
     await expect(operator.locator('.airplay-hint').last()).toContainText('Studio')
     await expect(operator.locator('.airplay-hint').last()).toContainText('±2 seconden')
     // Wachten tot macOS de uitgangen heeft doorgegeven (eerst staat er "Uitgangen laden…").
-    await expect(operator.locator('.channel select').first().locator('option').first()).toHaveText(
+    await expect(operator.locator('.channel [role="combobox"]').first()).toHaveText(
       /Systeemstandaard/
     )
     await operator.screenshot({ path: 'test-results/airplay.png' })

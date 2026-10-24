@@ -14,6 +14,7 @@ import MediaPreview from '../../components/MediaPreview.vue'
 import MediaThumb from '../../components/MediaThumb.vue'
 import MediaTile from '../../components/MediaTile.vue'
 import { formatTime } from '../../lib/format'
+import { ask } from '../../lib/confirm'
 import { useMediaImport } from '../../lib/use-media-import'
 import { usePreviewPlayer } from '../../lib/use-preview-player'
 import { useSession } from '../../stores/session'
@@ -102,9 +103,15 @@ async function newFolder(asset?: MediaAsset) {
   folderTitle.value?.select()
 }
 
-function removeFolder() {
+async function removeFolder() {
   const f = folder.value
-  if (!f || !confirm(`Map "${f.name}" verwijderen? De bestanden blijven in Media.`)) return
+  if (!f) return
+  const ok = await ask({
+    title: `Map “${f.name}” verwijderen?`,
+    message: 'De bestanden blijven in Media.',
+    confirm: 'Verwijder map'
+  })
+  if (!ok) return
   deleteFolder(quiz.value, f.id)
   openFolderId.value = null
 }

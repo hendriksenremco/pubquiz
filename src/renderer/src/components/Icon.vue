@@ -8,6 +8,7 @@ const PATHS = {
   more: 'M5 12h.01M12 12h.01M19 12h.01',
   play: 'M8 5.5v13l11-6.5z',
   stop: 'M7 7h10v10H7z',
+  pause: 'M7.5 6h3v12h-3zM13.5 6h3v12h-3z',
   music: 'M9 18V6l11-2v12M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM20 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0z',
   monitor: 'M3 5h18v11H3zM8 20h8M12 16v4',
   chevron: 'M6 9l6 6 6-6',
@@ -37,6 +38,7 @@ const PATHS = {
 } as const
 
 export type IconName = keyof typeof PATHS
+const FILLED: IconName[] = ['play', 'stop', 'pause']
 
 withDefaults(defineProps<{ name: IconName; size?: number }>(), { size: 16 })
 </script>
@@ -54,7 +56,7 @@ withDefaults(defineProps<{ name: IconName; size?: number }>(), { size: 16 })
     aria-hidden="true"
     class="icon"
   >
-    <path :d="PATHS[name]" :fill="name === 'play' || name === 'stop' ? 'currentColor' : 'none'" />
+    <path :d="PATHS[name]" :fill="FILLED.includes(name) ? 'currentColor' : 'none'" />
   </svg>
 </template>
 

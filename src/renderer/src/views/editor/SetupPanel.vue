@@ -7,8 +7,11 @@ import ContentChip from '../../components/ContentChip.vue'
 import Icon from '../../components/Icon.vue'
 import MediaPicker from '../../components/MediaPicker.vue'
 import PageHero from '../../components/PageHero.vue'
+import Select from '../../components/Select.vue'
 import StagePreview from '../../components/StagePreview.vue'
+import { vFill } from '../../lib/fill'
 import { useAmbient } from '../../lib/ambient'
+import { ask } from '../../lib/confirm'
 import { percent } from '../../lib/format'
 import { usePreviewPlayer } from '../../lib/use-preview-player'
 import { useSession } from '../../stores/session'
@@ -41,13 +44,16 @@ function addScreen() {
   quiz.value.screens.push(createScreenSlot(`Scherm ${quiz.value.screens.length + 1}`))
 }
 
-function removeScreen(id: string) {
+async function removeScreen(id: string) {
   const slot = quiz.value.screens.find((s) => s.id === id)
-  if (
-    !slot ||
-    !confirm(`Scherm "${slot.name}" verwijderen? Ronde-instellingen voor dit scherm vervallen.`)
-  )
-    return
+  if (!slot) return
+  const ok = await ask({
+    title: `Scherm “${slot.name}” verwijderen?`,
+    message: 'Wat rondes voor dit scherm hebben ingesteld, vervalt ook.',
+    confirm: 'Verwijder',
+    danger: true
+  })
+  if (!ok) return
   quiz.value.screens = quiz.value.screens.filter((s) => s.id !== id)
   for (const round of quiz.value.rounds) {
     delete round.screens[id]
@@ -184,6 +190,7 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
                   <span>Volume</span>
                   <input
                     v-model.number="quiz.background.volume"
+                    v-fill
                     type="range"
                     min="0"
                     max="1"
@@ -195,6 +202,7 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
                   <span>Bij fragment</span>
                   <input
                     v-model.number="quiz.background.duckTo"
+                    v-fill
                     type="range"
                     min="0"
                     max="1"
@@ -204,14 +212,13 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
                 </label>
                 <div class="bg-foot">
                   <span class="muted">Via</span>
-                  <select
+                  <Select
                     v-model="quiz.background.channelId"
-                    class="select input-sm channel-select"
-                  >
-                    <option v-for="c in quiz.channels" :key="c.id" :value="c.id">
-                      {{ c.name }}
-                    </option>
-                  </select>
+                    size="sm"
+                    class="channel-select"
+                    aria-label="Kanaal van de achtergrondmuziek"
+                    :options="quiz.channels.map((c) => ({ value: c.id, label: c.name }))"
+                  />
                   <span class="grow" />
                   <button class="btn btn-ghost btn-sm" @click="quiz.background = null">
                     Verwijder
@@ -237,6 +244,7 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
               <input v-model="c.name" class="quiet channel-name" aria-label="Naam van het kanaal" />
               <input
                 v-model.number="c.volume"
+                v-fill
                 type="range"
                 min="0"
                 max="1"
