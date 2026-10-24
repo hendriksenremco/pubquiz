@@ -41,27 +41,41 @@ async function saved(name: string): Promise<string> {
   return file
 }
 
-test('maakt het antwoordformulier en de antwoorden als pdf', async () => {
+/** Paginaformaat in millimeters (MediaBox staat in punten, 72 per inch). */
+function pageSizeMm(file: string): [number, number] {
+  const box = /\/MediaBox\s*\[\s*0\s+0\s+([\d.]+)\s+([\d.]+)/.exec(
+    readFileSync(file).toString('latin1')
+  )!
+  return [Math.round((Number(box[1]) / 72) * 25.4), Math.round((Number(box[2]) / 72) * 25.4)]
+}
+
+test('maakt het antwoordformulier, de antwoorden en de vragenkaarten als pdf', async () => {
   await operator.getByRole('button', { name: 'Quizmenu' }).click()
-  await operator.locator('.menu-item', { hasText: 'Antwoordformulieren' }).click()
-  const dialog = operator.getByRole('dialog', { name: 'Antwoordformulieren' })
+  await operator.locator('.menu-item', { hasText: 'Formulieren en kaarten' }).click()
+  const dialog = operator.getByRole('dialog', { name: 'Formulieren en kaarten' })
   // Alleen rondes met iets om in te vullen; de pauze niet.
-  await expect(dialog.locator('.option-title')).toHaveText([
+  await expect(dialog.locator('.rounds .option-title')).toHaveText([
     'Ronde 1: algemeen',
     'Ronde 2: muziek',
-    'Ronde 4: intro’s',
-    'Elke ronde op een eigen blad'
+    'Ronde 4: intro’s'
   ])
   await operator.waitForTimeout(200)
   await operator.screenshot({ path: 'test-results/forms-dialog.png' })
 
-  await dialog.getByRole('button', { name: 'Antwoordformulier' }).click()
+  await dialog.getByRole('button', { name: 'Antwoordformulier opslaan' }).click()
   const sheet = await saved('Demo-pubquiz – antwoordformulier.pdf')
-  // Elke ronde op een eigen blad.
+  // A4, elke ronde op een eigen blad.
+  expect(pageSizeMm(sheet)).toEqual([210, 297])
   expect(pageCount(sheet)).toBe(3)
   await expect(operator.locator('.notice')).toContainText('Opgeslagen')
 
-  await dialog.getByRole('button', { name: 'Antwoorden' }).click()
+  await dialog.getByRole('button', { name: 'Antwoorden opslaan' }).click()
   const key = await saved('Demo-pubquiz – antwoorden.pdf')
   expect(pageCount(key)).toBeGreaterThanOrEqual(1)
+
+  // Vragenkaarten: ansichtkaartformaat, een kaart per ronde.
+  await dialog.getByRole('button', { name: 'Vragenkaarten opslaan' }).click()
+  const cards = await saved('Demo-pubquiz – vragenkaarten.pdf')
+  expect(pageSizeMm(cards)).toEqual([148, 105])
+  expect(pageCount(cards)).toBe(3)
 })

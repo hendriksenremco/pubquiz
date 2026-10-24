@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted } from 'vue'
-import { formSections, type FormOptions } from '@shared/forms'
+import { formSections, itemText, type FormOptions } from '@shared/forms'
 import type { AnswerItem } from '@shared/resolve'
 import { assetUrl } from '../../lib/media'
 import { useSession } from '../../stores/session'
@@ -14,7 +14,6 @@ const options = JSON.parse(props.param) as FormOptions
 const session = useSession()
 
 const sections = computed(() => (session.quiz ? formSections(session.quiz, options.roundIds) : []))
-const sheet = options.doc === 'sheet'
 
 // Main wacht hierop voordat hij afdrukt: quiz binnen, fonts en afbeeldingen geladen.
 let markReady = () => {}
@@ -40,23 +39,14 @@ onMounted(async () => {
 
 const capital = (word: string) => word[0].toUpperCase() + word.slice(1)
 
-/** Wat de quizmaster bij een antwoord ziet: de vraag, de afbeelding of de naam van het fragment. */
-function what(item: AnswerItem): string {
-  if (item.fragment) return item.fragment.label
-  if (item.slide?.layout === 'question') return item.slide.body || item.slide.title || ''
-  // Een nummerslide heeft als titel alleen het nummer; dat staat al vooraan.
-  if (item.slide?.layout === 'number') return item.slide.body ?? ''
-  return item.slide?.title ?? ''
-}
-
 const imageOf = (item: AnswerItem) =>
   item.slide?.layout === 'image' ? assetUrl(session.quiz, item.slide.imageAssetId) : null
 </script>
 
 <template>
-  <div v-if="session.quiz" class="doc" :class="sheet ? 'sheet' : 'key'">
+  <div v-if="session.quiz" class="doc" :class="options.doc">
     <!-- Antwoordformulier: per ronde genummerde regels en een vak voor de punten. -->
-    <template v-if="sheet">
+    <template v-if="options.doc === 'sheet'">
       <div v-if="!options.pagePerRound" class="team">
         <span class="quiz-name">{{ session.quiz.title }}</span>
         <span class="team-field">Team <span class="write" /></span>
@@ -89,7 +79,7 @@ const imageOf = (item: AnswerItem) =>
     </template>
 
     <!-- Antwoorden: om na te kijken, met de vraag of afbeelding erbij. -->
-    <template v-else>
+    <template v-else-if="options.doc === 'key'">
       <header class="key-head">
         <span class="quiz-name">{{ session.quiz.title }}</span>
         <h1>Antwoorden</h1>
@@ -101,10 +91,43 @@ const imageOf = (item: AnswerItem) =>
             <td class="num">{{ item.number }}</td>
             <td class="what">
               <img v-if="imageOf(item)" :src="imageOf(item)!" alt="" />
-              <span>{{ s.mixed ? `${capital(item.noun)}: ` : '' }}{{ what(item) }}</span>
+              <span>{{ s.mixed ? `${capital(item.noun)}: ` : '' }}{{ itemText(item) }}</span>
             </td>
             <td class="answer" :class="{ missing: !item.answer }">{{ item.answer || '—' }}</td>
           </tr>
+        </table>
+      </section>
+    </template>
+
+    <!-- Vragenkaarten: per ronde een ansichtkaart om voor te lezen. Is hij vol, dan loopt de ronde
+         door op een volgende kaart, met de titel er opnieuw boven (thead herhaalt per pagina). -->
+    <template v-else>
+      <section v-for="s in sections" :key="s.round.id" class="qcard">
+        <table>
+          <thead>
+            <tr>
+              <th colspan="3">
+                <span class="qcard-head">
+                  <span class="qcard-title">{{ s.round.title }}</span>
+                  <span class="quiz-name">{{ session.quiz.title }}</span>
+                </span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="item in s.items" :key="item.id">
+              <td class="num">{{ item.number }}</td>
+              <td class="question">
+                <img v-if="imageOf(item)" :src="imageOf(item)!" alt="" />
+                <span v-if="s.mixed" class="noun">{{ capital(item.noun) }} </span>
+                <span v-if="itemText(item)">{{ itemText(item) }}</span>
+                <span v-else class="missing">{{ capital(item.noun) }} {{ item.number }}</span>
+              </td>
+              <td class="qcard-answer" :class="{ missing: !item.answer }">
+                {{ item.answer || '—' }}
+              </td>
+            </tr>
+          </tbody>
         </table>
       </section>
     </template>
@@ -300,6 +323,85 @@ td.answer {
 
 td.answer.missing {
   color: #9a9a9a;
+  font-weight: 400;
+}
+
+/* ── Vragenkaarten (A6 liggend) ─────────────────────────────────────────── */
+
+.qcard {
+  break-after: page;
+}
+
+.qcard:last-child {
+  break-after: auto;
+}
+
+.qcard th {
+  padding: 0 0 2mm;
+  font-weight: inherit;
+  text-align: left;
+}
+
+.qcard-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4mm;
+  padding-bottom: 1.6mm;
+  border-bottom: 0.4mm solid #141414;
+}
+
+.qcard-title {
+  font-family: var(--display);
+  font-size: 13pt;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+}
+
+.qcard tr {
+  break-inside: avoid;
+}
+
+.qcard td {
+  padding: 1.5mm 0;
+  border-bottom: 0.2mm solid #e2e2e2;
+  font-size: 10pt;
+  line-height: 1.3;
+}
+
+.qcard td.num {
+  width: 6mm;
+  padding-right: 2mm;
+  font-size: 10.5pt;
+  text-align: left;
+}
+
+.qcard td.question {
+  padding-right: 4mm;
+}
+
+.qcard td.question img {
+  display: block;
+  width: 22mm;
+  height: 13mm;
+  margin-bottom: 0.8mm;
+  border-radius: 1mm;
+  object-fit: cover;
+}
+
+.qcard .noun,
+.qcard .missing {
+  color: #8a8a8a;
+}
+
+.qcard-answer {
+  width: 34%;
+  color: #4a4a4a;
+  font-size: 9pt !important;
+  font-weight: 650;
+}
+
+.qcard-answer.missing {
   font-weight: 400;
 }
 </style>

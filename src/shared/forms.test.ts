@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { freshDemoQuiz } from '../main/demo-fixture'
-import { formFileName, formRounds, formSections } from './forms'
+import { formFileName, formRounds, formSections, itemText } from './forms'
 import { migrateQuiz } from './migrate'
 
 const demo = migrateQuiz(freshDemoQuiz())
@@ -27,5 +27,12 @@ describe('formulieren', () => {
       'Quiz 24-10 – antwoordformulier.pdf'
     )
     expect(formFileName({ ...demo, title: ' ' }, 'key')).toBe('Pubquiz – antwoorden.pdf')
+    expect(formFileName(demo, 'cards')).toBe('Demo-pubquiz – vragenkaarten.pdf')
+  })
+
+  it('geeft per nummer de tekst voor de quizmaster', () => {
+    const [algemeen, muziek] = formSections(demo, ['r1', 'r2'])
+    expect(algemeen.items.map(itemText)).toEqual(['Wat is de hoofdstad van Australië?', ''])
+    expect(itemText(muziek.items[0])).toBe('Fragment 1')
   })
 })

@@ -212,7 +212,7 @@ export class AppController {
     let target = fixedDir ? join(fixedDir, name) : null
     if (!target) {
       const result = await dialog.showSaveDialog(this.operator!, {
-        title: options.doc === 'sheet' ? 'Antwoordformulier opslaan' : 'Antwoorden opslaan',
+        title: 'Pdf opslaan',
         defaultPath: join(app.getPath('downloads'), name),
         filters: [{ name: 'Pdf', extensions: ['pdf'] }]
       })
