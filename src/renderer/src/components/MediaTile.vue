@@ -7,7 +7,6 @@ import { urlFor } from '../lib/media'
 import { usePreviewPlayer } from '../lib/use-preview-player'
 import { useSession } from '../stores/session'
 import Icon from './Icon.vue'
-import Popover from './Popover.vue'
 
 /** Video of afbeelding in de mediabibliotheek; video's zijn hier af te spelen. */
 const props = defineProps<{ asset: MediaAsset }>()
@@ -18,6 +17,7 @@ const preview = usePreviewPlayer()
 const video = ref<HTMLVideoElement | null>(null)
 const playing = computed(() => preview.playingId.value === props.asset.id)
 const used = computed(() => findAssetUsages(session.quiz!, props.asset.id).length > 0)
+const folders = computed(() => session.quiz?.folders ?? [])
 
 function toggle() {
   if (playing.value) return preview.stop()
@@ -36,14 +36,8 @@ watch(playing, (on) => {
   }
 })
 
-function move(folderId: string | null, close: () => void) {
-  close()
-  emit('move', folderId)
-}
-
-function remove(close: () => void) {
-  close()
-  emit('remove')
+function move(event: Event) {
+  emit('move', (event.target as HTMLSelectElement).value || null)
 }
 
 function onDragStart(event: DragEvent) {
@@ -75,32 +69,14 @@ function onDragStart(event: DragEvent) {
         <Icon :name="playing ? 'stop' : 'play'" :size="16" />
       </button>
     </div>
-    <div class="menu">
-      <Popover align="right" :width="200">
-        <template #trigger="{ toggle: open }">
-          <button class="menu-btn" aria-label="Meer" @click="open">
-            <Icon name="more" :size="16" />
-          </button>
-        </template>
-        <template #default="{ close }">
-          <div class="menu-label">Verplaats naar</div>
-          <button v-if="asset.folderId" class="menu-item" @click="move(null, close)">
-            <Icon name="images" /> Media (geen map)
-          </button>
-          <button
-            v-for="f in session.quiz?.folders.filter((x) => x.id !== asset.folderId)"
-            :key="f.id"
-            class="menu-item"
-            @click="move(f.id, close)"
-          >
-            <Icon name="folder" /> {{ f.name }}
-          </button>
-          <button class="menu-item danger" @click="remove(close)">
-            <Icon name="trash" /> Verwijder uit quiz
-          </button>
-        </template>
-      </Popover>
-    </div>
+    <button
+      class="remove"
+      aria-label="Verwijder uit quiz"
+      title="Verwijder uit quiz"
+      @click="emit('remove')"
+    >
+      <Icon name="trash" :size="14" />
+    </button>
     <figcaption>
       <span class="name">{{ asset.name }}</span>
       <span class="meta">
@@ -109,6 +85,13 @@ function onDragStart(event: DragEvent) {
         }}
         <span v-if="used" class="used">in gebruik</span>
       </span>
+      <label v-if="folders.length" class="tile-folder" title="Map">
+        <Icon name="folder" :size="12" />
+        <select :value="asset.folderId ?? ''" aria-label="Map" @change="move">
+          <option value="">Geen map</option>
+          <option v-for="f in folders" :key="f.id" :value="f.id">{{ f.name }}</option>
+        </select>
+      </label>
     </figcaption>
   </figure>
 </template>
@@ -155,14 +138,6 @@ function onDragStart(event: DragEvent) {
   background: rgba(15, 20, 32, 0.78);
   color: var(--text);
   cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.12s;
-}
-
-.frame:hover .play,
-.frame.playing .play,
-.play:focus-visible {
-  opacity: 1;
 }
 
 .frame.playing .play,
@@ -171,39 +146,47 @@ function onDragStart(event: DragEvent) {
   color: var(--accent-ink);
 }
 
-.menu {
+.remove {
   position: absolute;
   top: 8px;
   right: 8px;
-  opacity: 0;
-}
-
-.tile-item:hover .menu,
-.menu:focus-within {
-  opacity: 1;
-}
-
-.menu-btn {
   display: grid;
   place-items: center;
   width: 28px;
   height: 28px;
   border: 0;
   border-radius: 8px;
-  background: rgba(15, 20, 32, 0.78);
-  color: var(--text);
+  background: rgba(15, 20, 32, 0.72);
+  color: var(--muted);
   cursor: pointer;
 }
 
-.menu-label {
-  padding: 4px 10px 6px;
+.remove:hover {
+  background: var(--live);
+  color: #fff;
+}
+
+.tile-folder {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 4px;
   color: var(--muted);
   font-size: 12px;
 }
 
-.menu-item.danger {
-  margin-top: 4px;
-  color: var(--live);
+.tile-folder select {
+  min-width: 0;
+  padding: 2px 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.tile-folder:hover {
+  color: var(--text);
 }
 
 figcaption {

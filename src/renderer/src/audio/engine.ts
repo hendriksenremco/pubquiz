@@ -1,5 +1,6 @@
 import type { AudioEngineEvent } from '@shared/ipc'
 import {
+  answerItems,
   findAsset,
   findRound,
   resolveAudio,
@@ -450,7 +451,10 @@ export class AudioEngine {
     const rounds = [findRound(quiz, state.activeRoundId), quiz.rounds[index + 1]]
     const wanted = new Set<string>()
     for (const round of rounds) {
-      for (const f of round?.fragments ?? []) wanted.add(f.assetId)
+      if (!round) continue
+      for (const f of round.fragments) wanted.add(f.assetId)
+      for (const item of answerItems(quiz, round))
+        if (item.fragment) wanted.add(item.fragment.assetId)
     }
     for (const id of this.buffers.keys()) {
       if (!wanted.has(id) && id !== this.wantedBackground?.assetId) this.buffers.delete(id)

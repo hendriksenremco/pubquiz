@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { findAsset } from '@shared/resolve'
+import { answerScreens, hasAnswers } from '@shared/factory'
+import { itemSummary } from '@shared/forms'
+import { answerItems, findAsset } from '@shared/resolve'
 import type { Round, RoundBackground, ScreenContent } from '@shared/types'
 import ContentChip from '../../components/ContentChip.vue'
 import Icon from '../../components/Icon.vue'
@@ -14,6 +16,7 @@ import FragmentsEditor from './FragmentsEditor.vue'
 import SlidesEditor from './SlidesEditor.vue'
 
 const props = defineProps<{ round: Round }>()
+const emit = defineEmits<{ duplicate: []; remove: [] }>()
 const session = useSession()
 const quiz = computed(() => session.quiz!)
 const selectedSlide = ref(props.round.slides.length > 0 ? 0 : -1)
@@ -45,9 +48,46 @@ const summary = computed(() => {
   const s = props.round.slides.length
   if (f) parts.push(`${f} ${f === 1 ? 'fragment' : 'fragmenten'}`)
   if (s) parts.push(`${s} ${s === 1 ? 'slide' : 'slides'}`)
+  const a = answerItems(quiz.value, props.round).length
+  if (a) parts.push(`${a} ${a === 1 ? 'antwoord' : 'antwoorden'}`)
   if (!parts.length) return 'Nog leeg'
   return parts.join(' en ')
 })
+
+// ── Antwoorden: fragmenten van andere rondes nog eens langs ─────────────────
+const answerSources = computed(() =>
+  quiz.value.rounds.filter((r) => r.id !== props.round.id && hasAnswers(r))
+)
+const chosenSources = computed(() =>
+  answerSources.value.filter((r) => props.round.answersFor.includes(r.id))
+)
+const answersText = computed(() => {
+  const chosen = chosenSources.value
+  if (!chosen.length) return 'geen'
+  return chosen.length === 1 ? chosen[0].title : `${chosen.length} rondes`
+})
+const missingAnswers = computed(
+  () => answerItems(quiz.value, props.round).filter((item) => !item.answer).length
+)
+
+/** Lijsten in de volgorde van de quiz houden, zodat chip en live-weergave hetzelfde lezen. */
+function toggled(list: string[], order: string[], id: string, on: boolean): string[] {
+  return order.filter((x) => (x === id ? on : list.includes(x)))
+}
+
+function setAnswersFor(roundId: string, on: boolean) {
+  const order = quiz.value.rounds.map((r) => r.id)
+  props.round.answersFor = toggled(props.round.answersFor, order, roundId, on)
+  // Eerste keuze: in beeld waar de nummers van die ronde stonden.
+  if (on && !props.round.fragmentScreens.length) {
+    props.round.fragmentScreens = answerScreens(quiz.value, chosenSources.value)
+  }
+}
+
+function setAnswerScreen(screenId: string, on: boolean) {
+  const order = quiz.value.screens.map((s) => s.id)
+  props.round.fragmentScreens = toggled(props.round.fragmentScreens, order, screenId, on)
+}
 
 function setOverride(screenId: string, value: ScreenContent | undefined) {
   if (value) props.round.screens[screenId] = value
@@ -131,7 +171,15 @@ const bgText = computed(() => {
         </div>
 
         <div class="hero-text">
-          <span class="position">{{ position }}</span>
+          <div class="hero-top">
+            <span class="position grow">{{ position }}</span>
+            <button class="btn btn-ghost btn-sm" @click="emit('duplicate')">
+              <Icon name="copy" :size="14" /> Dupliceer
+            </button>
+            <button class="btn btn-ghost btn-sm danger" @click="emit('remove')">
+              <Icon name="trash" :size="14" /> Verwijder
+            </button>
+          </div>
           <input
             id="round-title"
             v-model="round.title"
@@ -197,6 +245,57 @@ const bgText = computed(() => {
                 </template>
               </template>
             </Popover>
+
+            <Popover v-if="answerSources.length" :width="320">
+              <template #trigger="{ open, toggle }">
+                <button
+                  type="button"
+                  class="chip answers-chip"
+                  :class="{ open, dimmed: !chosenSources.length }"
+                  :title="`Antwoorden van: ${answersText}`"
+                  @click="toggle"
+                >
+                  <span class="chip-icon"><Icon name="check" :size="13" /></span>
+                  <span>Antwoorden</span>
+                  <span class="chip-key chip-value">{{ answersText }}</span>
+                  <Icon name="chevron" :size="14" class="chev" />
+                </button>
+              </template>
+              <div class="answers-menu">
+                <p class="muted menu-note">
+                  Loop in deze ronde de vragen, afbeeldingen en fragmenten nog eens langs: eerst de
+                  vraag, de afbeelding of het fragment, dan het antwoord in beeld.
+                </p>
+                <label v-for="r in answerSources" :key="r.id" class="check-row">
+                  <input
+                    type="checkbox"
+                    :checked="round.answersFor.includes(r.id)"
+                    @change="setAnswersFor(r.id, ($event.target as HTMLInputElement).checked)"
+                  />
+                  <span class="grow">
+                    {{ r.title }}
+                    <span class="menu-hint">{{ itemSummary(r) }}</span>
+                  </span>
+                </label>
+                <p v-if="missingAnswers" class="menu-note warn">
+                  Nog {{ missingAnswers }} zonder antwoord. Vul het in bij de vraag, de afbeelding
+                  of het fragment zelf.
+                </p>
+                <template v-if="chosenSources.length">
+                  <div class="menu-label">In beeld op</div>
+                  <label v-for="slot in quiz.screens" :key="slot.id" class="check-row">
+                    <input
+                      type="checkbox"
+                      :checked="round.fragmentScreens.includes(slot.id)"
+                      @change="
+                        setAnswerScreen(slot.id, ($event.target as HTMLInputElement).checked)
+                      "
+                    />
+                    <span>{{ slot.name }}</span>
+                  </label>
+                </template>
+              </div>
+            </Popover>
           </div>
         </div>
       </div>
@@ -257,6 +356,17 @@ const bgText = computed(() => {
   padding-bottom: 4px;
 }
 
+.hero-top {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: -8px;
+}
+
+.hero-top .danger {
+  color: var(--live);
+}
+
 .position {
   color: var(--muted);
   font-size: 13px;
@@ -289,6 +399,42 @@ const bgText = computed(() => {
   border-radius: 4px;
   background: var(--surface-4);
   color: var(--accent);
+}
+
+.answers-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.menu-note {
+  padding: 4px 10px 8px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.menu-note.warn {
+  color: var(--warn);
+}
+
+.menu-label {
+  padding: 10px 10px 4px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 0 10px;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.check-row:hover {
+  background: var(--surface-3);
 }
 
 .no-bg {

@@ -4,9 +4,19 @@
  */
 import type { Fragment, MediaAsset, Quiz, Round, ScreenContent, ShowState, Slide } from './types'
 import { autoplayCountdown } from './autoplay'
+import { answerSlides } from './factory'
 
 export type ScreenOverlay =
-  | { kind: 'fragment'; number: number; label: string }
+  /** `context`: de ronde van het fragment, in een antwoordenronde. */
+  | { kind: 'fragment'; number: number; label: string; context?: string }
+  /** Bij een fragment midden in beeld; bij een vraag of afbeelding eronder, die blijft zichtbaar. */
+  | {
+      kind: 'answer'
+      number: number
+      answer: string
+      context: string
+      placement: 'center' | 'bottom'
+    }
   /** Pauze tussen twee fragmenten. `remaining`: deel van de pauze dat nog over is (1 → 0). */
   | { kind: 'countdown'; seconds: number; nextNumber: number; remaining: number }
 
@@ -16,6 +26,8 @@ export interface ResolvedScreen {
   programContent: ScreenContent
   blackout: boolean
   slide: Slide | null
+  /** Nummer van de slide in zijn ronde (voor afbeeldingen), zie `slideNumber`. */
+  slideNumber: number | null
   overlay: ScreenOverlay | null
   /** Geluid van de video op de speakers van het scherm; null = stil. */
   sound: ResolvedSound | null
@@ -87,15 +99,30 @@ export function resolveScreen(
   const muted = !!round && !override && round.mutedScreens.includes(screenId)
 
   const candidate = round && state.slideIndex >= 0 ? round.slides[state.slideIndex] : undefined
-  const slide = candidate && slideTargets(candidate, screenId) ? candidate : null
+  // Zodra de antwoorden lopen, toont het antwoordscherm de vraag of afbeelding die aan de beurt
+  // is (of niets, bij een fragment) in plaats van de eigen slides.
+  const answering =
+    !!round && state.answer?.roundId === round.id && round.fragmentScreens.includes(screenId)
+  const item = answering && state.answer ? answerItems(quiz, round!)[state.answer.index] : null
+  const answerImage =
+    item?.answerImageAssetId && state.answer?.revealed ? answerImageSlide(item) : null
+  // Bij de antwoorden staat de vraag wél in beeld, ook als tijdens de ronde alleen het nummer stond.
+  const answerSlide = item?.slide?.numberOnly ? { ...item.slide, numberOnly: false } : item?.slide
+  const slide = answering
+    ? (answerImage ?? answerSlide ?? null)
+    : candidate && slideTargets(candidate, screenId)
+      ? candidate
+      : null
+  const shown = blackout ? null : slide
 
   const content = blackout ? BLACK : programContent
   return {
     content,
     programContent,
     blackout,
-    slide: blackout ? null : slide,
-    overlay: blackout || !round ? null : resolveOverlay(round, state, screenId, now),
+    slide: shown,
+    slideNumber: shown ? (item?.number ?? (round ? slideNumber(round, shown) : null)) : null,
+    overlay: blackout || !round ? null : resolveOverlay(quiz, round, state, screenId, now),
     sound: muted ? null : resolveSound(quiz, state, screenId, content)
   }
 }
@@ -131,12 +158,14 @@ export function screenHasSound(quiz: Quiz, screenId: string): boolean {
 }
 
 function resolveOverlay(
+  quiz: Quiz,
   round: Round,
   state: ShowState,
   screenId: string,
   now: number
 ): ScreenOverlay | null {
   if (!round.fragmentScreens.includes(screenId)) return null
+  if (state.answer?.roundId === round.id) return answerOverlay(quiz, round, state.answer)
   const ap = state.autoplay
   if (ap.status === 'idle' || ap.roundId !== round.id) return manualOverlay(round, state)
 
@@ -152,6 +181,118 @@ function resolveOverlay(
   const leftMs = ap.status === 'gap' ? ap.until - now : ap.remainingMs
   const remaining = gapMs > 0 ? Math.min(1, Math.max(0, leftMs / gapMs)) : 0
   return { kind: 'countdown', seconds, nextNumber: ap.nextIndex + 1, remaining }
+}
+
+/** Het antwoord met zijn eigen afbeelding: over het hele scherm, net als een afbeeldingsslide. */
+function answerImageSlide(item: AnswerItem): Slide {
+  return {
+    id: `${item.id}:antwoord`,
+    layout: 'image',
+    imageAssetId: item.answerImageAssetId,
+    targetScreens: 'all',
+    backdrop: { color: '#000000' }
+  }
+}
+
+/** Slides die in de loop van een ronde meedraaien: alles behalve titelslides. */
+export function loopIndices(round: Round): number[] {
+  return round.slides.flatMap((s, i) => (s.layout === 'title' ? [] : [i]))
+}
+
+/** Loopt de ronde op deze slide vanzelf door? Pas na de titel, en met minstens twee slides. */
+export function loopActive(round: Round | null, slideIndex: number): boolean {
+  if (!round?.slideLoopSeconds) return false
+  const indices = loopIndices(round)
+  return indices.length > 1 && indices.includes(slideIndex)
+}
+
+/** Volgende slide in de loop; na de laatste weer de eerste. */
+export function nextLoopSlide(round: Round, slideIndex: number): number {
+  const indices = loopIndices(round)
+  return indices[(indices.indexOf(slideIndex) + 1) % indices.length] ?? slideIndex
+}
+
+/** Nummer van een vraag-, nummer- of afbeeldingsslide in zijn ronde (titelslides tellen niet). */
+export function slideNumber(round: Round, slide: Slide): number | null {
+  const index = answerSlides(round).findIndex((s) => s.id === slide.id)
+  return index === -1 ? null : index + 1
+}
+
+/** Eén ding om in een antwoordenronde langs te lopen: een vraag, afbeelding of fragment. */
+export interface AnswerItem {
+  /** Slide- of fragment-id. */
+  id: string
+  /** De ronde waar het bij hoort. */
+  round: Round
+  /** Nummer in die ronde: vraag 2, afbeelding 2, fragment 2. */
+  number: number
+  noun: 'vraag' | 'afbeelding' | 'fragment'
+  answer: string
+  /** Vervangt bij het antwoord wat er in beeld stond. */
+  answerImageAssetId: string | undefined
+  slide: Slide | null
+  fragment: Fragment | null
+}
+
+/** Wat een antwoordenronde langsloopt, in de volgorde van de quiz: per ronde slides, dan fragmenten. */
+export function answerItems(quiz: Quiz, round: Round): AnswerItem[] {
+  return quiz.rounds
+    .filter((r) => r.id !== round.id && round.answersFor.includes(r.id))
+    .flatMap(roundItems)
+}
+
+/** De vragen, afbeeldingen en fragmenten van één ronde, genummerd zoals de teams ze zien. */
+export function roundItems(round: Round): AnswerItem[] {
+  return [
+    ...answerSlides(round).map((slide, i): AnswerItem => ({
+      id: slide.id,
+      round,
+      number: i + 1,
+      noun: slide.layout === 'image' ? 'afbeelding' : 'vraag',
+      answer: slide.answer?.trim() ?? '',
+      answerImageAssetId: slide.answerImageAssetId,
+      slide,
+      fragment: null
+    })),
+    ...round.fragments.map((fragment, i): AnswerItem => ({
+      id: fragment.id,
+      round,
+      number: i + 1,
+      noun: 'fragment',
+      answer: fragment.answer?.trim() ?? '',
+      answerImageAssetId: fragment.answerImageAssetId,
+      slide: null,
+      fragment
+    }))
+  ]
+}
+
+function answerOverlay(
+  quiz: Quiz,
+  round: Round,
+  answer: NonNullable<ShowState['answer']>
+): ScreenOverlay | null {
+  const item = answerItems(quiz, round)[answer.index]
+  if (!item) return null
+  const context = `${item.round.title}, ${item.noun} ${item.number}`
+  if (answer.revealed) {
+    return {
+      kind: 'answer',
+      number: item.number,
+      answer: item.answer || item.fragment?.label || '—',
+      context,
+      placement: item.slide || item.answerImageAssetId ? 'bottom' : 'center'
+    }
+  }
+  // Nog niet onthuld: een vraag of afbeelding staat zelf al in beeld, een fragment krijgt zijn nummer.
+  return item.fragment
+    ? {
+        kind: 'fragment',
+        number: item.number,
+        label: item.fragment.label,
+        context: item.round.title
+      }
+    : null
 }
 
 /** Handmatig gestart fragment: het nummer staat in beeld zolang het speelt. */
@@ -226,6 +367,12 @@ export function findAssetUsages(quiz: Quiz, assetId: string): string[] {
     if (round.slides.some((s) => s.imageAssetId === assetId)) {
       usages.push(`Ronde "${round.title}": slide`)
     }
+    if (
+      round.slides.some((s) => s.answerImageAssetId === assetId) ||
+      round.fragments.some((f) => f.answerImageAssetId === assetId)
+    ) {
+      usages.push(`Ronde "${round.title}": bij een antwoord`)
+    }
   }
   return usages
 }
@@ -257,7 +404,13 @@ export function findBrokenReferences(quiz: Quiz): string[] {
       checkAsset(f.assetId, `${where}, ${f.label}`)
       if (!channelIds.has(f.channelId)) problems.push(`${where}, ${f.label}: kanaal ontbreekt`)
     }
-    for (const s of round.slides) checkAsset(s.imageAssetId, `${where}, slide`)
+    for (const s of round.slides) {
+      checkAsset(s.imageAssetId, `${where}, slide`)
+      checkAsset(s.answerImageAssetId, `${where}, afbeelding bij antwoord`)
+    }
+    for (const f of round.fragments) {
+      checkAsset(f.answerImageAssetId, `${where}, ${f.label}, afbeelding bij antwoord`)
+    }
   }
   return problems
 }

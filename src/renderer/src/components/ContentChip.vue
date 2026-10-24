@@ -190,10 +190,6 @@ const soundNote = computed(() =>
   border-radius: 4px;
 }
 
-.chip.dimmed .chip-key {
-  color: var(--faint);
-}
-
 .body {
   display: flex;
   flex-direction: column;

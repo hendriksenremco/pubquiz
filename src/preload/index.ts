@@ -13,6 +13,7 @@ const api: PubquizApi = {
   openQuiz: (path) => ipcRenderer.invoke(IPC.openQuiz, path),
   importZip: () => ipcRenderer.invoke(IPC.importZip),
   exportZip: () => ipcRenderer.invoke(IPC.exportZip),
+  exportForm: (options) => ipcRenderer.invoke(IPC.exportForm, options),
   revealQuiz: (path) => ipcRenderer.invoke(IPC.revealQuiz, path),
   closeQuiz: () => ipcRenderer.invoke(IPC.closeQuiz),
   recentQuizzes: () => ipcRenderer.invoke(IPC.recentQuizzes),

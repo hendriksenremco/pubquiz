@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { mediaUrl } from '@shared/ipc'
 import { sameDisplayName } from '@shared/airplay'
-import { findBrokenReferences, screenHasSound } from '@shared/resolve'
+import { answerItems, findBrokenReferences, screenHasSound } from '@shared/resolve'
 import type { HardwareMapping, ScreenTarget } from '@shared/types'
 import StagePreview from '../../components/StagePreview.vue'
 import {
@@ -185,6 +185,14 @@ const problems = computed(() => {
       list.push({
         level: 'warning',
         text: `Kanaal “${c.name}”: uitgang niet gevonden (systeemstandaard wordt gebruikt)`
+      })
+    }
+  }
+  for (const r of quiz.value.rounds) {
+    if (answerItems(quiz.value, r).length && !r.fragmentScreens.length) {
+      list.push({
+        level: 'warning',
+        text: `Ronde “${r.title}”: kies bij Antwoorden op welk scherm ze in beeld komen`
       })
     }
   }

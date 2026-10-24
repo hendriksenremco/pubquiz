@@ -42,6 +42,8 @@ function makeQuiz(): Quiz {
         screens: {},
         mutedScreens: [],
         fragmentScreens: [],
+        answersFor: [],
+        slideLoopSeconds: null,
         slides: [
           {
             id: 's1',
@@ -68,6 +70,8 @@ function makeQuiz(): Quiz {
         screens: { beamer: { type: 'video', assetId: 'music' } },
         mutedScreens: [],
         fragmentScreens: ['beamer'],
+        answersFor: [],
+        slideLoopSeconds: null,
         slides: [],
         background: 'duck',
         fragments: [
@@ -82,6 +86,8 @@ function makeQuiz(): Quiz {
         screens: { tv: { type: 'black' } },
         mutedScreens: [],
         fragmentScreens: [],
+        answersFor: [],
+        slideLoopSeconds: null,
         slides: [],
         background: { replaceAssetId: 'bg2' },
         fragments: [],
@@ -219,6 +225,88 @@ describe('resolveScreen', () => {
     // Alleen op de gekozen schermen.
     expect(resolveScreen(quiz, playing, 'tv').overlay).toBeNull()
     expect(resolveScreen(quiz, gap, 'tv', 7_500).overlay).toBeNull()
+  })
+
+  it('loopt in een antwoordenronde de fragmenten van een eerdere ronde langs', () => {
+    const q = makeQuiz()
+    q.rounds.push({
+      ...q.rounds[0],
+      id: 'ans',
+      title: 'Antwoorden',
+      answersFor: ['r2'],
+      fragmentScreens: ['tv']
+    })
+    q.rounds[1].fragments[1].answer = 'Queen – Bohemian Rhapsody'
+    const answering = (index: number, revealed: boolean) =>
+      state({ activeRoundId: 'ans', slideIndex: 0, answer: { roundId: 'ans', index, revealed } })
+
+    expect(resolveScreen(q, answering(1, false), 'tv').overlay).toEqual({
+      kind: 'fragment',
+      number: 2,
+      label: 'Fragment 2',
+      context: 'Muziek'
+    })
+    expect(resolveScreen(q, answering(1, true), 'tv').overlay).toEqual({
+      kind: 'answer',
+      number: 2,
+      answer: 'Queen – Bohemian Rhapsody',
+      context: 'Muziek, fragment 2',
+      placement: 'center'
+    })
+    // Zonder antwoord valt hij terug op de naam van het fragment.
+    expect(resolveScreen(q, answering(0, true), 'tv').overlay).toMatchObject({
+      answer: 'Fragment 1'
+    })
+    // De titelslide maakt plaats op het antwoordscherm, niet op de andere schermen.
+    expect(resolveScreen(q, answering(1, true), 'tv').slide).toBeNull()
+    expect(resolveScreen(q, answering(1, true), 'beamer').slide?.id).toBe('s1')
+    expect(resolveScreen(q, answering(1, true), 'beamer').overlay).toBeNull()
+  })
+
+  it('loopt ook vragen en afbeeldingen langs: eerst de slide, dan het antwoord eronder', () => {
+    const q = makeQuiz()
+    q.rounds[0].slides[1].answer = 'Canberra'
+    q.rounds.push({
+      ...q.rounds[2],
+      id: 'ans',
+      title: 'Antwoorden',
+      answersFor: ['r1', 'r2'],
+      fragmentScreens: ['beamer']
+    })
+    const answering = (index: number, revealed: boolean) =>
+      state({ activeRoundId: 'ans', answer: { roundId: 'ans', index, revealed } })
+
+    // De vraag (in r1 alleen voor de TV) staat op het antwoordscherm, nog zonder antwoord. Ook
+    // als de ronde zelf alleen het nummer toonde: bij de antwoorden staat de vraag erbij.
+    q.rounds[0].slides[1].numberOnly = true
+    const question = resolveScreen(q, answering(0, false), 'beamer')
+    expect(question.slide?.id).toBe('s2')
+    expect(question.slide?.numberOnly).toBe(false)
+    expect(
+      resolveScreen(q, state({ activeRoundId: 'r1', slideIndex: 1 }), 'tv').slide?.numberOnly
+    ).toBe(true)
+    expect(question.slideNumber).toBe(1)
+    expect(question.overlay).toBeNull()
+
+    expect(resolveScreen(q, answering(0, true), 'beamer').overlay).toEqual({
+      kind: 'answer',
+      number: 1,
+      answer: 'Canberra',
+      context: 'Algemeen, vraag 1',
+      placement: 'bottom'
+    })
+    // Met een eigen afbeelding bij het antwoord vervangt die de vraag, het antwoord staat eronder.
+    q.rounds[0].slides[1].answerImageAssetId = 'logo'
+    expect(resolveScreen(q, answering(0, false), 'beamer').slide?.id).toBe('s2')
+    const withImage = resolveScreen(q, answering(0, true), 'beamer')
+    expect(withImage.slide).toMatchObject({ layout: 'image', imageAssetId: 'logo' })
+    expect(withImage.slideNumber).toBe(1)
+    expect(withImage.overlay).toMatchObject({ answer: 'Canberra', placement: 'bottom' })
+
+    // Daarna de fragmenten van de muziekronde: geen slide, wel het nummer.
+    const fragment = resolveScreen(q, answering(1, false), 'beamer')
+    expect(fragment.slide).toBeNull()
+    expect(fragment.overlay).toMatchObject({ kind: 'fragment', number: 1, context: 'Muziek' })
   })
 
   it('toont het nummer ook bij een handmatig gestart fragment, alleen op de gekozen schermen', () => {

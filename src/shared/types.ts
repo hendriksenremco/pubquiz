@@ -15,6 +15,7 @@ import type {
   SlideBackdropSchema,
   SlideSchema
 } from './quiz-schema'
+import type { AnswerState } from './answers'
 import type { AutoplayState } from './autoplay'
 
 export type MediaKind = z.infer<typeof MediaKindSchema>
@@ -53,6 +54,14 @@ export interface ShowState {
   fragment: PlayingFragment | null
   played: string[]
   autoplay: AutoplayState
+  /** Antwoordenronde die loopt: welk fragment en of het antwoord in beeld is. */
+  answer: AnswerState | null
+  /** Fragment-ids waarvan het antwoord al in beeld is geweest. */
+  answered: string[]
+  /** Wanneer de slide-loop de volgende slide toont; null = de loop loopt niet. */
+  loopUntil: number | null
+  /** Door de host gepauzeerd; geldt tot de volgende ronde. */
+  loopPaused: boolean
   /** Screen-slot ids die op zwart staan. */
   blackout: string[]
   backgroundEnabled: boolean

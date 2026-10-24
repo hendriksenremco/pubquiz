@@ -12,7 +12,6 @@ import type { MediaAsset, MediaKind } from '@shared/types'
 import Icon from '../../components/Icon.vue'
 import MediaThumb from '../../components/MediaThumb.vue'
 import MediaTile from '../../components/MediaTile.vue'
-import Popover from '../../components/Popover.vue'
 import { formatTime } from '../../lib/format'
 import { useMediaImport } from '../../lib/use-media-import'
 import { usePreviewPlayer } from '../../lib/use-preview-player'
@@ -80,8 +79,7 @@ async function newFolder() {
   folderTitle.value?.select()
 }
 
-function removeFolder(close: () => void) {
-  close()
+function removeFolder() {
   const f = folder.value
   if (!f || !confirm(`Map "${f.name}" verwijderen? De bestanden blijven in Media.`)) return
   deleteFolder(quiz.value, f.id)
@@ -161,18 +159,9 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
           aria-label="Naam van de map"
         />
         <span class="count">{{ plural(assetsIn(quiz, folder.id).length) }}</span>
-        <Popover :width="190">
-          <template #trigger="{ toggle }">
-            <button class="btn btn-ghost btn-sm btn-icon" aria-label="Meer" @click="toggle">
-              <Icon name="more" />
-            </button>
-          </template>
-          <template #default="{ close }">
-            <button class="menu-item danger" @click="removeFolder(close)">
-              <Icon name="trash" /> Verwijder map
-            </button>
-          </template>
-        </Popover>
+        <button class="btn btn-ghost btn-sm danger" @click="removeFolder">
+          <Icon name="trash" :size="14" /> Verwijder map
+        </button>
       </template>
       <h2 v-else>Media</h2>
 
@@ -255,30 +244,25 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
         <span class="name grow">{{ a.name }}</span>
         <span v-if="findAssetUsages(quiz, a.id).length" class="used">in gebruik</span>
         <span class="meta mono">{{ formatTime(a.duration) }}</span>
-        <Popover align="right" :width="200" class="sound-menu">
-          <template #trigger="{ toggle }">
-            <button class="btn btn-ghost btn-sm btn-icon" aria-label="Meer" @click="toggle">
-              <Icon name="more" />
-            </button>
-          </template>
-          <template #default="{ close }">
-            <div class="menu-label">Verplaats naar</div>
-            <button v-if="a.folderId" class="menu-item" @click="(close(), moveToFolder(a, null))">
-              <Icon name="images" /> Media (geen map)
-            </button>
-            <button
-              v-for="f in quiz.folders.filter((x) => x.id !== a.folderId)"
-              :key="f.id"
-              class="menu-item"
-              @click="(close(), moveToFolder(a, f.id))"
-            >
-              <Icon name="folder" /> {{ f.name }}
-            </button>
-            <button class="menu-item danger" @click="(close(), remove(a))">
-              <Icon name="trash" /> Verwijder uit quiz
-            </button>
-          </template>
-        </Popover>
+        <label v-if="quiz.folders.length" class="sound-folder" title="Map">
+          <Icon name="folder" :size="12" />
+          <select
+            :value="a.folderId ?? ''"
+            aria-label="Map"
+            @change="moveToFolder(a, ($event.target as HTMLSelectElement).value || null)"
+          >
+            <option value="">Geen map</option>
+            <option v-for="f in quiz.folders" :key="f.id" :value="f.id">{{ f.name }}</option>
+          </select>
+        </label>
+        <button
+          class="btn btn-ghost btn-sm btn-icon sound-remove"
+          aria-label="Verwijder uit quiz"
+          title="Verwijder uit quiz"
+          @click="remove(a)"
+        >
+          <Icon name="trash" :size="14" />
+        </button>
       </div>
     </section>
 
@@ -485,23 +469,34 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
   font-size: 12px;
 }
 
-.sound-menu {
-  visibility: hidden;
-}
-
-.sound:hover .sound-menu,
-.sound-menu:focus-within {
-  visibility: visible;
-}
-
-.menu-label {
-  padding: 4px 10px 6px;
+.sound-folder {
+  display: flex;
+  align-items: center;
+  gap: 5px;
   color: var(--muted);
   font-size: 12px;
 }
 
-.menu-item.danger {
-  margin-top: 4px;
+.sound-folder select {
+  max-width: 140px;
+  padding: 2px 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.sound-folder:hover {
+  color: var(--text);
+}
+
+.sound-remove {
+  color: var(--muted);
+}
+
+.sound-remove:hover,
+.head .danger {
   color: var(--live);
 }
 

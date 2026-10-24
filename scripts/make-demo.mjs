@@ -197,9 +197,17 @@ const quiz = {
           title: 'Vraag 1',
           body: 'Wat is de hoofdstad van Australië?',
           targetScreens: 'all',
-          backdrop: 'dim'
+          backdrop: 'dim',
+          answer: 'Canberra'
         },
-        { id: 'r1-s2', layout: 'number', title: '2', targetScreens: 'all', backdrop: 'over-video' }
+        {
+          id: 'r1-s2',
+          layout: 'number',
+          title: '2',
+          targetScreens: 'all',
+          backdrop: 'over-video',
+          answer: 'Mount Everest'
+        }
       ],
       background: 'continue',
       fragments: [],

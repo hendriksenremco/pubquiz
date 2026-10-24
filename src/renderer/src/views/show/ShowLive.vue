@@ -1,10 +1,14 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted } from 'vue'
 import type { ShowCommand } from '@shared/ipc'
-import { activeRound } from '@shared/resolve'
+import { answerSlides } from '@shared/factory'
+import { activeRound, answerItems, slideNumber } from '@shared/resolve'
+import { useNow } from '../../lib/use-now'
+import type { Round } from '@shared/types'
 import Icon from '../../components/Icon.vue'
 import ScreenStage from '../../components/ScreenStage.vue'
 import { useSession } from '../../stores/session'
+import AnswersPad from './AnswersPad.vue'
 import FragmentPad from './FragmentPad.vue'
 import Mixer from './Mixer.vue'
 
@@ -14,6 +18,38 @@ const quiz = computed(() => session.quiz!)
 const state = computed(() => session.state)
 const round = computed(() => activeRound(quiz.value, state.value))
 const send = (command: ShowCommand) => api.command(command)
+
+/** In een antwoordenronde bedienen ← → (en een presenter-clicker) de antwoorden in plaats van de slides. */
+const hasAnswers = computed(() => !!round.value && answerItems(quiz.value, round.value).length > 0)
+const step = (direction: 'next' | 'prev') =>
+  send(
+    hasAnswers.value
+      ? { type: 'answers', action: direction }
+      : { type: direction === 'next' ? 'nextSlide' : 'prevSlide' }
+  )
+
+// Slide-loop: de timer loopt in main; hier alleen tonen en pauzeren.
+const now = useNow(250, () => state.value.loopUntil !== null)
+const loopText = computed(() => {
+  if (!round.value?.slideLoopSeconds) return null
+  if (state.value.loopPaused) return 'Loop gepauzeerd'
+  const until = state.value.loopUntil
+  if (until === null) return 'Loop start na de titel'
+  return `Loop: volgende over ${Math.max(1, Math.ceil((until - now.value) / 1000))} s`
+})
+function toggleLoop() {
+  if (round.value?.slideLoopSeconds) send({ type: 'slideLoop', paused: !state.value.loopPaused })
+}
+
+function roundSub(r: Round): string {
+  const parts: string[] = []
+  const images = answerSlides(r).filter((s) => s.layout === 'image').length
+  if (images) parts.push(`${images} afbeeldingen`)
+  if (r.fragments.length) parts.push(`${r.fragments.length} fragmenten`)
+  if (answerItems(quiz.value, r).length) parts.push('antwoorden')
+  if (Object.keys(r.screens).length) parts.push('eigen scherm')
+  return parts.join(' · ')
+}
 
 const nextRound = computed(() => {
   const ref = state.value.activeRoundId ?? state.value.lastRoundId
@@ -50,17 +86,18 @@ function toggleAutoplay() {
 }
 
 const KEYS: Record<string, () => void> = {
-  ArrowRight: () => send({ type: 'nextSlide' }),
-  PageDown: () => send({ type: 'nextSlide' }),
-  ArrowLeft: () => send({ type: 'prevSlide' }),
-  PageUp: () => send({ type: 'prevSlide' }),
+  ArrowRight: () => step('next'),
+  PageDown: () => step('next'),
+  ArrowLeft: () => step('prev'),
+  PageUp: () => step('prev'),
   Enter: () => send({ type: 'nextRound' }),
   e: () => send({ type: 'endRound' }),
   ' ': () => send({ type: 'stopFragment' }),
   a: toggleAutoplay,
   s: () => send({ type: 'autoplay', action: 'skip' }),
   b: () => toggleBlackout(),
-  m: toggleSound
+  m: toggleSound,
+  l: toggleLoop
 }
 
 function onKey(event: KeyboardEvent) {
@@ -85,7 +122,7 @@ onMounted(() => window.addEventListener('keydown', onKey))
 onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 
 const SHORTCUTS: [string, string][] = [
-  ['← →', 'Vorige/volgende slide'],
+  ['← →', 'Vorige/volgende slide of antwoord'],
   ['Enter', 'Start volgende ronde'],
   ['E', 'Einde ronde'],
   ['1–9', 'Speel fragment'],
@@ -93,7 +130,8 @@ const SHORTCUTS: [string, string][] = [
   ['A', 'Reeks start/pauze'],
   ['S', 'Volgende in reeks'],
   ['B', 'Beeld op zwart / terug'],
-  ['M', 'Geluid uit / aan']
+  ['M', 'Geluid uit / aan'],
+  ['L', 'Loop van de slides pauzeren / verder']
 ]
 </script>
 
@@ -133,7 +171,9 @@ const SHORTCUTS: [string, string][] = [
           @click="send({ type: 'nextRound' })"
         >
           <Icon name="next" :size="14" />
-          <span class="next-label">{{ nextRound ? `Start ${nextRound.title}` : 'Laatste ronde' }}</span>
+          <span class="next-label">{{
+            nextRound ? `Start ${nextRound.title}` : 'Laatste ronde'
+          }}</span>
           <span class="kbd">⏎</span>
         </button>
       </div>
@@ -178,10 +218,7 @@ const SHORTCUTS: [string, string][] = [
           <span class="mono num">{{ i + 1 }}</span>
           <span class="grow">
             <span class="round-title">{{ r.title }}</span>
-            <span class="round-sub">
-              {{ r.fragments.length ? `${r.fragments.length} fragmenten` : '' }}
-              {{ Object.keys(r.screens).length ? '· eigen scherm' : '' }}
-            </span>
+            <span class="round-sub">{{ roundSub(r) }}</span>
           </span>
           <span v-if="r.id === state.activeRoundId" class="pill pill-live">nu</span>
           <span v-else-if="r.id === nextRound?.id" class="pill">volgende</span>
@@ -210,6 +247,15 @@ const SHORTCUTS: [string, string][] = [
         <section v-if="round && round.slides.length" class="card">
           <header class="card-head">
             <h3 class="grow">Slides</h3>
+            <span
+              v-if="loopText"
+              class="pill"
+              :class="state.loopPaused ? 'pill-warn' : 'pill-accent'"
+              >{{ loopText }}</span
+            >
+            <button v-if="loopText" class="btn btn-sm" @click="toggleLoop">
+              {{ state.loopPaused ? 'Loop verder' : 'Pauzeer loop' }} <span class="kbd">L</span>
+            </button>
             <button class="btn btn-sm btn-icon" @click="send({ type: 'prevSlide' })">←</button>
             <button class="btn btn-sm btn-icon" @click="send({ type: 'nextSlide' })">→</button>
           </header>
@@ -230,11 +276,16 @@ const SHORTCUTS: [string, string][] = [
               @click="send({ type: 'setSlide', index: i })"
             >
               <span class="slide-kind">{{ i + 1 }}</span>
-              <span class="slide-text">{{ s.title || s.body || '(leeg)' }}</span>
+              <span class="slide-text">{{
+                s.layout === 'image'
+                  ? `Afbeelding ${slideNumber(round, s)}${s.title ? `: ${s.title}` : ''}`
+                  : s.title || s.body || '(leeg)'
+              }}</span>
             </button>
           </div>
         </section>
 
+        <AnswersPad v-if="round && hasAnswers" :round="round" />
         <FragmentPad v-if="round && round.fragments.length" :round="round" />
 
         <div v-if="!round" class="between">

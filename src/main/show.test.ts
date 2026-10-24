@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { migrateQuiz } from '@shared/migrate'
 import { resolveScreen } from '@shared/resolve'
 import type { Quiz, ShowState } from '@shared/types'
@@ -157,5 +157,81 @@ describe('ShowController', () => {
     t.show.reconcile()
     expect(t.state.activeRoundId).toBeNull()
     expect(t.state.fragment).toBeNull()
+  })
+
+  it('speelt in een antwoordenronde elk fragment opnieuw en toont daarna het antwoord', () => {
+    const quiz: Quiz = structuredClone(demo)
+    quiz.rounds.push({
+      ...quiz.rounds[0],
+      id: 'ans',
+      title: 'Antwoorden',
+      answersFor: ['r2'],
+      fragmentScreens: ['beamer']
+    })
+    const t = setup(quiz)
+    t.show.handle({ type: 'startRound', roundId: 'ans' })
+    const beamer = () => resolveScreen(quiz, t.state, 'beamer').overlay
+
+    t.show.handle({ type: 'answers', action: 'next' })
+    expect(t.state.fragment).toMatchObject({ roundId: 'r2', fragmentId: 'r2-f1' })
+    expect(beamer()).toMatchObject({ kind: 'fragment', number: 1 })
+
+    t.show.handle({ type: 'answers', action: 'next' })
+    expect(t.state.fragment).toMatchObject({ fragmentId: 'r2-f1' })
+    expect(beamer()).toMatchObject({ kind: 'answer', answer: 'Antwoord 1' })
+    expect(t.state.answered).toEqual(['r2-f1'])
+
+    t.show.handle({ type: 'answers', action: 'next' })
+    expect(t.state.fragment).toMatchObject({ fragmentId: 'r2-f2' })
+
+    // Een andere ronde starten sluit de antwoorden af.
+    t.show.handle({ type: 'endRound' })
+    expect(t.state.answer).toBeNull()
+  })
+
+  it('laat de slides van een ronde eindeloos rondgaan, na de titel en tot je pauzeert', () => {
+    vi.useFakeTimers()
+    try {
+      const quiz: Quiz = structuredClone(demo)
+      const round = quiz.rounds[0]
+      round.slideLoopSeconds = 5
+      round.slides.push({ ...round.slides[1], id: 'extra', title: 'Vraag 3' })
+      const t = setup(quiz)
+      active = t.show
+      const wait = (ms: number) => {
+        t.advance(ms)
+        vi.advanceTimersByTime(ms)
+      }
+
+      // Op de titelslide wacht hij op de host.
+      t.show.handle({ type: 'startRound', roundId: 'r1' })
+      expect(t.state.slideIndex).toBe(0)
+      wait(6_000)
+      expect(t.state.slideIndex).toBe(0)
+
+      t.show.handle({ type: 'nextSlide' })
+      expect(t.state.slideIndex).toBe(1)
+      wait(5_000)
+      expect(t.state.slideIndex).toBe(2)
+      wait(5_000)
+      expect(t.state.slideIndex).toBe(3)
+      // Na de laatste weer de eerste na de titel.
+      wait(5_000)
+      expect(t.state.slideIndex).toBe(1)
+
+      t.show.handle({ type: 'slideLoop', paused: true })
+      wait(20_000)
+      expect(t.state.slideIndex).toBe(1)
+      t.show.handle({ type: 'slideLoop', paused: false })
+      wait(5_000)
+      expect(t.state.slideIndex).toBe(2)
+
+      // Een volgende ronde: geen loop meer, en de pauze vervalt.
+      t.show.handle({ type: 'endRound' })
+      expect(t.state.loopUntil).toBeNull()
+      expect(t.state.loopPaused).toBe(false)
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })

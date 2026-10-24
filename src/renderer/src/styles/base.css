@@ -390,6 +390,11 @@ input[type='radio'] {
   color: var(--faint);
 }
 
+/* Niets ingesteld (Standaard, geen, nergens): de waarde stapt terug. */
+.chip.dimmed .chip-key {
+  color: var(--faint);
+}
+
 .popover-panel {
   position: absolute;
   z-index: 40;

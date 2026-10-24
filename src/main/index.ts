@@ -2,6 +2,7 @@ import { app, BrowserWindow, dialog, ipcMain, session } from 'electron'
 import { join } from 'path'
 import { IPC, type AudioEngineEvent, type ShowCommand } from '@shared/ipc'
 import type { TemplateOptions } from '@shared/template'
+import type { FormOptions } from '@shared/forms'
 import type { HardwareMapping, Quiz } from '@shared/types'
 import { AppController } from './controller'
 import { handleMediaProtocol, registerMediaScheme } from './media-protocol'
@@ -105,6 +106,7 @@ function registerIpc(ctl: AppController): void {
   )
   ipcMain.handle(IPC.importZip, () => ctl.promptImportZip())
   ipcMain.handle(IPC.exportZip, () => ctl.promptExportZip())
+  ipcMain.handle(IPC.exportForm, (_e, options: FormOptions) => ctl.exportForm(options))
   ipcMain.handle(IPC.revealQuiz, (_e, path?: string) => ctl.revealQuiz(path))
   ipcMain.handle(IPC.closeQuiz, () => ctl.closeQuiz())
   ipcMain.handle(IPC.recentQuizzes, () => ctl.recentQuizzes())

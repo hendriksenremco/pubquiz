@@ -1,7 +1,8 @@
-import { BrowserWindow, dialog, shell, type Display } from 'electron'
+import { app, BrowserWindow, dialog, shell, type Display } from 'electron'
 import { promises as fs } from 'fs'
 import { basename, dirname, join } from 'path'
 import { newId } from '@shared/factory'
+import { formFileName, type FormOptions } from '@shared/forms'
 import {
   IPC,
   type AudioEngineEvent,
@@ -29,8 +30,10 @@ import {
   summarizeQuiz,
   writeQuiz
 } from './quiz-files'
+import { renderFormPdf } from './pdf'
 import { Settings, type RecoveryData } from './settings'
 import { ShowController } from './show'
+import { headless } from './windows'
 
 const SAVE_DELAY_MS = 600
 const RECOVERY_DELAY_MS = 1000
@@ -197,6 +200,31 @@ export class AppController {
       this.notify('info', `Geëxporteerd naar ${basename(result.filePath)}`)
     } catch (err) {
       this.notify('error', `Exporteren mislukt: ${(err as Error).message}`)
+    }
+  }
+
+  /** Antwoordformulier of antwoorden als pdf; standaard in Downloads, daarna open in Voorvertoning. */
+  async exportForm(options: FormOptions): Promise<void> {
+    if (!this.quiz) return
+    const name = formFileName(this.quiz, options.doc)
+    // Voor tests: zonder dialoog in een vaste map.
+    const fixedDir = process.env['PUBQUIZ_SAVE_DIR']
+    let target = fixedDir ? join(fixedDir, name) : null
+    if (!target) {
+      const result = await dialog.showSaveDialog(this.operator!, {
+        title: 'Pdf opslaan',
+        defaultPath: join(app.getPath('downloads'), name),
+        filters: [{ name: 'Pdf', extensions: ['pdf'] }]
+      })
+      if (result.canceled || !result.filePath) return
+      target = result.filePath
+    }
+    try {
+      await fs.writeFile(target, await renderFormPdf(options))
+      this.notify('info', `Opgeslagen: ${basename(target)}`)
+      if (!headless) void shell.openPath(target)
+    } catch (err) {
+      this.notify('error', `Pdf maken mislukt: ${(err as Error).message}`)
     }
   }
 

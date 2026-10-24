@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { createSlide } from '@shared/factory'
-import { findAsset } from '@shared/resolve'
-import type { Round, Slide } from '@shared/types'
-import AssetGrid from '../../components/AssetGrid.vue'
+import { computed, ref } from 'vue'
+import { createImageSlide, createSlide } from '@shared/factory'
+import { groupByFolder, naturalCompare } from '@shared/media-folders'
+import { loopIndices, slideNumber } from '@shared/resolve'
+import type { MediaAsset, Round, Slide } from '@shared/types'
 import Icon from '../../components/Icon.vue'
-import MediaThumb from '../../components/MediaThumb.vue'
+import ImageChip from '../../components/ImageChip.vue'
 import Popover from '../../components/Popover.vue'
 import SlideView from '../../components/SlideView.vue'
+import { useMediaImport } from '../../lib/use-media-import'
 import { useSession } from '../../stores/session'
 
 const props = defineProps<{ round: Round }>()
@@ -16,24 +17,77 @@ const session = useSession()
 const quiz = computed(() => session.quiz!)
 const screens = computed(() => quiz.value.screens)
 const slide = computed(() => props.round.slides[selected.value] ?? null)
+const { importFiles, pathsFromDrop } = useMediaImport()
+const dropping = ref(false)
 
 const LAYOUTS: { value: Slide['layout']; label: string }[] = [
   { value: 'title', label: 'Titel' },
   { value: 'question', label: 'Vraag' },
-  { value: 'number', label: 'Nummer' }
+  { value: 'number', label: 'Nummer' },
+  { value: 'image', label: 'Afbeelding' }
 ]
 
 function add(layout: Slide['layout'], close: () => void) {
   const n = props.round.slides.filter((s) => s.layout === layout).length + 1
+  // Een nieuwe vraag toont net als de vorige vraag de vraag zelf, of alleen het nummer.
+  const lastQuestion = props.round.slides.findLast((s) => s.layout === 'question')
   const next =
     layout === 'question'
-      ? createSlide('question', `Vraag ${n}`)
+      ? { ...createSlide('question', `Vraag ${n}`), numberOnly: lastQuestion?.numberOnly }
       : layout === 'number'
         ? createSlide('number', String(n))
-        : createSlide('title', props.round.title)
+        : layout === 'image'
+          ? createImageSlide()
+          : createSlide('title', props.round.title)
   props.round.slides.splice(selected.value + 1, 0, next)
   selected.value = selected.value + 1
   close()
+}
+
+function setNumberOnly(on: boolean, close: () => void) {
+  if (slide.value) slide.value.numberOnly = on || undefined
+  close()
+}
+
+// ── Loop: slides wisselen vanzelf, eindeloos ────────────────────────────────
+const DEFAULT_LOOP_SECONDS = 8
+const loopable = computed(() => loopIndices(props.round).length > 1)
+
+function setLoop(on: boolean) {
+  props.round.slideLoopSeconds = on ? DEFAULT_LOOP_SECONDS : null
+}
+
+function setLoopSeconds(event: Event) {
+  const value = Math.round(Number((event.target as HTMLInputElement).value))
+  if (Number.isFinite(value) && value >= 1) props.round.slideLoopSeconds = value
+}
+
+// ── Afbeeldingenronde: een reeks afbeeldingen in één keer ───────────────────
+function addImages(assets: MediaAsset[]) {
+  const images = assets.filter((a) => a.kind === 'image')
+  if (!images.length) return
+  const first = props.round.slides.length
+  props.round.slides.push(...images.map((a) => createImageSlide(a.id)))
+  selected.value = first
+}
+
+async function addImagesFromFiles(close: () => void) {
+  close()
+  addImages(await importFiles())
+}
+
+/** Media-mappen met afbeeldingen, om in één keer als slides toe te voegen. */
+const imageFolders = computed(() => groupByFolder(quiz.value, ['image']).filter((g) => g.folder))
+
+function addImageFolder(assets: MediaAsset[], close: () => void) {
+  close()
+  addImages([...assets].sort((a, b) => naturalCompare(a.name, b.name)))
+}
+
+async function onDrop(event: DragEvent) {
+  dropping.value = false
+  const paths = pathsFromDrop(event)
+  if (paths.length) addImages(await importFiles(paths))
 }
 
 function move(delta: number) {
@@ -65,13 +119,6 @@ function setBackdrop(s: Slide, kind: BackdropKind) {
   s.backdrop = kind === 'color' ? { color: '#1d2433' } : kind
 }
 
-const image = computed(() => findAsset(quiz.value, slide.value?.imageAssetId))
-
-function clearImage(close: () => void) {
-  if (slide.value) slide.value.imageAssetId = undefined
-  close()
-}
-
 function targets(s: Slide, screenId: string): boolean {
   return s.targetScreens === 'all' || s.targetScreens.includes(screenId)
 }
@@ -94,10 +141,62 @@ function targetText(s: Slide): string {
 </script>
 
 <template>
-  <section>
+  <section
+    class="slides"
+    :class="{ dropping }"
+    @dragover.prevent="dropping = true"
+    @dragleave.self="dropping = false"
+    @drop.prevent.stop="onDrop"
+  >
     <div class="section-head">
       <h3>Slides</h3>
       <span class="count">{{ round.slides.length || '' }}</span>
+      <span class="grow" />
+
+      <Popover v-if="loopable" align="right" :width="290">
+        <template #trigger="{ open, toggle }">
+          <button
+            type="button"
+            class="chip loop-chip"
+            :class="{ open, dimmed: !round.slideLoopSeconds }"
+            @click="toggle"
+          >
+            <Icon name="repeat" :size="14" />
+            <span>Loop</span>
+            <span class="chip-key chip-value">{{
+              round.slideLoopSeconds ? `elke ${round.slideLoopSeconds} s` : 'uit'
+            }}</span>
+            <Icon name="chevron" :size="14" class="chev" />
+          </button>
+        </template>
+        <div class="loop-menu">
+          <label class="loop-row">
+            <input
+              type="checkbox"
+              :checked="!!round.slideLoopSeconds"
+              @change="setLoop(($event.target as HTMLInputElement).checked)"
+            />
+            <span>Slides vanzelf laten wisselen</span>
+          </label>
+          <label v-if="round.slideLoopSeconds" class="loop-row">
+            <span class="grow">Elke</span>
+            <input
+              :value="round.slideLoopSeconds"
+              type="number"
+              min="1"
+              step="1"
+              class="input input-sm loop-seconds"
+              aria-label="Seconden per slide"
+              @change="setLoopSeconds"
+            />
+            <span class="muted">seconden</span>
+          </label>
+          <p class="muted loop-hint">
+            Begint zodra je de eerste slide na de titel toont. Na de laatste komt de eerste weer,
+            tot je de ronde beëindigt. Live kun je hem pauzeren.
+          </p>
+        </div>
+      </Popover>
     </div>
 
     <div class="strip">
@@ -111,11 +210,11 @@ function targetText(s: Slide): string {
         @click="selected = selected === i ? -1 : i"
       >
         <span class="thumb-stage" :class="{ video: typeof s.backdrop !== 'object' }">
-          <SlideView :slide="s" :quiz="quiz" />
+          <SlideView :slide="s" :quiz="quiz" :number="slideNumber(round, s)" />
         </span>
       </button>
 
-      <Popover :width="200">
+      <Popover :width="240">
         <template #trigger="{ toggle }">
           <button type="button" class="thumb add" aria-label="Slide toevoegen" @click="toggle">
             <Icon name="plus" :size="20" />
@@ -129,6 +228,20 @@ function targetText(s: Slide): string {
             @click="add(l.value, close)"
           >
             {{ l.label }}
+          </button>
+          <div class="menu-label">Meerdere afbeeldingen</div>
+          <button class="menu-item" @click="addImagesFromFiles(close)">
+            <Icon name="upload" /> Bestanden of map…
+          </button>
+          <button
+            v-for="g in imageFolders"
+            :key="g.folder!.id"
+            class="menu-item"
+            @click="addImageFolder(g.assets, close)"
+          >
+            <Icon name="folder" />
+            <span class="grow">{{ g.folder!.name }}</span>
+            <span class="muted">{{ g.assets.length }}</span>
           </button>
         </template>
       </Popover>
@@ -178,19 +291,75 @@ function targetText(s: Slide): string {
         v-model="slide.title"
         class="quiet slide-title"
         :placeholder="
-          slide.layout === 'number' ? 'Nummer' : slide.layout === 'question' ? 'Vraag 1' : 'Titel'
+          slide.layout === 'number'
+            ? 'Nummer'
+            : slide.layout === 'question'
+              ? 'Vraag 1'
+              : slide.layout === 'image'
+                ? 'Bijschrift (mag leeg)'
+                : 'Titel'
         "
         aria-label="Titel"
       />
       <textarea
+        v-if="slide.layout !== 'image'"
         v-model="slide.body"
         class="quiet slide-body"
         rows="2"
-        :placeholder="slide.layout === 'question' ? 'Vraagtekst' : 'Ondertitel'"
+        :placeholder="
+          slide.layout !== 'question'
+            ? 'Ondertitel'
+            : slide.numberOnly
+              ? 'Vraagtekst, alleen voor jou (en de pdf)'
+              : 'Vraagtekst'
+        "
         aria-label="Tekst"
       />
 
+      <div v-if="slide.layout !== 'title'" class="answer-row">
+        <span class="muted">Antwoord</span>
+        <input
+          v-model="slide.answer"
+          class="input input-sm grow"
+          placeholder="Voor de antwoordenronde"
+          aria-label="Antwoord"
+        />
+        <ImageChip v-model="slide.answerImageAssetId" label="Met afbeelding" />
+      </div>
+
       <div class="options">
+        <Popover v-if="slide.layout === 'question'" :width="250">
+          <template #trigger="{ open, toggle }">
+            <button type="button" class="chip small shown-chip" :class="{ open }" @click="toggle">
+              <span class="chip-key">In beeld</span>
+              <span class="chip-value">{{
+                slide.numberOnly ? 'alleen het nummer' : 'de vraag'
+              }}</span>
+              <Icon name="chevron" :size="13" class="chev" />
+            </button>
+          </template>
+          <template #default="{ close }">
+            <button
+              class="menu-item"
+              :class="{ on: !slide.numberOnly }"
+              @click="setNumberOnly(false, close)"
+            >
+              <span class="grow">De vraag</span>
+              <Icon v-if="!slide.numberOnly" name="check" />
+            </button>
+            <button
+              class="menu-item"
+              :class="{ on: slide.numberOnly }"
+              @click="setNumberOnly(true, close)"
+            >
+              <span class="grow">
+                Alleen het nummer
+                <span class="menu-hint">Jij leest de vraag voor</span>
+              </span>
+              <Icon v-if="slide.numberOnly" name="check" />
+            </button>
+          </template>
+        </Popover>
         <Popover :width="220">
           <template #trigger="{ open, toggle }">
             <button type="button" class="chip small" :class="{ open }" @click="toggle">
@@ -217,30 +386,11 @@ function targetText(s: Slide): string {
           </label>
         </Popover>
 
-        <Popover v-if="slide.layout !== 'number'" :width="380">
-          <template #trigger="{ open, toggle }">
-            <button
-              type="button"
-              class="chip small"
-              :class="{ open }"
-              :title="image ? `Afbeelding: ${image.name}` : undefined"
-              @click="toggle"
-            >
-              <MediaThumb v-if="image" :asset="image" class="opt-thumb" />
-              <span class="chip-key">Afbeelding</span>
-              <span class="chip-value">{{
-                image ? image.name.replace(/\.[^.]+$/, '') : 'geen'
-              }}</span>
-              <Icon name="chevron" :size="13" class="chev" />
-            </button>
-          </template>
-          <template #default="{ close }">
-            <AssetGrid v-model="slide.imageAssetId" kind="image" @picked="close" />
-            <button v-if="slide.imageAssetId" class="menu-item clear" @click="clearImage(close)">
-              <Icon name="x" /> Geen afbeelding
-            </button>
-          </template>
-        </Popover>
+        <ImageChip
+          v-if="slide.layout !== 'number'"
+          v-model="slide.imageAssetId"
+          label="Afbeelding"
+        />
 
         <Popover v-if="screens.length > 1" :width="220">
           <template #trigger="{ open, toggle }">
@@ -370,6 +520,49 @@ function targetText(s: Slide): string {
   line-height: 1.45;
 }
 
+.loop-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.loop-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 0 10px;
+}
+
+.loop-seconds {
+  width: 64px;
+}
+
+.loop-hint {
+  padding: 4px 10px 6px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.answer-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 4px 0 2px;
+  font-size: 13px;
+}
+
+.slides.dropping .strip {
+  border-radius: var(--radius);
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.menu-label {
+  padding: 8px 10px 4px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
 .options {
   display: flex;
   flex-wrap: wrap;
@@ -384,12 +577,6 @@ function targetText(s: Slide): string {
   font-size: 12px;
 }
 
-.opt-thumb {
-  width: 26px;
-  height: 16px;
-  margin-left: -4px;
-}
-
 .color-row {
   padding: 6px 10px;
 }
@@ -401,9 +588,5 @@ function targetText(s: Slide): string {
   border: 0;
   border-radius: 6px;
   background: none;
-}
-
-.clear {
-  margin-top: 6px;
 }
 </style>

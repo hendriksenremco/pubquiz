@@ -81,9 +81,7 @@ test('toont mappen en maakt een nieuwe map', async () => {
 
 test('verplaatst een bestand naar een map', async () => {
   const row = operator.locator('.sound', { hasText: 'background-break.m4a' })
-  await row.hover()
-  await row.getByRole('button', { name: 'Meer' }).click()
-  await operator.locator('.popover-panel').getByRole('button', { name: 'Pauzemuziek' }).click()
+  await row.getByLabel('Map').selectOption({ label: 'Pauzemuziek' })
   await expect(row).toHaveCount(0)
 
   await operator.locator('.folder', { hasText: 'Pauzemuziek' }).click()

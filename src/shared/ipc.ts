@@ -1,4 +1,5 @@
 import type { AirPlayDevice } from './airplay'
+import type { FormOptions } from './forms'
 import type { TemplateOptions } from './template'
 import type { DisplayInfo, HardwareMapping, MediaAsset, Notice, Quiz, ShowState } from './types'
 
@@ -14,6 +15,11 @@ export type ShowCommand =
   | { type: 'playFragment'; fragmentId: string }
   | { type: 'stopFragment' }
   | { type: 'autoplay'; action: AutoplayAction }
+  /** Antwoordenronde: volgende/vorige stap, of stoppen. */
+  | { type: 'answers'; action: 'next' | 'prev' | 'stop' }
+  | { type: 'answerAt'; index: number }
+  /** Slide-loop van de ronde pauzeren of laten doorgaan. */
+  | { type: 'slideLoop'; paused: boolean }
   /** `id`: een audiokanaal of een scherm (videogeluid). */
   | { type: 'setVolume'; id: string; volume: number }
   | { type: 'toggleBackground' }
@@ -83,6 +89,8 @@ export interface PubquizApi {
   openQuiz(path?: string): Promise<void>
   importZip(): Promise<void>
   exportZip(): Promise<void>
+  /** Antwoordformulier of antwoorden als pdf opslaan; daarna opent hij. */
+  exportForm(options: FormOptions): Promise<void>
   revealQuiz(path?: string): Promise<void>
   closeQuiz(): Promise<void>
   recentQuizzes(): Promise<RecentQuiz[]>
@@ -120,6 +128,7 @@ export const IPC = {
   openQuiz: 'pq:open-quiz',
   importZip: 'pq:import-zip',
   exportZip: 'pq:export-zip',
+  exportForm: 'pq:export-form',
   revealQuiz: 'pq:reveal-quiz',
   closeQuiz: 'pq:close-quiz',
   recentQuizzes: 'pq:recent-quizzes',
