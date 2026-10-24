@@ -46,6 +46,9 @@ function tourSource(): string | null {
 app.whenReady().then(async () => {
   // Headless (tests): geen Dock-icoon en nooit de focus afpakken.
   if (headless && process.platform === 'darwin') app.setActivationPolicy('accessory')
+  // Tijdens het ontwikkelen draait de Electron-binary en toont de Dock diens icoon; de gebouwde app
+  // haalt het icoon uit build/icon.icns.
+  else if (!app.isPackaged) app.dock?.setIcon(join(__dirname, '../../resources/icon.png'))
   configurePermissions(session.defaultSession, process.env['ELECTRON_RENDERER_URL'])
 
   const settings = await Settings.load(app.getPath('userData'))
