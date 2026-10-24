@@ -8,9 +8,9 @@ import { usePreviewPlayer } from '../lib/use-preview-player'
 import { useSession } from '../stores/session'
 import Icon from './Icon.vue'
 
-/** Video of afbeelding in de mediabibliotheek; video's zijn hier af te spelen. */
+/** Video of afbeelding in de mediabibliotheek; video's zijn hier af te spelen, alles groot te bekijken. */
 const props = defineProps<{ asset: MediaAsset }>()
-const emit = defineEmits<{ move: [folderId: string | null]; remove: [] }>()
+const emit = defineEmits<{ move: [folderId: string | null]; remove: []; preview: [] }>()
 
 const session = useSession()
 const preview = usePreviewPlayer()
@@ -48,7 +48,7 @@ function onDragStart(event: DragEvent) {
 
 <template>
   <figure class="tile-item" draggable="true" :title="asset.name" @dragstart="onDragStart">
-    <div class="frame" :class="{ playing }">
+    <div class="frame" :class="{ playing }" @click="emit('preview')">
       <video
         v-if="asset.kind === 'video'"
         ref="video"
@@ -64,9 +64,12 @@ function onDragStart(event: DragEvent) {
         v-if="asset.kind === 'video'"
         class="play"
         :aria-label="playing ? 'Stop voorbeeld' : 'Speel voorbeeld'"
-        @click="toggle"
+        @click.stop="toggle"
       >
         <Icon :name="playing ? 'stop' : 'play'" :size="16" />
+      </button>
+      <button class="look" aria-label="Voorbeeld" title="Voorbeeld" @click.stop="emit('preview')">
+        <Icon name="eye" :size="16" />
       </button>
     </div>
     <button
@@ -113,6 +116,10 @@ function onDragStart(event: DragEvent) {
   background: var(--surface-2);
 }
 
+.frame {
+  cursor: zoom-in;
+}
+
 .frame.playing {
   box-shadow: 0 0 0 2px var(--accent);
 }
@@ -125,7 +132,8 @@ function onDragStart(event: DragEvent) {
   display: block;
 }
 
-.play {
+.play,
+.look {
   position: absolute;
   left: 10px;
   bottom: 10px;
@@ -140,8 +148,14 @@ function onDragStart(event: DragEvent) {
   cursor: pointer;
 }
 
+.look {
+  left: auto;
+  right: 10px;
+}
+
 .frame.playing .play,
-.play:hover {
+.play:hover,
+.look:hover {
   background: var(--accent);
   color: var(--accent-ink);
 }

@@ -10,6 +10,7 @@ import {
 import { findAssetUsages } from '@shared/resolve'
 import type { MediaAsset, MediaKind } from '@shared/types'
 import Icon from '../../components/Icon.vue'
+import MediaPreview from '../../components/MediaPreview.vue'
 import MediaThumb from '../../components/MediaThumb.vue'
 import MediaTile from '../../components/MediaTile.vue'
 import { formatTime } from '../../lib/format'
@@ -27,6 +28,7 @@ const filter = ref<MediaKind | 'all'>('all')
 const openFolderId = ref<string | null>(null)
 const folderTitle = ref<HTMLInputElement | null>(null)
 const dropFolder = ref<string | null>(null)
+const previewId = ref<string | null>(null)
 
 const FILTERS: { value: MediaKind | 'all'; label: string }[] = [
   { value: 'all', label: 'Alles' },
@@ -44,6 +46,8 @@ const matches = (a: MediaAsset) => filter.value === 'all' || a.kind === filter.v
 const here = computed(() => assetsIn(quiz.value, openFolderId.value).filter(matches))
 const visual = computed(() => here.value.filter((a) => a.kind !== 'audio'))
 const sounds = computed(() => here.value.filter((a) => a.kind === 'audio'))
+/** Bladeren in het grote voorbeeld: in dezelfde volgorde als op de pagina. */
+const shown = computed(() => [...visual.value, ...sounds.value])
 
 const folderTiles = computed(() =>
   openFolderId.value
@@ -222,6 +226,7 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
         :asset="a"
         @move="moveToFolder(a, $event)"
         @remove="remove(a)"
+        @preview="previewId = a.id"
       />
     </section>
 
@@ -256,6 +261,14 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
           </select>
         </label>
         <button
+          class="btn btn-ghost btn-sm btn-icon sound-look"
+          aria-label="Voorbeeld"
+          title="Voorbeeld"
+          @click="previewId = a.id"
+        >
+          <Icon name="eye" :size="14" />
+        </button>
+        <button
           class="btn btn-ghost btn-sm btn-icon sound-remove"
           aria-label="Verwijder uit quiz"
           title="Verwijder uit quiz"
@@ -269,6 +282,8 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
     <p class="tip faint">
       Soepelste loops: H.264- of HEVC-video met “faststart” en zonder geluidsspoor.
     </p>
+
+    <MediaPreview v-if="previewId" v-model:id="previewId" :items="shown" />
   </div>
 </template>
 
@@ -491,6 +506,7 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
   color: var(--text);
 }
 
+.sound-look,
 .sound-remove {
   color: var(--muted);
 }

@@ -112,6 +112,58 @@ test('speelt een video af als voorbeeld', async () => {
   await operator.locator('.crumb').click()
 })
 
+test('toont een bestand groot als voorbeeld en bladert verder', async () => {
+  await operator.locator('.folder', { hasText: 'Loops' }).click()
+  const names = await operator.locator('.tile-item .name').allTextContents()
+  expect(names).toHaveLength(3)
+  const tile = operator.locator('.tile-item').first()
+  await tile.getByRole('button', { name: 'Speel voorbeeld' }).click()
+
+  // Het grote voorbeeld neemt het over: de tegel stopt, het voorbeeld speelt met geluid.
+  await tile.getByRole('button', { name: 'Voorbeeld', exact: true }).click()
+  const dialog = operator.getByRole('dialog')
+  await expect(dialog).toHaveAccessibleName(`Voorbeeld: ${names[0]}`)
+  await expect(tile.locator('.frame')).not.toHaveClass(/playing/)
+  await expect
+    .poll(() => dialog.locator('video').evaluate((v: HTMLVideoElement) => v.paused))
+    .toBe(false)
+  await expect(dialog.locator('.meta')).toContainText(/\d+ × \d+/)
+  await expect(dialog.locator('.usages')).toContainText('Standaard van scherm "Beamer"')
+  await expect(dialog.locator('.count')).toHaveText('1 van 3')
+  await operator.waitForTimeout(700) // gloed laten infaden voor de screenshot
+  await operator.screenshot({ path: 'test-results/media-preview.png' })
+
+  await operator.keyboard.press('ArrowRight')
+  await expect(dialog).toHaveAccessibleName(`Voorbeeld: ${names[1]}`)
+  await operator.keyboard.press('ArrowLeft')
+  await operator.keyboard.press('ArrowLeft')
+  await expect(dialog).toHaveAccessibleName(`Voorbeeld: ${names[2]}`)
+  await operator.keyboard.press('Escape')
+  await expect(dialog).toHaveCount(0)
+
+  // In de hoofdmap: eerst de afbeelding (klik op de tegel), dan het geluid.
+  await operator.locator('.crumb').click()
+  await operator.locator('.tile-item .frame').first().click()
+  await expect(dialog).toHaveAccessibleName('Voorbeeld: logo.png')
+  await expect(dialog.locator('.meta')).toContainText(/Afbeelding.*\d+ × \d+/)
+  await dialog.getByRole('button', { name: 'Volgende' }).click()
+  await expect(dialog).toHaveAccessibleName('Voorbeeld: background.m4a')
+  await expect
+    .poll(() => dialog.locator('audio').evaluate((a: HTMLAudioElement) => a.paused))
+    .toBe(false)
+  await operator.screenshot({ path: 'test-results/media-preview-sound.png' })
+  await dialog.getByRole('button', { name: 'Sluiten' }).click()
+  await expect(dialog).toHaveCount(0)
+
+  // De knop staat ook bij elk geluid in de lijst.
+  await operator
+    .locator('.sound', { hasText: 'background.m4a' })
+    .getByRole('button', { name: 'Voorbeeld', exact: true })
+    .click()
+  await expect(dialog).toHaveAccessibleName('Voorbeeld: background.m4a')
+  await operator.keyboard.press('Escape')
+})
+
 test('voegt een hele Media-map als fragmenten toe aan een ronde', async () => {
   await operator.getByRole('button', { name: 'Ronde toevoegen' }).click()
   await operator.getByRole('button', { name: /^Muziekronde/ }).click()
