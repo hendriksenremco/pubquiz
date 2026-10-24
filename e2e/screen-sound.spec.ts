@@ -65,7 +65,10 @@ test('kiest bij Show waar het videogeluid heen gaat', async () => {
   await useWindowedScreens(operator)
   const beamer = operator.locator('.screen').first()
   await expect(beamer.getByText('Videogeluid via')).toBeVisible()
-  await expect(beamer.locator('select.sound-target')).toHaveValue('auto')
+  await expect(beamer.locator('.sound-target [role="combobox"]')).toHaveAttribute(
+    'data-value',
+    'auto'
+  )
   // De TV toont alleen een afbeelding: geen geluidskeuze.
   await expect(operator.locator('.screen').nth(1).getByText('Videogeluid via')).toHaveCount(0)
   await operator.screenshot({ path: 'test-results/screen-sound-prepare.png' })

@@ -8,6 +8,7 @@ import Icon from '../../components/Icon.vue'
 import ImageChip from '../../components/ImageChip.vue'
 import MediaPicker from '../../components/MediaPicker.vue'
 import Popover from '../../components/Popover.vue'
+import Select from '../../components/Select.vue'
 import TimeInput from '../../components/TimeInput.vue'
 import { formatTime } from '../../lib/format'
 import { useMediaImport } from '../../lib/use-media-import'
@@ -264,9 +265,11 @@ function numberFrom(event: Event, fallback: number): number {
           </label>
           <label class="field wide">
             <span class="label">Kanaal</span>
-            <select v-model="f.channelId" class="select input-sm">
-              <option v-for="c in quiz.channels" :key="c.id" :value="c.id">{{ c.name }}</option>
-            </select>
+            <Select
+              v-model="f.channelId"
+              size="sm"
+              :options="quiz.channels.map((c) => ({ value: c.id, label: c.name }))"
+            />
           </label>
           <label class="field">
             <span class="label">Start</span>

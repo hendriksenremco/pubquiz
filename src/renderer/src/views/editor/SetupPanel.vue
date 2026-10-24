@@ -7,6 +7,7 @@ import ContentChip from '../../components/ContentChip.vue'
 import Icon from '../../components/Icon.vue'
 import MediaPicker from '../../components/MediaPicker.vue'
 import PageHero from '../../components/PageHero.vue'
+import Select from '../../components/Select.vue'
 import StagePreview from '../../components/StagePreview.vue'
 import { useAmbient } from '../../lib/ambient'
 import { ask } from '../../lib/confirm'
@@ -208,14 +209,13 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
                 </label>
                 <div class="bg-foot">
                   <span class="muted">Via</span>
-                  <select
+                  <Select
                     v-model="quiz.background.channelId"
-                    class="select input-sm channel-select"
-                  >
-                    <option v-for="c in quiz.channels" :key="c.id" :value="c.id">
-                      {{ c.name }}
-                    </option>
-                  </select>
+                    size="sm"
+                    class="channel-select"
+                    aria-label="Kanaal van de achtergrondmuziek"
+                    :options="quiz.channels.map((c) => ({ value: c.id, label: c.name }))"
+                  />
                   <span class="grow" />
                   <button class="btn btn-ghost btn-sm" @click="quiz.background = null">
                     Verwijder

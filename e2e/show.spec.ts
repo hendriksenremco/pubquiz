@@ -68,6 +68,21 @@ test('bereidt de show voor met schermen als venster', async () => {
   await expect(operator.getByRole('heading', { name: 'Show voorbereiden' })).toBeVisible()
   await useWindowedScreens(operator)
   await operator.screenshot({ path: 'test-results/show-prepare.png' })
+
+  // De keuzelijst werkt ook met het toetsenbord: openen, bladeren, Escape laat alles staan.
+  const target = operator.locator('.screen .screen-target [role="combobox"]').first()
+  await target.focus()
+  await operator.keyboard.press('Enter')
+  const list = operator.getByRole('listbox')
+  await expect(list.getByRole('option', { name: /Venster op deze laptop/ })).toBeFocused()
+  await operator.keyboard.press('ArrowUp')
+  await expect(list.getByRole('option', { name: 'Uit' })).toBeFocused()
+  await operator.waitForTimeout(200)
+  await operator.screenshot({ path: 'test-results/select-open.png' })
+  await operator.keyboard.press('Escape')
+  await expect(list).toHaveCount(0)
+  await expect(target).toBeFocused()
+  await expect(target).toHaveAttribute('data-value', 'window')
 })
 
 test('wisselt scherm tijdens een ronde en valt daarna terug', async () => {

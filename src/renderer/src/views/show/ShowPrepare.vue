@@ -4,6 +4,7 @@ import { mediaUrl } from '@shared/ipc'
 import { sameDisplayName } from '@shared/airplay'
 import { answerItems, findBrokenReferences, screenHasSound } from '@shared/resolve'
 import type { HardwareMapping, ScreenTarget } from '@shared/types'
+import Select, { type SelectOption } from '../../components/Select.vue'
 import StagePreview from '../../components/StagePreview.vue'
 import {
   listAudioOutputs,
@@ -68,6 +69,23 @@ function screenValue(target: ScreenTarget | undefined): string {
   return airplay ? `ap:${airplay.name}` : 'missing'
 }
 
+function screenOptions(slotId: string): SelectOption[] {
+  const target = session.hardware.screens[slotId] as { label?: string } | undefined
+  return [
+    { value: 'off', label: 'Uit' },
+    { value: 'window', label: 'Venster op deze laptop (om te testen)' },
+    ...(screenValue(session.hardware.screens[slotId]) === 'missing'
+      ? [{ value: 'missing', label: `${target?.label} (niet aangesloten)`, disabled: true }]
+      : []),
+    ...session.displays.map((d) => ({ value: `d:${d.id}`, label: displayName(d) })),
+    ...airplayScreens.value.map((a) => ({
+      value: `ap:${a.name}`,
+      label: a.name,
+      group: 'AirPlay in de buurt'
+    }))
+  ]
+}
+
 function setScreen(slotId: string, value: string) {
   let target: ScreenTarget = { kind: 'off' }
   if (value === 'window') target = { kind: 'window' }
@@ -102,6 +120,23 @@ function audioValue(channelId: string): string {
   return sink === '' ? 'default' : sink
 }
 
+function audioOptions(channelId: string): SelectOption[] {
+  if (!outputs.value.length)
+    return [{ value: 'default', label: 'Uitgangen laden…', disabled: true }]
+  return [
+    ...(audioValue(channelId) === 'missing'
+      ? [
+          {
+            value: 'missing',
+            label: `${session.hardware.audio[channelId]?.label} (niet gevonden)`,
+            disabled: true
+          }
+        ]
+      : []),
+    ...outputs.value.map((o) => ({ value: o.deviceId, label: outputLabel(o.label) }))
+  ]
+}
+
 function setAudio(channelId: string, deviceId: string) {
   const output = outputs.value.find((o) => o.deviceId === deviceId)
   const target = { deviceId, label: output?.label ?? 'Systeemstandaard' }
@@ -133,6 +168,22 @@ function autoLabel(slotId: string): string {
   return output
     ? `Speakers van het scherm (${output.label})`
     : 'Speakers van het scherm (niet gevonden)'
+}
+
+function soundOptions(slotId: string): SelectOption[] {
+  return [
+    { value: 'auto', label: autoLabel(slotId) },
+    ...(soundValue(slotId) === 'missing'
+      ? [
+          {
+            value: 'missing',
+            label: `${session.hardware.screenSound[slotId]?.label} (niet gevonden)`,
+            disabled: true
+          }
+        ]
+      : []),
+    ...outputs.value.map((o) => ({ value: o.deviceId, label: outputLabel(o.label) }))
+  ]
 }
 
 function setSound(slotId: string, deviceId: string) {
@@ -271,31 +322,13 @@ function displayName(d: {
             <StagePreview :screen="slot" />
             <div class="field">
               <label>{{ slot.name }} toont op</label>
-              <select
-                class="select screen-target"
+              <Select
+                class="screen-target"
                 :aria-label="`${slot.name} toont op`"
-                :value="screenValue(session.hardware.screens[slot.id])"
-                @change="setScreen(slot.id, ($event.target as HTMLSelectElement).value)"
-              >
-                <option value="off">Uit</option>
-                <option value="window">Venster op deze laptop (om te testen)</option>
-                <option
-                  v-if="screenValue(session.hardware.screens[slot.id]) === 'missing'"
-                  value="missing"
-                  disabled
-                >
-                  {{ (session.hardware.screens[slot.id] as { label?: string })?.label }} (niet
-                  aangesloten)
-                </option>
-                <option v-for="d in session.displays" :key="d.id" :value="`d:${d.id}`">
-                  {{ displayName(d) }}
-                </option>
-                <optgroup v-if="airplayScreens.length" label="AirPlay in de buurt">
-                  <option v-for="a in airplayScreens" :key="a.name" :value="`ap:${a.name}`">
-                    {{ a.name }}
-                  </option>
-                </optgroup>
-              </select>
+                :model-value="screenValue(session.hardware.screens[slot.id])"
+                :options="screenOptions(slot.id)"
+                @update:model-value="setScreen(slot.id, $event!)"
+              />
               <div v-if="pendingAirPlay(slot.id)" class="airplay-hint stacked">
                 <p>
                   Nog niet verbonden. Kies in <strong>Beeldschermen</strong> bij
@@ -309,20 +342,13 @@ function displayName(d: {
             </div>
             <div v-if="hasSound(slot.id)" class="field">
               <label>Videogeluid via</label>
-              <select
-                class="select sound-target"
+              <Select
+                class="sound-target"
                 :aria-label="`Videogeluid van ${slot.name} via`"
-                :value="soundValue(slot.id)"
-                @change="setSound(slot.id, ($event.target as HTMLSelectElement).value)"
-              >
-                <option value="auto">{{ autoLabel(slot.id) }}</option>
-                <option v-if="soundValue(slot.id) === 'missing'" value="missing" disabled>
-                  {{ session.hardware.screenSound[slot.id]?.label }} (niet gevonden)
-                </option>
-                <option v-for="o in outputs" :key="o.deviceId" :value="o.deviceId">
-                  {{ outputLabel(o.label) }}
-                </option>
-              </select>
+                :model-value="soundValue(slot.id)"
+                :options="soundOptions(slot.id)"
+                @update:model-value="setSound(slot.id, $event!)"
+              />
             </div>
           </div>
           <div v-if="!quiz.screens.length" class="muted">Deze quiz heeft geen schermen.</div>
@@ -342,19 +368,13 @@ function displayName(d: {
         <div class="card-body stack">
           <div v-for="c in quiz.channels" :key="c.id" class="row channel">
             <span class="channel-name">{{ c.name }}</span>
-            <select
-              class="select grow"
-              :value="audioValue(c.id)"
-              @change="setAudio(c.id, ($event.target as HTMLSelectElement).value)"
-            >
-              <option v-if="!outputs.length" value="default" disabled>Uitgangen laden…</option>
-              <option v-else-if="audioValue(c.id) === 'missing'" value="missing" disabled>
-                {{ session.hardware.audio[c.id]?.label }} (niet gevonden)
-              </option>
-              <option v-for="o in outputs" :key="o.deviceId" :value="o.deviceId">
-                {{ outputLabel(o.label) }}
-              </option>
-            </select>
+            <Select
+              class="grow"
+              :aria-label="`Uitgang voor ${c.name}`"
+              :model-value="audioValue(c.id)"
+              :options="audioOptions(c.id)"
+              @update:model-value="setAudio(c.id, $event!)"
+            />
             <button class="btn" @click="api.testTone(c.id)">Testtoon</button>
           </div>
           <div v-if="airplaySpeakers.length" class="airplay-hint">
