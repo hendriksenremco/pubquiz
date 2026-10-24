@@ -1,6 +1,6 @@
 import { expect, test, type ElectronApplication, type Page } from '@playwright/test'
-import { rmSync } from 'fs'
-import { dirname } from 'path'
+import { readFileSync, rmSync } from 'fs'
+import { dirname, join } from 'path'
 import {
   activeVideo,
   audio as audioOf,
@@ -48,6 +48,21 @@ test('opent de demo-quiz in de editor', async () => {
   await operator.screenshot({ path: 'test-results/editor-round.png' })
 
   await operator.locator('.track-row').nth(2).click()
+  // De waveform van het hele bestand, met het stuk dat speelt tussen twee grepen.
+  const wave = operator.locator('.edit-wave')
+  await expect(wave.locator('rect')).toHaveCount(160)
+  const begin = wave.getByRole('slider', { name: 'Begin' })
+  await expect(begin).toHaveAttribute('aria-valuenow', '0')
+  await expect(wave.getByRole('slider', { name: 'Eind' })).toHaveAttribute('aria-valuenow', '83')
+  await begin.focus()
+  await operator.keyboard.press('ArrowRight')
+  await expect
+    .poll(
+      () =>
+        JSON.parse(readFileSync(join(quizDir, 'quiz.json'), 'utf8')).rounds[1].fragments[2].start
+    )
+    .toBe(0.5)
+  await expect(operator.locator('.track').nth(2).locator('.track-trim')).toHaveText('0:00–0:05')
   await operator.screenshot({ path: 'test-results/editor-fragment-open.png' })
 
   await operator.locator('.sidebar .round').first().click()
@@ -173,6 +188,11 @@ test('speelt een fragment af tot het einde en markeert het als gespeeld', async 
   const tv = await windowFor('screen/tv')
   await expect(beamer.locator('.overlay .ov-number')).toHaveText('1')
   await expect(tv.locator('.overlay')).toHaveCount(0)
+  // De waveform van het fragment loopt mee op de beamer en op de knop.
+  await expect(beamer.locator('.ov-wave .base rect')).toHaveCount(48)
+  await expect(beamer.locator('.ov-wave .played.running')).toHaveCount(1)
+  await expect(first.locator('.frag-wave .played.running')).toHaveCount(1)
+  await expect(operator.locator('.frag').nth(1).locator('.frag-wave .base rect')).toHaveCount(40)
   await expect(first.locator('.frag-time')).toContainText('-0:0')
   // Echt aan het spelen in de engine (een decodeerfout zou ook als "afgelopen" tellen).
   await expect.poll(async () => (await audio()).fragment).not.toBeNull()

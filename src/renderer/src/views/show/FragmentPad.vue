@@ -5,6 +5,7 @@ import type { AutoplayAction, ShowCommand } from '@shared/ipc'
 import type { Round } from '@shared/types'
 import { formatTime } from '../../lib/format'
 import { useNow } from '../../lib/use-now'
+import FragmentWave from './FragmentWave.vue'
 import { useSession } from '../../stores/session'
 
 /** `arrows`: ← → bladeren hier door de fragmenten. */
@@ -24,11 +25,6 @@ const upcoming = computed(() => {
 const ap = computed(() => session.state.autoplay)
 const now = useNow(100, () => playing.value !== null || ap.value.status === 'gap')
 
-const progress = computed(() => {
-  const f = playing.value
-  if (!f?.duration) return 0
-  return Math.min(1, (now.value - f.startedAt) / 1000 / f.duration)
-})
 const remaining = computed(() => {
   const f = playing.value
   return f?.duration ? Math.max(0, f.duration - (now.value - f.startedAt) / 1000) : null
@@ -114,10 +110,10 @@ function click(id: string) {
           Volgende <span class="kbd">→</span>
         </span>
         <span v-else-if="session.state.played.includes(f.id)" class="frag-time">✓ gespeeld</span>
-        <span
-          v-if="playing?.fragmentId === f.id"
-          class="bar"
-          :style="{ transform: `scaleX(${progress})` }"
+        <FragmentWave
+          class="frag-wave"
+          :fragment="f"
+          :playing="playing?.fragmentId === f.id && playing.duration ? playing : null"
         />
       </button>
     </div>
@@ -208,13 +204,14 @@ function click(id: string) {
   color: var(--muted);
 }
 
-.bar {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 4px;
-  background: var(--accent);
-  transform-origin: left;
+.frag-wave {
+  --wave: rgba(160, 180, 220, 0.22);
+  width: 100%;
+  height: 22px;
+  margin-top: 6px;
+}
+
+.frag.on .frag-wave {
+  --wave: rgba(255, 165, 61, 0.3);
 }
 </style>

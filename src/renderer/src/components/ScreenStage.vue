@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from 'vue'
-import { resolveScreen } from '@shared/resolve'
+import { activeRound, answerItems, findAsset, resolveScreen } from '@shared/resolve'
 import type { Quiz, ScreenContent, ShowState } from '@shared/types'
 import { assetUrl } from '../lib/media'
 import { useNow } from '../lib/use-now'
+import { peaksOf, useWaveform } from '../lib/waveform'
 import SlideView from './SlideView.vue'
+import Waveform from './Waveform.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -28,6 +30,43 @@ const counting = computed(() => {
 })
 const now = useNow(200, () => counting.value)
 const resolved = computed(() => resolveScreen(props.quiz, props.state, props.screenId, now.value))
+
+// ── Waveform bij het fragmentnummer ─────────────────────────────────────────
+
+/** Het fragment dat speelt (handmatig, in de reeks of opnieuw in de antwoordenronde). */
+const playing = computed(() => {
+  const f = props.state.fragment
+  const round = f && props.quiz.rounds.find((r) => r.id === f.roundId)
+  const fragment = round?.fragments.find((x) => x.id === f!.fragmentId)
+  return f && fragment ? { timing: f, fragment } : null
+})
+const { bars: waveBars } = useWaveform(() => {
+  const f = playing.value?.fragment
+  return { asset: f && findAsset(props.quiz, f.assetId), start: f?.start, end: f?.end }
+}, 48)
+const waveTiming = computed(() => {
+  const t = playing.value?.timing
+  return t?.duration ? { startedAt: t.startedAt, duration: t.duration } : null
+})
+
+// Toont dit scherm fragmentnummers in deze ronde, dan de waveforms alvast berekenen: zo staan
+// ze er meteen als een fragment begint.
+watch(
+  () => activeRound(props.quiz, props.state)?.id,
+  () => {
+    const round = activeRound(props.quiz, props.state)
+    if (!round?.fragmentScreens.includes(props.screenId)) return
+    const fragments = [
+      ...round.fragments,
+      ...answerItems(props.quiz, round).flatMap((item) => (item.fragment ? [item.fragment] : []))
+    ]
+    for (const f of fragments) {
+      const asset = findAsset(props.quiz, f.assetId)
+      if (asset) void peaksOf(asset)
+    }
+  },
+  { immediate: true }
+)
 
 const content = computed<ScreenContent>(() =>
   props.preview ? resolved.value.programContent : resolved.value.content
@@ -229,6 +268,7 @@ onBeforeUnmount(() => {
           </div>
           <div class="ov-label">Fragment</div>
           <div class="ov-number">{{ resolved.overlay.number }}</div>
+          <Waveform v-if="waveBars" class="ov-wave" :bars="waveBars" :playing="waveTiming" />
         </template>
         <!-- Antwoordenronde: het moment van de avond, dus groot en in het midden. -->
         <template v-else-if="resolved.overlay.kind === 'answer'">
@@ -294,6 +334,13 @@ onBeforeUnmount(() => {
   color: #fff;
   font-family: var(--font);
   backdrop-filter: blur(1cqh);
+}
+
+.ov-wave {
+  --wave: rgba(255, 255, 255, 0.28);
+  width: 30cqh;
+  height: 6cqh;
+  margin-top: 1.6cqh;
 }
 
 .ov-context {

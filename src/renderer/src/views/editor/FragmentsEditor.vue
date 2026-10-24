@@ -10,9 +10,11 @@ import MediaPicker from '../../components/MediaPicker.vue'
 import Popover from '../../components/Popover.vue'
 import Select from '../../components/Select.vue'
 import TimeInput from '../../components/TimeInput.vue'
+import Waveform from '../../components/Waveform.vue'
 import { formatTime } from '../../lib/format'
 import { useMediaImport } from '../../lib/use-media-import'
 import { usePreviewPlayer } from '../../lib/use-preview-player'
+import { useWaveform } from '../../lib/waveform'
 import { useSession } from '../../stores/session'
 
 const props = defineProps<{ round: Round }>()
@@ -111,6 +113,35 @@ function trimText(f: Fragment): string {
 
 function play(f: Fragment) {
   preview.toggle(f.id, assetOf(f), f.start ?? 0, f.end)
+}
+
+// ── Waveform van het geopende fragment: het hele bestand, met het gekozen stuk ────────────
+const open = computed(() => props.round.fragments.find((f) => f.id === expanded.value) ?? null)
+const { bars: openBars, duration: openDuration } = useWaveform(
+  () => ({ asset: open.value ? assetOf(open.value) : null }),
+  160
+)
+const selection = computed((): [number, number] | null => {
+  const f = open.value
+  const d = openDuration.value
+  return f && d ? [(f.start ?? 0) / d, Math.min(1, (f.end ?? d) / d)] : null
+})
+/** Bij luisteren loopt de lijn mee over het hele bestand. */
+const listening = computed(() => {
+  const f = open.value
+  const d = openDuration.value
+  return f && d && preview.playingId.value === f.id ? preview.position.value / d : null
+})
+
+/** Begin en eind uit de grepen, op een tiende seconde; helemaal aan de rand = geen grens. */
+function select(f: Fragment, [a, b]: [number, number]) {
+  const d = openDuration.value
+  if (!d) return
+  const tenth = (v: number) => Math.round(v * 10) / 10
+  const start = tenth(a * d)
+  const end = tenth(b * d)
+  f.start = start > 0 ? start : undefined
+  f.end = end < tenth(d) ? end : undefined
 }
 
 /** Leeg of ongeldig → fallback, zodat er nooit een lege string in de quiz belandt. */
@@ -271,6 +302,18 @@ function numberFrom(event: Event, fallback: number): number {
               :options="quiz.channels.map((c) => ({ value: c.id, label: c.name }))"
             />
           </label>
+          <div class="field full">
+            <span class="label">Wat er speelt <span class="faint">sleep begin en eind</span></span>
+            <Waveform
+              class="edit-wave"
+              :bars="openBars"
+              :selection="selection"
+              :progress="listening"
+              :step="0.5 / (openDuration || 1)"
+              :min-length="0.5 / (openDuration || 1)"
+              @select="select(f, $event)"
+            />
+          </div>
           <label class="field">
             <span class="label">Start</span>
             <TimeInput v-model="f.start" placeholder="0:00" />
@@ -491,6 +534,19 @@ function numberFrom(event: Event, fallback: number): number {
 
 .track-edit .wide {
   grid-column: span 2;
+}
+
+.track-edit .full {
+  grid-column: 1 / -1;
+}
+
+.edit-wave {
+  --wave: rgba(160, 180, 220, 0.45);
+  height: 56px;
+  margin-top: 6px;
+  padding: 6px 0;
+  border-radius: var(--radius);
+  background: var(--surface-1);
 }
 
 .edit-actions {
