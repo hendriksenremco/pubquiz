@@ -4,6 +4,7 @@ import { createShowState } from '@shared/factory'
 import type { AirPlayDevice } from '@shared/airplay'
 import type { RecoveryInfo } from '@shared/ipc'
 import type { DisplayInfo, HardwareMapping, Notice, Quiz, ShowState } from '@shared/types'
+import { probeDuration } from '../lib/media'
 
 const api = window.pubquiz
 const SYNC_DELAY_MS = 250
@@ -90,6 +91,41 @@ export const useSession = defineStore('session', () => {
       syncTimer = setTimeout(flush, SYNC_DELAY_MS)
     },
     { deep: true }
+  )
+
+  /** Wijziging die geen stap in de geschiedenis is (zoals een gemeten duur): meteen naar main. */
+  function patchQuietly(change: (quiz: Quiz) => void) {
+    if (!quiz.value) return
+    const clean = JSON.stringify(quiz.value) === committed
+    change(quiz.value)
+    // Loopt er een eigen wijziging, dan gaat dit daarmee mee.
+    if (!clean) return
+    committed = JSON.stringify(quiz.value)
+    api.updateQuiz(JSON.parse(committed))
+  }
+
+  // Video en geluid zonder duur (net geïmporteerd, ook door een AI) alsnog meten: Media en de
+  // fragmenten tonen hem, en een fragment zonder eindtijd speelt tot het einde.
+  const measured = new Set<string>()
+  watch(
+    () =>
+      quiz.value?.assets.filter(
+        (a) => a.kind !== 'image' && a.duration === undefined && !measured.has(a.id)
+      ) ?? [],
+    (assets) => {
+      // Alleen in het operator-venster; de andere vensters spiegelen alleen.
+      if (!editable) return
+      for (const asset of assets) {
+        measured.add(asset.id)
+        void probeDuration(asset).then((duration) => {
+          if (duration === null) return
+          patchQuietly((q) => {
+            const target = q.assets.find((a) => a.id === asset.id)
+            if (target) target.duration = Math.round(duration * 100) / 100
+          })
+        })
+      }
+    }
   )
 
   // ── Meldingen ───────────────────────────────────────────────────────────────
