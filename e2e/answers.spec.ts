@@ -1,7 +1,15 @@
 import { expect, test, type ElectronApplication, type Page } from '@playwright/test'
 import { copyFileSync, readFileSync, rmSync, writeFileSync } from 'fs'
 import { dirname, join } from 'path'
-import { audio, copyFixture, launch, tempDir, useWindowedScreens, windowFor } from './helpers'
+import {
+  audio,
+  confirmIn,
+  copyFixture,
+  launch,
+  tempDir,
+  useWindowedScreens,
+  windowFor
+} from './helpers'
 
 let app: ElectronApplication
 let operator: Page
@@ -173,7 +181,7 @@ test('live: eerst de vraag, afbeelding of het fragment, dan het antwoord', async
   await operator.locator('.answers').getByRole('button', { name: 'Stop', exact: true }).click()
   await expect(beamer.locator('.overlay')).toHaveCount(0)
 
-  operator.once('dialog', (d) => d.accept())
   await operator.getByRole('button', { name: 'Stop show' }).click()
+  await confirmIn(operator, 'Stop show')
   await expect.poll(() => app.windows().some((w) => w.url().includes('#/screen/'))).toBe(false)
 })

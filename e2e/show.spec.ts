@@ -4,6 +4,7 @@ import { dirname } from 'path'
 import {
   activeVideo,
   audio as audioOf,
+  confirmIn,
   copyFixture,
   launch,
   tempDir,
@@ -207,8 +208,33 @@ test('bladert met de pijltjes door de fragmenten', async () => {
   await expect(operator.locator('.frag.on')).toHaveCount(0)
 })
 
-test('stop show sluit de schermen', async () => {
-  operator.once('dialog', (d) => d.accept())
+test('stoppen en afsluiten vragen het eerst, in een venster van de app', async () => {
+  const round = await operator.locator('.now-title').textContent()
   await operator.getByRole('button', { name: 'Stop show' }).click()
+  const stop = operator.getByRole('dialog', { name: 'Show stoppen?' })
+  // Niet terug te draaien: de focus staat op Annuleer.
+  await expect(stop.getByRole('button', { name: 'Annuleer' })).toBeFocused()
+  await operator.waitForTimeout(200) // infaden afwachten voor de screenshot
+  await operator.screenshot({ path: 'test-results/confirm-stop.png' })
+  // Enter is dan voor het venster, niet "volgende ronde".
+  await operator.keyboard.press('Enter')
+  await expect(stop).toHaveCount(0)
+  await expect(operator.locator('.now-title')).toHaveText(round!)
+  await expect(operator.locator('.live')).toBeVisible()
+
+  // Afsluiten tijdens de show: main vraagt het via de app.
+  await app.evaluate(({ BrowserWindow }) => {
+    for (const w of BrowserWindow.getAllWindows()) w.webContents.send('pq:confirm-quit')
+  })
+  const quit = operator.getByRole('dialog', { name: 'De show loopt nog' })
+  await expect(quit.getByRole('button', { name: 'Afsluiten' })).toBeVisible()
+  await operator.keyboard.press('Escape')
+  await expect(quit).toHaveCount(0)
+  await expect(operator.locator('.live')).toBeVisible()
+})
+
+test('stop show sluit de schermen', async () => {
+  await operator.getByRole('button', { name: 'Stop show' }).click()
+  await confirmIn(operator, 'Stop show')
   await expect.poll(() => app.windows().some((w) => w.url().includes('#/screen/'))).toBe(false)
 })

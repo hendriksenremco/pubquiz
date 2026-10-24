@@ -112,6 +112,9 @@ export interface PubquizApi {
   /** Zet Quizmeister in de instellingen van Claude Desktop; geeft een foutmelding of null. */
   connectClaude(): Promise<string | null>
   copyText(text: string): void
+  /** Na "Afsluiten" in het venster dat main vroeg (show loopt nog). */
+  quitConfirmed(): void
+  onConfirmQuit(cb: () => void): () => void
   removeRecent(path: string): Promise<void>
   updateQuiz(quiz: Quiz): void
   importMedia(paths?: string[]): Promise<ImportResult>
@@ -153,6 +156,8 @@ export const IPC = {
   aiSetup: 'pq:ai-setup',
   connectClaude: 'pq:connect-claude',
   copyText: 'pq:copy-text',
+  confirmQuit: 'pq:confirm-quit',
+  quitConfirmed: 'pq:quit-confirmed',
   removeRecent: 'pq:remove-recent',
   updateQuiz: 'pq:update-quiz',
   importMedia: 'pq:import-media',

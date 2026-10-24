@@ -4,6 +4,7 @@ import { dirname } from 'path'
 import {
   activeVideo,
   audio as audioOf,
+  confirmIn,
   copyTour,
   launch,
   tempDir,
@@ -182,8 +183,8 @@ test('tot slot: uitleg over afdrukken, en stoppen', async () => {
   await startNextRound('Tot slot')
   const beamer = await windowFor('screen/beamer')
   await showsText(beamer, '.slide .title', 'Afdrukken')
-  operator.once('dialog', (d) => d.accept())
   await operator.getByRole('button', { name: 'Stop show' }).click()
+  await confirmIn(operator, 'Stop show')
   await expect.poll(() => app.windows().some((w) => w.url().includes('#/screen/'))).toBe(false)
 
   // Afdrukken: de vier rondes met antwoorden staan klaar.

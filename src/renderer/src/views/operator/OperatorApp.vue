@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import type { MenuAction } from '@shared/ipc'
+import ConfirmHost from '../../components/ConfirmHost.vue'
 import Icon from '../../components/Icon.vue'
 import NoticeStack from '../../components/NoticeStack.vue'
+import { ask } from '../../lib/confirm'
 import { useSession } from '../../stores/session'
 import EditorView from '../editor/EditorView.vue'
 import ShowView from '../show/ShowView.vue'
@@ -75,6 +77,16 @@ onMounted(async () => {
   // Live of een afgebroken show om te hervatten: meteen naar de show-modus.
   if (session.live || session.recovery) mode.value = 'show'
   api.onMenu((action) => actions[action]())
+  // Afsluiten (⌘Q of het venster dicht) terwijl de show loopt.
+  api.onConfirmQuit(async () => {
+    const ok = await ask({
+      title: 'De show loopt nog',
+      message: 'Wil je echt afsluiten? De schermen gaan uit en de muziek stopt.',
+      confirm: 'Afsluiten',
+      danger: true
+    })
+    if (ok) api.quitConfirmed()
+  })
 })
 
 // Komt de show live (ook via herstel), dan hoort de host in show-modus te zitten.
@@ -135,6 +147,7 @@ watch(
 
     <NewQuizDialog v-if="newQuiz" :source="newQuiz.source" @close="newQuiz = null" />
     <AiDialog v-if="aiOpen" @close="aiOpen = false" />
+    <ConfirmHost />
     <NoticeStack />
   </div>
 </template>

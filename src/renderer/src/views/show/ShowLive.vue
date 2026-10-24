@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted } from 'vue'
 import type { ShowCommand } from '@shared/ipc'
 import { answerSlides } from '@shared/factory'
 import { activeRound, answerItems, slideNumber } from '@shared/resolve'
+import { ask } from '../../lib/confirm'
 import { useNow } from '../../lib/use-now'
 import type { Round } from '@shared/types'
 import Icon from '../../components/Icon.vue'
@@ -79,7 +80,13 @@ function toggleBlackout(screenId?: string) {
 }
 
 async function stopShow() {
-  if (confirm('Show stoppen? De schermen gaan uit en de muziek stopt.')) await api.stopShow()
+  const ok = await ask({
+    title: 'Show stoppen?',
+    message: 'De schermen gaan uit en de muziek stopt.',
+    confirm: 'Stop show',
+    danger: true
+  })
+  if (ok) await api.stopShow()
 }
 
 function toggleAutoplay() {
@@ -108,6 +115,8 @@ const KEYS: Record<string, () => void> = {
 function onKey(event: KeyboardEvent) {
   const el = event.target as HTMLElement
   if (event.metaKey || event.ctrlKey || event.altKey) return
+  // Staat er een venster open (bv. "Show stoppen?"), dan zijn de toetsen voor dat venster.
+  if (document.querySelector('[role="dialog"][aria-modal="true"]')) return
   if (['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName) && el.getAttribute('type') !== 'range')
     return
 

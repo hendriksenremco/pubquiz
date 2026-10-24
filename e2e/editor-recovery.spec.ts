@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { readFileSync, rmSync } from 'fs'
 import { dirname, join } from 'path'
-import { copyFixture, launch, tempDir, useWindowedScreens } from './helpers'
+import { confirmIn, copyFixture, launch, tempDir, useWindowedScreens } from './helpers'
 
 test('wijzigingen in de editor worden automatisch opgeslagen', async () => {
   const userData = tempDir('userdata')
@@ -48,8 +48,8 @@ test('na een crash biedt de app aan de show te hervatten', async () => {
     await second.operator.getByRole('button', { name: 'Hervat show' }).click()
     await expect(second.operator.locator('.now-title')).toHaveText('Ronde 2: muziek')
     await expect(second.operator.locator('.frag').nth(2)).toHaveClass(/played/)
-    second.operator.once('dialog', (d) => d.accept())
     await second.operator.getByRole('button', { name: 'Stop show' }).click()
+    await confirmIn(second.operator, 'Stop show')
   } finally {
     await second.app.close()
     rmSync(userData, { recursive: true, force: true })

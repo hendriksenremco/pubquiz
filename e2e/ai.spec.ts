@@ -3,7 +3,7 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'fs'
 import { join, resolve } from 'path'
-import { launch, tempDir, tourFixture, useWindowedScreens } from './helpers'
+import { confirmIn, launch, tempDir, tourFixture, useWindowedScreens } from './helpers'
 
 // Een AI-assistent maakt een quiz via de MCP-server (out/main/mcp.js), die met de draaiende app
 // praat. De client hier doet wat Claude Desktop doet.
@@ -192,8 +192,8 @@ test('tijdens een show past de AI de lopende quiz niet aan en wisselt hij niet v
   await expect(operator.locator('.now-title')).toBeVisible()
   await expect(operator.locator('.notice')).toContainText('Volgende week')
 
-  operator.once('dialog', (d) => d.accept())
   await operator.getByRole('button', { name: 'Stop show' }).click()
+  await confirmIn(operator, 'Stop show')
 })
 
 test('vanaf het dashboard koppel je Quizmeister in één keer aan Claude Desktop', async () => {

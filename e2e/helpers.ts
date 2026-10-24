@@ -91,6 +91,11 @@ export async function audio(app: ElectronApplication): Promise<AudioSnapshot> {
   )
 }
 
+/** Beantwoordt de vraag in het bevestigingsvenster van de app (ConfirmHost). */
+export async function confirmIn(page: Page, button: string) {
+  await page.getByRole('dialog').getByRole('button', { name: button, exact: true }).click()
+}
+
 /** Zet alle scherm-slots op "venster op deze laptop", zodat tests geen externe displays overnemen. */
 export async function useWindowedScreens(operator: Page) {
   for (const select of await operator.locator('.screen select.screen-target').all()) {

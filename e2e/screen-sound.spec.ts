@@ -1,7 +1,7 @@
 import { expect, test, type ElectronApplication, type Page } from '@playwright/test'
 import { rmSync } from 'fs'
 import { dirname } from 'path'
-import { copyFixture, launch, tempDir, useWindowedScreens, windowFor } from './helpers'
+import { confirmIn, copyFixture, launch, tempDir, useWindowedScreens, windowFor } from './helpers'
 
 let app: ElectronApplication
 let operator: Page
@@ -123,7 +123,7 @@ test('speelt het videogeluid alleen op het scherm, duckt bij een fragment en zwi
     )
     .toBe(true)
 
-  operator.once('dialog', (d) => d.accept())
   await operator.getByRole('button', { name: 'Stop show' }).click()
+  await confirmIn(operator, 'Stop show')
   await expect.poll(() => app.windows().some((w) => w.url().includes('#/screen/'))).toBe(false)
 })

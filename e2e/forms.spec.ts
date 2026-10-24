@@ -1,7 +1,7 @@
 import { expect, test, type ElectronApplication, type Page } from '@playwright/test'
 import { copyFileSync, existsSync, readFileSync, rmSync, writeFileSync } from 'fs'
 import { dirname, join } from 'path'
-import { copyFixture, launch, tempDir } from './helpers'
+import { confirmIn, copyFixture, launch, tempDir } from './helpers'
 
 let app: ElectronApplication
 let operator: Page
@@ -103,8 +103,8 @@ test('acties staan zichtbaar in beeld, niet achter drie stippen', async () => {
   await expect(rounds).toHaveCount(5)
   await expect(operator.locator('#round-title')).toHaveValue('Ronde 1: algemeen (kopie)')
   await operator.screenshot({ path: 'test-results/round-actions.png' })
-  operator.once('dialog', (d) => d.accept())
   await operator.getByRole('button', { name: 'Verwijder', exact: true }).click()
+  await confirmIn(operator, 'Verwijder')
   await expect(rounds).toHaveCount(4)
 
   await operator.locator('.nav-item', { hasText: 'Media' }).click()

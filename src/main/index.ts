@@ -1,4 +1,4 @@
-import { app, BrowserWindow, clipboard, dialog, ipcMain, session } from 'electron'
+import { app, BrowserWindow, clipboard, ipcMain, session } from 'electron'
 import { join } from 'path'
 import { IPC, type AudioEngineEvent, type ShowCommand } from '@shared/ipc'
 import type { TemplateOptions } from '@shared/template'
@@ -24,6 +24,7 @@ let pendingOpen: string | null =
   process.argv.find((arg) => arg.endsWith(QUIZ_EXT) || arg.endsWith(`${QUIZ_EXT}/`)) ?? null
 let controller: AppController | null = null
 let bridge: AgentBridge | null = null
+let quitConfirmed = false
 
 app.on('open-file', (event, path) => {
   event.preventDefault()
@@ -91,17 +92,17 @@ app.whenReady().then(async () => {
 
   const operator = createOperatorWindow(ctl.windowTitle)
   ctl.operator = operator
+  // Tijdens een show eerst vragen, in de app zelf (zie OperatorApp). Headless (tests) is er
+  // niemand om te antwoorden.
   operator.on('close', (event) => {
-    // Headless (tests) is er niemand om de vraag te beantwoorden.
-    if (!ctl.live || headless) return
-    const choice = dialog.showMessageBoxSync(operator, {
-      type: 'warning',
-      message: 'De show loopt nog. Wil je echt afsluiten?',
-      buttons: ['Annuleer', 'Afsluiten'],
-      defaultId: 0,
-      cancelId: 0
-    })
-    if (choice === 0) event.preventDefault()
+    if (!ctl.live || headless || quitConfirmed) return
+    event.preventDefault()
+    operator.show()
+    operator.webContents.send(IPC.confirmQuit)
+  })
+  ipcMain.on(IPC.quitConfirmed, () => {
+    quitConfirmed = true
+    operator.close()
   })
   operator.on('closed', () => {
     ctl.operator = null

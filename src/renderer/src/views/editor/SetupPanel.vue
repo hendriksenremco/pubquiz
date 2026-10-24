@@ -9,6 +9,7 @@ import MediaPicker from '../../components/MediaPicker.vue'
 import PageHero from '../../components/PageHero.vue'
 import StagePreview from '../../components/StagePreview.vue'
 import { useAmbient } from '../../lib/ambient'
+import { ask } from '../../lib/confirm'
 import { percent } from '../../lib/format'
 import { usePreviewPlayer } from '../../lib/use-preview-player'
 import { useSession } from '../../stores/session'
@@ -41,13 +42,16 @@ function addScreen() {
   quiz.value.screens.push(createScreenSlot(`Scherm ${quiz.value.screens.length + 1}`))
 }
 
-function removeScreen(id: string) {
+async function removeScreen(id: string) {
   const slot = quiz.value.screens.find((s) => s.id === id)
-  if (
-    !slot ||
-    !confirm(`Scherm "${slot.name}" verwijderen? Ronde-instellingen voor dit scherm vervallen.`)
-  )
-    return
+  if (!slot) return
+  const ok = await ask({
+    title: `Scherm “${slot.name}” verwijderen?`,
+    message: 'Wat rondes voor dit scherm hebben ingesteld, vervalt ook.',
+    confirm: 'Verwijder',
+    danger: true
+  })
+  if (!ok) return
   quiz.value.screens = quiz.value.screens.filter((s) => s.id !== id)
   for (const round of quiz.value.rounds) {
     delete round.screens[id]
