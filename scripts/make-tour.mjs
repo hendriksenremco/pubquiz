@@ -4,20 +4,29 @@
 // wordt hier gesynthetiseerd.
 // Gebruik: pnpm tour [--force]
 //          node scripts/make-tour.mjs --quiz-only <map>   (alleen een verse quiz.json, voor tests)
+//          node scripts/make-tour.mjs --into <map>        (alles vers in een lege map, voor de build)
 import { execFileSync } from 'node:child_process'
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
-import { dirname, join } from 'node:path'
+import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
+import { dirname, join, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
-const quizOnlyIndex = process.argv.indexOf('--quiz-only')
-const quizOnly = quizOnlyIndex !== -1
-const quizDir = quizOnly
-  ? process.argv[quizOnlyIndex + 1]
-  : join(root, 'fixtures', 'rondleiding.pubquiz')
-if (!quizDir) throw new Error('Gebruik: --quiz-only <map>')
+const argAfter = (flag) => {
+  const index = process.argv.indexOf(flag)
+  return index === -1 ? null : (process.argv[index + 1] ?? '')
+}
+const quizOnly = argAfter('--quiz-only') !== null
+// Voor de build: altijd vers, zodat de app nooit een aangepaste of verouderde rondleiding meekrijgt.
+const into = argAfter('--into')
+const quizDir = argAfter('--quiz-only') ?? into ?? join(root, 'fixtures', 'rondleiding.pubquiz')
+if (!quizDir) throw new Error('Gebruik: --quiz-only <map> of --into <map>')
+// De map wordt eerst leeggemaakt; alleen binnen dist/, zodat een verkeerd pad niets wist.
+if (into && !resolve(into).startsWith(join(root, 'dist') + sep)) {
+  throw new Error('--into moet een map in dist/ zijn')
+}
+if (into) rmSync(into, { recursive: true, force: true })
 const mediaDir = join(quizDir, 'media')
-const force = process.argv.includes('--force')
+const force = process.argv.includes('--force') || into !== null
 mkdirSync(mediaDir, { recursive: true })
 
 const font = [

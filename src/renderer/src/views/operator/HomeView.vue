@@ -86,7 +86,7 @@ function reveal(q: RecentQuiz) {
       <div v-if="latest" class="hero-grid">
         <QuizCover :quiz="latest" class="hero-cover" />
         <div class="hero-text">
-          <span class="kicker">Laatst geopend</span>
+          <span class="kicker">{{ latest.tour ? 'Begin hier' : 'Laatst geopend' }}</span>
           <h1 class="hero-title">{{ latest.title }}</h1>
           <p class="muted hero-meta">
             {{ contents(latest)

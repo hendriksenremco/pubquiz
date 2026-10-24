@@ -23,6 +23,9 @@ export function copyFixture(): string {
   return copyQuiz('demo.pubquiz', 'make-demo.mjs')
 }
 
+/** De rondleiding zoals `pnpm tour` hem maakt; de app zet hem bij de eerste start klaar. */
+export const tourFixture = join(root, 'fixtures', 'rondleiding.pubquiz')
+
 /** Zelfde voor de rondleiding (fixtures/rondleiding.pubquiz, gemaakt met `pnpm tour`). */
 export function copyTour(): string {
   return copyQuiz('rondleiding.pubquiz', 'make-tour.mjs')
@@ -51,6 +54,8 @@ export async function launch(
       PUBQUIZ_MUTE: '1',
       // Onzichtbaar testen; PUBQUIZ_HEADED=1 pnpm test:e2e laat de vensters wel zien.
       ...(process.env['PUBQUIZ_HEADED'] ? {} : { PUBQUIZ_HEADLESS: '1' }),
+      // Geen rondleiding op het dashboard, behalve in de test die erom gaat.
+      PUBQUIZ_TOUR: '',
       ...extraEnv
     } as Record<string, string>
   })

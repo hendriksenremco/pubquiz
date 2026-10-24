@@ -255,7 +255,35 @@ export class AppController {
   }
 
   recentQuizzes(): Promise<RecentQuiz[]> {
-    return Promise.all(this.settings.recent.map((dir) => summarizeQuiz(dir)))
+    return Promise.all(
+      this.settings.recent.map(async (dir) => ({
+        ...(await summarizeQuiz(dir)),
+        tour: dir === this.settings.tourDir
+      }))
+    )
+  }
+
+  /**
+   * Eerste start: de meegeleverde rondleiding naar de bibliotheek kopiëren en op het dashboard
+   * zetten. Eén keer: wie hem uit de lijst haalt, krijgt hem niet terug.
+   */
+  async installTour(source: string | null): Promise<void> {
+    if (!source || this.settings.tourDir !== null || !(await isQuizDir(source))) return
+    const target = join(this.libraryDir, `Rondleiding${QUIZ_EXT}`)
+    try {
+      if (!(await isQuizDir(target))) {
+        await fs.mkdir(this.libraryDir, { recursive: true })
+        await fs.cp(source, target, {
+          recursive: true,
+          errorOnExist: true,
+          force: false,
+          preserveTimestamps: true
+        })
+      }
+      this.settings.setTour(target, source)
+    } catch (err) {
+      console.error('Rondleiding klaarzetten mislukt', err)
+    }
   }
 
   removeRecent(path: string): void {

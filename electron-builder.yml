@@ -16,6 +16,10 @@ files:
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
 asarUnpack:
   - 'resources/**'
+# De rondleiding (pnpm tour:build); de app zet hem bij de eerste start op het dashboard.
+extraResources:
+  - from: dist/tour/Rondleiding.pubquiz
+    to: Rondleiding.pubquiz
 fileAssociations:
   - ext: pubquiz
     name: Pubquiz

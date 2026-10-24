@@ -10,8 +10,8 @@
     "dev": "electron-vite dev",
     "start": "electron-vite preview",
     "build": "pnpm typecheck && electron-vite build",
-    "build:mac": "pnpm build && electron-builder --mac",
-    "build:unpack": "pnpm build && electron-builder --mac --dir",
+    "build:mac": "pnpm build && pnpm tour:build && electron-builder --mac",
+    "build:unpack": "pnpm build && pnpm tour:build && electron-builder --mac --dir",
     "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
     "typecheck:web": "vue-tsc --noEmit -p tsconfig.web.json --composite false",
     "typecheck": "pnpm typecheck:node && pnpm typecheck:web",
@@ -20,6 +20,7 @@
     "test:e2e": "node scripts/make-demo.mjs && node scripts/make-tour.mjs && electron-vite build && playwright test",
     "demo": "node scripts/make-demo.mjs",
     "tour": "node scripts/make-tour.mjs",
+    "tour:build": "node scripts/make-tour.mjs --into dist/tour/Rondleiding.pubquiz",
     "format": "prettier --write .",
     "postinstall": "install-electron && electron-builder install-app-deps"
   },

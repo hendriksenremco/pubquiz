@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { cpSync, existsSync, readdirSync, readFileSync, rmSync } from 'fs'
 import { dirname, join } from 'path'
-import { copyFixture, launch, tempDir } from './helpers'
+import { copyFixture, launch, tempDir, tourFixture } from './helpers'
 
 test('dashboard: leeg starten, recente quiz openen en terugkomen', async () => {
   const userData = tempDir('userdata')
@@ -41,6 +41,45 @@ test('dashboard: leeg starten, recente quiz openen en terugkomen', async () => {
     // Opnieuw starten zonder bestand: terug op het dashboard, met dezelfde quiz bovenaan.
     ;({ app, operator } = await launch(userData))
     await expect(operator.locator('.hero-title')).toHaveText('Demo-pubquiz')
+    await app.close()
+  } finally {
+    rmSync(userData, { recursive: true, force: true })
+    rmSync(dirname(quizDir), { recursive: true, force: true })
+  }
+})
+
+test('dashboard: de rondleiding staat de eerste keer klaar, en komt niet terug als je hem weghaalt', async () => {
+  const userData = tempDir('userdata')
+  const library = join(userData, 'Pubquiz')
+  const quizDir = copyFixture()
+  const env = { PUBQUIZ_TOUR: tourFixture }
+  try {
+    // Eerste start: een kopie in de bibliotheek, bovenaan het dashboard.
+    let { app, operator } = await launch(userData, undefined, env)
+    await expect(operator.locator('.kicker')).toHaveText('Begin hier')
+    await expect(operator.locator('.hero-title')).toHaveText('Rondleiding')
+    expect(existsSync(join(library, 'Rondleiding.pubquiz', 'quiz.json'))).toBe(true)
+    await operator.waitForTimeout(800) // cover en gloed laten laden voor de screenshot
+    await operator.screenshot({ path: 'test-results/home-tour.png' })
+    await operator.locator('.hero-text').getByRole('button', { name: 'Bewerken' }).click()
+    await expect(operator.locator('#quiz-title')).toHaveValue('Rondleiding')
+    await app.close()
+
+    // Een eigen quiz gaat voor; de rondleiding blijft in de lijst.
+    ;({ app, operator } = await launch(userData, quizDir, env))
+    await operator.getByRole('button', { name: 'Naar het overzicht' }).click()
+    await expect(operator.locator('.kicker')).toHaveText('Laatst geopend')
+    await expect(operator.locator('.hero-title')).toHaveText('Demo-pubquiz')
+    const tour = operator.locator('.card', { hasText: 'Rondleiding' })
+    await expect(tour).toHaveCount(1)
+    await tour.getByRole('button', { name: 'Uit lijst' }).click()
+    await expect(tour).toHaveCount(0)
+    await app.close()
+
+    // Weggehaald is weggehaald, ook na opnieuw starten.
+    ;({ app, operator } = await launch(userData, undefined, env))
+    await expect(operator.locator('.hero-title')).toHaveText('Demo-pubquiz')
+    await expect(operator.locator('.card', { hasText: 'Rondleiding' })).toHaveCount(0)
     await app.close()
   } finally {
     rmSync(userData, { recursive: true, force: true })

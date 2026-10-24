@@ -69,6 +69,8 @@ export interface RecentQuiz {
   modifiedAt: number | null
   /** Beeld van het eerste scherm, als artwork. */
   cover: { kind: 'video' | 'image'; file: string } | null
+  /** De rondleiding die de app bij de eerste start klaarzet. */
+  tour: boolean
 }
 
 export type MenuAction = 'new' | 'open' | 'exportZip' | 'importZip' | 'reveal' | 'undo' | 'redo'

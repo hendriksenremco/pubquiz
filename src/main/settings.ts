@@ -22,6 +22,8 @@ interface SettingsData {
   audio: Record<string, AudioTarget>
   /** Alleen schermen waarvan het geluid niet naar hun eigen speakers gaat. */
   screenSound: Record<string, AudioTarget>
+  /** Waar de rondleiding bij de eerste start is neergezet; null = nog niet gebeurd. */
+  tourDir: string | null
 }
 
 export interface RecoveryData {
@@ -45,7 +47,8 @@ export class Settings {
       recent: stored?.recent ?? [],
       screens: stored?.screens ?? {},
       audio: stored?.audio ?? {},
-      screenSound: stored?.screenSound ?? {}
+      screenSound: stored?.screenSound ?? {},
+      tourDir: stored?.tourDir ?? null
     })
   }
 
@@ -60,6 +63,24 @@ export class Settings {
 
   removeRecent(path: string): void {
     this.data.recent = this.data.recent.filter((p) => p !== path)
+    void this.save()
+  }
+
+  get tourDir(): string | null {
+    return this.data.tourDir
+  }
+
+  /**
+   * Rondleiding neergezet in `dir`: op het dashboard op de plek van `replaces` (dezelfde quiz,
+   * eerder vanaf een andere plek geopend), anders achteraan, zodat de eigen quizzen voorgaan.
+   */
+  setTour(dir: string, replaces: string): void {
+    this.data.tourDir = dir
+    const recent = this.data.recent.filter((p) => p !== dir)
+    const at = recent.indexOf(replaces)
+    if (at >= 0) recent[at] = dir
+    else recent.splice(MAX_RECENT - 1, Infinity, dir)
+    this.data.recent = recent
     void this.save()
   }
 

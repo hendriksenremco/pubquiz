@@ -51,3 +51,35 @@ describe('Settings.mappingFor', () => {
     }
   })
 })
+
+describe('Settings.setTour', () => {
+  it('zet de rondleiding achteraan, of op de plek waar hij eerder geopend was', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'pubquiz-settings-'))
+    try {
+      const settings = await Settings.load(dir)
+      expect(settings.tourDir).toBeNull()
+      settings.addRecent('/q/b')
+      settings.addRecent('/q/a')
+      settings.setTour('/lib/Rondleiding.pubquiz', '/app/Rondleiding.pubquiz')
+      expect(settings.recent).toEqual(['/q/a', '/q/b', '/lib/Rondleiding.pubquiz'])
+      expect(settings.tourDir).toBe('/lib/Rondleiding.pubquiz')
+
+      // Al eens vanaf de bron geopend: die kaart wordt de rondleiding, op dezelfde plek.
+      const again = await Settings.load(mkdtempSync(join(dir, 'x-')))
+      again.addRecent('/q/a')
+      again.addRecent('/dev/rondleiding.pubquiz')
+      again.setTour('/lib/Rondleiding.pubquiz', '/dev/rondleiding.pubquiz')
+      expect(again.recent).toEqual(['/lib/Rondleiding.pubquiz', '/q/a'])
+
+      // Een volle lijst: de oudste valt eraf, de rondleiding staat er wel in.
+      const full = await Settings.load(mkdtempSync(join(dir, 'y-')))
+      for (let i = 0; i < 8; i++) full.addRecent(`/q/${i}`)
+      full.setTour('/lib/Rondleiding.pubquiz', '/app/Rondleiding.pubquiz')
+      expect(full.recent).toHaveLength(8)
+      expect(full.recent.at(-1)).toBe('/lib/Rondleiding.pubquiz')
+      expect(full.recent).not.toContain('/q/0')
+    } finally {
+      rmSync(dir, { recursive: true, force: true })
+    }
+  })
+})

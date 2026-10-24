@@ -31,6 +31,18 @@ app.on('open-file', (event, path) => {
 
 if (!app.requestSingleInstanceLock()) app.quit()
 
+/**
+ * De meegeleverde rondleiding: in de app (electron-builder extraResources), of tijdens het
+ * ontwikkelen die uit `pnpm tour`. PUBQUIZ_TOUR: voor tests; leeg = geen rondleiding.
+ */
+function tourSource(): string | null {
+  const override = process.env['PUBQUIZ_TOUR']
+  if (override !== undefined) return override || null
+  return app.isPackaged
+    ? join(process.resourcesPath, 'Rondleiding.pubquiz')
+    : join(__dirname, '../../fixtures/rondleiding.pubquiz')
+}
+
 app.whenReady().then(async () => {
   // Headless (tests): geen Dock-icoon en nooit de focus afpakken.
   if (headless && process.platform === 'darwin') app.setActivationPolicy('accessory')
@@ -47,6 +59,8 @@ app.whenReady().then(async () => {
   registerIpc(ctl)
   buildMenu(ctl)
   ctl.airplay.start()
+
+  await ctl.installTour(tourSource())
 
   // Eerst de quiz (en een eventuele afgebroken show) laden, zodat de vensters bij hun eerste
   // snapshot meteen alles hebben. Zonder bestand of herstel start de app op het dashboard.
