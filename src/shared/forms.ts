@@ -1,6 +1,6 @@
 /**
- * Pdf's voor op tafel: het antwoordformulier voor de teams (genummerde lege regels per ronde),
- * de antwoorden om na te kijken, en vragenkaarten (ansichtkaartformaat) voor de quizmaster.
+ * Pdf's voor op tafel: het antwoordformulier voor de teams (genummerde regels per ronde), het
+ * nakijkformulier (dezelfde opmaak met de antwoorden erop) en vragenkaarten voor de quizmaster.
  */
 import { answerSlides } from './factory'
 import { roundItems, type AnswerItem } from './resolve'
@@ -12,8 +12,6 @@ export interface FormOptions {
   doc: FormDoc
   /** Welke rondes erop komen; de volgorde is die van de quiz. */
   roundIds: string[]
-  /** Elke ronde op een eigen blad, zodat je de formulieren per ronde kunt ophalen. */
-  pagePerRound: boolean
 }
 
 export interface FormSection {
@@ -55,8 +53,43 @@ export function itemSummary(round: Round): string {
 
 const FILE_NAMES: Record<FormDoc, string> = {
   sheet: 'antwoordformulier',
-  key: 'antwoorden',
+  key: 'nakijkformulier',
   cards: 'vragenkaarten'
+}
+
+/** Regels die in een vak (een kwart A4) passen; een grotere ronde krijgt een hele rij. */
+export const SHEET_BLOCK_LINES = 16
+const SLOTS_PER_PAGE = 4
+
+/** Een ronde op het formulier: vak 0–3 (links-rechts, boven-onder); breed = de hele rij. */
+export interface SheetBlock {
+  section: FormSection
+  slot: number
+  wide: boolean
+}
+
+/**
+ * Verdeelt de rondes over A4-bladen: maximaal vier vakken per blad, in de volgorde van de quiz.
+ * Antwoordformulier en nakijkformulier gebruiken dezelfde indeling, zodat ze naast elkaar passen.
+ */
+export function sheetPages(sections: FormSection[]): SheetBlock[][] {
+  const pages: SheetBlock[][] = []
+  let page: SheetBlock[] = []
+  let used = 0
+  for (const section of sections) {
+    const wide = section.items.length > SHEET_BLOCK_LINES
+    // Een brede ronde begint altijd links, op een nieuwe rij.
+    let slot = wide && used % 2 === 1 ? used + 1 : used
+    if (slot + (wide ? 2 : 1) > SLOTS_PER_PAGE) {
+      pages.push(page)
+      page = []
+      slot = 0
+    }
+    page.push({ section, slot, wide })
+    used = slot + (wide ? 2 : 1)
+  }
+  if (page.length) pages.push(page)
+  return pages
 }
 
 /** "Pubquiz november – antwoordformulier.pdf", zonder tekens die in een bestandsnaam niet mogen. */

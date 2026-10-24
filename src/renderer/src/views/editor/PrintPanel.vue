@@ -13,16 +13,19 @@ const session = useSession()
 
 const rounds = computed(() => formRounds(session.quiz!))
 const chosen = ref(rounds.value.map((r) => r.id))
-const pagePerRound = ref(true)
 const busy = ref<FormDoc | null>(null)
 
 const DOCS: { doc: FormDoc; title: string; hint: string }[] = [
   {
     doc: 'sheet',
     title: 'Antwoordformulier',
-    hint: 'Voor de teams: genummerde regels per ronde, A4'
+    hint: 'Voor de teams: tot vier rondes per A4, elk in een eigen vak om los te knippen'
   },
-  { doc: 'key', title: 'Antwoorden', hint: 'Om na te kijken: alle antwoorden op A4' },
+  {
+    doc: 'key',
+    title: 'Nakijkformulier',
+    hint: 'Precies dezelfde opmaak met de antwoorden erop: leg hem naast een ingevuld formulier'
+  },
   {
     doc: 'cards',
     title: 'Vragenkaarten',
@@ -34,7 +37,7 @@ async function save(doc: FormDoc) {
   if (busy.value || !chosen.value.length) return
   busy.value = doc
   session.flush()
-  await api.exportForm({ doc, roundIds: [...chosen.value], pagePerRound: pagePerRound.value })
+  await api.exportForm({ doc, roundIds: [...chosen.value] })
   busy.value = null
 }
 </script>
@@ -77,10 +80,6 @@ async function save(doc: FormDoc) {
             <div class="grow">
               <div class="option-title">{{ d.title }}</div>
               <div class="option-hint">{{ d.hint }}</div>
-              <label v-if="d.doc === 'sheet'" class="sub-option">
-                <input v-model="pagePerRound" type="checkbox" />
-                Elke ronde op een eigen blad
-              </label>
             </div>
             <button
               class="btn"
@@ -166,14 +165,5 @@ async function save(doc: FormDoc) {
   margin-top: 2px;
   color: var(--muted);
   font-size: 12px;
-}
-
-.sub-option {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 10px;
-  font-size: 12px;
-  cursor: pointer;
 }
 </style>

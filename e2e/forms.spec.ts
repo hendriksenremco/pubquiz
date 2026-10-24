@@ -63,14 +63,16 @@ test('maakt het antwoordformulier, de antwoorden en de vragenkaarten als pdf', a
 
   await dialog.getByRole('button', { name: 'Antwoordformulier opslaan' }).click()
   const sheet = await saved('Demo-pubquiz – antwoordformulier.pdf')
-  // A4, elke ronde op een eigen blad.
+  // A4, tot vier rondes per blad: de drie rondes van de demo passen op één.
   expect(pageSizeMm(sheet)).toEqual([210, 297])
-  expect(pageCount(sheet)).toBe(3)
+  expect(pageCount(sheet)).toBe(1)
   await expect(operator.locator('.notice')).toContainText('Opgeslagen')
 
-  await dialog.getByRole('button', { name: 'Antwoorden opslaan' }).click()
-  const key = await saved('Demo-pubquiz – antwoorden.pdf')
-  expect(pageCount(key)).toBeGreaterThanOrEqual(1)
+  // Nakijkformulier: dezelfde indeling, dus ook één A4.
+  await dialog.getByRole('button', { name: 'Nakijkformulier opslaan' }).click()
+  const key = await saved('Demo-pubquiz – nakijkformulier.pdf')
+  expect(pageSizeMm(key)).toEqual([210, 297])
+  expect(pageCount(key)).toBe(1)
 
   // Vragenkaarten: ansichtkaartformaat, een kaart per ronde.
   await dialog.getByRole('button', { name: 'Vragenkaarten opslaan' }).click()

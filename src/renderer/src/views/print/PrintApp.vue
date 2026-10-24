@@ -1,19 +1,27 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted } from 'vue'
-import { formSections, itemText, type FormOptions } from '@shared/forms'
+import {
+  formSections,
+  itemText,
+  sheetPages,
+  type FormOptions,
+  type SheetBlock
+} from '@shared/forms'
 import type { AnswerItem } from '@shared/resolve'
 import { assetUrl } from '../../lib/media'
 import { useSession } from '../../stores/session'
 
 /**
- * Formulier om af te drukken (main maakt er een pdf van): het antwoordformulier voor de teams,
- * of de antwoorden voor de quizmaster. Zwart op wit, A4.
+ * Om af te drukken (main maakt er een pdf van): het antwoordformulier voor de teams, het
+ * nakijkformulier (dezelfde opmaak, met de antwoorden op de regels) en vragenkaarten.
  */
 const props = defineProps<{ param: string }>()
 const options = JSON.parse(props.param) as FormOptions
 const session = useSession()
 
 const sections = computed(() => (session.quiz ? formSections(session.quiz, options.roundIds) : []))
+const pages = computed(() => sheetPages(sections.value))
+const key = options.doc === 'key'
 
 // Main wacht hierop voordat hij afdrukt: quiz binnen, fonts en afbeeldingen geladen.
 let markReady = () => {}
@@ -41,62 +49,60 @@ const capital = (word: string) => word[0].toUpperCase() + word.slice(1)
 
 const imageOf = (item: AnswerItem) =>
   item.slide?.layout === 'image' ? assetUrl(session.quiz, item.slide.imageAssetId) : null
+
+/** Vak op het blad: twee kolommen, twee rijen; een brede ronde vult de hele rij. */
+function placement(block: SheetBlock) {
+  return {
+    gridRow: Math.floor(block.slot / 2) + 1,
+    gridColumn: block.wide ? '1 / span 2' : (block.slot % 2) + 1,
+    '--rows': block.wide ? Math.ceil(block.section.items.length / 2) : block.section.items.length
+  }
+}
 </script>
 
 <template>
   <div v-if="session.quiz" class="doc" :class="options.doc">
-    <!-- Antwoordformulier: per ronde genummerde regels en een vak voor de punten. -->
-    <template v-if="options.doc === 'sheet'">
-      <div v-if="!options.pagePerRound" class="team">
-        <span class="quiz-name">{{ session.quiz.title }}</span>
-        <span class="team-field">Team <span class="write" /></span>
-      </div>
-      <section
-        v-for="s in sections"
-        :key="s.round.id"
-        class="round"
-        :class="{ 'own-page': options.pagePerRound }"
-      >
-        <div v-if="options.pagePerRound" class="team">
+    <!-- Antwoord- en nakijkformulier: precies dezelfde indeling, zodat je ze naast elkaar legt.
+         Elk vak heeft een eigen teamnaam en puntenvak, dus je kunt het blad ook in vieren knippen. -->
+    <template v-if="options.doc !== 'cards'">
+      <div v-for="(page, p) in pages" :key="p" class="sheet-page">
+        <header class="page-head">
           <span class="quiz-name">{{ session.quiz.title }}</span>
-          <span class="team-field">Team <span class="write" /></span>
-        </div>
-        <header class="round-head">
-          <h2>{{ s.round.title }}</h2>
-          <span class="score">
-            <span class="score-box" />
-            <span class="score-max">/ {{ s.items.length }}</span>
-          </span>
+          <span class="page-kind">{{ key ? 'Nakijkformulier' : 'Antwoordformulier' }}</span>
         </header>
-        <ol class="lines">
-          <li v-for="item in s.items" :key="item.id">
-            <span class="num">{{ item.number }}</span>
-            <span v-if="s.mixed" class="noun">{{ capital(item.noun) }}</span>
-            <span class="write" />
-          </li>
-        </ol>
-      </section>
-    </template>
-
-    <!-- Antwoorden: om na te kijken, met de vraag of afbeelding erbij. -->
-    <template v-else-if="options.doc === 'key'">
-      <header class="key-head">
-        <span class="quiz-name">{{ session.quiz.title }}</span>
-        <h1>Antwoorden</h1>
-      </header>
-      <section v-for="s in sections" :key="s.round.id" class="round">
-        <h2>{{ s.round.title }}</h2>
-        <table>
-          <tr v-for="item in s.items" :key="item.id">
-            <td class="num">{{ item.number }}</td>
-            <td class="what">
-              <img v-if="imageOf(item)" :src="imageOf(item)!" alt="" />
-              <span>{{ s.mixed ? `${capital(item.noun)}: ` : '' }}{{ itemText(item) }}</span>
-            </td>
-            <td class="answer" :class="{ missing: !item.answer }">{{ item.answer || '—' }}</td>
-          </tr>
-        </table>
-      </section>
+        <div class="blocks">
+          <section
+            v-for="b in page"
+            :key="b.section.round.id"
+            class="block"
+            :class="{ wide: b.wide }"
+            :style="placement(b)"
+          >
+            <header class="block-head">
+              <h2>{{ b.section.round.title }}</h2>
+              <span class="score">
+                <span class="score-box" />
+                <span>/ {{ b.section.items.length }}</span>
+              </span>
+            </header>
+            <div class="team">
+              <span>Team</span>
+              <span class="write" />
+            </div>
+            <ol class="lines">
+              <li v-for="item in b.section.items" :key="item.id">
+                <span class="num">{{ item.number }}</span>
+                <span v-if="b.section.mixed" class="noun">{{ capital(item.noun) }}</span>
+                <span class="write">
+                  <span v-if="key" class="answer" :class="{ missing: !item.answer }">
+                    {{ item.answer || '—' }}
+                  </span>
+                </span>
+              </li>
+            </ol>
+          </section>
+        </div>
+      </div>
     </template>
 
     <!-- Vragenkaarten: per ronde een ansichtkaart om voor te lezen. Is hij vol, dan loopt de ronde
@@ -164,7 +170,6 @@ body[data-route='print'] #app {
   font-weight: 500;
 }
 
-h1,
 h2 {
   font-family: var(--display);
   font-weight: 750;
@@ -172,157 +177,156 @@ h2 {
   color: #141414;
 }
 
-/* ── Antwoordformulier ──────────────────────────────────────────────────── */
+.num {
+  font-family: var(--display);
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+}
 
-.team {
+.noun,
+.missing {
+  color: #8a8a8a;
+}
+
+/* ── Antwoord- en nakijkformulier (A4, tot vier vakken) ─────────────────── */
+
+/* Hoogte van de bedrukbare A4 (297 mm min 2 × 16 mm marge), met wat speling. */
+.sheet-page {
   display: flex;
-  align-items: flex-end;
-  gap: 8mm;
-  margin-bottom: 9mm;
-}
-
-.team-field {
-  display: flex;
-  flex: 1;
-  align-items: flex-end;
-  gap: 3mm;
-  font-size: 12pt;
-  font-weight: 650;
-}
-
-.round {
-  break-inside: avoid;
-  margin-bottom: 11mm;
-}
-
-.round.own-page {
+  flex-direction: column;
+  height: 262mm;
   break-after: page;
-  margin-bottom: 0;
 }
 
-.round.own-page:last-child {
+.sheet-page:last-child {
   break-after: auto;
 }
 
-.round-head {
+.page-head {
   display: flex;
-  align-items: flex-end;
+  align-items: baseline;
   justify-content: space-between;
-  gap: 6mm;
   margin-bottom: 4mm;
 }
 
-.round-head h2 {
-  font-size: 20pt;
-  line-height: 1.1;
+.page-kind {
+  font-size: 9.5pt;
+  font-weight: 700;
+}
+
+.blocks {
+  display: grid;
+  flex: 1;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 6mm;
+  min-height: 0;
+}
+
+/* Gestippelde rand: om langs te knippen als je per ronde ophaalt. */
+.block {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  padding: 5mm 5mm 4mm;
+  border: 0.3mm dashed #b3b3b3;
+  border-radius: 3mm;
+}
+
+.block-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 3mm;
+}
+
+.block-head h2 {
+  font-size: 14pt;
+  line-height: 1.15;
 }
 
 .score {
   display: flex;
   flex-shrink: 0;
   align-items: flex-end;
-  gap: 2mm;
+  gap: 1.5mm;
   color: #6b6b6b;
-  font-size: 11pt;
+  font-size: 10pt;
 }
 
 .score-box {
-  width: 16mm;
-  height: 11mm;
-  border: 0.4mm solid #141414;
-  border-radius: 2mm;
+  width: 13mm;
+  height: 9mm;
+  border: 0.35mm solid #141414;
+  border-radius: 1.6mm;
 }
 
+.team {
+  display: flex;
+  align-items: flex-end;
+  gap: 2mm;
+  margin: 3mm 0 2.5mm;
+  font-size: 10pt;
+  font-weight: 650;
+}
+
+/* Regels verdelen de ruimte van het vak, maar worden nooit hoger dan 10 mm. Een brede ronde
+   heeft twee kolommen regels. */
 .lines {
+  display: grid;
+  flex: 1;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(var(--rows), minmax(0, 10mm));
+  align-content: start;
+  column-gap: 8mm;
+  min-height: 0;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
+.block.wide .lines {
+  grid-template-columns: 1fr 1fr;
+}
+
 .lines li {
   display: flex;
   align-items: flex-end;
-  gap: 4mm;
-  height: 11.5mm;
+  gap: 2.5mm;
+  min-height: 0;
 }
 
-.num {
-  width: 7mm;
-  font-family: var(--display);
-  font-size: 13pt;
-  font-weight: 750;
-  font-variant-numeric: tabular-nums;
+.lines .num {
+  width: 6mm;
+  font-size: 11pt;
   text-align: right;
 }
 
-.noun {
-  width: 18mm;
-  color: #6b6b6b;
-  font-size: 9.5pt;
+.lines .noun {
+  font-size: 8.5pt;
 }
 
+/* Schrijfregel. Op het nakijkformulier staat het antwoord erop, op exact dezelfde plek. */
 .write {
+  display: flex;
   flex: 1;
-  height: 0;
-  margin-bottom: 1.2mm;
+  align-items: flex-end;
+  min-width: 0;
+  height: 5mm;
   border-bottom: 0.3mm solid #9a9a9a;
 }
 
-/* ── Antwoorden ─────────────────────────────────────────────────────────── */
-
-.key-head {
-  display: flex;
-  flex-direction: column;
-  gap: 1mm;
-  margin-bottom: 8mm;
-}
-
-.key-head h1 {
-  font-size: 24pt;
-}
-
-.key .round h2 {
-  margin-bottom: 2.5mm;
-  font-size: 15pt;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-td {
-  padding: 2mm 0;
-  border-bottom: 0.25mm solid #dcdcdc;
-  vertical-align: top;
-}
-
-td.num {
-  padding-right: 4mm;
-}
-
-td.what {
-  width: 55%;
-  padding-right: 6mm;
-  color: #4a4a4a;
+.answer {
+  overflow: hidden;
+  padding: 0 1mm 0.4mm;
   font-size: 10pt;
-}
-
-td.what img {
-  display: block;
-  width: 28mm;
-  height: 16mm;
-  margin-bottom: 1mm;
-  border-radius: 1mm;
-  object-fit: cover;
-}
-
-td.answer {
   font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-td.answer.missing {
-  color: #9a9a9a;
+.answer.missing {
   font-weight: 400;
 }
 
@@ -334,6 +338,11 @@ td.answer.missing {
 
 .qcard:last-child {
   break-after: auto;
+}
+
+.qcard table {
+  width: 100%;
+  border-collapse: collapse;
 }
 
 .qcard th {
@@ -367,13 +376,13 @@ td.answer.missing {
   border-bottom: 0.2mm solid #e2e2e2;
   font-size: 10pt;
   line-height: 1.3;
+  vertical-align: top;
 }
 
 .qcard td.num {
   width: 6mm;
   padding-right: 2mm;
   font-size: 10.5pt;
-  text-align: left;
 }
 
 .qcard td.question {
@@ -387,11 +396,6 @@ td.answer.missing {
   margin-bottom: 0.8mm;
   border-radius: 1mm;
   object-fit: cover;
-}
-
-.qcard .noun,
-.qcard .missing {
-  color: #8a8a8a;
 }
 
 .qcard-answer {
