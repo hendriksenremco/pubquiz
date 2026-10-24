@@ -7,6 +7,7 @@ import { useSession } from '../../stores/session'
 import EditorView from '../editor/EditorView.vue'
 import ShowView from '../show/ShowView.vue'
 import HomeView from './HomeView.vue'
+import AiDialog from './AiDialog.vue'
 import NewQuizDialog from './NewQuizDialog.vue'
 
 const api = window.pubquiz
@@ -27,6 +28,7 @@ async function open(path?: string, openIn: 'edit' | 'show' = 'edit') {
 
 /** Open dialoog voor een nieuwe quiz; `source` = "op basis van" die quiz. */
 const newQuiz = ref<{ source: { path: string; title: string } | null } | null>(null)
+const aiOpen = ref(false)
 
 function create() {
   session.flush()
@@ -125,12 +127,14 @@ watch(
         @open="open"
         @create="create"
         @create-from="createFrom"
+        @ai="aiOpen = true"
       />
       <EditorView v-else-if="mode === 'edit'" @create-from-current="createFromCurrent" />
       <ShowView v-else />
     </main>
 
     <NewQuizDialog v-if="newQuiz" :source="newQuiz.source" @close="newQuiz = null" />
+    <AiDialog v-if="aiOpen" @close="aiOpen = false" />
     <NoticeStack />
   </div>
 </template>

@@ -83,6 +83,20 @@ export class AppController {
     return this.show.current.live
   }
 
+  /** De geopende quiz, voor de AI-koppeling (src/main/agent.ts). */
+  get current(): { quiz: Quiz; dir: string } | null {
+    return this.quiz && this.quizDir ? { quiz: this.quiz, dir: this.quizDir } : null
+  }
+
+  get recentDirs(): string[] {
+    return this.settings.recent
+  }
+
+  /** Op het dashboard zetten zonder te openen. */
+  remember(dir: string): void {
+    this.settings.addRecent(dir)
+  }
+
   snapshot(): Snapshot {
     return {
       quiz: this.quiz,

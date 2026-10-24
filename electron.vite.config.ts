@@ -8,7 +8,13 @@ const alias = {
 
 export default defineConfig({
   main: {
-    resolve: { alias }
+    resolve: { alias },
+    build: {
+      rollupOptions: {
+        // De MCP-server (src/mcp) komt als out/main/mcp.js naast de app.
+        input: { index: resolve('src/main/index.ts'), mcp: resolve('src/mcp/server.ts') }
+      }
+    }
   },
   preload: {
     resolve: { alias }

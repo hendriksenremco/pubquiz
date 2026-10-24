@@ -1,9 +1,10 @@
-import { app, BrowserWindow, dialog, ipcMain, session } from 'electron'
+import { app, BrowserWindow, clipboard, dialog, ipcMain, session } from 'electron'
 import { join } from 'path'
 import { IPC, type AudioEngineEvent, type ShowCommand } from '@shared/ipc'
 import type { TemplateOptions } from '@shared/template'
 import type { FormOptions } from '@shared/forms'
 import type { HardwareMapping, Quiz } from '@shared/types'
+import { AgentBridge, aiSetup, connectClaude, handleAgent } from './agent'
 import { AppController } from './controller'
 import { handleMediaProtocol, registerMediaScheme } from './media-protocol'
 import { buildMenu } from './menu'
@@ -22,6 +23,7 @@ if (process.env['PUBQUIZ_MUTE']) app.commandLine.appendSwitch('mute-audio')
 let pendingOpen: string | null =
   process.argv.find((arg) => arg.endsWith(QUIZ_EXT) || arg.endsWith(`${QUIZ_EXT}/`)) ?? null
 let controller: AppController | null = null
+let bridge: AgentBridge | null = null
 
 app.on('open-file', (event, path) => {
   event.preventDefault()
@@ -65,6 +67,11 @@ app.whenReady().then(async () => {
   handleMediaProtocol({ current: () => ctl.mediaRoot, isRecent: (dir) => ctl.isRecent(dir) })
   registerIpc(ctl)
   buildMenu(ctl)
+  // AI-assistenten praten via de MCP-server (src/mcp) over deze socket met de app.
+  bridge = new AgentBridge(join(app.getPath('userData'), 'mcp.sock'), (tool, input) =>
+    handleAgent(ctl, tool, input)
+  )
+  await bridge.start().catch((err) => console.error('AI-koppeling starten mislukt', err))
   ctl.airplay.start()
 
   await ctl.installTour(tourSource())
@@ -110,6 +117,7 @@ app.on('before-quit', (event) => {
   const ctl = controller
   ctl.screens.closeAll()
   ctl.airplay.stop()
+  bridge?.stop()
   void ctl.flushSave().finally(() => app.quit())
 })
 
@@ -131,6 +139,9 @@ function registerIpc(ctl: AppController): void {
   ipcMain.handle(IPC.revealQuiz, (_e, path?: string) => ctl.revealQuiz(path))
   ipcMain.handle(IPC.closeQuiz, () => ctl.closeQuiz())
   ipcMain.handle(IPC.recentQuizzes, () => ctl.recentQuizzes())
+  ipcMain.handle(IPC.aiSetup, () => aiSetup())
+  ipcMain.handle(IPC.connectClaude, () => connectClaude())
+  ipcMain.on(IPC.copyText, (_e, text: string) => clipboard.writeText(text))
   ipcMain.handle(IPC.removeRecent, (_e, path: string) => ctl.removeRecent(path))
   ipcMain.handle(IPC.importMedia, (_e, paths?: string[]) => ctl.importMedia(paths))
   ipcMain.on(IPC.updateQuiz, (e, quiz: Quiz) => ctl.updateQuiz(quiz, e.sender.id))

@@ -6,6 +6,7 @@
     "playwright.config.*",
     "e2e/**/*",
     "src/main/**/*",
+    "src/mcp/**/*",
     "src/preload/**/*",
     "src/shared/**/*"
   ],
