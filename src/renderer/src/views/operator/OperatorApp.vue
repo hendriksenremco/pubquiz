@@ -9,6 +9,7 @@ import EditorView from '../editor/EditorView.vue'
 import ShowView from '../show/ShowView.vue'
 import HomeView from './HomeView.vue'
 import NewQuizDialog from './NewQuizDialog.vue'
+import FormsDialog from './FormsDialog.vue'
 
 const api = window.pubquiz
 const session = useSession()
@@ -55,6 +56,14 @@ function exportZip(close: () => void) {
   close()
   session.flush()
   void api.exportZip()
+}
+
+const forms = ref(false)
+
+function openForms(close: () => void) {
+  close()
+  session.flush()
+  forms.value = true
 }
 
 function reveal(close: () => void) {
@@ -126,6 +135,9 @@ watch(
               <button class="menu-item" @click="createFromCurrent(close)">
                 <Icon name="copy" /> Nieuwe quiz op basis van deze…
               </button>
+              <button class="menu-item" @click="openForms(close)">
+                <Icon name="text" /> Antwoordformulieren (pdf)…
+              </button>
               <button class="menu-item" @click="reveal(close)">
                 <Icon name="folder" /> Toon in Finder
               </button>
@@ -162,6 +174,7 @@ watch(
     </main>
 
     <NewQuizDialog v-if="newQuiz" :source="newQuiz.source" @close="newQuiz = null" />
+    <FormsDialog v-if="forms && session.quiz" @close="forms = false" />
     <NoticeStack />
   </div>
 </template>

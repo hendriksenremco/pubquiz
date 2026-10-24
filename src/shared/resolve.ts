@@ -236,28 +236,33 @@ export interface AnswerItem {
 export function answerItems(quiz: Quiz, round: Round): AnswerItem[] {
   return quiz.rounds
     .filter((r) => r.id !== round.id && round.answersFor.includes(r.id))
-    .flatMap((r) => [
-      ...answerSlides(r).map((slide, i): AnswerItem => ({
-        id: slide.id,
-        round: r,
-        number: i + 1,
-        noun: slide.layout === 'image' ? 'afbeelding' : 'vraag',
-        answer: slide.answer?.trim() ?? '',
-        answerImageAssetId: slide.answerImageAssetId,
-        slide,
-        fragment: null
-      })),
-      ...r.fragments.map((fragment, i): AnswerItem => ({
-        id: fragment.id,
-        round: r,
-        number: i + 1,
-        noun: 'fragment',
-        answer: fragment.answer?.trim() ?? '',
-        answerImageAssetId: fragment.answerImageAssetId,
-        slide: null,
-        fragment
-      }))
-    ])
+    .flatMap(roundItems)
+}
+
+/** De vragen, afbeeldingen en fragmenten van één ronde, genummerd zoals de teams ze zien. */
+export function roundItems(round: Round): AnswerItem[] {
+  return [
+    ...answerSlides(round).map((slide, i): AnswerItem => ({
+      id: slide.id,
+      round,
+      number: i + 1,
+      noun: slide.layout === 'image' ? 'afbeelding' : 'vraag',
+      answer: slide.answer?.trim() ?? '',
+      answerImageAssetId: slide.answerImageAssetId,
+      slide,
+      fragment: null
+    })),
+    ...round.fragments.map((fragment, i): AnswerItem => ({
+      id: fragment.id,
+      round,
+      number: i + 1,
+      noun: 'fragment',
+      answer: fragment.answer?.trim() ?? '',
+      answerImageAssetId: fragment.answerImageAssetId,
+      slide: null,
+      fragment
+    }))
+  ]
 }
 
 function answerOverlay(

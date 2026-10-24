@@ -4,6 +4,7 @@ import AudioApp from './audio/AudioApp.vue'
 import IdentifyApp from './views/screen/IdentifyApp.vue'
 import ScreenApp from './views/screen/ScreenApp.vue'
 import OperatorApp from './views/operator/OperatorApp.vue'
+import PrintApp from './views/print/PrintApp.vue'
 import '@fontsource-variable/bricolage-grotesque/opsz.css'
 import './styles/base.css'
 
@@ -13,7 +14,8 @@ const roots: Record<string, Component> = {
   operator: OperatorApp,
   screen: ScreenApp,
   audio: AudioApp,
-  identify: IdentifyApp
+  identify: IdentifyApp,
+  print: PrintApp
 }
 
 document.body.dataset.route = route

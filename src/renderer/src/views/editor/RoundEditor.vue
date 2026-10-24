@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { answerScreens, answerSlides, hasAnswers } from '@shared/factory'
+import { answerScreens, hasAnswers } from '@shared/factory'
+import { itemSummary } from '@shared/forms'
 import { answerItems, findAsset } from '@shared/resolve'
 import type { Round, RoundBackground, ScreenContent } from '@shared/types'
 import ContentChip from '../../components/ContentChip.vue'
@@ -67,21 +68,6 @@ const answersText = computed(() => {
 const missingAnswers = computed(
   () => answerItems(quiz.value, props.round).filter((item) => !item.answer).length
 )
-
-/** "2 vragen, 8 fragmenten" */
-function answerCount(r: Round): string {
-  const slides = answerSlides(r)
-  const images = slides.filter((s) => s.layout === 'image').length
-  const parts = [
-    [slides.length - images, 'vraag', 'vragen'],
-    [images, 'afbeelding', 'afbeeldingen'],
-    [r.fragments.length, 'fragment', 'fragmenten']
-  ] as const
-  return parts
-    .filter(([n]) => n > 0)
-    .map(([n, one, many]) => `${n} ${n === 1 ? one : many}`)
-    .join(', ')
-}
 
 /** Lijsten in de volgorde van de quiz houden, zodat chip en live-weergave hetzelfde lezen. */
 function toggled(list: string[], order: string[], id: string, on: boolean): string[] {
@@ -279,7 +265,7 @@ const bgText = computed(() => {
                   />
                   <span class="grow">
                     {{ r.title }}
-                    <span class="menu-hint">{{ answerCount(r) }}</span>
+                    <span class="menu-hint">{{ itemSummary(r) }}</span>
                   </span>
                 </label>
                 <p v-if="missingAnswers" class="menu-note warn">

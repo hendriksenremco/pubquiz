@@ -24,12 +24,11 @@ export function webPreferences(): BrowserWindowConstructorOptions['webPreference
 }
 
 /** Laadt de renderer met een hash-route, bv. `/screen/abc`. */
-export function loadRoute(win: BrowserWindow, route: string): void {
+export function loadRoute(win: BrowserWindow, route: string): Promise<void> {
   if (!app.isPackaged && process.env['ELECTRON_RENDERER_URL']) {
-    void win.loadURL(`${process.env['ELECTRON_RENDERER_URL']}#${route}`)
-  } else {
-    void win.loadFile(join(__dirname, '../renderer/index.html'), { hash: route })
+    return win.loadURL(`${process.env['ELECTRON_RENDERER_URL']}#${route}`)
   }
+  return win.loadFile(join(__dirname, '../renderer/index.html'), { hash: route })
 }
 
 function openLinksExternally(win: BrowserWindow): void {
