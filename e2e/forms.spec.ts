@@ -1,5 +1,5 @@
 import { expect, test, type ElectronApplication, type Page } from '@playwright/test'
-import { copyFileSync, existsSync, readFileSync, rmSync } from 'fs'
+import { copyFileSync, existsSync, readFileSync, rmSync, writeFileSync } from 'fs'
 import { dirname, join } from 'path'
 import { copyFixture, launch, tempDir } from './helpers'
 
@@ -13,6 +13,12 @@ test.beforeAll(async () => {
   userData = tempDir('userdata')
   saveDir = tempDir('pdf')
   quizDir = copyFixture()
+  // Een lang antwoord: moet op het nakijkformulier over meerdere regels doorlopen.
+  const file = join(quizDir, 'quiz.json')
+  const quiz = JSON.parse(readFileSync(file, 'utf8'))
+  quiz.rounds[1].fragments[2].answer =
+    'Queen – Bohemian Rhapsody (live at Wembley Stadium, 13 juli 1985, Live Aid)'
+  writeFileSync(file, JSON.stringify(quiz))
   ;({ app, operator } = await launch(userData, quizDir, { PUBQUIZ_SAVE_DIR: saveDir }))
 })
 

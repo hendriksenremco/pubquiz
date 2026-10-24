@@ -63,12 +63,20 @@ function placement(block: SheetBlock) {
 <template>
   <div v-if="session.quiz" class="doc" :class="options.doc">
     <!-- Antwoord- en nakijkformulier: precies dezelfde indeling, zodat je ze naast elkaar legt.
-         Elk vak heeft een eigen teamnaam en puntenvak, dus je kunt het blad ook in vieren knippen. -->
+         Een lang antwoord loopt door over meerdere regels; het antwoordformulier zet dezelfde tekst
+         onzichtbaar in de regel, zodat die daar net zo hoog wordt. -->
     <template v-if="options.doc !== 'cards'">
       <div v-for="(page, p) in pages" :key="p" class="sheet-page">
         <header class="page-head">
           <span class="quiz-name">{{ session.quiz.title }}</span>
-          <span class="page-kind">{{ key ? 'Nakijkformulier' : 'Antwoordformulier' }}</span>
+          <!-- Teamnaam één keer per blad; het nakijkformulier heeft op die plek zijn titel. -->
+          <div class="team">
+            <template v-if="key">Nakijkformulier</template>
+            <template v-else>
+              <span>Team</span>
+              <span class="team-line" />
+            </template>
+          </div>
         </header>
         <div class="blocks">
           <section
@@ -85,17 +93,13 @@ function placement(block: SheetBlock) {
                 <span>/ {{ b.section.items.length }}</span>
               </span>
             </header>
-            <div class="team">
-              <span>Team</span>
-              <span class="write" />
-            </div>
             <ol class="lines">
               <li v-for="item in b.section.items" :key="item.id">
-                <span class="num">{{ item.number }}</span>
-                <span v-if="b.section.mixed" class="noun">{{ capital(item.noun) }}</span>
-                <span class="write">
-                  <span v-if="key" class="answer" :class="{ missing: !item.answer }">
-                    {{ item.answer || '—' }}
+                <span class="entry">
+                  <span class="num">{{ item.number }}</span>
+                  <span v-if="b.section.mixed" class="noun">{{ capital(item.noun) }}</span>
+                  <span class="write" :class="{ missing: !item.answer }">
+                    <span :class="{ blank: !key }">{{ item.answer || '—' }}</span>
                   </span>
                 </span>
               </li>
@@ -204,14 +208,26 @@ h2 {
 
 .page-head {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  margin-bottom: 4mm;
+  flex-direction: column;
+  gap: 2mm;
+  margin-bottom: 5mm;
 }
 
-.page-kind {
-  font-size: 9.5pt;
-  font-weight: 700;
+/* Teamregel, of op het nakijkformulier de titel: even hoog, zodat de vakken gelijk liggen. */
+.team {
+  display: flex;
+  align-items: flex-end;
+  gap: 3mm;
+  height: 9mm;
+  font-family: var(--display);
+  font-size: 15pt;
+  font-weight: 750;
+}
+
+.team-line {
+  flex: 1;
+  margin-bottom: 1mm;
+  border-bottom: 0.35mm solid #141414;
 }
 
 .blocks {
@@ -239,6 +255,7 @@ h2 {
   align-items: flex-start;
   justify-content: space-between;
   gap: 3mm;
+  margin-bottom: 2mm;
 }
 
 .block-head h2 {
@@ -262,22 +279,13 @@ h2 {
   border-radius: 1.6mm;
 }
 
-.team {
-  display: flex;
-  align-items: flex-end;
-  gap: 2mm;
-  margin: 3mm 0 2.5mm;
-  font-size: 10pt;
-  font-weight: 650;
-}
-
-/* Regels verdelen de ruimte van het vak, maar worden nooit hoger dan 10 mm. Een brede ronde
-   heeft twee kolommen regels. */
+/* Regels verdelen de ruimte van het vak tot 10 mm per regel. Een lang antwoord maakt zijn regel
+   hoger (min-content). Een brede ronde heeft twee kolommen regels. */
 .lines {
   display: grid;
   flex: 1;
   grid-auto-flow: column;
-  grid-template-rows: repeat(var(--rows), minmax(0, 10mm));
+  grid-template-rows: repeat(var(--rows), minmax(min-content, 10mm));
   align-content: start;
   column-gap: 8mm;
   min-height: 0;
@@ -290,43 +298,50 @@ h2 {
   grid-template-columns: 1fr 1fr;
 }
 
+/* De schrijfregel staat onderaan zijn rij; het nummer staat bij de eerste regel tekst. */
 .lines li {
   display: flex;
-  align-items: flex-end;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.entry {
+  display: flex;
+  align-items: baseline;
   gap: 2.5mm;
-  min-height: 0;
 }
 
 .lines .num {
+  flex: none;
   width: 6mm;
   font-size: 11pt;
   text-align: right;
 }
 
 .lines .noun {
+  flex: none;
   font-size: 8.5pt;
 }
 
-/* Schrijfregel. Op het nakijkformulier staat het antwoord erop, op exact dezelfde plek. */
 .write {
-  display: flex;
   flex: 1;
-  align-items: flex-end;
   min-width: 0;
-  height: 5mm;
+  padding: 1mm 1mm 0.6mm;
   border-bottom: 0.3mm solid #9a9a9a;
-}
-
-.answer {
-  overflow: hidden;
-  padding: 0 1mm 0.4mm;
   font-size: 10pt;
   font-weight: 650;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
 }
 
-.answer.missing {
+/* Antwoordformulier: dezelfde tekst voor de hoogte, maar niet getekend (dus ook niet in de pdf
+   te vinden). Alleen de tekst is verborgen; de lijn van de regel blijft staan. */
+.blank {
+  visibility: hidden;
+}
+
+.write.missing {
   font-weight: 400;
 }
 
