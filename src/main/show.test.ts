@@ -118,6 +118,47 @@ describe('ShowController', () => {
     expect(t.state.fragment?.fragmentId).toBe('r2-f5')
   })
 
+  it('bladert met ← → door de fragmenten, vanaf het laatst gestarte', () => {
+    const t = setup()
+    t.show.handle({ type: 'startRound', roundId: 'r2' })
+    t.show.handle({ type: 'stepFragment', direction: 'prev' })
+    expect(t.state.fragment).toBeNull()
+    t.show.handle({ type: 'stepFragment', direction: 'next' })
+    expect(t.state.fragment?.fragmentId).toBe('r2-f1')
+
+    // Ook na een fragment via de cijfertoets, en als het al is afgelopen.
+    t.show.handle({ type: 'playFragment', fragmentId: 'r2-f5' })
+    t.show.audioEvent({ type: 'fragmentEnded', key: t.state.fragment!.key })
+    t.show.handle({ type: 'stepFragment', direction: 'next' })
+    expect(t.state.fragment?.fragmentId).toBe('r2-f6')
+    t.show.handle({ type: 'stepFragment', direction: 'prev' })
+    t.show.handle({ type: 'stepFragment', direction: 'prev' })
+    expect(t.state.fragment?.fragmentId).toBe('r2-f4')
+    expect(t.state.autoplay.status).toBe('idle')
+
+    // Reset begint weer bij het eerste.
+    t.show.handle({ type: 'resetPlayed' })
+    t.show.handle({ type: 'stepFragment', direction: 'next' })
+    expect(t.state.fragment?.fragmentId).toBe('r2-f1')
+  })
+
+  it('in een lopende reeks gaan ← → mee en loopt de reeks daarna verder', () => {
+    const t = setup()
+    active = t.show
+    t.show.handle({ type: 'startRound', roundId: 'r2' })
+    t.show.handle({ type: 'autoplay', action: 'start' })
+    t.show.handle({ type: 'stepFragment', direction: 'next' })
+    expect(t.state.fragment?.fragmentId).toBe('r2-f2')
+    expect(t.state.autoplay).toMatchObject({ status: 'playing', index: 1 })
+
+    // In de pauze tussen twee fragmenten: ← speelt het vorige, de reeks gaat vanaf daar verder.
+    t.show.audioEvent({ type: 'fragmentEnded', key: t.state.fragment!.key })
+    expect(t.state.autoplay).toMatchObject({ status: 'gap', nextIndex: 2 })
+    t.show.handle({ type: 'stepFragment', direction: 'prev' })
+    expect(t.state.fragment?.fragmentId).toBe('r2-f1')
+    expect(t.state.autoplay).toMatchObject({ status: 'playing', index: 0 })
+  })
+
   it('stopt fragment en autoplay bij een rondewissel', () => {
     const t = setup()
     t.show.handle({ type: 'startRound', roundId: 'r2' })

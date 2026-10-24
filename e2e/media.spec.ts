@@ -1,5 +1,5 @@
 import { expect, test, type ElectronApplication, type Page } from '@playwright/test'
-import { readFileSync, rmSync } from 'fs'
+import { readFileSync, rmSync, writeFileSync } from 'fs'
 import { dirname, join } from 'path'
 import { copyFixture, launch, tempDir } from './helpers'
 
@@ -8,9 +8,19 @@ let operator: Page
 let userData: string
 let quizDir: string
 
+/** 60 × 80 pixels, oranje. */
+const PORTRAIT_PNG =
+  'iVBORw0KGgoAAAANSUhEUgAAADwAAABQCAIAAADKqIEEAAAAVklEQVR42u3OAQkAAAgDsBczrjm1hSAMFmCZrnciLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tfWkBWVI8zkmlRqcAAAAASUVORK5CYII='
+
 test.beforeAll(async () => {
   userData = tempDir('userdata')
   quizDir = copyFixture()
+  // Een staande foto: mag in het grote voorbeeld de informatie eronder niet wegduwen.
+  writeFileSync(join(quizDir, 'media', 'staand.png'), Buffer.from(PORTRAIT_PNG, 'base64'))
+  const file = join(quizDir, 'quiz.json')
+  const quiz = JSON.parse(readFileSync(file, 'utf8'))
+  quiz.assets.push({ id: 'staand', kind: 'image', file: 'media/staand.png', name: 'staand.png' })
+  writeFileSync(file, JSON.stringify(quiz))
   ;({ app, operator } = await launch(userData, quizDir))
 })
 
@@ -79,9 +89,11 @@ test('toont mappen en maakt een nieuwe map', async () => {
   await expect(operator.locator('.folder-name')).toHaveText(['Fragmenten', 'Loops', 'Pauzemuziek'])
 })
 
-test('verplaatst een bestand naar een map', async () => {
+test('verplaatst een bestand naar een map door het te slepen', async () => {
+  // Geen keuzelijstje meer onder de bestanden: verplaatsen gaat door te slepen.
+  await expect(operator.getByLabel('Map', { exact: true })).toHaveCount(0)
   const row = operator.locator('.sound', { hasText: 'background-break.m4a' })
-  await row.getByLabel('Map').selectOption({ label: 'Pauzemuziek' })
+  await row.dragTo(operator.locator('.folder', { hasText: 'Pauzemuziek' }))
   await expect(row).toHaveCount(0)
 
   await operator.locator('.folder', { hasText: 'Pauzemuziek' }).click()
@@ -93,7 +105,37 @@ test('verplaatst een bestand naar een map', async () => {
       return quiz.assets.find((a: { id: string }) => a.id === 'bg-break')?.folderId === folder?.id
     })
     .toBe(true)
+
+  // Tijdens het slepen verschijnt onderin waar het heen kan: ook een andere of een nieuwe map.
+  const box = (await operator.locator('.sound').first().boundingBox())!
+  await operator.mouse.move(box.x + 200, box.y + box.height / 2)
+  await operator.mouse.down()
+  await operator.mouse.move(box.x + 260, box.y + 120, { steps: 6 })
+  const dock = operator.getByRole('group', { name: 'Verplaats naar' })
+  await expect(dock.locator('.dock-target')).toHaveText([
+    'Media',
+    'Fragmenten',
+    'Loops',
+    'Nieuwe map'
+  ])
+  await dock.locator('.dock-target', { hasText: 'Nieuwe map' }).hover()
+  await expect(dock.locator('.dock-target.drop')).toHaveText('Nieuwe map')
+  await operator.waitForTimeout(400) // infaden afwachten voor de screenshot
+  await operator.screenshot({ path: 'test-results/media-drag-dock.png' })
+  await operator.mouse.up()
+
+  // De nieuwe map staat open met het bestand erin, klaar om een naam te geven.
+  await expect(dock).toHaveCount(0)
+  await expect(operator.getByLabel('Naam van de map')).toHaveValue('Nieuwe map')
+  await expect(operator.getByLabel('Naam van de map')).toBeFocused()
+  await expect(operator.locator('.sound .name')).toHaveText(['background-break.m4a'])
   await operator.locator('.crumb').click()
+  await expect(operator.locator('.folder-name')).toHaveText([
+    'Fragmenten',
+    'Loops',
+    'Nieuwe map',
+    'Pauzemuziek'
+  ])
 })
 
 test('speelt een video af als voorbeeld', async () => {
@@ -110,6 +152,65 @@ test('speelt een video af als voorbeeld', async () => {
   await tile.getByRole('button', { name: 'Stop voorbeeld' }).click()
   await expect(tile.locator('.frame')).not.toHaveClass(/playing/)
   await operator.locator('.crumb').click()
+})
+
+test('toont een bestand groot als voorbeeld en bladert verder', async () => {
+  await operator.locator('.folder', { hasText: 'Loops' }).click()
+  const names = await operator.locator('.tile-item .name').allTextContents()
+  expect(names).toHaveLength(3)
+  const tile = operator.locator('.tile-item').first()
+  await tile.getByRole('button', { name: 'Speel voorbeeld' }).click()
+
+  // Het grote voorbeeld neemt het over: de tegel stopt, het voorbeeld speelt met geluid.
+  await tile.getByRole('button', { name: 'Voorbeeld', exact: true }).click()
+  const dialog = operator.getByRole('dialog')
+  await expect(dialog).toHaveAccessibleName(`Voorbeeld: ${names[0]}`)
+  await expect(tile.locator('.frame')).not.toHaveClass(/playing/)
+  await expect
+    .poll(() => dialog.locator('video').evaluate((v: HTMLVideoElement) => v.paused))
+    .toBe(false)
+  await expect(dialog.locator('.meta')).toContainText(/\d+ × \d+/)
+  await expect(dialog.locator('.usages')).toContainText('Standaard van scherm "Beamer"')
+  await expect(dialog.locator('.count')).toHaveText('1 van 3')
+  await operator.waitForTimeout(700) // gloed laten infaden voor de screenshot
+  await operator.screenshot({ path: 'test-results/media-preview.png' })
+
+  await operator.keyboard.press('ArrowRight')
+  await expect(dialog).toHaveAccessibleName(`Voorbeeld: ${names[1]}`)
+  await operator.keyboard.press('ArrowLeft')
+  await operator.keyboard.press('ArrowLeft')
+  await expect(dialog).toHaveAccessibleName(`Voorbeeld: ${names[2]}`)
+  await operator.keyboard.press('Escape')
+  await expect(dialog).toHaveCount(0)
+
+  // In de hoofdmap: eerst de afbeelding (klik op de tegel), dan het geluid.
+  await operator.locator('.crumb').click()
+  await operator.locator('.tile-item .frame').first().click()
+  await expect(dialog).toHaveAccessibleName('Voorbeeld: logo.png')
+  await expect(dialog.locator('.meta')).toContainText(/Afbeelding.*\d+ × \d+/)
+  await dialog.getByRole('button', { name: 'Volgende' }).click()
+  await expect(dialog).toHaveAccessibleName('Voorbeeld: staand.png')
+  await expect(dialog.locator('.meta')).toContainText('60 × 80')
+  // De informatie en knoppen blijven in beeld, ook bij een staande foto.
+  await expect(dialog.locator('.info')).toBeInViewport({ ratio: 1 })
+  await operator.waitForTimeout(400) // infaden afwachten voor de screenshot
+  await operator.screenshot({ path: 'test-results/media-preview-portrait.png' })
+  await dialog.getByRole('button', { name: 'Volgende' }).click()
+  await expect(dialog).toHaveAccessibleName('Voorbeeld: background.m4a')
+  await expect
+    .poll(() => dialog.locator('audio').evaluate((a: HTMLAudioElement) => a.paused))
+    .toBe(false)
+  await operator.screenshot({ path: 'test-results/media-preview-sound.png' })
+  await dialog.getByRole('button', { name: 'Sluiten' }).click()
+  await expect(dialog).toHaveCount(0)
+
+  // De knop staat ook bij elk geluid in de lijst.
+  await operator
+    .locator('.sound', { hasText: 'background.m4a' })
+    .getByRole('button', { name: 'Voorbeeld', exact: true })
+    .click()
+  await expect(dialog).toHaveAccessibleName('Voorbeeld: background.m4a')
+  await operator.keyboard.press('Escape')
 })
 
 test('voegt een hele Media-map als fragmenten toe aan een ronde', async () => {

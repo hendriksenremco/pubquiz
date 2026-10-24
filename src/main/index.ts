@@ -1,15 +1,16 @@
-import { app, BrowserWindow, dialog, ipcMain, session } from 'electron'
+import { app, BrowserWindow, clipboard, dialog, ipcMain, session } from 'electron'
 import { join } from 'path'
 import { IPC, type AudioEngineEvent, type ShowCommand } from '@shared/ipc'
 import type { TemplateOptions } from '@shared/template'
 import type { FormOptions } from '@shared/forms'
 import type { HardwareMapping, Quiz } from '@shared/types'
+import { AgentBridge, aiSetup, connectClaude, handleAgent } from './agent'
 import { AppController } from './controller'
 import { handleMediaProtocol, registerMediaScheme } from './media-protocol'
 import { buildMenu } from './menu'
 import { configurePermissions } from './permissions'
 import { QUIZ_EXT } from './quiz-files'
-import { Settings } from './settings'
+import { adoptSettings, Settings } from './settings'
 import { createAudioWindow, createOperatorWindow, headless } from './windows'
 
 registerMediaScheme()
@@ -22,6 +23,7 @@ if (process.env['PUBQUIZ_MUTE']) app.commandLine.appendSwitch('mute-audio')
 let pendingOpen: string | null =
   process.argv.find((arg) => arg.endsWith(QUIZ_EXT) || arg.endsWith(`${QUIZ_EXT}/`)) ?? null
 let controller: AppController | null = null
+let bridge: AgentBridge | null = null
 
 app.on('open-file', (event, path) => {
   event.preventDefault()
@@ -31,11 +33,30 @@ app.on('open-file', (event, path) => {
 
 if (!app.requestSingleInstanceLock()) app.quit()
 
+/**
+ * De meegeleverde rondleiding: in de app (electron-builder extraResources), of tijdens het
+ * ontwikkelen die uit `pnpm tour`. PUBQUIZ_TOUR: voor tests; leeg = geen rondleiding.
+ */
+function tourSource(): string | null {
+  const override = process.env['PUBQUIZ_TOUR']
+  if (override !== undefined) return override || null
+  return app.isPackaged
+    ? join(process.resourcesPath, 'Rondleiding.pubquiz')
+    : join(__dirname, '../../fixtures/rondleiding.pubquiz')
+}
+
 app.whenReady().then(async () => {
   // Headless (tests): geen Dock-icoon en nooit de focus afpakken.
   if (headless && process.platform === 'darwin') app.setActivationPolicy('accessory')
+  // Tijdens het ontwikkelen draait de Electron-binary en toont de Dock diens icoon; de gebouwde app
+  // haalt het icoon uit build/icon.icns.
+  else if (!app.isPackaged) app.dock?.setIcon(join(__dirname, '../../resources/icon.png'))
   configurePermissions(session.defaultSession, process.env['ELECTRON_RENDERER_URL'])
 
+  // De app heette eerst Pubquiz; zijn instellingen verhuizen één keer mee.
+  if (!process.env['PUBQUIZ_USER_DATA']) {
+    await adoptSettings(join(app.getPath('appData'), 'Pubquiz'), app.getPath('userData'))
+  }
   const settings = await Settings.load(app.getPath('userData'))
   // PUBQUIZ_LIBRARY: voor tests, zodat er niets in Documenten belandt.
   // Niet "Pubquiz": macOS negeert hoofdletters, dus dat zou dezelfde map zijn als de broncode in
@@ -46,7 +67,14 @@ app.whenReady().then(async () => {
   handleMediaProtocol({ current: () => ctl.mediaRoot, isRecent: (dir) => ctl.isRecent(dir) })
   registerIpc(ctl)
   buildMenu(ctl)
+  // AI-assistenten praten via de MCP-server (src/mcp) over deze socket met de app.
+  bridge = new AgentBridge(join(app.getPath('userData'), 'mcp.sock'), (tool, input) =>
+    handleAgent(ctl, tool, input)
+  )
+  await bridge.start().catch((err) => console.error('AI-koppeling starten mislukt', err))
   ctl.airplay.start()
+
+  await ctl.installTour(tourSource())
 
   // Eerst de quiz (en een eventuele afgebroken show) laden, zodat de vensters bij hun eerste
   // snapshot meteen alles hebben. Zonder bestand of herstel start de app op het dashboard.
@@ -89,6 +117,7 @@ app.on('before-quit', (event) => {
   const ctl = controller
   ctl.screens.closeAll()
   ctl.airplay.stop()
+  bridge?.stop()
   void ctl.flushSave().finally(() => app.quit())
 })
 
@@ -110,6 +139,9 @@ function registerIpc(ctl: AppController): void {
   ipcMain.handle(IPC.revealQuiz, (_e, path?: string) => ctl.revealQuiz(path))
   ipcMain.handle(IPC.closeQuiz, () => ctl.closeQuiz())
   ipcMain.handle(IPC.recentQuizzes, () => ctl.recentQuizzes())
+  ipcMain.handle(IPC.aiSetup, () => aiSetup())
+  ipcMain.handle(IPC.connectClaude, () => connectClaude())
+  ipcMain.on(IPC.copyText, (_e, text: string) => clipboard.writeText(text))
   ipcMain.handle(IPC.removeRecent, (_e, path: string) => ctl.removeRecent(path))
   ipcMain.handle(IPC.importMedia, (_e, paths?: string[]) => ctl.importMedia(paths))
   ipcMain.on(IPC.updateQuiz, (e, quiz: Quiz) => ctl.updateQuiz(quiz, e.sender.id))

@@ -14,6 +14,7 @@ const emit = defineEmits<{
   open: [path: string, mode: OpenMode]
   create: []
   createFrom: [path: string, title: string]
+  ai: []
 }>()
 const api = window.pubquiz
 
@@ -86,7 +87,7 @@ function reveal(q: RecentQuiz) {
       <div v-if="latest" class="hero-grid">
         <QuizCover :quiz="latest" class="hero-cover" />
         <div class="hero-text">
-          <span class="kicker">Laatst geopend</span>
+          <span class="kicker">{{ latest.tour ? 'Begin hier' : 'Laatst geopend' }}</span>
           <h1 class="hero-title">{{ latest.title }}</h1>
           <p class="muted hero-meta">
             {{ contents(latest)
@@ -113,6 +114,7 @@ function reveal(q: RecentQuiz) {
           <button class="btn btn-primary btn-lg" @click="emit('create')">
             <Icon name="plus" /> Nieuwe quiz
           </button>
+          <button class="btn btn-lg" @click="emit('ai')"><Icon name="spark" /> Met je AI…</button>
           <button class="btn btn-lg" @click="api.openQuiz()">
             <Icon name="folder" /> Open quiz…
           </button>
@@ -148,6 +150,9 @@ function reveal(q: RecentQuiz) {
           <template #default="{ close }">
             <button class="menu-item" @click="createEmpty(close)">
               <Icon name="plus" /> Lege quiz
+            </button>
+            <button class="menu-item" @click="(close(), emit('ai'))">
+              <Icon name="spark" /> Met je AI…
             </button>
             <div class="menu-label">Op basis van</div>
             <button

@@ -10,6 +10,7 @@ import {
 import { findAssetUsages } from '@shared/resolve'
 import type { MediaAsset, MediaKind } from '@shared/types'
 import Icon from '../../components/Icon.vue'
+import MediaPreview from '../../components/MediaPreview.vue'
 import MediaThumb from '../../components/MediaThumb.vue'
 import MediaTile from '../../components/MediaTile.vue'
 import { formatTime } from '../../lib/format'
@@ -27,6 +28,10 @@ const filter = ref<MediaKind | 'all'>('all')
 const openFolderId = ref<string | null>(null)
 const folderTitle = ref<HTMLInputElement | null>(null)
 const dropFolder = ref<string | null>(null)
+const previewId = ref<string | null>(null)
+const page = ref<HTMLElement | null>(null)
+const draggingId = ref<string | null>(null)
+const dockX = ref(0)
 
 const FILTERS: { value: MediaKind | 'all'; label: string }[] = [
   { value: 'all', label: 'Alles' },
@@ -44,6 +49,8 @@ const matches = (a: MediaAsset) => filter.value === 'all' || a.kind === filter.v
 const here = computed(() => assetsIn(quiz.value, openFolderId.value).filter(matches))
 const visual = computed(() => here.value.filter((a) => a.kind !== 'audio'))
 const sounds = computed(() => here.value.filter((a) => a.kind === 'audio'))
+/** Bladeren in het grote voorbeeld: in dezelfde volgorde als op de pagina. */
+const shown = computed(() => [...visual.value, ...sounds.value])
 
 const folderTiles = computed(() =>
   openFolderId.value
@@ -61,6 +68,19 @@ const folderTiles = computed(() =>
         })
 )
 
+/**
+ * Waar een bestand heen kan terwijl je het sleept: de balk die dan onderin verschijnt. Zo kan een
+ * bestand ook rechtstreeks van de ene map naar de andere, of in een nieuwe map.
+ */
+const dockTargets = computed(() => [
+  ...(folder.value ? [{ key: 'root', label: 'Media', icon: 'images' as const }] : []),
+  ...[...quiz.value.folders]
+    .filter((f) => f.id !== openFolderId.value)
+    .sort((a, b) => naturalCompare(a.name, b.name))
+    .map((f) => ({ key: f.id, label: f.name, icon: 'folder' as const })),
+  { key: 'new', label: 'Nieuwe map', icon: 'folder-plus' as const }
+])
+
 const isEmpty = computed(
   () => !folderTiles.value.length && !visual.value.length && !sounds.value.length
 )
@@ -69,11 +89,14 @@ function plural(n: number) {
   return `${n} ${n === 1 ? 'bestand' : 'bestanden'}`
 }
 
-async function newFolder() {
+/** Nieuwe map (eventueel meteen met een bestand erin), open en klaar om een naam te geven. */
+async function newFolder(asset?: MediaAsset) {
   const names = new Set(quiz.value.folders.map((f) => f.name))
   let name = 'Nieuwe map'
   for (let n = 2; names.has(name); n++) name = `Nieuwe map ${n}`
-  openFolderId.value = createFolder(quiz.value, name).id
+  const created = createFolder(quiz.value, name)
+  if (asset) moveToFolder(asset, created.id)
+  openFolderId.value = created.id
   await nextTick()
   folderTitle.value?.focus()
   folderTitle.value?.select()
@@ -109,23 +132,54 @@ function isAssetDrag(event: DragEvent) {
   return [...(event.dataTransfer?.types ?? [])].includes(ASSET_TYPE)
 }
 
-function onFolderDragOver(event: DragEvent, folderId: string) {
+let dragToken = 0
+
+function onDragStart(event: DragEvent) {
   if (!isAssetDrag(event)) return
-  event.preventDefault()
-  dropFolder.value = folderId
+  const id = event.dataTransfer!.getData(ASSET_TYPE)
+  const rect = page.value!.getBoundingClientRect()
+  const token = ++dragToken
+  // Een tik later: de pagina aanpassen tijdens dragstart kan het slepen in Chromium afbreken.
+  setTimeout(() => {
+    if (token !== dragToken) return
+    draggingId.value = id
+    dockX.value = rect.left + rect.width / 2
+  })
 }
 
-function onFolderDrop(event: DragEvent, folderId: string | null) {
+function endDrag() {
+  dragToken++
+  draggingId.value = null
   dropFolder.value = null
+}
+
+/** `target`: een map-id, 'root' (Media zelf) of 'new' (een nieuwe map). */
+function onTargetDragOver(event: DragEvent, target: string) {
+  if (!isAssetDrag(event)) return
+  event.preventDefault()
+  if (event.dataTransfer) event.dataTransfer.dropEffect = 'move'
+  dropFolder.value = target
+}
+
+/** Niet uitgaan als de muis alleen naar iets binnen het doel gaat (bv. het icoon). */
+function onTargetDragLeave(event: DragEvent, target: string) {
+  const inside = (event.currentTarget as Node).contains(event.relatedTarget as Node | null)
+  if (dropFolder.value === target && !inside) dropFolder.value = null
+}
+
+function onTargetDrop(event: DragEvent, target: string) {
   const asset = draggedAsset(event)
+  endDrag()
   if (!asset) return
   event.preventDefault()
   event.stopPropagation()
-  moveToFolder(asset, folderId)
+  if (target === 'new') void newFolder(asset)
+  else moveToFolder(asset, target === 'root' ? null : target)
 }
 
 /** Bestanden uit Finder: in de open map (de editor zelf importeert alleen in de hoofdmap). */
 async function onFilesDrop(event: DragEvent) {
+  endDrag()
   const paths = pathsFromDrop(event)
   if (!paths.length) return
   event.stopPropagation()
@@ -138,17 +192,24 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
 </script>
 
 <template>
-  <div class="page" @drop.prevent="onFilesDrop">
+  <div
+    ref="page"
+    class="page"
+    @dragstart="onDragStart"
+    @dragend="endDrag"
+    @drop.prevent="onFilesDrop"
+  >
     <header class="head">
       <template v-if="folder">
         <button
           class="crumb"
-          :class="{ drop: dropFolder === 'root' }"
+          :class="{ drop: dropFolder === 'root', receptive: draggingId }"
           title="Terug naar Media (sleep een bestand hierheen om het uit de map te halen)"
           @click="openFolderId = null"
-          @dragover="isAssetDrag($event) && ($event.preventDefault(), (dropFolder = 'root'))"
-          @dragleave="dropFolder = null"
-          @drop="onFolderDrop($event, null)"
+          @dragenter="onTargetDragOver($event, 'root')"
+          @dragover="onTargetDragOver($event, 'root')"
+          @dragleave="onTargetDragLeave($event, 'root')"
+          @drop="onTargetDrop($event, 'root')"
         >
           <Icon name="left" :size="18" /> Media
         </button>
@@ -177,7 +238,7 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
           {{ f.label }}
         </button>
       </div>
-      <button v-if="!folder" class="btn btn-ghost" @click="newFolder">
+      <button v-if="!folder" class="btn btn-ghost" @click="newFolder()">
         <Icon name="folder-plus" /> Nieuwe map
       </button>
       <button class="btn" @click="importFiles(undefined, openFolderId)">
@@ -200,11 +261,12 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
         v-for="t in folderTiles"
         :key="t.folder.id"
         class="folder"
-        :class="{ drop: dropFolder === t.folder.id }"
+        :class="{ drop: dropFolder === t.folder.id, receptive: draggingId }"
         @click="openFolderId = t.folder.id"
-        @dragover="onFolderDragOver($event, t.folder.id)"
-        @dragleave="dropFolder = null"
-        @drop="onFolderDrop($event, t.folder.id)"
+        @dragenter="onTargetDragOver($event, t.folder.id)"
+        @dragover="onTargetDragOver($event, t.folder.id)"
+        @dragleave="onTargetDragLeave($event, t.folder.id)"
+        @drop="onTargetDrop($event, t.folder.id)"
       >
         <span class="mosaic" :class="`n${t.mosaic.length}`">
           <MediaThumb v-for="a in t.mosaic" :key="a.id" :asset="a" class="mosaic-cell" />
@@ -220,8 +282,9 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
         v-for="a in visual"
         :key="a.id"
         :asset="a"
-        @move="moveToFolder(a, $event)"
+        :class="{ dragging: draggingId === a.id }"
         @remove="remove(a)"
+        @preview="previewId = a.id"
       />
     </section>
 
@@ -230,7 +293,7 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
         v-for="a in sounds"
         :key="a.id"
         class="sound"
-        :class="{ playing: preview.playingId.value === a.id }"
+        :class="{ playing: preview.playingId.value === a.id, dragging: draggingId === a.id }"
         draggable="true"
         @dragstart="onSoundDragStart($event, a)"
       >
@@ -244,17 +307,14 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
         <span class="name grow">{{ a.name }}</span>
         <span v-if="findAssetUsages(quiz, a.id).length" class="used">in gebruik</span>
         <span class="meta mono">{{ formatTime(a.duration) }}</span>
-        <label v-if="quiz.folders.length" class="sound-folder" title="Map">
-          <Icon name="folder" :size="12" />
-          <select
-            :value="a.folderId ?? ''"
-            aria-label="Map"
-            @change="moveToFolder(a, ($event.target as HTMLSelectElement).value || null)"
-          >
-            <option value="">Geen map</option>
-            <option v-for="f in quiz.folders" :key="f.id" :value="f.id">{{ f.name }}</option>
-          </select>
-        </label>
+        <button
+          class="btn btn-ghost btn-sm btn-icon sound-look"
+          aria-label="Voorbeeld"
+          title="Voorbeeld"
+          @click="previewId = a.id"
+        >
+          <Icon name="eye" :size="14" />
+        </button>
         <button
           class="btn btn-ghost btn-sm btn-icon sound-remove"
           aria-label="Verwijder uit quiz"
@@ -266,9 +326,38 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
       </div>
     </section>
 
-    <p class="tip faint">
-      Soepelste loops: H.264- of HEVC-video met “faststart” en zonder geluidsspoor.
-    </p>
+    <div class="tips faint">
+      <p v-if="visual.length || sounds.length">
+        Sleep een bestand naar een map om het te verplaatsen.
+      </p>
+      <p>Soepelste loops: H.264- of HEVC-video met “faststart” en zonder geluidsspoor.</p>
+    </div>
+
+    <Transition name="dock">
+      <div
+        v-if="draggingId"
+        class="dock"
+        role="group"
+        aria-label="Verplaats naar"
+        :style="{ left: `${dockX}px` }"
+      >
+        <span class="dock-label">Verplaats naar</span>
+        <div
+          v-for="t in dockTargets"
+          :key="t.key"
+          class="dock-target"
+          :class="{ drop: dropFolder === t.key }"
+          @dragenter="onTargetDragOver($event, t.key)"
+          @dragover="onTargetDragOver($event, t.key)"
+          @dragleave="onTargetDragLeave($event, t.key)"
+          @drop="onTargetDrop($event, t.key)"
+        >
+          <Icon :name="t.icon" :size="14" /> {{ t.label }}
+        </div>
+      </div>
+    </Transition>
+
+    <MediaPreview v-if="previewId" v-model:id="previewId" :items="shown" />
   </div>
 </template>
 
@@ -306,6 +395,7 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
 }
 
 .crumb:hover,
+.crumb.receptive,
 .crumb.drop {
   background: var(--surface-2);
   color: var(--text);
@@ -371,6 +461,10 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
   box-shadow: 0 0 0 2px var(--surface-4);
 }
 
+.folder.receptive .mosaic {
+  box-shadow: 0 0 0 2px var(--surface-4);
+}
+
 .folder.drop .mosaic {
   box-shadow: 0 0 0 2px var(--accent);
 }
@@ -425,10 +519,16 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
   min-height: 44px;
   padding: 0 6px 0 10px;
   border-radius: var(--radius);
+  cursor: grab;
+  transition: opacity 0.12s;
 }
 
 .sound:hover {
   background: var(--surface-1);
+}
+
+.sound.dragging {
+  opacity: 0.35;
 }
 
 .sound.playing .name {
@@ -469,28 +569,7 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
   font-size: 12px;
 }
 
-.sound-folder {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.sound-folder select {
-  max-width: 140px;
-  padding: 2px 0;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
-}
-
-.sound-folder:hover {
-  color: var(--text);
-}
-
+.sound-look,
 .sound-remove {
   color: var(--muted);
 }
@@ -500,8 +579,68 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
   color: var(--live);
 }
 
-.tip {
+.tips {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
   margin-top: auto;
   font-size: 12px;
+}
+
+/* Verschijnt tijdens het slepen, onderin over de pagina heen (niets schuift op). */
+.dock {
+  position: fixed;
+  bottom: 28px;
+  z-index: 40;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  max-width: min(900px, calc(100vw - 48px));
+  padding: 8px 8px 8px 16px;
+  border-radius: var(--radius-xl);
+  background: var(--surface-3);
+  box-shadow:
+    0 0 0 1px var(--line-strong),
+    0 20px 50px rgba(3, 6, 14, 0.55);
+  translate: -50% 0;
+}
+
+.dock-label {
+  margin-right: 4px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.dock-target {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: var(--surface-4);
+  font-weight: 600;
+  transition:
+    background 0.1s,
+    color 0.1s;
+}
+
+.dock-target.drop {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.dock-enter-active,
+.dock-leave-active {
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
+}
+
+.dock-enter-from,
+.dock-leave-to {
+  opacity: 0;
+  transform: translateY(8px);
 }
 </style>

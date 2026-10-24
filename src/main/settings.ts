@@ -22,6 +22,8 @@ interface SettingsData {
   audio: Record<string, AudioTarget>
   /** Alleen schermen waarvan het geluid niet naar hun eigen speakers gaat. */
   screenSound: Record<string, AudioTarget>
+  /** Waar de rondleiding bij de eerste start is neergezet; null = nog niet gebeurd. */
+  tourDir: string | null
 }
 
 export interface RecoveryData {
@@ -34,6 +36,9 @@ const MAX_RECENT = 8
 export const DEFAULT_AUDIO: AudioTarget = { deviceId: 'default', label: 'Systeemstandaard' }
 
 export class Settings {
+  /** Opslaan gebeurt na elkaar: twee snelle wijzigingen kunnen elkaar zo niet inhalen. */
+  private saving: Promise<void> = Promise.resolve()
+
   private constructor(
     private readonly dir: string,
     private data: SettingsData
@@ -45,7 +50,8 @@ export class Settings {
       recent: stored?.recent ?? [],
       screens: stored?.screens ?? {},
       audio: stored?.audio ?? {},
-      screenSound: stored?.screenSound ?? {}
+      screenSound: stored?.screenSound ?? {},
+      tourDir: stored?.tourDir ?? null
     })
   }
 
@@ -60,6 +66,24 @@ export class Settings {
 
   removeRecent(path: string): void {
     this.data.recent = this.data.recent.filter((p) => p !== path)
+    void this.save()
+  }
+
+  get tourDir(): string | null {
+    return this.data.tourDir
+  }
+
+  /**
+   * Rondleiding neergezet in `dir`: op het dashboard op de plek van `replaces` (dezelfde quiz,
+   * eerder vanaf een andere plek geopend), anders achteraan, zodat de eigen quizzen voorgaan.
+   */
+  setTour(dir: string, replaces: string): void {
+    this.data.tourDir = dir
+    const recent = this.data.recent.filter((p) => p !== dir)
+    const at = recent.indexOf(replaces)
+    if (at >= 0) recent[at] = dir
+    else recent.splice(MAX_RECENT - 1, Infinity, dir)
+    this.data.recent = recent
     void this.save()
   }
 
@@ -117,12 +141,38 @@ export class Settings {
     return fs.rm(join(this.dir, 'recovery.json'), { force: true })
   }
 
+  /** Klaar als alles is weggeschreven. */
+  whenSaved(): Promise<void> {
+    return this.saving
+  }
+
   private save(): Promise<void> {
-    return writeJson(join(this.dir, 'settings.json'), this.data).catch((err) => {
-      console.error('Instellingen opslaan mislukt', err)
-    })
+    this.saving = this.saving
+      .then(() => writeJson(join(this.dir, 'settings.json'), this.data))
+      .catch((err) => {
+        console.error('Instellingen opslaan mislukt', err)
+      })
+    return this.saving
   }
 }
+
+/**
+ * Eén keer bij de nieuwe naam: instellingen en herstelgegevens overnemen uit de map van de
+ * werknaam (Application Support/Pubquiz), zodat recente quizzen en koppelingen blijven.
+ */
+export async function adoptSettings(from: string, to: string): Promise<void> {
+  if (await exists(join(to, 'settings.json'))) return
+  await fs.mkdir(to, { recursive: true })
+  for (const file of ['settings.json', 'recovery.json']) {
+    await fs.copyFile(join(from, file), join(to, file), fs.constants.COPYFILE_EXCL).catch(() => {})
+  }
+}
+
+const exists = (path: string) =>
+  fs.access(path).then(
+    () => true,
+    () => false
+  )
 
 /** Zoekt het display bij een doel: eerst op id, dan op naam (ids veranderen soms na opnieuw aansluiten). */
 export function findDisplay<T extends { id: number; label: string }>(

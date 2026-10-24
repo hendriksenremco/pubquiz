@@ -1,7 +1,6 @@
 import { addImported } from '@shared/media-folders'
 import type { MediaAsset } from '@shared/types'
 import { useSession } from '../stores/session'
-import { probeDuration } from './media'
 
 const api = window.pubquiz
 
@@ -19,14 +18,8 @@ export function useMediaImport() {
     const result = await api.importMedia(paths)
     const quiz = session.quiz
     if (!quiz) return []
-    const added = addImported(quiz, result, folderId)
-    for (const asset of added) {
-      if (asset.duration !== undefined || asset.kind === 'image') continue
-      void probeDuration(asset).then((duration) => {
-        if (duration !== null) asset.duration = Math.round(duration * 100) / 100
-      })
-    }
-    return added
+    // De duur meet de sessie zelf, voor alle media zonder duur.
+    return addImported(quiz, result, folderId)
   }
 
   function pathsFromDrop(event: DragEvent): string[] {

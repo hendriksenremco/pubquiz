@@ -76,11 +76,25 @@ export class AppController {
   }
 
   get windowTitle(): string {
-    return this.quiz ? `${this.quiz.title} — Pubquiz` : 'Pubquiz'
+    return this.quiz ? `${this.quiz.title} — Quizmeister` : 'Quizmeister'
   }
 
   get live(): boolean {
     return this.show.current.live
+  }
+
+  /** De geopende quiz, voor de AI-koppeling (src/main/agent.ts). */
+  get current(): { quiz: Quiz; dir: string } | null {
+    return this.quiz && this.quizDir ? { quiz: this.quiz, dir: this.quizDir } : null
+  }
+
+  get recentDirs(): string[] {
+    return this.settings.recent
+  }
+
+  /** Op het dashboard zetten zonder te openen. */
+  remember(dir: string): void {
+    this.settings.addRecent(dir)
   }
 
   snapshot(): Snapshot {
@@ -255,7 +269,35 @@ export class AppController {
   }
 
   recentQuizzes(): Promise<RecentQuiz[]> {
-    return Promise.all(this.settings.recent.map((dir) => summarizeQuiz(dir)))
+    return Promise.all(
+      this.settings.recent.map(async (dir) => ({
+        ...(await summarizeQuiz(dir)),
+        tour: dir === this.settings.tourDir
+      }))
+    )
+  }
+
+  /**
+   * Eerste start: de meegeleverde rondleiding naar de bibliotheek kopiëren en op het dashboard
+   * zetten. Eén keer: wie hem uit de lijst haalt, krijgt hem niet terug.
+   */
+  async installTour(source: string | null): Promise<void> {
+    if (!source || this.settings.tourDir !== null || !(await isQuizDir(source))) return
+    const target = join(this.libraryDir, `Rondleiding${QUIZ_EXT}`)
+    try {
+      if (!(await isQuizDir(target))) {
+        await fs.mkdir(this.libraryDir, { recursive: true })
+        await fs.cp(source, target, {
+          recursive: true,
+          errorOnExist: true,
+          force: false,
+          preserveTimestamps: true
+        })
+      }
+      this.settings.setTour(target, source)
+    } catch (err) {
+      console.error('Rondleiding klaarzetten mislukt', err)
+    }
   }
 
   removeRecent(path: string): void {

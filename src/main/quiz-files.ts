@@ -97,8 +97,8 @@ export async function createQuizFromTemplate(
 }
 
 /** Samenvatting voor het home-dashboard; ook voor quizzen die verplaatst of kapot zijn. */
-export async function summarizeQuiz(dir: string): Promise<RecentQuiz> {
-  const missing: RecentQuiz = {
+export async function summarizeQuiz(dir: string): Promise<Omit<RecentQuiz, 'tour'>> {
+  const missing: Omit<RecentQuiz, 'tour'> = {
     path: dir,
     exists: false,
     title: basename(dir, QUIZ_EXT),

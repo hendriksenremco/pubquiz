@@ -14,6 +14,8 @@ export type ShowCommand =
   | { type: 'prevSlide' }
   | { type: 'playFragment'; fragmentId: string }
   | { type: 'stopFragment' }
+  /** Het volgende of vorige fragment (← →); loopt de reeks, dan gaat die vanaf daar verder. */
+  | { type: 'stepFragment'; direction: 'next' | 'prev' }
   | { type: 'autoplay'; action: AutoplayAction }
   /** Antwoordenronde: volgende/vorige stap, of stoppen. */
   | { type: 'answers'; action: 'next' | 'prev' | 'stop' }
@@ -67,6 +69,18 @@ export interface RecentQuiz {
   modifiedAt: number | null
   /** Beeld van het eerste scherm, als artwork. */
   cover: { kind: 'video' | 'image'; file: string } | null
+  /** De rondleiding die de app bij de eerste start klaarzet. */
+  tour: boolean
+}
+
+/** Quizmeister koppelen aan een AI-assistent (MCP); zie src/mcp. */
+export interface AiSetup {
+  /** Hoe een AI-app de MCP-server start. */
+  server: { command: string; args: string[]; env: Record<string, string> }
+  /** Claude Desktop staat op deze Mac (zijn instellingenmap bestaat). */
+  claudeInstalled: boolean
+  /** Quizmeister staat al in de instellingen van Claude Desktop. */
+  claudeConnected: boolean
 }
 
 export type MenuAction = 'new' | 'open' | 'exportZip' | 'importZip' | 'reveal' | 'undo' | 'redo'
@@ -94,6 +108,10 @@ export interface PubquizApi {
   revealQuiz(path?: string): Promise<void>
   closeQuiz(): Promise<void>
   recentQuizzes(): Promise<RecentQuiz[]>
+  aiSetup(): Promise<AiSetup>
+  /** Zet Quizmeister in de instellingen van Claude Desktop; geeft een foutmelding of null. */
+  connectClaude(): Promise<string | null>
+  copyText(text: string): void
   removeRecent(path: string): Promise<void>
   updateQuiz(quiz: Quiz): void
   importMedia(paths?: string[]): Promise<ImportResult>
@@ -132,6 +150,9 @@ export const IPC = {
   revealQuiz: 'pq:reveal-quiz',
   closeQuiz: 'pq:close-quiz',
   recentQuizzes: 'pq:recent-quizzes',
+  aiSetup: 'pq:ai-setup',
+  connectClaude: 'pq:connect-claude',
+  copyText: 'pq:copy-text',
   removeRecent: 'pq:remove-recent',
   updateQuiz: 'pq:update-quiz',
   importMedia: 'pq:import-media',

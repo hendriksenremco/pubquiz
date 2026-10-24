@@ -52,6 +52,8 @@ export interface ShowState {
   /** Index in `round.slides`, of -1 voor geen slide. */
   slideIndex: number
   fragment: PlayingFragment | null
+  /** Laatst gestarte fragment, ook als het al is afgelopen: ← → bladeren vanaf hier. */
+  lastFragmentId: string | null
   played: string[]
   autoplay: AutoplayState
   /** Antwoordenronde die loopt: welk fragment en of het antwoord in beeld is. */

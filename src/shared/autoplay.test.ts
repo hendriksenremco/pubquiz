@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { AUTOPLAY_IDLE, autoplayCountdown, stepAutoplay, type AutoplayState } from './autoplay'
+import {
+  AUTOPLAY_IDLE,
+  adjacentFragment,
+  autoplayCountdown,
+  stepAutoplay,
+  type AutoplayState
+} from './autoplay'
 
 const config = { count: 3, gapMs: 5000 }
 
@@ -94,6 +100,27 @@ describe('stepAutoplay', () => {
 
   it('start voorbij het einde is direct klaar', () => {
     expect(start(3).state).toEqual(AUTOPLAY_IDLE)
+  })
+})
+
+describe('adjacentFragment', () => {
+  const ids = ['a', 'b', 'c']
+
+  it('gaat naar het fragment na of voor het laatst gestarte', () => {
+    expect(adjacentFragment(ids, 'a', 'next')).toBe(1)
+    expect(adjacentFragment(ids, 'c', 'prev')).toBe(1)
+  })
+
+  it('begint bij het eerste als er nog niets gestart is', () => {
+    expect(adjacentFragment(ids, null, 'next')).toBe(0)
+    expect(adjacentFragment(ids, null, 'prev')).toBeNull()
+    // Laatst gestarte hoort bij een andere ronde: ook opnieuw beginnen.
+    expect(adjacentFragment(ids, 'x', 'next')).toBe(0)
+  })
+
+  it('gaat niet voorbij het begin of het eind', () => {
+    expect(adjacentFragment(ids, 'a', 'prev')).toBeNull()
+    expect(adjacentFragment(ids, 'c', 'next')).toBeNull()
   })
 })
 

@@ -133,6 +133,20 @@ export function stepAutoplay(
   }
 }
 
+/**
+ * Bladeren met ← →: de index van het fragment na of voor het laatst gestarte. Nog niets gestart,
+ * dan begint → bij het eerste. Voorbij het begin of het eind: null.
+ */
+export function adjacentFragment(
+  ids: string[],
+  lastId: string | null,
+  direction: 'next' | 'prev'
+): number | null {
+  const index = lastId ? ids.indexOf(lastId) : -1
+  const target = index + (direction === 'next' ? 1 : -1)
+  return target >= 0 && target < ids.length ? target : null
+}
+
 /** Resterende hele seconden in de pauze tussen twee fragmenten, of null. */
 export function autoplayCountdown(state: AutoplayState, now: number): number | null {
   if (state.status === 'gap') return Math.max(0, Math.ceil((state.until - now) / 1000))

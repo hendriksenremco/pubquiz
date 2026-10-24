@@ -1,18 +1,26 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { autoplayCountdown } from '@shared/autoplay'
+import { adjacentFragment, autoplayCountdown } from '@shared/autoplay'
 import type { AutoplayAction, ShowCommand } from '@shared/ipc'
 import type { Round } from '@shared/types'
 import { formatTime } from '../../lib/format'
 import { useNow } from '../../lib/use-now'
 import { useSession } from '../../stores/session'
 
-const props = defineProps<{ round: Round }>()
+/** `arrows`: ← → bladeren hier door de fragmenten. */
+const props = defineProps<{ round: Round; arrows: boolean }>()
 const api = window.pubquiz
 const session = useSession()
 const send = (command: ShowCommand) => api.command(command)
 
 const playing = computed(() => session.state.fragment)
+/** Het fragment dat → gaat spelen. */
+const upcoming = computed(() => {
+  if (!props.arrows) return null
+  const ids = props.round.fragments.map((f) => f.id)
+  const index = adjacentFragment(ids, session.state.lastFragmentId, 'next')
+  return index === null ? null : ids[index]
+})
 const ap = computed(() => session.state.autoplay)
 const now = useNow(100, () => playing.value !== null || ap.value.status === 'gap')
 
@@ -88,7 +96,8 @@ function click(id: string) {
         class="frag"
         :class="{
           on: playing?.fragmentId === f.id,
-          played: session.state.played.includes(f.id) && playing?.fragmentId !== f.id
+          played: session.state.played.includes(f.id) && playing?.fragmentId !== f.id,
+          upcoming: upcoming === f.id
         }"
         @click="click(f.id)"
       >
@@ -100,6 +109,9 @@ function click(id: string) {
         <span v-if="f.answer" class="frag-answer">{{ f.answer }}</span>
         <span v-if="playing?.fragmentId === f.id" class="frag-time mono">
           {{ remaining !== null ? `-${formatTime(remaining)}` : 'speelt…' }}
+        </span>
+        <span v-else-if="upcoming === f.id" class="frag-time frag-next">
+          Volgende <span class="kbd">→</span>
         </span>
         <span v-else-if="session.state.played.includes(f.id)" class="frag-time">✓ gespeeld</span>
         <span
@@ -148,6 +160,20 @@ function click(id: string) {
 
 .frag.played {
   opacity: 0.55;
+}
+
+/* Wat → gaat spelen; ook als het al eens gespeeld is (na ←). */
+.frag.upcoming {
+  border-style: dashed;
+  border-color: var(--accent);
+  opacity: 1;
+}
+
+.frag-next {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--accent);
 }
 
 .frag-top {

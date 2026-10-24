@@ -1,5 +1,5 @@
 appId: com.gutsgusto.pubquiz
-productName: Pubquiz
+productName: Quizmeister
 directories:
   buildResources: build
 files:
@@ -16,10 +16,14 @@ files:
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
 asarUnpack:
   - 'resources/**'
+# De rondleiding (pnpm tour:build); de app zet hem bij de eerste start op het dashboard.
+extraResources:
+  - from: dist/tour/Rondleiding.pubquiz
+    to: Rondleiding.pubquiz
 fileAssociations:
   - ext: pubquiz
-    name: Pubquiz
-    description: Pubquiz
+    name: Quizmeister-quiz
+    description: Quizmeister-quiz
     role: Editor
     isPackage: true
 mac:
@@ -30,5 +34,5 @@ mac:
   identity: null
   notarize: false
 dmg:
-  artifactName: ${name}-${version}.${ext}
+  artifactName: Quizmeister-${version}.${ext}
 npmRebuild: false
