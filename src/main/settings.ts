@@ -36,6 +36,9 @@ const MAX_RECENT = 8
 export const DEFAULT_AUDIO: AudioTarget = { deviceId: 'default', label: 'Systeemstandaard' }
 
 export class Settings {
+  /** Opslaan gebeurt na elkaar: twee snelle wijzigingen kunnen elkaar zo niet inhalen. */
+  private saving: Promise<void> = Promise.resolve()
+
   private constructor(
     private readonly dir: string,
     private data: SettingsData
@@ -138,10 +141,18 @@ export class Settings {
     return fs.rm(join(this.dir, 'recovery.json'), { force: true })
   }
 
+  /** Klaar als alles is weggeschreven. */
+  whenSaved(): Promise<void> {
+    return this.saving
+  }
+
   private save(): Promise<void> {
-    return writeJson(join(this.dir, 'settings.json'), this.data).catch((err) => {
-      console.error('Instellingen opslaan mislukt', err)
-    })
+    this.saving = this.saving
+      .then(() => writeJson(join(this.dir, 'settings.json'), this.data))
+      .catch((err) => {
+        console.error('Instellingen opslaan mislukt', err)
+      })
+    return this.saving
   }
 }
 

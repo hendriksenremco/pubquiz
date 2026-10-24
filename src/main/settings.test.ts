@@ -46,6 +46,7 @@ describe('Settings.mappingFor', () => {
 
       settings.saveMapping(quiz, { ...mapping, screenSound: {} })
       expect(settings.mappingFor(other, []).screenSound).toEqual({})
+      await settings.whenSaved()
     } finally {
       rmSync(dir, { recursive: true, force: true })
     }
@@ -78,6 +79,7 @@ describe('Settings.setTour', () => {
       expect(full.recent).toHaveLength(8)
       expect(full.recent.at(-1)).toBe('/lib/Rondleiding.pubquiz')
       expect(full.recent).not.toContain('/q/0')
+      await Promise.all([settings, again, full].map((s) => s.whenSaved()))
     } finally {
       rmSync(dir, { recursive: true, force: true })
     }
