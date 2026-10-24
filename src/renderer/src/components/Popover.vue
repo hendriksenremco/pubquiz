@@ -41,6 +41,10 @@ function onKey(event: KeyboardEvent) {
   if (event.key === 'Escape') open.value = false
 }
 
+// Groeit de inhoud (bv. een keuze die meer opties toont), dan opnieuw plaatsen: anders kan het
+// paneel onder het venster uitlopen.
+const resize = new ResizeObserver(() => place())
+
 watch(open, async (isOpen) => {
   if (isOpen) {
     document.addEventListener('pointerdown', onDocumentPointer, true)
@@ -49,7 +53,9 @@ watch(open, async (isOpen) => {
     window.addEventListener('resize', place)
     await nextTick()
     place()
+    if (panel.value) resize.observe(panel.value)
   } else {
+    resize.disconnect()
     document.removeEventListener('pointerdown', onDocumentPointer, true)
     document.removeEventListener('keydown', onKey)
     window.removeEventListener('scroll', place, true)

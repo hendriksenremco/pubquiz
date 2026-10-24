@@ -112,6 +112,25 @@ const BACKDROPS = [
 ] as const
 type BackdropKind = (typeof BACKDROPS)[number]['value']
 
+/** Donkere kleuren waar witte tekst goed op leesbaar is; daarnaast kan een eigen kleurcode. */
+const SWATCHES = [
+  '#000000',
+  '#0f1420',
+  '#1d2433',
+  '#16304f',
+  '#123b2e',
+  '#3a2410',
+  '#5c1a2b',
+  '#3b2350'
+]
+
+/** Eigen kleurcode, bv. "#1d2433" of "1d2433"; iets anders laat de kleur staan. */
+function setColor(s: Slide, input: HTMLInputElement) {
+  const hex = input.value.trim().replace(/^#?/, '#').toLowerCase()
+  if (typeof s.backdrop === 'object' && /^#[0-9a-f]{6}$/.test(hex)) s.backdrop = { color: hex }
+  input.value = typeof s.backdrop === 'object' ? s.backdrop.color : ''
+}
+
 function backdropKind(s: Slide): BackdropKind {
   return typeof s.backdrop === 'object' ? 'color' : s.backdrop
 }
@@ -380,10 +399,30 @@ function targetText(s: Slide): string {
             <span class="grow">{{ b.label }}</span>
             <Icon v-if="backdropKind(slide) === b.value" name="check" />
           </button>
-          <label v-if="typeof slide.backdrop === 'object'" class="row color-row">
-            <input v-model="slide.backdrop.color" type="color" class="color" />
-            <span class="muted mono">{{ slide.backdrop.color }}</span>
-          </label>
+          <div v-if="typeof slide.backdrop === 'object'" class="colors">
+            <div class="swatches" role="group" aria-label="Kleur">
+              <button
+                v-for="c in SWATCHES"
+                :key="c"
+                type="button"
+                class="swatch"
+                :class="{ on: slide.backdrop.color.toLowerCase() === c }"
+                :style="{ background: c }"
+                :aria-label="`Kleur ${c}`"
+                :aria-pressed="slide.backdrop.color.toLowerCase() === c"
+                @click="slide.backdrop = { color: c }"
+              />
+            </div>
+            <input
+              class="input input-sm mono hex"
+              :value="slide.backdrop.color"
+              aria-label="Eigen kleurcode"
+              maxlength="7"
+              spellcheck="false"
+              @change="setColor(slide, $event.target as HTMLInputElement)"
+              @keydown.enter="setColor(slide, $event.target as HTMLInputElement)"
+            />
+          </div>
         </Popover>
 
         <ImageChip
@@ -577,16 +616,35 @@ function targetText(s: Slide): string {
   font-size: 12px;
 }
 
-.color-row {
-  padding: 6px 10px;
+.colors {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 10px 6px;
 }
 
-.color {
-  width: 34px;
-  height: 26px;
-  padding: 0;
+.swatches {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.swatch {
+  aspect-ratio: 1;
   border: 0;
-  border-radius: 6px;
-  background: none;
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  cursor: pointer;
+}
+
+.swatch.on {
+  box-shadow:
+    0 0 0 2px var(--surface-3),
+    0 0 0 4px var(--accent);
+}
+
+.hex {
+  background: var(--surface-2);
+  text-transform: lowercase;
 }
 </style>

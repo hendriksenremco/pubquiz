@@ -293,14 +293,108 @@ button:focus-visible,
   gap: var(--gap);
 }
 
+/* Schuifjes en vinkjes in de stijl van de app; het blijven echte invoervelden (toetsenbord,
+   schermlezers). De gevulde baan van een schuifje komt van v-fill (lib/fill.ts). */
 input[type='range'] {
-  accent-color: var(--accent);
+  --fill: 0%;
+  appearance: none;
+  height: 18px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
 }
 
-input[type='checkbox'],
-input[type='radio'] {
-  accent-color: var(--accent);
+input[type='range']::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(to right, var(--accent) var(--fill), var(--surface-4) var(--fill));
+}
+
+input[type='range']::-webkit-slider-thumb {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  margin-top: -5px;
+  border-radius: 50%;
+  background: var(--text);
+  box-shadow: 0 1px 4px rgba(3, 6, 14, 0.5);
+  transition: transform 0.1s;
+}
+
+input[type='range']:hover::-webkit-slider-thumb,
+input[type='range']:active::-webkit-slider-thumb {
+  transform: scale(1.15);
+}
+
+input[type='range']:focus-visible {
+  outline: none;
+}
+
+input[type='range']:focus-visible::-webkit-slider-thumb {
+  box-shadow:
+    0 0 0 4px rgba(255, 165, 61, 0.35),
+    0 1px 4px rgba(3, 6, 14, 0.5);
+}
+
+input[type='range']:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+input[type='checkbox'] {
+  display: inline-grid;
+  flex: none;
+  place-content: center;
+  width: 16px;
+  height: 16px;
   margin: 0;
+  border-radius: 5px;
+  background: var(--surface-4);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  appearance: none;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+input[type='checkbox']::after {
+  width: 11px;
+  height: 11px;
+  background: var(--accent-ink);
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12l5 5 9-10'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  content: '';
+  transform: scale(0);
+  transition: transform 0.1s;
+}
+
+input[type='checkbox']:checked {
+  background: var(--accent);
+  box-shadow: none;
+}
+
+input[type='checkbox']:checked::after {
+  transform: scale(1);
+}
+
+input[type='checkbox']:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+input[type='checkbox']:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* Getallen zonder de pijltjes van macOS; ↑ ↓ op het toetsenbord werken nog. */
+input[type='number'] {
+  appearance: textfield;
+}
+
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  margin: 0;
+  appearance: none;
 }
 
 /* ── Vlakken ─────────────────────────────────────────────────────────────── */

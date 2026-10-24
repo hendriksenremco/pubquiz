@@ -9,6 +9,7 @@ import MediaPicker from '../../components/MediaPicker.vue'
 import PageHero from '../../components/PageHero.vue'
 import Select from '../../components/Select.vue'
 import StagePreview from '../../components/StagePreview.vue'
+import { vFill } from '../../lib/fill'
 import { useAmbient } from '../../lib/ambient'
 import { ask } from '../../lib/confirm'
 import { percent } from '../../lib/format'
@@ -189,6 +190,7 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
                   <span>Volume</span>
                   <input
                     v-model.number="quiz.background.volume"
+                    v-fill
                     type="range"
                     min="0"
                     max="1"
@@ -200,6 +202,7 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
                   <span>Bij fragment</span>
                   <input
                     v-model.number="quiz.background.duckTo"
+                    v-fill
                     type="range"
                     min="0"
                     max="1"
@@ -241,6 +244,7 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
               <input v-model="c.name" class="quiet channel-name" aria-label="Naam van het kanaal" />
               <input
                 v-model.number="c.volume"
+                v-fill
                 type="range"
                 min="0"
                 max="1"

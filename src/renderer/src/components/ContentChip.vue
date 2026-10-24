@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import { findAsset } from '@shared/resolve'
 import type { ScreenContent } from '@shared/types'
+import { vFill } from '../lib/fill'
 import { percent } from '../lib/format'
 import { useSession } from '../stores/session'
 import AssetGrid from './AssetGrid.vue'
@@ -165,6 +166,7 @@ const soundNote = computed(() =>
           <label class="row volume">
             <input
               v-model.number="soundVolume"
+              v-fill
               type="range"
               min="0"
               max="1"

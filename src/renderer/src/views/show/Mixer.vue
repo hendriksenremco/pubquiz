@@ -9,6 +9,7 @@ import {
   screenVolume
 } from '@shared/resolve'
 import Icon from '../../components/Icon.vue'
+import { vFill } from '../../lib/fill'
 import { percent } from '../../lib/format'
 import { useSession } from '../../stores/session'
 
@@ -80,6 +81,7 @@ const soundScreens = computed(() =>
           }}</span>
         </div>
         <input
+          v-fill
           type="range"
           min="0"
           max="1"
@@ -102,6 +104,7 @@ const soundScreens = computed(() =>
           <span class="mono muted pct">{{ percent(screenVolume(session.state, s.slot.id)) }}</span>
         </div>
         <input
+          v-fill
           type="range"
           min="0"
           max="1"
