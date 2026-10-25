@@ -46,9 +46,6 @@ async function save(doc: FormDoc) {
   <div class="print">
     <header class="head">
       <h2>Afdrukken</h2>
-      <p class="muted">
-        Pdf's om te printen. Je kiest waar ze komen; daarna openen ze, klaar om te printen.
-      </p>
     </header>
 
     <p v-if="!rounds.length" class="tile empty muted">

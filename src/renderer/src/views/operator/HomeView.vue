@@ -1,11 +1,9 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
-import { recentMediaUrl, type RecentQuiz } from '@shared/ipc'
+import { computed, onMounted, ref } from 'vue'
+import type { RecentQuiz } from '@shared/ipc'
 import Icon from '../../components/Icon.vue'
-import PageHero from '../../components/PageHero.vue'
 import Popover from '../../components/Popover.vue'
 import QuizCover from '../../components/QuizCover.vue'
-import { ambientFromUrl } from '../../lib/ambient'
 import { relativeDate } from '../../lib/format'
 
 type OpenMode = 'edit' | 'show'
@@ -29,13 +27,6 @@ defineExpose({ reload: load })
 const latest = computed(() => quizzes.value?.find((q) => q.exists) ?? null)
 const others = computed(() => quizzes.value?.filter((q) => q !== latest.value) ?? [])
 const templates = computed(() => quizzes.value?.filter((q) => q.exists) ?? [])
-
-const ambient = ref<string | null>(null)
-watch(latest, async (q) => {
-  ambient.value = q?.cover
-    ? await ambientFromUrl(q.cover.kind, recentMediaUrl(q.path, q.cover.file))
-    : null
-})
 
 function plural(n: number, one: string, many: string) {
   return `${n} ${n === 1 ? one : many}`
@@ -83,7 +74,7 @@ function reveal(q: RecentQuiz) {
 
 <template>
   <div v-if="quizzes" class="home scroll">
-    <PageHero :ambient="ambient">
+    <header class="hero">
       <div v-if="latest" class="hero-grid">
         <QuizCover :quiz="latest" class="hero-cover" />
         <div class="hero-text">
@@ -123,7 +114,7 @@ function reveal(q: RecentQuiz) {
           </button>
         </div>
       </div>
-    </PageHero>
+    </header>
 
     <section v-if="latest" class="body">
       <div class="section-head">
@@ -206,6 +197,12 @@ function reveal(q: RecentQuiz) {
   height: 100%;
 }
 
+.hero {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 40px 40px 32px;
+}
+
 .hero-grid {
   display: grid;
   grid-template-columns: minmax(260px, 420px) minmax(0, 1fr);
@@ -214,9 +211,7 @@ function reveal(q: RecentQuiz) {
 }
 
 .hero-cover {
-  box-shadow:
-    0 24px 60px rgba(3, 6, 14, 0.55),
-    0 0 0 1px rgba(255, 255, 255, 0.04);
+  box-shadow: 0 0 0 1px var(--line);
 }
 
 .hero-text,
