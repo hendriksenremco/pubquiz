@@ -4,7 +4,7 @@ import { activeRound, answerItems, findAsset, resolveScreen } from '@shared/reso
 import type { Quiz, ScreenContent, ShowState } from '@shared/types'
 import { assetUrl } from '../lib/media'
 import { useNow } from '../lib/use-now'
-import { peaksOf, useWaveform } from '../lib/waveform'
+import { levelsOf, useWaveform } from '../lib/waveform'
 import SlideView from './SlideView.vue'
 import Waveform from './Waveform.vue'
 
@@ -62,7 +62,7 @@ watch(
     ]
     for (const f of fragments) {
       const asset = findAsset(props.quiz, f.assetId)
-      if (asset) void peaksOf(asset)
+      if (asset) void levelsOf(asset)
     }
   },
   { immediate: true }

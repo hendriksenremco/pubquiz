@@ -1,17 +1,15 @@
 import { ref, watch, type Ref } from 'vue'
 import type { MediaAsset } from '@shared/types'
 import { urlFor } from './media'
-import { barsFor, type Peaks } from './peaks'
+import { barsFor, measure, type Levels } from './levels'
 
-/** Zoveel piekwaardes per bestand; elke weergave haalt daar zijn eigen aantal balkjes uit. */
-const RESOLUTION = 2000
 /** Genoeg voor de vorm, en vlug te decoderen. */
 const SAMPLE_RATE = 8000
 
-const cache = new Map<string, Promise<Peaks | null>>()
+const cache = new Map<string, Promise<Levels | null>>()
 
-/** Piekwaardes van een geluidsbestand; per venster één keer berekend. */
-export function peaksOf(asset: MediaAsset): Promise<Peaks | null> {
+/** Luidheid van een geluidsbestand; per venster één keer berekend. */
+export function levelsOf(asset: MediaAsset): Promise<Levels | null> {
   const url = urlFor(asset)
   let pending = cache.get(url)
   if (!pending) {
@@ -21,24 +19,11 @@ export function peaksOf(asset: MediaAsset): Promise<Peaks | null> {
   return pending
 }
 
-async function compute(url: string): Promise<Peaks> {
+async function compute(url: string): Promise<Levels> {
   const data = await (await fetch(url)).arrayBuffer()
   const audio = await new OfflineAudioContext(1, 1, SAMPLE_RATE).decodeAudioData(data)
   const channels = Array.from({ length: audio.numberOfChannels }, (_, c) => audio.getChannelData(c))
-  const peaks = new Float32Array(RESOLUTION)
-  const size = audio.length / RESOLUTION
-  for (let i = 0; i < RESOLUTION; i++) {
-    const to = Math.min(audio.length, Math.floor((i + 1) * size))
-    let max = 0
-    for (const samples of channels) {
-      for (let j = Math.floor(i * size); j < to; j++) {
-        const v = Math.abs(samples[j])
-        if (v > max) max = v
-      }
-    }
-    peaks[i] = max
-  }
-  return { peaks, duration: audio.duration }
+  return measure(channels, audio.sampleRate)
 }
 
 export interface WaveSource {
@@ -66,12 +51,12 @@ export function useWaveform(
         duration.value = null
         return
       }
-      const peaks = await peaksOf(s.asset)
+      const levels = await levelsOf(s.asset)
       const now = source()
       // Intussen een ander fragment of stuk gekozen: dat antwoord komt nog.
       if (now.asset?.file !== s.asset.file || now.start !== s.start || now.end !== s.end) return
-      bars.value = peaks ? barsFor(peaks, count, s.start, s.end) : null
-      duration.value = peaks?.duration ?? null
+      bars.value = levels ? barsFor(levels, count, s.start, s.end) : null
+      duration.value = levels?.duration ?? null
     },
     { immediate: true }
   )
