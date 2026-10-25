@@ -1,466 +1,430 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { answerScreens, hasAnswers } from '@shared/factory'
-import { itemSummary } from '@shared/forms'
-import { answerItems, findAsset } from '@shared/resolve'
-import type { Round, RoundBackground, ScreenContent } from '@shared/types'
-import ContentChip from '../../components/ContentChip.vue'
+import { computed, ref, watch } from 'vue'
+import { createFragment, createImageSlide, createSlide } from '@shared/factory'
+import { groupByFolder, naturalCompare } from '@shared/media-folders'
+import type { MediaAsset, Round, Slide } from '@shared/types'
 import Icon from '../../components/Icon.vue'
-import MediaPicker from '../../components/MediaPicker.vue'
-import PageHero from '../../components/PageHero.vue'
 import Popover from '../../components/Popover.vue'
-import StagePreview from '../../components/StagePreview.vue'
-import { useAmbient } from '../../lib/ambient'
+import { useMediaImport } from '../../lib/use-media-import'
 import { useSession } from '../../stores/session'
-import FragmentsEditor from './FragmentsEditor.vue'
-import SlidesEditor from './SlidesEditor.vue'
+import FragmentInspector from './FragmentInspector.vue'
+import FragmentList from './FragmentList.vue'
+import RoundSettings from './RoundSettings.vue'
+import SlideInspector from './SlideInspector.vue'
+import SlideList from './SlideList.vue'
 
+/**
+ * Een ronde, zoals Keynote: in het midden de inhoud (slides en fragmenten, meteen te typen),
+ * rechts het paneel met de instellingen van wat je gekozen hebt, of van de ronde zelf.
+ */
 const props = defineProps<{ round: Round }>()
 const emit = defineEmits<{ duplicate: []; remove: [] }>()
 const session = useSession()
 const quiz = computed(() => session.quiz!)
-const selectedSlide = ref(props.round.slides.length > 0 ? 0 : -1)
+const { importFiles, pathsFromDrop } = useMediaImport()
 
-// ── Hero: welk scherm staat in het "artwork" ────────────────────────────────
-const previewId = ref(quiz.value.screens[0]?.id ?? null)
-const previewSlot = computed(
-  () => quiz.value.screens.find((s) => s.id === previewId.value) ?? quiz.value.screens[0] ?? null
-)
-const shownContent = computed<ScreenContent | null>(() =>
-  previewSlot.value
-    ? (props.round.screens[previewSlot.value.id] ?? previewSlot.value.default)
+type Selection = { kind: 'slide' | 'fragment'; id: string } | null
+
+function first(): Selection {
+  const s = props.round.slides[0]
+  if (s) return { kind: 'slide', id: s.id }
+  const f = props.round.fragments[0]
+  return f ? { kind: 'fragment', id: f.id } : null
+}
+
+const selection = ref<Selection>(first())
+const tab = ref<'item' | 'round'>(selection.value ? 'item' : 'round')
+
+const slide = computed(() =>
+  selection.value?.kind === 'slide'
+    ? (props.round.slides.find((s) => s.id === selection.value!.id) ?? null)
     : null
 )
-const ambient = useAmbient(() =>
-  shownContent.value && shownContent.value.type !== 'black'
-    ? findAsset(quiz.value, shownContent.value.assetId)
+const fragment = computed(() =>
+  selection.value?.kind === 'fragment'
+    ? (props.round.fragments.find((f) => f.id === selection.value!.id) ?? null)
     : null
 )
 
-const position = computed(() => {
-  const index = quiz.value.rounds.findIndex((r) => r.id === props.round.id)
-  return `Ronde ${index + 1} van ${quiz.value.rounds.length}`
+// Weg (verwijderd of ongedaan gemaakt): dan het paneel van de ronde.
+watch([slide, fragment], ([s, f]) => {
+  if (selection.value && !s && !f) {
+    selection.value = null
+    tab.value = 'round'
+  }
 })
 
-const summary = computed(() => {
-  const parts: string[] = []
-  const f = props.round.fragments.length
-  const s = props.round.slides.length
-  if (f) parts.push(`${f} ${f === 1 ? 'fragment' : 'fragmenten'}`)
-  if (s) parts.push(`${s} ${s === 1 ? 'slide' : 'slides'}`)
-  const a = answerItems(quiz.value, props.round).length
-  if (a) parts.push(`${a} ${a === 1 ? 'antwoord' : 'antwoorden'}`)
-  if (!parts.length) return 'Nog leeg'
-  return parts.join(' en ')
+function select(kind: 'slide' | 'fragment', id: string | null) {
+  selection.value = id ? { kind, id } : null
+  tab.value = id ? 'item' : 'round'
+}
+
+const itemLabel = computed(() => {
+  if (fragment.value) return 'Fragment'
+  const layout = slide.value?.layout
+  return layout === 'question'
+    ? 'Vraag'
+    : layout === 'title'
+      ? 'Titel'
+      : layout === 'number'
+        ? 'Nummer'
+        : 'Afbeelding'
 })
 
-// ── Antwoorden: fragmenten van andere rondes nog eens langs ─────────────────
-const answerSources = computed(() =>
-  quiz.value.rounds.filter((r) => r.id !== props.round.id && hasAnswers(r))
+// ── Toevoegen ────────────────────────────────────────────────────────────────
+
+/** Na de gekozen slide, of achteraan. */
+function insertSlides(...slides: Slide[]) {
+  const at = slide.value ? props.round.slides.indexOf(slide.value) + 1 : props.round.slides.length
+  props.round.slides.splice(at, 0, ...slides)
+  select('slide', slides[0].id)
+}
+
+function addQuestion() {
+  const n = props.round.slides.filter((s) => s.layout === 'question').length + 1
+  // Een nieuwe vraag toont net als de vorige vraag de vraag zelf, of alleen het nummer.
+  const lastQuestion = props.round.slides.findLast((s) => s.layout === 'question')
+  insertSlides({ ...createSlide('question', `Vraag ${n}`), numberOnly: lastQuestion?.numberOnly })
+}
+
+function addSlide(layout: 'title' | 'number' | 'image', close: () => void) {
+  close()
+  const n = props.round.slides.filter((s) => s.layout === 'number').length + 1
+  insertSlides(
+    layout === 'title'
+      ? createSlide('title', props.round.title)
+      : layout === 'number'
+        ? createSlide('number', String(n))
+        : createImageSlide()
+  )
+}
+
+function addImages(assets: MediaAsset[]) {
+  const images = assets.filter((a) => a.kind === 'image')
+  if (images.length) insertSlides(...images.map((a) => createImageSlide(a.id)))
+}
+
+/** Fragmenten gaan standaard naar het kanaal "Fragmenten", anders naar het laatste kanaal. */
+const defaultChannel = computed(
+  () =>
+    quiz.value.channels.find((c) => /fragment/i.test(c.name))?.id ?? quiz.value.channels.at(-1)?.id
 )
-const chosenSources = computed(() =>
-  answerSources.value.filter((r) => props.round.answersFor.includes(r.id))
-)
-const answersText = computed(() => {
-  const chosen = chosenSources.value
-  if (!chosen.length) return 'geen'
-  return chosen.length === 1 ? chosen[0].title : `${chosen.length} rondes`
-})
-const missingAnswers = computed(
-  () => answerItems(quiz.value, props.round).filter((item) => !item.answer).length
-)
 
-/** Lijsten in de volgorde van de quiz houden, zodat chip en live-weergave hetzelfde lezen. */
-function toggled(list: string[], order: string[], id: string, on: boolean): string[] {
-  return order.filter((x) => (x === id ? on : list.includes(x)))
-}
-
-function setAnswersFor(roundId: string, on: boolean) {
-  const order = quiz.value.rounds.map((r) => r.id)
-  props.round.answersFor = toggled(props.round.answersFor, order, roundId, on)
-  // Eerste keuze: in beeld waar de nummers van die ronde stonden.
-  if (on && !props.round.fragmentScreens.length) {
-    props.round.fragmentScreens = answerScreens(quiz.value, chosenSources.value)
+function addFragments(assets: MediaAsset[]) {
+  const audio = assets.filter((a) => a.kind === 'audio')
+  if (!audio.length) return
+  const channelId = defaultChannel.value
+  if (!channelId) {
+    session.notify({
+      level: 'warning',
+      message: 'Voeg eerst een audiokanaal toe bij Quiz-instellingen.'
+    })
+    return
   }
+  const added = audio.map((asset, i) =>
+    createFragment(asset.id, channelId, props.round.fragments.length + i + 1)
+  )
+  props.round.fragments.push(...added)
+  select('fragment', added[0].id)
 }
 
-function setAnswerScreen(screenId: string, on: boolean) {
-  const order = quiz.value.screens.map((s) => s.id)
-  props.round.fragmentScreens = toggled(props.round.fragmentScreens, order, screenId, on)
+async function fromFiles(close: () => void) {
+  close()
+  const assets = await importFiles()
+  addImages(assets)
+  addFragments(assets)
 }
 
-function setOverride(screenId: string, value: ScreenContent | undefined) {
-  if (value) props.round.screens[screenId] = value
-  else delete props.round.screens[screenId]
+const imageFolders = computed(() => groupByFolder(quiz.value, ['image']).filter((g) => g.folder))
+const audioFolders = computed(() => groupByFolder(quiz.value, ['audio']).filter((g) => g.folder))
+
+function fromFolder(assets: MediaAsset[], close: () => void) {
+  close()
+  const used = new Set(props.round.fragments.map((f) => f.assetId))
+  const sorted = [...assets].sort((a, b) => naturalCompare(a.name, b.name))
+  addImages(sorted)
+  addFragments(sorted.filter((a) => !used.has(a.id)))
 }
 
-function setMuted(screenId: string, muted: boolean) {
-  const rest = props.round.mutedScreens.filter((id) => id !== screenId)
-  props.round.mutedScreens = muted ? [...rest, screenId] : rest
+// Bestanden op de ronde: afbeeldingen worden slides, geluid wordt fragmenten.
+const dropping = ref(false)
+
+async function onDrop(event: DragEvent) {
+  dropping.value = false
+  const paths = pathsFromDrop(event)
+  if (!paths.length) return
+  const assets = await importFiles(paths)
+  addImages(assets)
+  addFragments(assets)
 }
 
-// ── Achtergrondmuziek tijdens deze ronde ────────────────────────────────────
-type BgMode = 'continue' | 'duck' | 'pause' | 'replace'
-// "Andere muziek" wordt pas echt opgeslagen zodra er een bestand gekozen is.
-const replacing = ref(typeof props.round.background === 'object')
-const bgMode = computed<BgMode>(() => {
-  const bg = props.round.background
-  return replacing.value || typeof bg === 'object' ? 'replace' : bg
-})
-function chooseBackground(mode: BgMode, close: () => void) {
-  replacing.value = mode === 'replace'
-  if (mode !== 'replace') {
-    props.round.background = mode
-    close()
-  }
-}
-const replaceAsset = computed({
-  get: () =>
-    typeof props.round.background === 'object' ? props.round.background.replaceAssetId : undefined,
-  set: (id) => {
-    if (id) props.round.background = { replaceAssetId: id } satisfies RoundBackground
-  }
-})
-
-const BG_OPTIONS: { value: BgMode; label: string; short: string; hint: string }[] = [
-  {
-    value: 'continue',
-    label: 'Doorspelen',
-    short: 'speelt door',
-    hint: 'Alleen zachter tijdens een fragment'
-  },
-  { value: 'duck', label: 'Zachter', short: 'zachter', hint: 'De hele ronde op het lagere volume' },
-  {
-    value: 'pause',
-    label: 'Pauzeren',
-    short: 'pauzeert',
-    hint: 'Stil, na de ronde speelt hij verder'
-  },
-  {
-    value: 'replace',
-    label: 'Andere muziek',
-    short: 'andere muziek',
-    hint: 'Een eigen loop tijdens deze ronde'
-  }
-]
-const bgText = computed(() => {
-  if (!quiz.value.background) return 'geen'
-  if (bgMode.value === 'replace') {
-    const name = findAsset(quiz.value, replaceAsset.value)?.name.replace(/\.[^.]+$/, '')
-    return name ?? 'kies muziek'
-  }
-  return BG_OPTIONS.find((o) => o.value === bgMode.value)?.short ?? ''
-})
+const both = computed(() => props.round.slides.length > 0 && props.round.fragments.length > 0)
+const empty = computed(() => !props.round.slides.length && !props.round.fragments.length)
 </script>
 
 <template>
   <div class="round-page">
-    <PageHero :ambient="ambient">
-      <div class="hero-grid">
-        <div class="artwork">
-          <StagePreview
-            v-if="previewSlot"
-            :screen="previewSlot"
-            :round-id="round.id"
-            :slide-index="selectedSlide"
-            :caption="false"
-          />
-          <span v-if="previewSlot && quiz.screens.length > 1" class="artwork-label">{{
-            previewSlot.name
-          }}</span>
-        </div>
-
-        <div class="hero-text">
-          <div class="hero-top">
-            <span class="position grow">{{ position }}</span>
-            <button class="btn btn-ghost btn-sm" @click="emit('duplicate')">
-              <Icon name="copy" :size="14" /> Dupliceer
-            </button>
-            <button class="btn btn-ghost btn-sm danger" @click="emit('remove')">
-              <Icon name="trash" :size="14" /> Verwijder
-            </button>
-          </div>
-          <input
-            id="round-title"
-            v-model="round.title"
-            class="quiet hero-title"
-            aria-label="Titel van de ronde"
-          />
-          <p class="muted summary">{{ summary }}</p>
-
-          <div class="chips">
-            <ContentChip
-              v-for="slot in quiz.screens"
-              :key="slot.id"
-              :label="slot.name"
-              :model-value="round.screens[slot.id]"
-              :muted="round.mutedScreens.includes(slot.id)"
-              :fallback="slot.default"
-              allow-default
-              @update:model-value="setOverride(slot.id, $event)"
-              @update:muted="setMuted(slot.id, $event)"
-              @opened="previewId = slot.id"
-            />
-
-            <Popover :width="300">
-              <template #trigger="{ open, toggle }">
-                <button
-                  type="button"
-                  class="chip"
-                  :class="{ open }"
-                  :title="`Achtergrond: ${bgText}`"
-                  @click="toggle"
-                >
-                  <span class="chip-icon"><Icon name="music" :size="13" /></span>
-                  <span>Achtergrond</span>
-                  <span class="chip-key chip-value">{{ bgText }}</span>
-                  <Icon name="chevron" :size="14" class="chev" />
-                </button>
-              </template>
-              <template #default="{ close }">
-                <p v-if="!quiz.background" class="muted no-bg">
-                  Er is nog geen achtergrondmuziek. Die kies je bij Quiz.
-                </p>
-                <template v-else>
-                  <button
-                    v-for="o in BG_OPTIONS"
-                    :key="o.value"
-                    class="menu-item"
-                    :class="{ on: bgMode === o.value }"
-                    @click="chooseBackground(o.value, close)"
-                  >
-                    <span class="grow">
-                      {{ o.label }}
-                      <span class="menu-hint">{{ o.hint }}</span>
-                    </span>
-                    <Icon v-if="bgMode === o.value" name="check" />
-                  </button>
-                  <MediaPicker
-                    v-if="bgMode === 'replace'"
-                    v-model="replaceAsset"
-                    :kinds="['audio']"
-                    placeholder="Kies muziek voor deze ronde…"
-                    class="replace-picker"
-                  />
-                </template>
-              </template>
-            </Popover>
-
-            <Popover v-if="answerSources.length" :width="320">
-              <template #trigger="{ open, toggle }">
-                <button
-                  type="button"
-                  class="chip answers-chip"
-                  :class="{ open, dimmed: !chosenSources.length }"
-                  :title="`Antwoorden van: ${answersText}`"
-                  @click="toggle"
-                >
-                  <span class="chip-icon"><Icon name="check" :size="13" /></span>
-                  <span>Antwoorden</span>
-                  <span class="chip-key chip-value">{{ answersText }}</span>
-                  <Icon name="chevron" :size="14" class="chev" />
-                </button>
-              </template>
-              <div class="answers-menu">
-                <p class="muted menu-note">
-                  Loop in deze ronde de vragen, afbeeldingen en fragmenten nog eens langs: eerst de
-                  vraag, de afbeelding of het fragment, dan het antwoord in beeld.
-                </p>
-                <label v-for="r in answerSources" :key="r.id" class="check-row">
-                  <input
-                    type="checkbox"
-                    :checked="round.answersFor.includes(r.id)"
-                    @change="setAnswersFor(r.id, ($event.target as HTMLInputElement).checked)"
-                  />
-                  <span class="grow">
-                    {{ r.title }}
-                    <span class="menu-hint">{{ itemSummary(r) }}</span>
-                  </span>
-                </label>
-                <p v-if="missingAnswers" class="menu-note warn">
-                  Nog {{ missingAnswers }} zonder antwoord. Vul het in bij de vraag, de afbeelding
-                  of het fragment zelf.
-                </p>
-                <template v-if="chosenSources.length">
-                  <div class="menu-label">In beeld op</div>
-                  <label v-for="slot in quiz.screens" :key="slot.id" class="check-row">
-                    <input
-                      type="checkbox"
-                      :checked="round.fragmentScreens.includes(slot.id)"
-                      @change="
-                        setAnswerScreen(slot.id, ($event.target as HTMLInputElement).checked)
-                      "
-                    />
-                    <span>{{ slot.name }}</span>
-                  </label>
-                </template>
-              </div>
-            </Popover>
-          </div>
-        </div>
-      </div>
-    </PageHero>
-
-    <div class="body">
-      <SlidesEditor v-model:selected="selectedSlide" :round="round" />
-      <FragmentsEditor :round="round" />
-
-      <section>
-        <div class="section-head"><h3>Notities</h3></div>
-        <textarea
-          v-model="round.hostNotes"
-          class="quiet notes"
-          rows="3"
-          placeholder="Antwoorden of aankondigingen. Alleen jij ziet dit, tijdens de ronde."
+    <div
+      class="canvas scroll"
+      :class="{ dropping }"
+      @dragover.prevent="dropping = true"
+      @dragleave.self="dropping = false"
+      @drop.prevent.stop="onDrop"
+    >
+      <div class="inner">
+        <input
+          id="round-title"
+          v-model="round.title"
+          class="quiet round-title"
+          aria-label="Titel van de ronde"
         />
-      </section>
+
+        <section v-if="round.slides.length" class="part">
+          <h3 v-if="both" class="part-label">Slides</h3>
+          <SlideList
+            :round="round"
+            :selected-id="slide?.id ?? null"
+            @select="select('slide', $event)"
+          />
+        </section>
+
+        <section v-if="round.fragments.length" class="part">
+          <h3 v-if="both" class="part-label">Fragmenten</h3>
+          <FragmentList
+            :round="round"
+            :selected-id="fragment?.id ?? null"
+            @select="select('fragment', $event)"
+          />
+        </section>
+
+        <p v-if="empty" class="muted empty-hint">
+          Nog leeg. Voeg hieronder iets toe, of sleep afbeeldingen of geluid hierheen.
+        </p>
+
+        <div class="add-bar">
+          <button class="btn add" @click="addQuestion">
+            <Icon name="plus" :size="14" /> Vraag
+          </button>
+          <Popover :width="260">
+            <template #trigger="{ open, toggle }">
+              <button class="btn add" :class="{ active: open }" @click="toggle">
+                <Icon name="plus" :size="14" /> Afbeeldingen
+              </button>
+            </template>
+            <template #default="{ close }">
+              <button class="menu-item" @click="fromFiles(close)">
+                <Icon name="upload" /> Bestanden of map…
+              </button>
+              <template v-if="imageFolders.length">
+                <div class="menu-label">Uit Media</div>
+                <button
+                  v-for="g in imageFolders"
+                  :key="g.folder!.id"
+                  class="menu-item"
+                  @click="fromFolder(g.assets, close)"
+                >
+                  <Icon name="folder" />
+                  <span class="grow">{{ g.folder!.name }}</span>
+                  <span class="muted">{{ g.assets.length }}</span>
+                </button>
+              </template>
+            </template>
+          </Popover>
+          <Popover :width="260">
+            <template #trigger="{ open, toggle }">
+              <button class="btn add" :class="{ active: open }" @click="toggle">
+                <Icon name="plus" :size="14" /> Fragmenten
+              </button>
+            </template>
+            <template #default="{ close }">
+              <button class="menu-item" @click="fromFiles(close)">
+                <Icon name="upload" /> Bestanden of map…
+              </button>
+              <template v-if="audioFolders.length">
+                <div class="menu-label">Uit Media</div>
+                <button
+                  v-for="g in audioFolders"
+                  :key="g.folder!.id"
+                  class="menu-item"
+                  @click="fromFolder(g.assets, close)"
+                >
+                  <Icon name="folder" />
+                  <span class="grow">{{ g.folder!.name }}</span>
+                  <span class="muted">{{ g.assets.length }}</span>
+                </button>
+              </template>
+            </template>
+          </Popover>
+          <Popover :width="200">
+            <template #trigger="{ open, toggle }">
+              <button class="btn add" :class="{ active: open }" @click="toggle">
+                <Icon name="plus" :size="14" /> Slide
+              </button>
+            </template>
+            <template #default="{ close }">
+              <button class="menu-item" @click="addSlide('title', close)">Titel</button>
+              <button class="menu-item" @click="addSlide('number', close)">Nummer</button>
+              <button class="menu-item" @click="addSlide('image', close)">Afbeelding</button>
+            </template>
+          </Popover>
+        </div>
+
+        <section class="part notes-part">
+          <label class="part-label" for="round-notes">Notities voor jou</label>
+          <textarea
+            id="round-notes"
+            v-model="round.hostNotes"
+            class="quiet notes"
+            rows="2"
+            placeholder="Alleen jij ziet dit, tijdens de ronde."
+          />
+        </section>
+      </div>
     </div>
+
+    <aside class="inspector scroll" aria-label="Instellingen">
+      <div v-if="selection" class="segmented tabs" role="tablist">
+        <button
+          type="button"
+          role="tab"
+          :aria-selected="tab === 'item'"
+          :class="{ on: tab === 'item' }"
+          @click="tab = 'item'"
+        >
+          {{ itemLabel }}
+        </button>
+        <button
+          type="button"
+          role="tab"
+          :aria-selected="tab === 'round'"
+          :class="{ on: tab === 'round' }"
+          @click="tab = 'round'"
+        >
+          Ronde
+        </button>
+      </div>
+
+      <SlideInspector
+        v-if="tab === 'item' && slide"
+        :key="slide.id"
+        :round="round"
+        :slide="slide"
+        @select="select('slide', $event)"
+      />
+      <FragmentInspector
+        v-else-if="tab === 'item' && fragment"
+        :key="fragment.id"
+        :round="round"
+        :fragment="fragment"
+        @select="select('fragment', $event)"
+      />
+      <RoundSettings
+        v-else
+        :round="round"
+        @duplicate="emit('duplicate')"
+        @remove="emit('remove')"
+      />
+    </aside>
   </div>
 </template>
 
 <style scoped>
-.hero-grid {
+.round-page {
   display: grid;
-  grid-template-columns: minmax(240px, 360px) minmax(0, 1fr);
-  gap: 32px;
-  align-items: end;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  height: 100%;
 }
 
-.artwork {
-  position: relative;
-  border-radius: var(--radius-lg);
-  box-shadow:
-    0 24px 60px rgba(3, 6, 14, 0.55),
-    0 0 0 1px rgba(255, 255, 255, 0.04);
+.canvas {
+  min-width: 0;
+  transition: box-shadow 0.15s;
 }
 
-.artwork :deep(.preview) {
-  border-radius: var(--radius-lg);
+.canvas.dropping {
+  box-shadow: inset 0 0 0 2px var(--accent);
 }
 
-.artwork-label {
-  position: absolute;
-  left: 10px;
-  bottom: 10px;
-  padding: 3px 8px;
-  border-radius: 999px;
-  background: rgba(15, 20, 32, 0.7);
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.hero-text {
+.inner {
   display: flex;
   flex-direction: column;
-  min-width: 0;
-  padding-bottom: 4px;
+  gap: 24px;
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 32px 40px 80px;
 }
 
-.hero-top {
+.round-title {
+  font: 700 30px/1.15 var(--display);
+  letter-spacing: -0.02em;
+}
+
+.part {
   display: flex;
-  align-items: center;
-  gap: 4px;
-  margin-right: -8px;
+  flex-direction: column;
+  gap: 6px;
 }
 
-.hero-top .danger {
-  color: var(--live);
-}
-
-.position {
+.part-label {
+  padding-left: 10px;
   color: var(--muted);
-  font-size: 13px;
-  font-weight: 550;
+  font: 600 12px var(--font);
+  letter-spacing: 0;
 }
 
-.hero-title {
-  margin-top: 4px;
-  font: 750 44px/1.08 var(--display);
-  letter-spacing: -0.03em;
+.empty-hint {
+  padding: 4px 0;
 }
 
-.summary {
-  margin-top: 6px;
-  font-size: 14px;
-}
-
-.chips {
+.add-bar {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 20px;
+  margin-top: -8px;
+  padding-left: 10px;
 }
 
-.chip-icon {
-  display: grid;
-  place-items: center;
-  width: 30px;
-  height: 18px;
-  border-radius: 4px;
-  background: var(--surface-4);
-  color: var(--accent);
+.add {
+  height: 30px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  font-weight: 550;
 }
 
-.answers-menu {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.menu-note {
-  padding: 4px 10px 8px;
-  font-size: 12px;
-  line-height: 1.45;
-}
-
-.menu-note.warn {
-  color: var(--warn);
+.add:hover:not(:disabled),
+.add.active {
+  background: var(--surface-3);
 }
 
 .menu-label {
-  padding: 10px 10px 4px;
+  padding: 8px 10px 4px;
   color: var(--muted);
   font-size: 12px;
 }
 
-.check-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 34px;
-  padding: 0 10px;
-  border-radius: var(--radius);
-  cursor: pointer;
-}
-
-.check-row:hover {
-  background: var(--surface-3);
-}
-
-.no-bg {
-  padding: 6px 8px;
-  font-size: 12px;
-}
-
-.replace-picker {
-  margin-top: 6px;
-}
-
-.body {
-  display: flex;
-  flex-direction: column;
-  gap: 44px;
-  max-width: 1080px;
-  margin: 0 auto;
-  padding: 12px 40px 80px;
+.notes-part {
+  margin-top: 12px;
 }
 
 .notes {
   display: block;
+  margin: 0 0 0 4px;
   padding: 8px 10px;
-  margin: 0;
-  background: var(--surface-1);
   border-radius: var(--radius);
+  background: var(--surface-1);
   line-height: 1.5;
+  field-sizing: content;
+  min-height: 64px;
+}
+
+.inspector {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 16px 20px 24px;
+  background: var(--surface-1);
+}
+
+.tabs {
+  flex: none;
 }
 </style>

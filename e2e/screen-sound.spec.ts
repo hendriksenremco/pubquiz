@@ -54,7 +54,8 @@ test('zet geluid aan voor de standaardvideo en een ronde-video', async () => {
 
   // Ronde 1 toont de standaard, maar zonder geluid.
   await operator.locator('.sidebar .round').nth(0).click()
-  const roundBeamer = operator.locator('.hero-text .chips .chip').first()
+  await operator.getByRole('tab', { name: 'Ronde' }).click()
+  const roundBeamer = operator.locator('.round-settings .picker').first()
   await roundBeamer.click()
   await expect(operator.getByLabel('Geluid van de video')).toBeChecked()
   await operator.getByLabel('Geluid van de video').uncheck()
@@ -65,7 +66,8 @@ test('zet geluid aan voor de standaardvideo en een ronde-video', async () => {
 
   // Ronde 2 toont een andere video op de beamer; ook die met geluid.
   await operator.locator('.sidebar .round').nth(1).click()
-  await operator.locator('.hero-text .chips .chip').first().click()
+  await operator.getByRole('tab', { name: 'Ronde' }).click()
+  await operator.locator('.round-settings .picker').first().click()
   await operator.getByLabel('Geluid van de video').check()
   await operator.keyboard.press('Escape')
 })

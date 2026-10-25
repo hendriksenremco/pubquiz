@@ -40,16 +40,19 @@ test('opent de demo-quiz in de editor', async () => {
   await operator.locator('.sidebar .round').nth(1).click()
   await expect(operator.locator('#round-title')).toHaveValue('Ronde 2: muziek')
   await expect(operator.locator('.track')).toHaveCount(8)
-  // Fragmentnummer alleen op de gekozen schermen.
-  await expect(operator.locator('.number-chip')).toContainText('Beamer')
-  await operator.locator('.number-chip').click()
-  await operator.waitForTimeout(300)
-  await operator.screenshot({ path: 'test-results/editor-number-screens.png' })
-  await operator.keyboard.press('Escape')
-  await operator.waitForTimeout(800) // previews en gloed laten laden voor de screenshot
+  // De ronde zelf: het fragmentnummer alleen op de gekozen schermen.
+  await operator.getByRole('tab', { name: 'Ronde' }).click()
+  const numberOn = operator.getByRole('group', { name: 'Fragmentnummer in beeld op' })
+  await expect(numberOn.getByLabel('Beamer')).toBeChecked()
+  await expect(numberOn.getByLabel('TV bar')).not.toBeChecked()
+  await operator.waitForTimeout(800) // previews laten laden voor de screenshot
   await operator.screenshot({ path: 'test-results/editor-round.png' })
 
-  await operator.locator('.track-row').nth(2).click()
+  await operator.locator('.track').nth(2).click()
+  await expect(operator.getByRole('tab', { name: 'Fragment' })).toHaveAttribute(
+    'aria-selected',
+    'true'
+  )
   // De waveform van het hele bestand, met het stuk dat speelt tussen twee grepen.
   const wave = operator.locator('.edit-wave')
   await expect(wave.locator('rect')).toHaveCount(160)
@@ -64,7 +67,7 @@ test('opent de demo-quiz in de editor', async () => {
         JSON.parse(readFileSync(join(quizDir, 'quiz.json'), 'utf8')).rounds[1].fragments[2].start
     )
     .toBe(0.5)
-  await expect(operator.locator('.track').nth(2).locator('.track-trim')).toHaveText('0:00–0:05')
+  await expect(operator.locator('.times input').first()).toHaveValue('0:00.5')
   await operator.screenshot({ path: 'test-results/editor-fragment-open.png' })
 
   await operator.locator('.sidebar .round').first().click()

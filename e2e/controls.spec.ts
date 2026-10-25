@@ -26,9 +26,8 @@ const savedQuiz = () => JSON.parse(readFileSync(join(quizDir, 'quiz.json'), 'utf
 
 test('een slide krijgt een kleur uit het rijtje of een eigen kleurcode', async () => {
   await operator.locator('.sidebar .round').first().click()
-  await operator.locator('.strip .thumb').nth(1).click()
-  const chip = operator.locator('.chip.small', { hasText: 'Achtergrond' })
-  await chip.click()
+  await operator.locator('.slide-list .item').nth(1).locator('.thumb').click()
+  await operator.getByRole('button', { name: 'Achtergrond' }).click()
   await operator.locator('.menu-item', { hasText: 'Effen kleur' }).click()
 
   const panel = operator.locator('.popover-panel')

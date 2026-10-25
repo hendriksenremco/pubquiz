@@ -189,7 +189,7 @@ function onDropCapture() {
       </nav>
     </aside>
 
-    <section class="main scroll">
+    <section class="main" :class="{ scroll: !round }">
       <SetupPanel v-if="selected === 'setup'" @create-from-current="emit('createFromCurrent')" />
       <MediaLibrary v-else-if="selected === 'media'" />
       <PrintPanel v-else-if="selected === 'print'" />
@@ -329,6 +329,7 @@ function onDropCapture() {
 
 .main {
   min-width: 0;
+  min-height: 0;
 }
 
 .drop-overlay {
