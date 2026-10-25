@@ -1,7 +1,15 @@
 import { expect, test } from '@playwright/test'
 import { readFileSync, rmSync } from 'fs'
 import { dirname, join } from 'path'
-import { confirmIn, copyFixture, launch, tempDir, useWindowedScreens } from './helpers'
+import {
+  confirmIn,
+  copyFixture,
+  launch,
+  openStart,
+  startShow,
+  tempDir,
+  useWindowedScreens
+} from './helpers'
 
 test('wijzigingen in de editor worden automatisch opgeslagen', async () => {
   const userData = tempDir('userdata')
@@ -11,7 +19,6 @@ test('wijzigingen in de editor worden automatisch opgeslagen', async () => {
     await operator.getByRole('button', { name: 'Ronde toevoegen' }).click()
     await operator.getByRole('button', { name: /^Muziekronde/ }).click()
     await operator.locator('#round-title').fill('Ronde 5: jaren 80')
-    await expect(operator.locator('.save')).toHaveText('Opgeslagen')
 
     await expect
       .poll(() => JSON.parse(readFileSync(join(quizDir, 'quiz.json'), 'utf8')).rounds.at(-1)?.title)
@@ -30,9 +37,9 @@ test('na een crash biedt de app aan de show te hervatten', async () => {
   const userData = tempDir('userdata')
   const quizDir = copyFixture()
   const first = await launch(userData, quizDir)
-  await first.operator.getByRole('button', { name: 'Show', exact: true }).click()
+  await openStart(first.operator)
   await useWindowedScreens(first.operator)
-  await first.operator.getByRole('button', { name: 'Start show' }).click()
+  await startShow(first.operator)
   await first.operator.locator('.rounds .round').nth(1).click()
   await first.operator.keyboard.press('3')
   await expect(first.operator.locator('.frag').nth(2)).toHaveClass(/on/)
@@ -43,8 +50,9 @@ test('na een crash biedt de app aan de show te hervatten', async () => {
   // Zonder quizpad starten: de app opent zelf de quiz van de afgebroken show.
   const second = await launch(userData)
   try {
-    await expect(second.operator.getByText('De vorige show is onverwacht gestopt')).toBeVisible()
-    await expect(second.operator.getByText('Bezig met “Ronde 2: muziek”')).toBeVisible()
+    await expect(second.operator.locator('.recovery')).toContainText(
+      'De vorige show stopte onverwacht, bij Ronde 2: muziek'
+    )
     await second.operator.getByRole('button', { name: 'Hervat show' }).click()
     await expect(second.operator.locator('.now-title')).toHaveText('Ronde 2: muziek')
     await expect(second.operator.locator('.frag').nth(2)).toHaveClass(/played/)

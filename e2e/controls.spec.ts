@@ -55,7 +55,7 @@ test('een slide krijgt een kleur uit het rijtje of een eigen kleurcode', async (
 })
 
 test('vinkjes en schuifjes zijn echte invoervelden met de stijl van de app', async () => {
-  await operator.locator('.nav-item', { hasText: 'Afdrukken' }).click()
+  await operator.locator('.topbar').getByRole('button', { name: 'Afdrukken' }).click()
   const box = operator.locator('.print label.option input[type="checkbox"]').first()
   await expect(box).toBeChecked()
   // Geen standaardvinkje van macOS meer.

@@ -56,7 +56,7 @@ function pageSizeMm(file: string): [number, number] {
 }
 
 test('maakt het antwoordformulier, de antwoorden en de vragenkaarten als pdf', async () => {
-  await operator.locator('.nav-item', { hasText: 'Afdrukken' }).click()
+  await operator.locator('.topbar').getByRole('button', { name: 'Afdrukken' }).click()
   const dialog = operator.locator('.print')
   // Alleen rondes met iets om in te vullen; de pauze niet.
   await expect(dialog.locator('label.option .option-title')).toHaveText([

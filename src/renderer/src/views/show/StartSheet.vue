@@ -4,8 +4,8 @@ import { mediaUrl } from '@shared/ipc'
 import { sameDisplayName } from '@shared/airplay'
 import { answerItems, findBrokenReferences, screenHasSound } from '@shared/resolve'
 import type { HardwareMapping, ScreenTarget } from '@shared/types'
+import Icon from '../../components/Icon.vue'
 import Select, { type SelectOption } from '../../components/Select.vue'
-import StagePreview from '../../components/StagePreview.vue'
 import {
   listAudioOutputs,
   resolveSinkId,
@@ -14,6 +14,11 @@ import {
 } from '../../lib/audio-devices'
 import { useSession } from '../../stores/session'
 
+/**
+ * Venster voor de show begint: welk scherm en welke speaker van vanavond bij welk scherm en
+ * kanaal van de quiz hoort. De app onthoudt het, dus meestal is het alleen nog "Start show".
+ */
+const emit = defineEmits<{ close: [] }>()
 const api = window.pubquiz
 const session = useSession()
 const quiz = computed(() => session.quiz!)
@@ -35,12 +40,21 @@ async function checkMedia() {
   missingMedia.value = results.filter((n): n is string => n !== null)
 }
 
+function onKey(event: KeyboardEvent) {
+  // Escape in een open keuzelijst sluit alleen die lijst.
+  if (event.key === 'Escape' && !event.defaultPrevented) emit('close')
+}
+
 onMounted(() => {
   void refreshOutputs()
   void checkMedia()
   navigator.mediaDevices.addEventListener('devicechange', refreshOutputs)
+  document.addEventListener('keydown', onKey)
 })
-onBeforeUnmount(() => navigator.mediaDevices.removeEventListener('devicechange', refreshOutputs))
+onBeforeUnmount(() => {
+  navigator.mediaDevices.removeEventListener('devicechange', refreshOutputs)
+  document.removeEventListener('keydown', onKey)
+})
 watch(() => quiz.value.assets.length, checkMedia)
 
 // ── Koppeling ────────────────────────────────────────────────────────────────
@@ -211,14 +225,14 @@ const problems = computed(() => {
   for (const slot of quiz.value.screens) {
     const value = screenValue(session.hardware.screens[slot.id])
     if (value === 'missing')
-      list.push({ level: 'warning', text: `Scherm “${slot.name}”: display niet aangesloten` })
-    if (value === 'off') list.push({ level: 'warning', text: `Scherm “${slot.name}” staat uit` })
+      list.push({ level: 'warning', text: `${slot.name}: display niet aangesloten` })
+    if (value === 'off') list.push({ level: 'warning', text: `${slot.name} staat uit` })
     if (!hasSound(slot.id) || !outputs.value.length) continue
     const sound = soundValue(slot.id)
     if (sound === 'missing') {
       list.push({
         level: 'warning',
-        text: `Scherm “${slot.name}”: geluidsuitgang niet gevonden (systeemstandaard wordt gebruikt)`
+        text: `${slot.name}: geluidsuitgang niet gevonden, het videogeluid gaat naar de systeemstandaard`
       })
     } else if (
       sound === 'auto' &&
@@ -227,7 +241,7 @@ const problems = computed(() => {
     ) {
       list.push({
         level: 'warning',
-        text: `Scherm “${slot.name}”: geen speakers gevonden bij dit scherm. Het videogeluid gaat naar de systeemstandaard; kies hierboven een uitgang.`
+        text: `${slot.name}: geen speakers bij dit scherm, het videogeluid gaat naar de systeemstandaard`
       })
     }
   }
@@ -235,7 +249,7 @@ const problems = computed(() => {
     if (audioValue(c.id) === 'missing') {
       list.push({
         level: 'warning',
-        text: `Kanaal “${c.name}”: uitgang niet gevonden (systeemstandaard wordt gebruikt)`
+        text: `${c.name}: uitgang niet gevonden, de systeemstandaard wordt gebruikt`
       })
     }
   }
@@ -243,7 +257,7 @@ const problems = computed(() => {
     if (answerItems(quiz.value, r).length && !r.fragmentScreens.length) {
       list.push({
         level: 'warning',
-        text: `Ronde “${r.title}”: kies bij Antwoorden op welk scherm ze in beeld komen`
+        text: `${r.title}: kies bij Antwoorden op welk scherm ze in beeld komen`
       })
     }
   }
@@ -275,99 +289,81 @@ function displayName(d: {
   internal: boolean
   primary: boolean
 }) {
-  return `${d.label} · ${d.width}×${d.height}${d.internal ? ' (laptop)' : ''}`
+  return `${d.label}, ${d.width}×${d.height}${d.internal ? ' (laptop)' : ''}`
 }
+
+const savedAt = computed(() =>
+  recovery.value
+    ? new Date(recovery.value.savedAt).toLocaleTimeString('nl-NL', {
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    : ''
+)
 </script>
 
 <template>
-  <div class="prepare scroll">
-    <div class="inner">
-      <div v-if="recovery" class="recovery card">
-        <div class="grow">
-          <h3>De vorige show is onverwacht gestopt</h3>
-          <p class="muted">
-            {{ recovery.roundTitle ? `Bezig met “${recovery.roundTitle}”` : 'Tussen twee rondes' }},
-            om
-            {{
-              new Date(recovery.savedAt).toLocaleTimeString('nl-NL', {
-                hour: '2-digit',
-                minute: '2-digit'
-              })
-            }}.
-          </p>
-        </div>
-        <button class="btn" @click="dismissRecovery">Negeer</button>
-        <button class="btn btn-primary" @click="start(true)">Hervat show</button>
-      </div>
+  <Teleport to="body">
+    <div class="backdrop" @pointerdown.self="emit('close')">
+      <section class="sheet" role="dialog" aria-modal="true" aria-label="Show starten">
+        <h2>Show starten</h2>
 
-      <header class="head">
-        <div class="grow">
-          <h2>Show voorbereiden</h2>
-          <p class="muted">
-            Koppel de schermen en speakers van vanavond. De app onthoudt dit voor de volgende keer.
+        <div v-if="recovery" class="recovery">
+          <p class="grow">
+            De vorige show stopte onverwacht{{
+              recovery.roundTitle ? `, bij ${recovery.roundTitle}` : ''
+            }}, om {{ savedAt }}.
           </p>
+          <button class="btn btn-sm" @click="dismissRecovery">Negeer</button>
+          <button class="btn btn-sm btn-primary" @click="start(true)">Hervat show</button>
         </div>
-        <button class="btn btn-live btn-lg" :disabled="starting" @click="start()">
-          Start show
-        </button>
-      </header>
 
-      <section class="card">
-        <header class="card-head">
-          <h3 class="grow">Schermen</h3>
-          <button class="btn btn-sm" @click="api.identifyDisplays()">Identificeer displays</button>
-        </header>
-        <div class="card-body screens">
-          <div v-for="slot in quiz.screens" :key="slot.id" class="screen">
-            <StagePreview :screen="slot" />
-            <div class="field">
-              <label>{{ slot.name }} toont op</label>
+        <div class="group">
+          <div class="group-head">
+            <span class="label grow">Schermen</span>
+            <button class="btn btn-ghost btn-sm" @click="api.identifyDisplays()">
+              Toon namen op de displays
+            </button>
+          </div>
+          <template v-for="slot in quiz.screens" :key="slot.id">
+            <div class="line screen">
+              <span class="name">{{ slot.name }}</span>
               <Select
-                class="screen-target"
+                class="grow screen-target"
                 :aria-label="`${slot.name} toont op`"
                 :model-value="screenValue(session.hardware.screens[slot.id])"
                 :options="screenOptions(slot.id)"
                 @update:model-value="setScreen(slot.id, $event!)"
               />
-              <div v-if="pendingAirPlay(slot.id)" class="airplay-hint stacked">
-                <p>
-                  Nog niet verbonden. Kies in <strong>Beeldschermen</strong> bij
-                  <strong>+</strong> voor {{ pendingAirPlay(slot.id) }} en gebruik hem als
-                  <strong>uitgebreid beeldscherm</strong>. Hij verschijnt hier dan vanzelf.
-                </p>
-                <button class="btn btn-sm" @click="api.openAirPlaySettings('screen')">
-                  Open Beeldschermen
-                </button>
-              </div>
             </div>
-            <div v-if="hasSound(slot.id)" class="field">
-              <label>Videogeluid via</label>
+            <div v-if="pendingAirPlay(slot.id)" class="note airplay-hint">
+              <span class="grow">
+                Kies {{ pendingAirPlay(slot.id) }} in macOS als uitgebreid beeldscherm.
+              </span>
+              <button class="btn btn-ghost btn-sm" @click="api.openAirPlaySettings('screen')">
+                Open Beeldschermen
+              </button>
+            </div>
+            <div v-if="hasSound(slot.id)" class="line sub">
+              <span class="name muted">Videogeluid</span>
               <Select
-                class="sound-target"
+                class="grow sound-target"
                 :aria-label="`Videogeluid van ${slot.name} via`"
                 :model-value="soundValue(slot.id)"
                 :options="soundOptions(slot.id)"
                 @update:model-value="setSound(slot.id, $event!)"
               />
             </div>
-          </div>
-          <div v-if="!quiz.screens.length" class="muted">Deze quiz heeft geen schermen.</div>
+          </template>
+          <p v-if="!quiz.screens.length" class="muted">Deze quiz heeft geen schermen.</p>
         </div>
-      </section>
 
-      <section class="card">
-        <header class="card-head">
-          <div class="grow">
-            <h3>Audio-uitgangen</h3>
-            <p class="muted small">
-              Let op: macOS zet de systeemuitgang vaak op HDMI zodra je een beamer aansluit. Kies
-              hier expliciet.
-            </p>
+        <div class="group">
+          <div class="group-head">
+            <span class="label grow">Geluid</span>
           </div>
-        </header>
-        <div class="card-body stack">
-          <div v-for="c in quiz.channels" :key="c.id" class="row channel">
-            <span class="channel-name">{{ c.name }}</span>
+          <div v-for="c in quiz.channels" :key="c.id" class="line channel">
+            <span class="name">{{ c.name }}</span>
             <Select
               class="grow"
               :aria-label="`Uitgang voor ${c.name}`"
@@ -375,130 +371,129 @@ function displayName(d: {
               :options="audioOptions(c.id)"
               @update:model-value="setAudio(c.id, $event!)"
             />
-            <button class="btn" @click="api.testTone(c.id)">Testtoon</button>
+            <button class="btn btn-ghost btn-sm" @click="api.testTone(c.id)">Testtoon</button>
           </div>
-          <div v-if="airplaySpeakers.length" class="airplay-hint">
-            <p>
-              <strong>AirPlay in de buurt:</strong>
-              {{ airplaySpeakers.map((a) => a.name).join(', ') }}. Kies er een in macOS bij
-              <strong>Geluid › Uitvoer</strong>; als macOS hem doorgeeft, staat hij daarna in deze
-              lijst. AirPlay loopt ±2 seconden achter: prima voor achtergrondmuziek, niet voor
-              fragmenten.
-            </p>
-            <button class="btn btn-sm" @click="api.openAirPlaySettings('audio')">
+          <div v-if="airplaySpeakers.length" class="note airplay-hint">
+            <span class="grow">
+              AirPlay-speaker ({{ airplaySpeakers.map((a) => a.name).join(', ') }})? Kies hem eerst
+              in macOS.
+            </span>
+            <button class="btn btn-ghost btn-sm" @click="api.openAirPlaySettings('audio')">
               Open Geluid
             </button>
           </div>
         </div>
-      </section>
 
-      <section class="card">
-        <header class="card-head">
-          <h3 class="grow">Controle</h3>
-          <span v-if="!problems.length" class="pill pill-ok"
-            ><span class="dot" />Alles in orde</span
-          >
-          <span v-else class="pill pill-warn"
-            >{{ problems.length }} aandachtspunt{{ problems.length > 1 ? 'en' : '' }}</span
-          >
-        </header>
-        <div v-if="problems.length" class="card-body">
-          <ul class="problems">
-            <li v-for="p in problems" :key="p.text" :class="p.level">{{ p.text }}</li>
-          </ul>
-        </div>
+        <ul v-if="problems.length" class="problems">
+          <li v-for="p in problems" :key="p.text" :class="p.level">{{ p.text }}</li>
+        </ul>
+
+        <footer class="foot">
+          <span v-if="!problems.length" class="ok grow">
+            <Icon name="check" :size="16" /> Alles in orde
+          </span>
+          <span v-else class="grow" />
+          <button class="btn" @click="emit('close')">Annuleer</button>
+          <button class="btn btn-primary" :disabled="starting" @click="start()">
+            <Icon name="play" :size="13" /> Start show
+          </button>
+        </footer>
       </section>
     </div>
-  </div>
+  </Teleport>
 </template>
 
 <style scoped>
-.prepare {
-  height: 100%;
+.backdrop {
+  position: fixed;
+  inset: 46px 0 0;
+  z-index: 80;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  background: rgba(6, 9, 16, 0.6);
+  animation: fade 0.12s ease;
 }
 
-.inner {
+.sheet {
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  max-width: 920px;
-  margin: 0 auto;
-  padding: 24px;
+  gap: 20px;
+  width: min(620px, calc(100% - 48px));
+  max-height: calc(100% - 24px);
+  overflow-y: auto;
+  padding: 24px 24px 20px;
+  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+  background: var(--surface-2);
+  box-shadow: 0 30px 80px rgba(3, 6, 14, 0.6);
+  animation: drop 0.18s ease;
 }
 
-.head {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.head p {
-  margin-top: 4px;
+h2 {
+  font-size: 20px;
 }
 
 .recovery {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 14px 16px;
-  border-color: var(--warn);
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
   background: var(--warn-soft);
 }
 
-.screens {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 18px;
-}
-
-.screen {
+.group {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 2px;
 }
 
-.channel-name {
-  width: 120px;
-  font-weight: 600;
-}
-
-.small {
-  font-size: 12px;
-}
-
-.airplay-hint {
+.group-head {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
+  min-height: 28px;
+  margin-bottom: 2px;
+}
+
+.line {
+  display: flex;
+  align-items: center;
   gap: 12px;
-  margin-top: 4px;
-  padding: 10px 12px;
-  border-radius: var(--radius);
-  background: var(--surface-2);
+  min-height: 42px;
+}
+
+.name {
+  flex: none;
+  width: 110px;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sub .name {
+  padding-left: 12px;
+  font-size: 13px;
+}
+
+.note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 122px;
   color: var(--muted);
   font-size: 12px;
-  line-height: 1.5;
-}
-
-.airplay-hint p {
-  flex: 1;
-}
-
-/* Smal (onder een scherm): knop onder de tekst. */
-.airplay-hint.stacked {
-  flex-direction: column;
-}
-
-.airplay-hint strong {
-  color: var(--text);
-  font-weight: 600;
 }
 
 .problems {
-  margin: 0;
-  padding-left: 18px;
   display: flex;
   flex-direction: column;
   gap: 4px;
+  margin: 0;
+  padding: 10px 12px 10px 28px;
+  border-radius: var(--radius);
+  background: var(--surface-1);
+  font-size: 12px;
 }
 
 .problems .error {
@@ -507,5 +502,37 @@ function displayName(d: {
 
 .problems .warning {
   color: var(--warn);
+}
+
+.foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.ok {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+}
+
+.ok .icon {
+  color: var(--ok);
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes drop {
+  from {
+    transform: translateY(-12px);
+    opacity: 0;
+  }
 }
 </style>

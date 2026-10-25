@@ -97,10 +97,7 @@ function click(id: string) {
         }"
         @click="click(f.id)"
       >
-        <span class="frag-top">
-          <span class="frag-num mono">{{ i + 1 }}</span>
-          <span v-if="i < 9" class="kbd">{{ i + 1 }}</span>
-        </span>
+        <span class="frag-num mono">{{ i + 1 }}</span>
         <span class="frag-label">{{ f.label }}</span>
         <span v-if="f.answer" class="frag-answer">{{ f.answer }}</span>
         <span v-if="playing?.fragmentId === f.id" class="frag-time mono">
@@ -135,9 +132,9 @@ function click(id: string) {
   gap: 2px;
   min-height: 92px;
   padding: 10px 12px 14px;
-  border: 1px solid var(--line-strong);
+  border: 1px solid transparent;
   border-radius: var(--radius-lg);
-  background: var(--panel-2);
+  background: var(--surface-2);
   color: var(--text);
   font: inherit;
   text-align: left;
@@ -146,7 +143,7 @@ function click(id: string) {
 }
 
 .frag:hover {
-  border-color: var(--muted);
+  background: var(--surface-3);
 }
 
 .frag.on {
@@ -170,13 +167,6 @@ function click(id: string) {
   align-items: center;
   gap: 5px;
   color: var(--accent);
-}
-
-.frag-top {
-  display: flex;
-  width: 100%;
-  justify-content: space-between;
-  align-items: center;
 }
 
 .frag-num {

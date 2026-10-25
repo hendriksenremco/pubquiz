@@ -6,6 +6,8 @@ import {
   confirmIn,
   copyFixture,
   launch,
+  openStart,
+  startShow,
   tempDir,
   useWindowedScreens,
   windowFor
@@ -106,9 +108,9 @@ test('een antwoordenronde loopt vragen, afbeeldingen en fragmenten langs', async
 })
 
 test('live: eerst de vraag, afbeelding of het fragment, dan het antwoord', async () => {
-  await operator.getByRole('button', { name: 'Show', exact: true }).click()
+  await openStart(operator)
   await useWindowedScreens(operator)
-  await operator.getByRole('button', { name: 'Start show' }).click()
+  await startShow(operator)
   const beamer = await windowFor(app, 'screen/beamer')
   const tv = await windowFor(app, 'screen/tv')
 

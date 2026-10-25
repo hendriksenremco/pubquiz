@@ -7,6 +7,8 @@ import {
   confirmIn,
   copyFixture,
   launch,
+  openStart,
+  startShow,
   tempDir,
   useWindowedScreens,
   windowFor as windowOf
@@ -69,7 +71,7 @@ test('opent de demo-quiz in de editor', async () => {
   await operator.waitForTimeout(600)
   await operator.screenshot({ path: 'test-results/editor-round-slides.png' })
 
-  await operator.getByRole('button', { name: 'Quiz', exact: true }).click()
+  await operator.getByRole('button', { name: 'Quiz-instellingen' }).click()
   await operator.waitForTimeout(800)
   await operator.screenshot({ path: 'test-results/editor-setup.png' })
 
@@ -79,8 +81,7 @@ test('opent de demo-quiz in de editor', async () => {
 })
 
 test('bereidt de show voor met schermen als venster', async () => {
-  await operator.getByRole('button', { name: 'Show', exact: true }).click()
-  await expect(operator.getByRole('heading', { name: 'Show voorbereiden' })).toBeVisible()
+  await openStart(operator)
   await useWindowedScreens(operator)
   await operator.screenshot({ path: 'test-results/show-prepare.png' })
 
@@ -101,13 +102,13 @@ test('bereidt de show voor met schermen als venster', async () => {
 })
 
 test('wisselt scherm tijdens een ronde en valt daarna terug', async () => {
-  await operator.getByRole('button', { name: 'Start show' }).click()
+  await startShow(operator)
   await expect(operator.locator('.live')).toBeVisible()
 
   const beamer = await windowFor('screen/beamer')
   await expect.poll(() => activeVideo(beamer)).toContain('default-loop.mp4')
   // Tijdens de show kun je niet per ongeluk naar het overzicht.
-  await expect(operator.getByRole('button', { name: 'Stop eerst de show' })).toBeDisabled()
+  await expect(operator.getByRole('button', { name: 'Quizzen' })).toBeDisabled()
 
   await operator.locator('.rounds .round').nth(1).click()
   await expect(operator.locator('.now-title')).toHaveText('Ronde 2: muziek')
@@ -169,13 +170,13 @@ test('beeld- en geluidknoppen zijn terug te draaien', async () => {
   await operator.getByRole('button', { name: /Geluid uit/ }).click()
   await expect.poll(async () => (await audio()).background?.playing).toBe(false)
   await operator.waitForTimeout(300)
-  await operator.locator('.bar').screenshot({ path: 'test-results/show-bar-alert.png' })
+  await operator.locator('.topbar').screenshot({ path: 'test-results/show-bar-alert.png' })
 
   await operator.getByRole('button', { name: /Beeld terug/ }).click()
   await expect.poll(() => activeVideo(beamer)).toContain('default-loop.mp4')
   await operator.getByRole('button', { name: /Geluid aan/ }).click()
   await expect.poll(async () => (await audio()).background?.playing).toBe(true)
-  await operator.locator('.bar').screenshot({ path: 'test-results/show-bar.png' })
+  await operator.locator('.topbar').screenshot({ path: 'test-results/show-bar.png' })
 })
 
 test('speelt een fragment af tot het einde en markeert het als gespeeld', async () => {
@@ -223,7 +224,11 @@ test('autoplay toont fragmentnummer en countdown op het scherm', async () => {
 test('bladert met de pijltjes door de fragmenten', async () => {
   // Fragment 1 en 2 zijn al gestart (de cijfertoets en de reeks): → gaat verder met 3.
   const frag = (n: number) => operator.locator('.frag').nth(n - 1)
-  await expect(operator.locator('.shortcuts')).toContainText('Vorig/volgend fragment')
+  const help = operator.getByRole('button', { name: 'Sneltoetsen' })
+  await help.click()
+  await expect(operator.locator('.shortcuts')).toContainText('Vorig of volgend fragment')
+  await help.click()
+  await expect(operator.locator('.shortcuts')).toHaveCount(0)
   await expect(frag(3)).toHaveClass(/upcoming/)
   await expect(frag(3).locator('.frag-next')).toContainText('Volgende')
 

@@ -26,6 +26,7 @@ const PATHS = {
   power: 'M12 3v9M6.3 6.3a8 8 0 1 0 11.4 0',
   home: 'M3 11l9-7 9 7M5 9.5V20h5v-6h4v6h5V9.5',
   pencil: 'M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4',
+  printer: 'M7 9V4h10v5M7 17H4V9h16v8h-3M7 14h10v6H7z',
   'screen-off': 'M3 5h18v11H3zM8 20h8M12 16v4M3 2l18 18',
   volume: 'M11 5L6 9H3v6h3l5 4zM15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13',
   'volume-off': 'M11 5L6 9H3v6h3l5 4zM16 9l5 6M21 9l-5 6',

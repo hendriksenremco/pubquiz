@@ -15,8 +15,8 @@ test('dashboard: leeg starten, recente quiz openen en terugkomen', async () => {
 
     // Quiz openen, dan via de home-knop naar het overzicht.
     ;({ app, operator } = await launch(userData, quizDir))
-    await expect(operator.locator('#quiz-title')).toHaveValue('Demo-pubquiz')
-    await operator.getByRole('button', { name: 'Naar het overzicht' }).click()
+    await expect(operator.locator('.topbar .name')).toHaveText('Demo-pubquiz')
+    await operator.getByRole('button', { name: 'Quizzen' }).click()
     await expect(operator.locator('.kicker')).toHaveText('Laatst geopend')
     await expect(operator.locator('.hero-title')).toHaveText('Demo-pubquiz')
     await expect(operator.locator('.hero-meta')).toContainText('4 rondes en 2 schermen')
@@ -35,7 +35,7 @@ test('dashboard: leeg starten, recente quiz openen en terugkomen', async () => {
     await operator.screenshot({ path: 'test-results/home.png' })
 
     await operator.getByRole('button', { name: 'Naar show' }).click()
-    await expect(operator.getByRole('heading', { name: 'Show voorbereiden' })).toBeVisible()
+    await expect(operator.getByRole('dialog', { name: 'Show starten' })).toBeVisible()
     await app.close()
 
     // Opnieuw starten zonder bestand: terug op het dashboard, met dezelfde quiz bovenaan.
@@ -62,12 +62,12 @@ test('dashboard: de rondleiding staat de eerste keer klaar, en komt niet terug a
     await operator.waitForTimeout(800) // cover en gloed laten laden voor de screenshot
     await operator.screenshot({ path: 'test-results/home-tour.png' })
     await operator.locator('.hero-text').getByRole('button', { name: 'Bewerken' }).click()
-    await expect(operator.locator('#quiz-title')).toHaveValue('Rondleiding')
+    await expect(operator.locator('.topbar .name')).toHaveText('Rondleiding')
     await app.close()
 
     // Een eigen quiz gaat voor; de rondleiding blijft in de lijst.
     ;({ app, operator } = await launch(userData, quizDir, env))
-    await operator.getByRole('button', { name: 'Naar het overzicht' }).click()
+    await operator.getByRole('button', { name: 'Quizzen' }).click()
     await expect(operator.locator('.kicker')).toHaveText('Laatst geopend')
     await expect(operator.locator('.hero-title')).toHaveText('Demo-pubquiz')
     const tour = operator.locator('.card', { hasText: 'Rondleiding' })
@@ -103,7 +103,7 @@ test('dashboard: een verplaatste quiz is te herkennen en uit de lijst te halen',
       second
     )
     rmSync(first, { recursive: true, force: true })
-    await operator.getByRole('button', { name: 'Naar het overzicht' }).click()
+    await operator.getByRole('button', { name: 'Quizzen' }).click()
 
     const card = operator.locator('.card')
     await expect(card).toHaveCount(1)
@@ -126,7 +126,7 @@ test('nieuwe quiz: alleen een naam, de app maakt zelf de map aan', async () => {
   const { app, operator } = await launch(userData, quizDir)
   const dialog = operator.getByRole('dialog')
   const newQuizMenu = async () => {
-    await operator.getByRole('button', { name: 'Naar het overzicht' }).click()
+    await operator.getByRole('button', { name: 'Quizzen' }).click()
     await operator.locator('.new-tile').click()
   }
   try {
@@ -138,7 +138,7 @@ test('nieuwe quiz: alleen een naam, de app maakt zelf de map aan', async () => {
     await operator.waitForTimeout(300) // infaden afwachten voor de screenshot
     await operator.screenshot({ path: 'test-results/new-quiz-dialog.png' })
     await dialog.getByLabel('Naam').press('Enter')
-    await expect(operator.locator('#quiz-title')).toHaveValue('Pubquiz november')
+    await expect(operator.locator('.topbar .name')).toHaveText('Pubquiz november')
     expect(existsSync(join(library, 'Pubquiz november.pubquiz', 'quiz.json'))).toBe(true)
 
     // Dezelfde naam nog eens: een duidelijke melding in het venster.
@@ -157,7 +157,7 @@ test('nieuwe quiz: alleen een naam, de app maakt zelf de map aan', async () => {
     await operator.screenshot({ path: 'test-results/new-quiz-template.png' })
     await dialog.getByLabel('Naam').fill('Pubquiz december')
     await dialog.getByRole('button', { name: 'Maak quiz' }).click()
-    await expect(operator.locator('#quiz-title')).toHaveValue('Pubquiz december')
+    await expect(operator.locator('.topbar .name')).toHaveText('Pubquiz december')
     await expect(operator.locator('.sidebar .round')).toHaveCount(4)
 
     const dir = join(library, 'Pubquiz december.pubquiz')

@@ -30,6 +30,7 @@ test('lange bestandsnamen blijven binnen hun chip en tegel', async () => {
   const { app, operator } = await launch(userData, quizDir)
   try {
     // Quiz-instellingen: chip "Toont …" in elke schermtegel.
+    await operator.getByRole('button', { name: 'Quiz-instellingen' }).click()
     for (const tile of await operator.locator('.screen.tile').all()) {
       await expectInside(tile.locator('.chip'), tile)
     }

@@ -55,9 +55,9 @@ const soundScreens = computed(() =>
 </script>
 
 <template>
-  <section class="card">
-    <header class="card-head"><h3>Audio</h3></header>
-    <div class="card-body stack">
+  <section class="mixer" aria-label="Geluid">
+    <span class="label">Geluid</span>
+    <div class="stack">
       <div class="bg">
         <div class="row">
           <span class="label grow">Achtergrond</span>
@@ -73,7 +73,12 @@ const soundScreens = computed(() =>
         </button>
       </div>
 
-      <div v-for="c in quiz.channels" :key="c.id" class="channel">
+      <div
+        v-for="c in quiz.channels"
+        :key="c.id"
+        class="channel"
+        :title="session.hardware.audio[c.id]?.label ?? 'Systeemstandaard'"
+      >
         <div class="row">
           <span class="label grow">{{ c.name }}</span>
           <span class="mono muted pct">{{
@@ -89,12 +94,14 @@ const soundScreens = computed(() =>
           :value="channelVolume(quiz, session.state, c.id)"
           @input="setVolume(c.id, $event)"
         />
-        <div class="device faint">
-          {{ session.hardware.audio[c.id]?.label ?? 'Systeemstandaard' }}
-        </div>
       </div>
 
-      <div v-for="s in soundScreens" :key="s.slot.id" class="channel screen-sound">
+      <div
+        v-for="s in soundScreens"
+        :key="s.slot.id"
+        class="channel screen-sound"
+        :title="s.device"
+      >
         <div class="row">
           <Icon name="monitor" :size="14" class="faint" />
           <span class="label grow">{{ s.slot.name }}</span>
@@ -113,19 +120,22 @@ const soundScreens = computed(() =>
           :aria-label="`Videogeluid ${s.slot.name}`"
           @input="setVolume(s.slot.id, $event)"
         />
-        <div class="device faint">{{ s.device }}</div>
       </div>
     </div>
   </section>
 </template>
 
 <style scoped>
+.mixer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 .bg {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--line);
 }
 
 .bg-name {
@@ -152,12 +162,5 @@ const soundScreens = computed(() =>
 
 .pct {
   font-size: 12px;
-}
-
-.device {
-  font-size: 11px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 </style>
