@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { rmSync } from 'fs'
 import { dirname } from 'path'
-import { copyFixture, launch, tempDir } from './helpers'
+import { copyFixture, launch, openStart, tempDir } from './helpers'
 
 // Vaste lijst i.p.v. het echte netwerk; zelfde soort apparaten als op kantoor gevonden.
 const FAKE_AIRPLAY = [
@@ -25,7 +25,7 @@ test('AirPlay in de buurt: schermen in de lijst, met hulp bij verbinden', async 
       }
     })
 
-    await operator.getByRole('button', { name: 'Show', exact: true }).click()
+    await openStart(operator)
     await operator.locator('.screen .screen-target [role="combobox"]').first().click()
     const list = operator.getByRole('listbox')
     const options = await list.getByRole('option').allTextContents()
@@ -35,7 +35,7 @@ test('AirPlay in de buurt: schermen in de lijst, met hulp bij verbinden', async 
 
     await list.getByRole('option', { name: 'BEAMER-KANTINE' }).click()
     await expect(operator.locator('.airplay-hint').first()).toContainText(
-      'Nog niet verbonden. Kies in Beeldschermen'
+      'Kies BEAMER-KANTINE in macOS als uitgebreid beeldscherm'
     )
     await expect
       .poll(() => app.evaluate(() => (globalThis as unknown as { __opened: string[] }).__opened))
@@ -43,7 +43,6 @@ test('AirPlay in de buurt: schermen in de lijst, met hulp bij verbinden', async 
 
     // Speakers zonder scherm staan bij de audio, met de waarschuwing over vertraging.
     await expect(operator.locator('.airplay-hint').last()).toContainText('Studio')
-    await expect(operator.locator('.airplay-hint').last()).toContainText('±2 seconden')
     // Wachten tot macOS de uitgangen heeft doorgegeven (eerst staat er "Uitgangen laden…").
     await expect(operator.locator('.channel [role="combobox"]').first()).toHaveText(
       /Systeemstandaard/

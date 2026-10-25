@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 import { createRound, newId, ROUND_PRESETS, type RoundPreset } from '@shared/factory'
 import Icon from '../../components/Icon.vue'
 import Popover from '../../components/Popover.vue'
@@ -14,14 +14,18 @@ import SetupPanel from './SetupPanel.vue'
 const session = useSession()
 const quiz = computed(() => session.quiz!)
 const emit = defineEmits<{ createFromCurrent: [] }>()
-const selected = ref<'setup' | 'media' | 'print' | string>('setup')
+/** Gekozen pagina: een ronde (id), 'setup', 'media' of 'print'. Afdrukken zit in de werkbalk. */
+const page = defineModel<string>('page', { required: true })
 const PAGES = ['setup', 'media', 'print']
 const { importFiles, pathsFromDrop } = useMediaImport()
 
+/** Leeg of een verwijderde ronde: de eerste ronde, of zonder rondes de quiz-instellingen. */
+const selected = computed(() =>
+  PAGES.includes(page.value) || quiz.value.rounds.some((r) => r.id === page.value)
+    ? page.value
+    : (quiz.value.rounds[0]?.id ?? 'setup')
+)
 const round = computed(() => quiz.value.rounds.find((r) => r.id === selected.value) ?? null)
-watch(round, (r) => {
-  if (!r && !PAGES.includes(selected.value)) selected.value = 'setup'
-})
 
 const PRESET_HINTS: Record<RoundPreset, string> = {
   normal: 'Vragen met slides',
@@ -34,7 +38,7 @@ const PRESET_HINTS: Record<RoundPreset, string> = {
 function addRound(preset: RoundPreset, close: () => void) {
   const r = createRound(preset, quiz.value.rounds.length + 1, quiz.value)
   quiz.value.rounds.push(r)
-  selected.value = r.id
+  page.value = r.id
   close()
 }
 
@@ -48,7 +52,7 @@ function duplicate(id: string) {
   for (const s of copy.slides) s.id = newId()
   for (const f of copy.fragments) f.id = newId()
   quiz.value.rounds.splice(index + 1, 0, copy)
-  selected.value = copy.id
+  page.value = copy.id
 }
 
 async function remove(id: string) {
@@ -127,33 +131,33 @@ function onDropCapture() {
     @drop.capture="onDropCapture"
   >
     <aside class="sidebar">
-      <nav class="nav">
-        <button class="nav-item" :class="{ on: selected === 'setup' }" @click="selected = 'setup'">
-          <Icon name="sliders" />
-          <span class="grow">Quiz</span>
-        </button>
-        <button class="nav-item" :class="{ on: selected === 'media' }" @click="selected = 'media'">
-          <Icon name="images" />
-          <span class="grow">Media</span>
-          <span class="badge">{{ quiz.assets.length }}</span>
-        </button>
-        <button class="nav-item" :class="{ on: selected === 'print' }" @click="selected = 'print'">
-          <Icon name="text" />
-          <span class="grow">Afdrukken</span>
-        </button>
-      </nav>
-
-      <div class="rounds-head">
-        <span class="label grow">Rondes</span>
-        <Popover align="right" :width="250">
-          <template #trigger="{ toggle }">
+      <div class="rounds-head label">Rondes</div>
+      <div class="rounds scroll">
+        <div
+          v-for="(r, i) in quiz.rounds"
+          :key="r.id"
+          class="round"
+          :class="{ on: selected === r.id, drop: dropTarget === r.id && dragging !== r.id }"
+          draggable="true"
+          @click="page = r.id"
+          @dragstart="dragging = r.id"
+          @dragend="dragging = dropTarget = null"
+          @dragover.prevent="dragging && (dropTarget = r.id)"
+          @drop.prevent.stop="dragging && onRoundDrop(r.id)"
+        >
+          <span class="num mono">{{ i + 1 }}</span>
+          <span class="round-title grow">{{ r.title || 'Naamloze ronde' }}</span>
+        </div>
+        <Popover :width="250">
+          <template #trigger="{ open, toggle }">
             <button
-              class="btn btn-ghost btn-sm btn-icon"
+              class="nav-item add-round"
+              :class="{ active: open }"
               aria-label="Ronde toevoegen"
-              title="Ronde toevoegen"
               @click="toggle"
             >
-              <Icon name="plus" />
+              <Icon name="plus" :size="14" />
+              <span>Ronde</span>
             </button>
           </template>
           <template #default="{ close }">
@@ -172,27 +176,20 @@ function onDropCapture() {
         </Popover>
       </div>
 
-      <div class="rounds scroll">
-        <div
-          v-for="(r, i) in quiz.rounds"
-          :key="r.id"
-          class="round"
-          :class="{ on: selected === r.id, drop: dropTarget === r.id && dragging !== r.id }"
-          draggable="true"
-          @click="selected = r.id"
-          @dragstart="dragging = r.id"
-          @dragend="dragging = dropTarget = null"
-          @dragover.prevent="dragging && (dropTarget = r.id)"
-          @drop.prevent.stop="dragging && onRoundDrop(r.id)"
-        >
-          <span class="num mono">{{ i + 1 }}</span>
-          <span class="round-title grow">{{ r.title || 'Naamloze ronde' }}</span>
-        </div>
-        <p v-if="!quiz.rounds.length" class="muted hint">Nog geen rondes. Voeg er een toe met +.</p>
-      </div>
+      <nav class="nav">
+        <button class="nav-item" :class="{ on: selected === 'media' }" @click="page = 'media'">
+          <Icon name="images" />
+          <span class="grow">Media</span>
+          <span class="badge">{{ quiz.assets.length }}</span>
+        </button>
+        <button class="nav-item" :class="{ on: selected === 'setup' }" @click="page = 'setup'">
+          <Icon name="sliders" />
+          <span class="grow">Quiz-instellingen</span>
+        </button>
+      </nav>
     </aside>
 
-    <section class="main scroll">
+    <section class="main" :class="{ scroll: !round }">
       <SetupPanel v-if="selected === 'setup'" @create-from-current="emit('createFromCurrent')" />
       <MediaLibrary v-else-if="selected === 'media'" />
       <PrintPanel v-else-if="selected === 'print'" />
@@ -225,7 +222,7 @@ function onDropCapture() {
 .sidebar {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 4px;
   min-height: 0;
   padding: 14px 10px;
   background: var(--surface-1);
@@ -278,10 +275,7 @@ function onDropCapture() {
 }
 
 .rounds-head {
-  display: flex;
-  align-items: center;
-  padding: 0 4px 0 10px;
-  margin-bottom: -10px;
+  padding: 4px 10px 6px;
 }
 
 .rounds {
@@ -323,13 +317,19 @@ function onDropCapture() {
   box-shadow: inset 0 2px 0 var(--accent);
 }
 
-.hint {
-  padding: 6px 10px;
-  font-size: 12px;
+.add-round {
+  gap: 8px;
+  color: var(--muted);
+}
+
+.add-round.active {
+  background: var(--surface-2);
+  color: var(--text);
 }
 
 .main {
   min-width: 0;
+  min-height: 0;
 }
 
 .drop-overlay {

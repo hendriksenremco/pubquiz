@@ -7,7 +7,19 @@ import { urlFor } from './media'
 // voorbeeld tegelijk speelt.
 const audio = new Audio()
 const playingId = ref<string | null>(null)
+/** Waar het geluid is (seconden); per beeld bijgewerkt zolang het speelt, voor een meelopende lijn. */
+const position = ref(0)
 let stopAt: number | null = null
+let frame = 0
+
+function track() {
+  position.value = audio.currentTime
+  if (!audio.paused) frame = requestAnimationFrame(track)
+}
+audio.addEventListener('play', () => {
+  cancelAnimationFrame(frame)
+  track()
+})
 
 audio.addEventListener('timeupdate', () => {
   if (stopAt !== null && audio.currentTime >= stopAt) stop()
@@ -32,11 +44,12 @@ function toggle(id: string, asset: MediaAsset | null, start = 0, end?: number) {
   if (!asset) return
   audio.src = urlFor(asset)
   audio.currentTime = start
+  position.value = start
   stopAt = end ?? null
   playingId.value = id
   void audio.play().catch(stop)
 }
 
 export function usePreviewPlayer() {
-  return { playingId, toggle, stop, claim }
+  return { playingId, position, toggle, stop, claim }
 }

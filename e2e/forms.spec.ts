@@ -56,7 +56,7 @@ function pageSizeMm(file: string): [number, number] {
 }
 
 test('maakt het antwoordformulier, de antwoorden en de vragenkaarten als pdf', async () => {
-  await operator.locator('.nav-item', { hasText: 'Afdrukken' }).click()
+  await operator.locator('.topbar').getByRole('button', { name: 'Afdrukken' }).click()
   const dialog = operator.locator('.print')
   // Alleen rondes met iets om in te vullen; de pauze niet.
   await expect(dialog.locator('label.option .option-title')).toHaveText([
@@ -88,7 +88,7 @@ test('maakt het antwoordformulier, de antwoorden en de vragenkaarten als pdf', a
 })
 
 test('acties staan zichtbaar in beeld, niet achter drie stippen', async () => {
-  await operator.locator('.nav-item', { hasText: 'Quiz' }).click()
+  await operator.getByRole('button', { name: 'Quiz-instellingen' }).click()
   for (const name of ['Nieuwe quiz op basis van deze', 'Exporteer als zip', 'Toon in Finder']) {
     await expect(operator.getByRole('button', { name })).toBeVisible()
   }
@@ -96,18 +96,20 @@ test('acties staan zichtbaar in beeld, niet achter drie stippen', async () => {
   await operator.waitForTimeout(300)
   await operator.screenshot({ path: 'test-results/quiz-actions.png' })
 
-  // Ronde dupliceren en verwijderen vanaf de rondepagina.
+  // Ronde dupliceren en verwijderen, onderaan de instellingen van de ronde.
   const rounds = operator.locator('.sidebar .round')
   await rounds.first().click()
-  await operator.getByRole('button', { name: 'Dupliceer' }).click()
+  await operator.getByRole('tab', { name: 'Ronde' }).click()
+  await operator.getByRole('button', { name: 'Dupliceer ronde' }).click()
   await expect(rounds).toHaveCount(5)
   await expect(operator.locator('#round-title')).toHaveValue('Ronde 1: algemeen (kopie)')
+  await operator.getByRole('tab', { name: 'Ronde' }).click()
   await operator.screenshot({ path: 'test-results/round-actions.png' })
-  await operator.getByRole('button', { name: 'Verwijder', exact: true }).click()
+  await operator.getByRole('button', { name: 'Verwijder ronde' }).click()
   await confirmIn(operator, 'Verwijder')
   await expect(rounds).toHaveCount(4)
 
-  await operator.locator('.nav-item', { hasText: 'Media' }).click()
+  await operator.getByRole('button', { name: /^Media/ }).click()
   await expect(operator.getByRole('button', { name: 'Verwijder uit quiz' }).first()).toBeVisible()
   await operator.screenshot({ path: 'test-results/media-actions.png' })
   await expect(operator.getByRole('button', { name: 'Meer' })).toHaveCount(0)

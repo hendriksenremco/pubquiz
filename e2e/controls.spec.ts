@@ -26,9 +26,8 @@ const savedQuiz = () => JSON.parse(readFileSync(join(quizDir, 'quiz.json'), 'utf
 
 test('een slide krijgt een kleur uit het rijtje of een eigen kleurcode', async () => {
   await operator.locator('.sidebar .round').first().click()
-  await operator.locator('.strip .thumb').nth(1).click()
-  const chip = operator.locator('.chip.small', { hasText: 'Achtergrond' })
-  await chip.click()
+  await operator.locator('.slide-list .item').nth(1).locator('.thumb').click()
+  await operator.getByRole('button', { name: 'Achtergrond' }).click()
   await operator.locator('.menu-item', { hasText: 'Effen kleur' }).click()
 
   const panel = operator.locator('.popover-panel')
@@ -55,7 +54,7 @@ test('een slide krijgt een kleur uit het rijtje of een eigen kleurcode', async (
 })
 
 test('vinkjes en schuifjes zijn echte invoervelden met de stijl van de app', async () => {
-  await operator.locator('.nav-item', { hasText: 'Afdrukken' }).click()
+  await operator.locator('.topbar').getByRole('button', { name: 'Afdrukken' }).click()
   const box = operator.locator('.print label.option input[type="checkbox"]').first()
   await expect(box).toBeChecked()
   // Geen standaardvinkje van macOS meer.

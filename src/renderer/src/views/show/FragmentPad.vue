@@ -5,6 +5,7 @@ import type { AutoplayAction, ShowCommand } from '@shared/ipc'
 import type { Round } from '@shared/types'
 import { formatTime } from '../../lib/format'
 import { useNow } from '../../lib/use-now'
+import FragmentWave from './FragmentWave.vue'
 import { useSession } from '../../stores/session'
 
 /** `arrows`: ← → bladeren hier door de fragmenten. */
@@ -24,11 +25,6 @@ const upcoming = computed(() => {
 const ap = computed(() => session.state.autoplay)
 const now = useNow(100, () => playing.value !== null || ap.value.status === 'gap')
 
-const progress = computed(() => {
-  const f = playing.value
-  if (!f?.duration) return 0
-  return Math.min(1, (now.value - f.startedAt) / 1000 / f.duration)
-})
 const remaining = computed(() => {
   const f = playing.value
   return f?.duration ? Math.max(0, f.duration - (now.value - f.startedAt) / 1000) : null
@@ -101,10 +97,7 @@ function click(id: string) {
         }"
         @click="click(f.id)"
       >
-        <span class="frag-top">
-          <span class="frag-num mono">{{ i + 1 }}</span>
-          <span v-if="i < 9" class="kbd">{{ i + 1 }}</span>
-        </span>
+        <span class="frag-num mono">{{ i + 1 }}</span>
         <span class="frag-label">{{ f.label }}</span>
         <span v-if="f.answer" class="frag-answer">{{ f.answer }}</span>
         <span v-if="playing?.fragmentId === f.id" class="frag-time mono">
@@ -114,10 +107,10 @@ function click(id: string) {
           Volgende <span class="kbd">→</span>
         </span>
         <span v-else-if="session.state.played.includes(f.id)" class="frag-time">✓ gespeeld</span>
-        <span
-          v-if="playing?.fragmentId === f.id"
-          class="bar"
-          :style="{ transform: `scaleX(${progress})` }"
+        <FragmentWave
+          class="frag-wave"
+          :fragment="f"
+          :playing="playing?.fragmentId === f.id && playing.duration ? playing : null"
         />
       </button>
     </div>
@@ -139,9 +132,9 @@ function click(id: string) {
   gap: 2px;
   min-height: 92px;
   padding: 10px 12px 14px;
-  border: 1px solid var(--line-strong);
+  border: 1px solid transparent;
   border-radius: var(--radius-lg);
-  background: var(--panel-2);
+  background: var(--surface-2);
   color: var(--text);
   font: inherit;
   text-align: left;
@@ -150,7 +143,7 @@ function click(id: string) {
 }
 
 .frag:hover {
-  border-color: var(--muted);
+  background: var(--surface-3);
 }
 
 .frag.on {
@@ -174,13 +167,6 @@ function click(id: string) {
   align-items: center;
   gap: 5px;
   color: var(--accent);
-}
-
-.frag-top {
-  display: flex;
-  width: 100%;
-  justify-content: space-between;
-  align-items: center;
 }
 
 .frag-num {
@@ -208,13 +194,14 @@ function click(id: string) {
   color: var(--muted);
 }
 
-.bar {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 4px;
-  background: var(--accent);
-  transform-origin: left;
+.frag-wave {
+  --wave: rgba(160, 180, 220, 0.22);
+  width: 100%;
+  height: 22px;
+  margin-top: 6px;
+}
+
+.frag.on .frag-wave {
+  --wave: rgba(255, 165, 61, 0.3);
 }
 </style>

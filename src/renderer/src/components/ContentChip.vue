@@ -14,11 +14,17 @@ type Choice = 'default' | 'video' | 'image' | 'black'
 
 /**
  * Chip "Beamer · music-loop" die openklapt tot een keuze met thumbnails.
- * Met allowDefault betekent undefined: de standaard van het scherm.
+ * Met allowDefault betekent undefined: de standaard van het scherm. Met `field` oogt hij als een
+ * veld, voor het paneel rechts waar de naam van het scherm ernaast staat.
  */
 const props = withDefaults(
-  defineProps<{ label: string; allowDefault?: boolean; fallback?: ScreenContent }>(),
-  { allowDefault: false, fallback: undefined }
+  defineProps<{
+    label: string
+    allowDefault?: boolean
+    fallback?: ScreenContent
+    field?: boolean
+  }>(),
+  { allowDefault: false, fallback: undefined, field: false }
 )
 const model = defineModel<ScreenContent | undefined>()
 /** Ronde-editor: de standaard tonen, maar zonder videogeluid. */
@@ -108,9 +114,29 @@ const soundNote = computed(() =>
 </script>
 
 <template>
-  <Popover :width="420">
+  <Popover :width="420" :block="field">
     <template #trigger="{ open, toggle }">
       <button
+        v-if="field"
+        type="button"
+        class="picker"
+        :class="{ open }"
+        :aria-label="label"
+        :title="`${label}: ${model ? (shownAsset?.name ?? valueText) : 'Standaard'}${soundNote}`"
+        @click="(toggle(), emit('opened'))"
+      >
+        <MediaThumb :asset="shownAsset" :black="shown.type === 'black'" class="chip-thumb" />
+        <span class="value" :class="{ none: allowDefault && !model }">{{ valueText }}</span>
+        <Icon
+          v-if="shownHasSound"
+          :name="shownMuted ? 'volume-off' : 'volume'"
+          :size="14"
+          class="chip-sound"
+        />
+        <Icon name="chevron" :size="14" class="chev" />
+      </button>
+      <button
+        v-else
         type="button"
         class="chip"
         :class="{ open, dimmed: allowDefault && !model && !shownMuted }"
@@ -177,7 +203,7 @@ const soundNote = computed(() =>
             <span class="mono pct">{{ percent(soundVolume) }}</span>
           </label>
           <p class="muted hint">
-            Via de speakers van het scherm. Een andere uitgang kies je bij Show.
+            Via de speakers van het scherm, of de uitgang die je bij Start show kiest.
           </p>
         </template>
       </div>
@@ -187,9 +213,14 @@ const soundNote = computed(() =>
 
 <style scoped>
 .chip-thumb {
+  flex: none;
   width: 30px;
   height: 18px;
   border-radius: 4px;
+}
+
+.picker .chip-thumb {
+  margin-left: -4px;
 }
 
 .body {

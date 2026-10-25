@@ -6,11 +6,9 @@ import type { Background } from '@shared/types'
 import ContentChip from '../../components/ContentChip.vue'
 import Icon from '../../components/Icon.vue'
 import MediaPicker from '../../components/MediaPicker.vue'
-import PageHero from '../../components/PageHero.vue'
 import Select from '../../components/Select.vue'
 import StagePreview from '../../components/StagePreview.vue'
 import { vFill } from '../../lib/fill'
-import { useAmbient } from '../../lib/ambient'
 import { ask } from '../../lib/confirm'
 import { percent } from '../../lib/format'
 import { usePreviewPlayer } from '../../lib/use-preview-player'
@@ -26,19 +24,6 @@ function exportZip() {
   void api.exportZip()
 }
 const preview = usePreviewPlayer()
-
-const ambient = useAmbient(() => {
-  const content = quiz.value.screens[0]?.default
-  return content && content.type !== 'black' ? findAsset(quiz.value, content.assetId) : null
-})
-
-function plural(n: number, one: string, many: string) {
-  return `${n} ${n === 1 ? one : many}`
-}
-const summary = computed(() => {
-  const q = quiz.value
-  return `${plural(q.screens.length, 'scherm', 'schermen')}, ${plural(q.channels.length, 'audiokanaal', 'audiokanalen')} en ${plural(q.rounds.length, 'ronde', 'rondes')}`
-})
 
 function addScreen() {
   quiz.value.screens.push(createScreenSlot(`Scherm ${quiz.value.screens.length + 1}`))
@@ -105,28 +90,14 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
 
 <template>
   <div class="setup">
-    <PageHero :ambient="ambient">
+    <div class="body">
       <input
         id="quiz-title"
         v-model="quiz.title"
-        class="quiet hero-title"
+        class="quiet page-title"
         aria-label="Naam van de quiz"
       />
-      <p class="muted summary">{{ summary }}</p>
-      <div class="quiz-actions">
-        <button class="btn btn-ghost btn-sm" @click="emit('createFromCurrent')">
-          <Icon name="copy" :size="14" /> Nieuwe quiz op basis van deze
-        </button>
-        <button class="btn btn-ghost btn-sm" @click="exportZip">
-          <Icon name="upload" :size="14" /> Exporteer als zip
-        </button>
-        <button class="btn btn-ghost btn-sm" @click="api.revealQuiz()">
-          <Icon name="folder" :size="14" /> Toon in Finder
-        </button>
-      </div>
-    </PageHero>
 
-    <div class="body">
       <section>
         <div class="section-head">
           <h3>Schermen</h3>
@@ -260,8 +231,22 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
                 <Icon name="x" :size="14" />
               </button>
             </div>
-            <p class="muted foot">Welke speaker bij welk kanaal hoort, kies je bij Show.</p>
           </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-head"><h3>Bestand</h3></div>
+        <div class="quiz-actions">
+          <button class="btn" @click="emit('createFromCurrent')">
+            <Icon name="copy" :size="14" /> Nieuwe quiz op basis van deze
+          </button>
+          <button class="btn" @click="exportZip">
+            <Icon name="upload" :size="14" /> Exporteer als zip
+          </button>
+          <button class="btn" @click="api.revealQuiz()">
+            <Icon name="folder" :size="14" /> Toon in Finder
+          </button>
         </div>
       </section>
     </div>
@@ -269,21 +254,16 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
 </template>
 
 <style scoped>
-.hero-title {
-  font: 700 40px/1.1 var(--display);
-  letter-spacing: -0.025em;
-}
-
-.summary {
-  margin-top: 6px;
-  font-size: 14px;
+.page-title {
+  margin-bottom: -12px;
+  font: 700 30px/1.15 var(--display);
+  letter-spacing: -0.02em;
 }
 
 .quiz-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
-  margin: 14px 0 0 -10px;
+  gap: 8px;
 }
 
 .remove-screen {
@@ -300,7 +280,7 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
   gap: 40px;
   max-width: 1080px;
   margin: 0 auto;
-  padding: 8px 40px 80px;
+  padding: 32px 40px 80px;
 }
 
 .screens {
@@ -381,18 +361,17 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
   height: 112px;
   border: 0;
   border-radius: var(--radius-lg);
-  background:
-    radial-gradient(circle at 30% 25%, rgba(255, 210, 140, 0.55), transparent 55%),
-    linear-gradient(145deg, #ffa53d, #c2410c 70%, #5b1a07);
-  color: #fff;
+  background: var(--surface-3);
+  color: var(--text);
   cursor: pointer;
-  box-shadow: 0 14px 30px rgba(255, 120, 30, 0.18);
+}
+
+.art:hover:not(:disabled) {
+  background: var(--surface-4);
 }
 
 .art:disabled {
-  background: var(--surface-3);
   color: var(--muted);
-  box-shadow: none;
   cursor: default;
 }
 
@@ -464,17 +443,7 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
   font-weight: 600;
 }
 
-.channel .del {
-  opacity: 0;
-}
-
-.channel:hover .del {
-  opacity: 1;
-}
-
-.foot {
-  margin-top: auto;
-  padding-top: 10px;
-  font-size: 12px;
+.del {
+  color: var(--muted);
 }
 </style>

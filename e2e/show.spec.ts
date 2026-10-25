@@ -1,12 +1,14 @@
 import { expect, test, type ElectronApplication, type Page } from '@playwright/test'
-import { rmSync } from 'fs'
-import { dirname } from 'path'
+import { readFileSync, rmSync } from 'fs'
+import { dirname, join } from 'path'
 import {
   activeVideo,
   audio as audioOf,
   confirmIn,
   copyFixture,
   launch,
+  openStart,
+  startShow,
   tempDir,
   useWindowedScreens,
   windowFor as windowOf
@@ -38,23 +40,41 @@ test('opent de demo-quiz in de editor', async () => {
   await operator.locator('.sidebar .round').nth(1).click()
   await expect(operator.locator('#round-title')).toHaveValue('Ronde 2: muziek')
   await expect(operator.locator('.track')).toHaveCount(8)
-  // Fragmentnummer alleen op de gekozen schermen.
-  await expect(operator.locator('.number-chip')).toContainText('Beamer')
-  await operator.locator('.number-chip').click()
-  await operator.waitForTimeout(300)
-  await operator.screenshot({ path: 'test-results/editor-number-screens.png' })
-  await operator.keyboard.press('Escape')
-  await operator.waitForTimeout(800) // previews en gloed laten laden voor de screenshot
+  // De ronde zelf: het fragmentnummer alleen op de gekozen schermen.
+  await operator.getByRole('tab', { name: 'Ronde' }).click()
+  const numberOn = operator.getByRole('group', { name: 'Fragmentnummer in beeld op' })
+  await expect(numberOn.getByLabel('Beamer')).toBeChecked()
+  await expect(numberOn.getByLabel('TV bar')).not.toBeChecked()
+  await operator.waitForTimeout(800) // previews laten laden voor de screenshot
   await operator.screenshot({ path: 'test-results/editor-round.png' })
 
-  await operator.locator('.track-row').nth(2).click()
+  await operator.locator('.track').nth(2).click()
+  await expect(operator.getByRole('tab', { name: 'Fragment' })).toHaveAttribute(
+    'aria-selected',
+    'true'
+  )
+  // De waveform van het hele bestand, met het stuk dat speelt tussen twee grepen.
+  const wave = operator.locator('.edit-wave')
+  await expect(wave.locator('rect')).toHaveCount(160)
+  const begin = wave.getByRole('slider', { name: 'Begin' })
+  await expect(begin).toHaveAttribute('aria-valuenow', '0')
+  await expect(wave.getByRole('slider', { name: 'Eind' })).toHaveAttribute('aria-valuenow', '83')
+  await begin.focus()
+  await operator.keyboard.press('ArrowRight')
+  await expect
+    .poll(
+      () =>
+        JSON.parse(readFileSync(join(quizDir, 'quiz.json'), 'utf8')).rounds[1].fragments[2].start
+    )
+    .toBe(0.5)
+  await expect(operator.locator('.times input').first()).toHaveValue('0:00.5')
   await operator.screenshot({ path: 'test-results/editor-fragment-open.png' })
 
   await operator.locator('.sidebar .round').first().click()
   await operator.waitForTimeout(600)
   await operator.screenshot({ path: 'test-results/editor-round-slides.png' })
 
-  await operator.getByRole('button', { name: 'Quiz', exact: true }).click()
+  await operator.getByRole('button', { name: 'Quiz-instellingen' }).click()
   await operator.waitForTimeout(800)
   await operator.screenshot({ path: 'test-results/editor-setup.png' })
 
@@ -64,8 +84,7 @@ test('opent de demo-quiz in de editor', async () => {
 })
 
 test('bereidt de show voor met schermen als venster', async () => {
-  await operator.getByRole('button', { name: 'Show', exact: true }).click()
-  await expect(operator.getByRole('heading', { name: 'Show voorbereiden' })).toBeVisible()
+  await openStart(operator)
   await useWindowedScreens(operator)
   await operator.screenshot({ path: 'test-results/show-prepare.png' })
 
@@ -86,13 +105,13 @@ test('bereidt de show voor met schermen als venster', async () => {
 })
 
 test('wisselt scherm tijdens een ronde en valt daarna terug', async () => {
-  await operator.getByRole('button', { name: 'Start show' }).click()
+  await startShow(operator)
   await expect(operator.locator('.live')).toBeVisible()
 
   const beamer = await windowFor('screen/beamer')
   await expect.poll(() => activeVideo(beamer)).toContain('default-loop.mp4')
   // Tijdens de show kun je niet per ongeluk naar het overzicht.
-  await expect(operator.getByRole('button', { name: 'Stop eerst de show' })).toBeDisabled()
+  await expect(operator.getByRole('button', { name: 'Quizzen' })).toBeDisabled()
 
   await operator.locator('.rounds .round').nth(1).click()
   await expect(operator.locator('.now-title')).toHaveText('Ronde 2: muziek')
@@ -154,13 +173,13 @@ test('beeld- en geluidknoppen zijn terug te draaien', async () => {
   await operator.getByRole('button', { name: /Geluid uit/ }).click()
   await expect.poll(async () => (await audio()).background?.playing).toBe(false)
   await operator.waitForTimeout(300)
-  await operator.locator('.bar').screenshot({ path: 'test-results/show-bar-alert.png' })
+  await operator.locator('.topbar').screenshot({ path: 'test-results/show-bar-alert.png' })
 
   await operator.getByRole('button', { name: /Beeld terug/ }).click()
   await expect.poll(() => activeVideo(beamer)).toContain('default-loop.mp4')
   await operator.getByRole('button', { name: /Geluid aan/ }).click()
   await expect.poll(async () => (await audio()).background?.playing).toBe(true)
-  await operator.locator('.bar').screenshot({ path: 'test-results/show-bar.png' })
+  await operator.locator('.topbar').screenshot({ path: 'test-results/show-bar.png' })
 })
 
 test('speelt een fragment af tot het einde en markeert het als gespeeld', async () => {
@@ -173,6 +192,11 @@ test('speelt een fragment af tot het einde en markeert het als gespeeld', async 
   const tv = await windowFor('screen/tv')
   await expect(beamer.locator('.overlay .ov-number')).toHaveText('1')
   await expect(tv.locator('.overlay')).toHaveCount(0)
+  // De waveform van het fragment loopt mee op de beamer en op de knop.
+  await expect(beamer.locator('.ov-wave .base rect')).toHaveCount(48)
+  await expect(beamer.locator('.ov-wave .played.running')).toHaveCount(1)
+  await expect(first.locator('.frag-wave .played.running')).toHaveCount(1)
+  await expect(operator.locator('.frag').nth(1).locator('.frag-wave .base rect')).toHaveCount(40)
   await expect(first.locator('.frag-time')).toContainText('-0:0')
   // Echt aan het spelen in de engine (een decodeerfout zou ook als "afgelopen" tellen).
   await expect.poll(async () => (await audio()).fragment).not.toBeNull()
@@ -203,7 +227,11 @@ test('autoplay toont fragmentnummer en countdown op het scherm', async () => {
 test('bladert met de pijltjes door de fragmenten', async () => {
   // Fragment 1 en 2 zijn al gestart (de cijfertoets en de reeks): → gaat verder met 3.
   const frag = (n: number) => operator.locator('.frag').nth(n - 1)
-  await expect(operator.locator('.shortcuts')).toContainText('Vorig/volgend fragment')
+  const help = operator.getByRole('button', { name: 'Sneltoetsen' })
+  await help.click()
+  await expect(operator.locator('.shortcuts')).toContainText('Vorig of volgend fragment')
+  await help.click()
+  await expect(operator.locator('.shortcuts')).toHaveCount(0)
   await expect(frag(3)).toHaveClass(/upcoming/)
   await expect(frag(3).locator('.frag-next')).toContainText('Volgende')
 

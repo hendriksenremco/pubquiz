@@ -6,6 +6,8 @@ import {
   confirmIn,
   copyFixture,
   launch,
+  openStart,
+  startShow,
   tempDir,
   useWindowedScreens,
   windowFor
@@ -54,61 +56,63 @@ const addRound = async (preset: string) => {
 
 test('een vraag kan alleen zijn nummer in beeld tonen', async () => {
   await operator.locator('.sidebar .round').first().click()
-  await operator.locator('.strip .thumb').nth(1).click()
-  await operator.locator('.shown-chip').click()
-  await operator.locator('.menu-item', { hasText: 'Alleen het nummer' }).click()
-  await expect(operator.locator('.shown-chip')).toContainText('alleen het nummer')
-  await expect(operator.locator('.thumb.on .slide .number')).toHaveText('1')
-  await expect(operator.locator('.thumb.on .slide .body')).toHaveCount(0)
+  const question = operator.locator('.slide-list .item').nth(1)
+  await question.locator('.thumb').click()
+  await operator
+    .getByRole('group', { name: 'In beeld' })
+    .getByRole('button', { name: 'Alleen het nummer' })
+    .click()
+  await expect(question).toContainText('alleen het nummer in beeld')
+  await expect(question.locator('.slide .number')).toHaveText('1')
+  await expect(question.locator('.slide .body')).toHaveCount(0)
 })
 
 test('een afbeeldingenronde vul je in één keer met een map uit Media', async () => {
   await addRound('Afbeeldingenronde')
   await expect(operator.locator('#round-title')).toHaveValue('Ronde 5: afbeeldingen')
 
-  await operator.getByRole('button', { name: 'Slide toevoegen' }).click()
+  await operator.locator('.add-bar').getByRole('button', { name: 'Afbeeldingen' }).click()
   await operator.locator('.menu-item', { hasText: 'Plaatjes' }).click()
   // Titelslide plus drie afbeeldingen; de eerste afbeelding is geselecteerd.
-  await expect(operator.locator('.strip .thumb:not(.add)')).toHaveCount(4)
-  await expect(operator.locator('.thumb.on .image-number')).toHaveText('1')
-  await operator.getByLabel('Antwoord').fill('De Eiffeltoren')
+  await expect(operator.locator('.slide-list .item')).toHaveCount(4)
+  const picked = operator.locator('.slide-list .item.on')
+  await expect(picked.locator('.image-number')).toHaveText('1')
+  await picked.getByLabel('Antwoord').fill('De Eiffeltoren')
   // Bij het antwoord een andere afbeelding dan bij de vraag.
-  await operator.locator('.answer-row .chip').click()
+  const answerImage = operator.getByRole('button', { name: 'Afbeelding bij het antwoord' })
+  await answerImage.click()
   await operator.locator('.popover-panel button[title="Foto 3.png"]').click()
-  await expect(operator.locator('.answer-row .chip')).toContainText('Foto 3')
+  await expect(answerImage).toContainText('Foto 3')
 
   // Eindeloos laten rondgaan, elke seconde (kort, voor de test).
-  await operator.locator('.loop-chip').click()
-  await operator.getByLabel('Slides vanzelf laten wisselen').check()
+  await operator.getByRole('tab', { name: 'Ronde' }).click()
+  await operator.getByLabel('Vanzelf wisselen').check()
   await operator.getByLabel('Seconden per slide').fill('1')
   await operator.getByLabel('Seconden per slide').press('Enter')
-  await operator.keyboard.press('Escape')
-  await expect(operator.locator('.loop-chip')).toContainText('elke 1 s')
+  await expect
+    .poll(
+      () => JSON.parse(readFileSync(join(quizDir, 'quiz.json'), 'utf8')).rounds[4]?.slideLoopSeconds
+    )
+    .toBe(1)
   await operator.waitForTimeout(400)
   await operator.screenshot({ path: 'test-results/pictures-editor.png' })
 })
 
 test('een antwoordenronde loopt vragen, afbeeldingen en fragmenten langs', async () => {
   await addRound('Antwoorden')
-  const chip = operator.locator('.answers-chip')
-  await expect(chip).toContainText('4 rondes')
-  await chip.click()
-  const menu = operator.locator('.answers-menu')
-  await expect(menu.locator('.check-row', { hasText: 'Ronde 1: algemeen' })).toContainText(
-    '2 vragen'
-  )
-  await expect(menu.locator('.check-row', { hasText: 'Ronde 5: afbeeldingen' })).toContainText(
-    '3 afbeeldingen'
-  )
+  await operator.getByRole('tab', { name: 'Ronde' }).click()
+  const sources = operator.locator('.answers .check-row')
+  await expect(sources.locator('input:checked')).toHaveCount(4)
+  await expect(sources.filter({ hasText: 'Ronde 1: algemeen' })).toContainText('2 vragen')
+  await expect(sources.filter({ hasText: 'Ronde 5: afbeeldingen' })).toContainText('3 afbeeldingen')
   await operator.waitForTimeout(300)
   await operator.screenshot({ path: 'test-results/answers-editor.png' })
-  await operator.keyboard.press('Escape')
 })
 
 test('live: eerst de vraag, afbeelding of het fragment, dan het antwoord', async () => {
-  await operator.getByRole('button', { name: 'Show', exact: true }).click()
+  await openStart(operator)
   await useWindowedScreens(operator)
-  await operator.getByRole('button', { name: 'Start show' }).click()
+  await startShow(operator)
   const beamer = await windowFor(app, 'screen/beamer')
   const tv = await windowFor(app, 'screen/tv')
 

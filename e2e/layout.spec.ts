@@ -30,6 +30,7 @@ test('lange bestandsnamen blijven binnen hun chip en tegel', async () => {
   const { app, operator } = await launch(userData, quizDir)
   try {
     // Quiz-instellingen: chip "Toont …" in elke schermtegel.
+    await operator.getByRole('button', { name: 'Quiz-instellingen' }).click()
     for (const tile of await operator.locator('.screen.tile').all()) {
       await expectInside(tile.locator('.chip'), tile)
     }
@@ -39,10 +40,13 @@ test('lange bestandsnamen blijven binnen hun chip en tegel', async () => {
     )
     await operator.screenshot({ path: 'test-results/long-names-setup.png' })
 
-    // Ronde-kop: scherm-chips binnen de rij.
+    // Instellingen van de ronde: de keuzes voor de schermen blijven binnen het paneel.
     await operator.locator('.sidebar .round').nth(1).click()
-    const chips = operator.locator('.hero-text .chips')
-    for (const chip of await chips.locator('.chip').all()) await expectInside(chip, chips)
+    await operator.getByRole('tab', { name: 'Ronde' }).click()
+    const panel = operator.locator('.inspector')
+    const pickers = panel.locator('.picker')
+    await expect(pickers.first()).toBeVisible()
+    for (const picker of await pickers.all()) await expectInside(picker, panel)
     await operator.screenshot({ path: 'test-results/long-names-round.png' })
   } finally {
     await app.close()

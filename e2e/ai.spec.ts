@@ -3,7 +3,15 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'fs'
 import { join, resolve } from 'path'
-import { confirmIn, launch, tempDir, tourFixture, useWindowedScreens } from './helpers'
+import {
+  confirmIn,
+  launch,
+  openStart,
+  startShow,
+  tempDir,
+  tourFixture,
+  useWindowedScreens
+} from './helpers'
 
 // Een AI-assistent maakt een quiz via de MCP-server (out/main/mcp.js), die met de draaiende app
 // praat. De client hier doet wat Claude Desktop doet.
@@ -112,7 +120,7 @@ test('een AI maakt een quiz met vragen, muziek, plaatjes, een pauze en antwoorde
   expect(created.json.quiz.rounds).toHaveLength(5)
 
   // De app opent hem meteen, met de bestanden in een map per ronde.
-  await expect(operator.locator('#quiz-title')).toHaveValue('Pubquiz Italië')
+  await expect(operator.locator('.topbar .name')).toHaveText('Pubquiz Italië')
   await expect(operator.locator('.sidebar .round')).toHaveCount(5)
   const dir = join(userData, 'Pubquiz', 'Pubquiz Italië.pubquiz')
   const saved = JSON.parse(readFileSync(join(dir, 'quiz.json'), 'utf8'))
@@ -174,9 +182,9 @@ test('een AI maakt een quiz met vragen, muziek, plaatjes, een pauze en antwoorde
 })
 
 test('tijdens een show past de AI de lopende quiz niet aan en wisselt hij niet van quiz', async () => {
-  await operator.getByRole('button', { name: 'Show', exact: true }).click()
+  await openStart(operator)
   await useWindowedScreens(operator)
-  await operator.getByRole('button', { name: 'Start show' }).click()
+  await startShow(operator)
   await expect(operator.locator('.live')).toBeVisible()
 
   const blocked = await call('remove_round', { quiz: 'Pubquiz Italië', round: 4 })
@@ -197,7 +205,7 @@ test('tijdens een show past de AI de lopende quiz niet aan en wisselt hij niet v
 })
 
 test('vanaf het dashboard koppel je Quizmeister in één keer aan Claude Desktop', async () => {
-  await operator.getByRole('button', { name: 'Naar het overzicht' }).click()
+  await operator.getByRole('button', { name: 'Quizzen' }).click()
   await operator.locator('.new-tile').click()
   await operator.getByRole('button', { name: 'Met je AI…' }).click()
   const dialog = operator.getByRole('dialog', { name: 'Een quiz maken met je AI' })

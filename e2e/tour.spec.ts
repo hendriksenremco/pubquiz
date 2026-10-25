@@ -7,6 +7,8 @@ import {
   confirmIn,
   copyTour,
   launch,
+  openStart,
+  startShow,
   tempDir,
   useWindowedScreens,
   windowFor as windowOf
@@ -60,10 +62,10 @@ test('opent de rondleiding en start de show zonder ontbrekende bestanden', async
   await operator.waitForTimeout(800)
   await operator.screenshot({ path: 'test-results/tour-editor.png' })
 
-  await operator.getByRole('button', { name: 'Show', exact: true }).click()
+  await openStart(operator)
   await useWindowedScreens(operator)
   await expect(operator.getByText(/Bestand ontbreekt/)).toHaveCount(0)
-  await operator.getByRole('button', { name: 'Start show' }).click()
+  await startShow(operator)
   await expect(operator.locator('.live')).toBeVisible()
   const beamer = await windowFor('screen/beamer')
   await expect.poll(() => activeVideo(beamer)).toContain('welkom-loop.mp4')
@@ -188,8 +190,7 @@ test('tot slot: uitleg over afdrukken, en stoppen', async () => {
   await expect.poll(() => app.windows().some((w) => w.url().includes('#/screen/'))).toBe(false)
 
   // Afdrukken: de vier rondes met antwoorden staan klaar.
-  await operator.getByRole('button', { name: 'Bewerken', exact: true }).click()
-  await operator.locator('.nav-item', { hasText: 'Afdrukken' }).click()
+  await operator.locator('.topbar').getByRole('button', { name: 'Afdrukken' }).click()
   await expect(operator.locator('.print label.option .option-title')).toHaveText([
     'Ronde 1: algemene kennis',
     'Ronde 2: muziek',

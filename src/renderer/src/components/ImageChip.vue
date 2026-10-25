@@ -7,8 +7,11 @@ import Icon from './Icon.vue'
 import MediaThumb from './MediaThumb.vue'
 import Popover from './Popover.vue'
 
-/** Kleine chip "Afbeelding · naam" die openklapt tot de afbeeldingen uit Media. */
-defineProps<{ label: string }>()
+/**
+ * Kleine chip "Afbeelding · naam" die openklapt tot de afbeeldingen uit Media. Met `field` oogt hij
+ * als een veld (voor het paneel rechts, waar het label ernaast staat).
+ */
+withDefaults(defineProps<{ label: string; field?: boolean }>(), { field: false })
 const model = defineModel<string | undefined>()
 const session = useSession()
 const image = computed(() => findAsset(session.quiz!, model.value))
@@ -20,9 +23,25 @@ function clear(close: () => void) {
 </script>
 
 <template>
-  <Popover :width="380">
+  <Popover :width="380" :block="field">
     <template #trigger="{ open, toggle }">
       <button
+        v-if="field"
+        type="button"
+        class="picker"
+        :class="{ open }"
+        :aria-label="label"
+        :title="image?.name"
+        @click="toggle"
+      >
+        <MediaThumb v-if="image" :asset="image" class="field-thumb" />
+        <span class="value" :class="{ none: !image }">{{
+          image ? image.name.replace(/\.[^.]+$/, '') : 'Geen'
+        }}</span>
+        <Icon name="chevron" :size="13" class="chev" />
+      </button>
+      <button
+        v-else
         type="button"
         class="chip small"
         :class="{ open }"
@@ -58,6 +77,14 @@ function clear(close: () => void) {
   width: 26px;
   height: 16px;
   margin-left: -4px;
+}
+
+.field-thumb {
+  flex: none;
+  width: 30px;
+  height: 18px;
+  margin-left: -4px;
+  border-radius: 4px;
 }
 
 .clear {

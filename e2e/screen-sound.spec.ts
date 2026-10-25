@@ -1,7 +1,16 @@
 import { expect, test, type ElectronApplication, type Page } from '@playwright/test'
 import { rmSync } from 'fs'
 import { dirname } from 'path'
-import { confirmIn, copyFixture, launch, tempDir, useWindowedScreens, windowFor } from './helpers'
+import {
+  confirmIn,
+  copyFixture,
+  launch,
+  openStart,
+  startShow,
+  tempDir,
+  useWindowedScreens,
+  windowFor
+} from './helpers'
 
 let app: ElectronApplication
 let operator: Page
@@ -33,6 +42,7 @@ function sound(page: Page) {
 }
 
 test('zet geluid aan voor de standaardvideo en een ronde-video', async () => {
+  await operator.getByRole('button', { name: 'Quiz-instellingen' }).click()
   const beamerTile = operator.locator('.screen.tile').first()
   await beamerTile.locator('.chip').click()
   await operator.getByLabel('Geluid van de video').check()
@@ -44,7 +54,8 @@ test('zet geluid aan voor de standaardvideo en een ronde-video', async () => {
 
   // Ronde 1 toont de standaard, maar zonder geluid.
   await operator.locator('.sidebar .round').nth(0).click()
-  const roundBeamer = operator.locator('.hero-text .chips .chip').first()
+  await operator.getByRole('tab', { name: 'Ronde' }).click()
+  const roundBeamer = operator.locator('.round-settings .picker').first()
   await roundBeamer.click()
   await expect(operator.getByLabel('Geluid van de video')).toBeChecked()
   await operator.getByLabel('Geluid van de video').uncheck()
@@ -55,27 +66,25 @@ test('zet geluid aan voor de standaardvideo en een ronde-video', async () => {
 
   // Ronde 2 toont een andere video op de beamer; ook die met geluid.
   await operator.locator('.sidebar .round').nth(1).click()
-  await operator.locator('.hero-text .chips .chip').first().click()
+  await operator.getByRole('tab', { name: 'Ronde' }).click()
+  await operator.locator('.round-settings .picker').first().click()
   await operator.getByLabel('Geluid van de video').check()
   await operator.keyboard.press('Escape')
 })
 
 test('kiest bij Show waar het videogeluid heen gaat', async () => {
-  await operator.getByRole('button', { name: 'Show', exact: true }).click()
+  const sheet = await openStart(operator)
   await useWindowedScreens(operator)
-  const beamer = operator.locator('.screen').first()
-  await expect(beamer.getByText('Videogeluid via')).toBeVisible()
-  await expect(beamer.locator('.sound-target [role="combobox"]')).toHaveAttribute(
-    'data-value',
-    'auto'
-  )
-  // De TV toont alleen een afbeelding: geen geluidskeuze.
-  await expect(operator.locator('.screen').nth(1).getByText('Videogeluid via')).toHaveCount(0)
+  // Alleen de beamer speelt video met geluid; de TV toont een afbeelding: geen geluidskeuze.
+  const sound = sheet.locator('.sound-target [role="combobox"]')
+  await expect(sound).toHaveCount(1)
+  await expect(sound).toHaveAttribute('aria-label', 'Videogeluid van Beamer via')
+  await expect(sound).toHaveAttribute('data-value', 'auto')
   await operator.screenshot({ path: 'test-results/screen-sound-prepare.png' })
 })
 
 test('speelt het videogeluid alleen op het scherm, duckt bij een fragment en zwijgt bij zwart', async () => {
-  await operator.getByRole('button', { name: 'Start show' }).click()
+  await startShow(operator)
   const beamer = await windowFor(app, 'screen/beamer')
 
   await expect.poll(() => sound(beamer)).toEqual({ muted: false, volume: 0.8, sinkId: '' })

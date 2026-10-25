@@ -7,14 +7,20 @@ import NoticeStack from '../../components/NoticeStack.vue'
 import { ask } from '../../lib/confirm'
 import { useSession } from '../../stores/session'
 import EditorView from '../editor/EditorView.vue'
-import ShowView from '../show/ShowView.vue'
+import LiveControls from '../show/LiveControls.vue'
+import ShowLive from '../show/ShowLive.vue'
+import StartSheet from '../show/StartSheet.vue'
 import HomeView from './HomeView.vue'
 import AiDialog from './AiDialog.vue'
 import NewQuizDialog from './NewQuizDialog.vue'
 
 const api = window.pubquiz
 const session = useSession()
+/** Tijdens de show wissel je tussen de show en bewerken; daarbuiten is er alleen bewerken. */
 const mode = ref<'edit' | 'show'>('edit')
+/** Wat de editor toont: een ronde (id), 'setup', 'media' of 'print'; leeg = de eerste ronde. */
+const page = ref('')
+const starting = ref(false)
 
 const title = computed(() => session.quiz?.title || 'Naamloze quiz')
 
@@ -22,10 +28,11 @@ const home = ref<InstanceType<typeof HomeView> | null>(null)
 
 async function open(path?: string, openIn: 'edit' | 'show' = 'edit') {
   session.flush()
-  mode.value = openIn
+  mode.value = 'edit'
   await api.openQuiz(path)
   // Niet gelukt (bv. verplaatst): het dashboard toont de bijgewerkte lijst.
   if (!session.quiz) await home.value?.reload()
+  else if (openIn === 'show') starting.value = true
 }
 
 /** Open dialoog voor een nieuwe quiz; `source` = "op basis van" die quiz. */
@@ -53,6 +60,10 @@ async function goHome() {
   await api.closeQuiz()
 }
 
+function togglePrint() {
+  page.value = page.value === 'print' ? '' : 'print'
+}
+
 function isEditable(target: EventTarget | null): boolean {
   const el = target as HTMLElement | null
   return !!el && (el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName))
@@ -74,8 +85,7 @@ const actions: Record<MenuAction, () => void> = {
 
 onMounted(async () => {
   await session.init({ editable: true })
-  // Live of een afgebroken show om te hervatten: meteen naar de show-modus.
-  if (session.live || session.recovery) mode.value = 'show'
+  if (session.live) mode.value = 'show'
   api.onMenu((action) => actions[action]())
   // Afsluiten (⌘Q of het venster dicht) terwijl de show loopt.
   api.onConfirmQuit(async () => {
@@ -89,12 +99,29 @@ onMounted(async () => {
   })
 })
 
-// Komt de show live (ook via herstel), dan hoort de host in show-modus te zitten.
+// Komt de show live (ook via herstel), dan naar de show; stopt hij, dan terug naar bewerken.
 watch(
   () => session.live,
   (live) => {
-    if (live) mode.value = 'show'
+    mode.value = live ? 'show' : 'edit'
+    if (live) starting.value = false
   }
+)
+
+// Een andere quiz: weer bij de eerste ronde beginnen.
+watch(
+  () => session.quizDir,
+  () => (page.value = '')
+)
+
+// Een afgebroken show van deze quiz: meteen het venster om hem te hervatten.
+watch(
+  () =>
+    !!session.recovery && session.recovery.quizDir === session.quizDir && !!session.quiz,
+  (pending) => {
+    if (pending && !session.live) starting.value = true
+  },
+  { immediate: true }
 )
 </script>
 
@@ -104,32 +131,39 @@ watch(
       <div class="traffic-space" />
       <template v-if="session.quiz">
         <button
-          class="home-btn"
+          class="btn btn-ghost back"
           :disabled="session.live"
-          :aria-label="session.live ? 'Stop eerst de show' : 'Naar het overzicht'"
-          :title="session.live ? 'Stop eerst de show' : 'Naar het overzicht'"
+          :title="session.live ? 'Stop eerst de show' : undefined"
           @click="goHome"
         >
-          <Icon name="home" />
+          <Icon name="left" :size="15" /> Quizzen
         </button>
-        <div class="title">
-          <span class="name">{{ title }}</span>
-          <span class="save" :class="{ dirty: session.dirty }">
-            {{ session.dirty ? 'Opslaan…' : 'Opgeslagen' }}
-          </span>
-        </div>
-        <nav class="modes">
-          <button class="mode" :class="{ on: mode === 'edit' }" @click="mode = 'edit'">
-            Bewerken
-          </button>
-          <button class="mode" :class="{ on: mode === 'show' }" @click="mode = 'show'">
-            <span v-if="session.live" class="pill pill-live"><span class="dot" />Live</span>
-            <span v-else>Show</span>
-          </button>
-        </nav>
+        <span class="name">{{ title }}</span>
+        <span v-if="session.live && mode === 'edit'" class="pill pill-live">
+          <span class="dot" />Live
+        </span>
         <div class="spacer" />
+
+        <LiveControls v-if="session.live && mode === 'show'" @edit="mode = 'edit'" />
+        <div v-else class="actions">
+          <button v-if="session.live" class="btn btn-primary" @click="mode = 'show'">
+            Naar de show
+          </button>
+          <template v-else>
+            <button
+              class="btn btn-ghost"
+              :class="{ active: page === 'print' }"
+              :aria-pressed="page === 'print'"
+              @click="togglePrint"
+            >
+              <Icon name="printer" :size="15" /> Afdrukken
+            </button>
+            <button class="btn btn-primary" @click="starting = true">
+              <Icon name="play" :size="13" /> Start show
+            </button>
+          </template>
+        </div>
       </template>
-      <span v-else class="brand">Quizmeister</span>
     </header>
 
     <main v-if="session.ready" class="body">
@@ -141,10 +175,11 @@ watch(
         @create-from="createFrom"
         @ai="aiOpen = true"
       />
-      <EditorView v-else-if="mode === 'edit'" @create-from-current="createFromCurrent" />
-      <ShowView v-else />
+      <ShowLive v-else-if="session.live && mode === 'show'" />
+      <EditorView v-else v-model:page="page" @create-from-current="createFromCurrent" />
     </main>
 
+    <StartSheet v-if="starting && session.quiz && !session.live" @close="starting = false" />
     <NewQuizDialog v-if="newQuiz" :source="newQuiz.source" @close="newQuiz = null" />
     <AiDialog v-if="aiOpen" @close="aiOpen = false" />
     <ConfirmHost />
@@ -162,16 +197,17 @@ watch(
 .topbar {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   height: 46px;
-  padding: 0 12px;
+  padding: 0 10px;
   border-bottom: 1px solid var(--line);
   background: var(--panel);
   -webkit-app-region: drag;
   flex-shrink: 0;
 }
 
-.topbar button {
+.topbar button,
+.actions {
   -webkit-app-region: no-drag;
 }
 
@@ -179,46 +215,19 @@ watch(
   width: 64px;
 }
 
-.home-btn {
-  display: grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  border: 0;
-  border-radius: var(--radius);
-  background: transparent;
+.back {
+  gap: 2px;
+  padding-left: 6px;
   color: var(--muted);
-  cursor: pointer;
+  font-weight: 550;
 }
 
-.home-btn:hover:not(:disabled) {
-  background: var(--surface-3);
+.back:hover:not(:disabled) {
   color: var(--text);
 }
 
-.home-btn:disabled {
-  opacity: 0.35;
-  cursor: default;
-}
-
-.brand {
-  font: 700 15px var(--display);
-  color: var(--accent);
-}
-
-.title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-  flex: 1;
-}
-
-.title .popover {
-  -webkit-app-region: no-drag;
-}
-
 .name {
+  min-width: 0;
   font-weight: 650;
   font-size: 14px;
   white-space: nowrap;
@@ -226,46 +235,14 @@ watch(
   text-overflow: ellipsis;
 }
 
-.save {
-  font-size: 11px;
-  color: var(--faint);
-}
-
-.save.dirty {
-  color: var(--warn);
-}
-
-.modes {
-  display: flex;
-  padding: 3px;
-  border-radius: 9px;
-  background: var(--bg);
-  border: 1px solid var(--line);
-}
-
-.mode {
-  display: inline-flex;
-  align-items: center;
-  height: 26px;
-  min-width: 92px;
-  justify-content: center;
-  padding: 0 14px;
-  border: 0;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--muted);
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.mode.on {
-  background: var(--panel-3);
-  color: var(--text);
-}
-
 .spacer {
   flex: 1;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .body {

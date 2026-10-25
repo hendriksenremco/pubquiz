@@ -337,7 +337,6 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
       <p v-if="visual.length || sounds.length">
         Sleep een bestand naar een map om het te verplaatsen.
       </p>
-      <p>Soepelste loops: H.264- of HEVC-video met “faststart” en zonder geluidsspoor.</p>
     </div>
 
     <Transition name="dock">

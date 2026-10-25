@@ -60,7 +60,8 @@ test('menu’s vallen niet buiten het venster en liggen bovenop', async () => {
   await operator.keyboard.press('Escape')
 
   await operator.locator('.sidebar .round').first().click()
-  await operator.locator('.chips .chip').last().click()
+  await operator.getByRole('tab', { name: 'Ronde' }).click()
+  await operator.locator('.round-settings .picker').last().click()
   await expectPanelOnTop(operator)
   await operator.waitForTimeout(200) // infaden afwachten voor de screenshot
   await operator.screenshot({ path: 'test-results/popover-background.png' })
@@ -235,13 +236,19 @@ test('toont een bestand groot als voorbeeld en bladert verder', async () => {
 test('voegt een hele Media-map als fragmenten toe aan een ronde', async () => {
   await operator.getByRole('button', { name: 'Ronde toevoegen' }).click()
   await operator.getByRole('button', { name: /^Muziekronde/ }).click()
-  await operator.getByRole('button', { name: 'Toevoegen', exact: true }).click()
+  await operator.locator('.add-bar').getByRole('button', { name: 'Fragmenten' }).click()
   await operator
     .locator('.popover-panel')
     .getByRole('button', { name: /Fragmenten/ })
     .click()
-  await expect(operator.locator('.track-title')).toHaveText(
-    Array.from({ length: 8 }, (_, i) => `Fragment ${i + 1}`)
+  await expect(operator.locator('.track')).toHaveCount(8)
+  expect(
+    await operator
+      .locator('.track input.title')
+      .evaluateAll((els) => els.map((e) => (e as HTMLInputElement).value))
+  ).toEqual(Array.from({ length: 8 }, (_, i) => `Fragment ${i + 1}`))
+  // Het eerste is gekozen: rechts staat zijn bestand.
+  await expect(operator.getByRole('combobox', { name: 'Bestand' })).toContainText(
+    'fragment-1.m4a'
   )
-  await expect(operator.locator('.track-sub').first()).toHaveText('fragment-1.m4a')
 })

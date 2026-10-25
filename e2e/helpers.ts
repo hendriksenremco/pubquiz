@@ -103,6 +103,23 @@ export async function choose(page: Page, combobox: Locator, option: string | Reg
   await page.getByRole('listbox').getByRole('option', { name: option, exact: true }).click()
 }
 
+/** Opent het venster "Show starten" met de knop in de werkbalk. */
+export async function openStart(page: Page): Promise<Locator> {
+  await page.locator('.topbar').getByRole('button', { name: 'Start show' }).click()
+  const sheet = page.getByRole('dialog', { name: 'Show starten' })
+  await expect(sheet).toBeVisible()
+  return sheet
+}
+
+/** Start de show vanuit het venster "Show starten". */
+export async function startShow(page: Page) {
+  await page
+    .getByRole('dialog', { name: 'Show starten' })
+    .getByRole('button', { name: 'Start show' })
+    .click()
+  await expect(page.locator('.live')).toBeVisible()
+}
+
 /** Zet alle scherm-slots op "venster op deze laptop", zodat tests geen externe displays overnemen. */
 export async function useWindowedScreens(operator: Page) {
   for (const box of await operator.locator('.screen .screen-target [role="combobox"]').all()) {

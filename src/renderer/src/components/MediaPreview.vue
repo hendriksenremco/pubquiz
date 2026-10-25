@@ -2,7 +2,6 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { findAssetUsages } from '@shared/resolve'
 import type { MediaAsset } from '@shared/types'
-import { useAmbient } from '../lib/ambient'
 import { vFill } from '../lib/fill'
 import { formatTime } from '../lib/format'
 import { urlFor } from '../lib/media'
@@ -29,7 +28,6 @@ const length = ref<number | null>(null)
 
 const index = computed(() => props.items.findIndex((a) => a.id === id.value))
 const asset = computed(() => props.items[index.value] ?? null)
-const ambient = useAmbient(() => asset.value)
 const usages = computed(() => (asset.value ? findAssetUsages(session.quiz!, asset.value.id) : []))
 const folder = computed(() => session.quiz?.folders.find((f) => f.id === asset.value?.folderId))
 
@@ -144,14 +142,6 @@ onBeforeUnmount(() => {
         tabindex="-1"
       >
         <div class="stage" :class="asset.kind">
-          <Transition name="glow">
-            <div
-              v-if="ambient"
-              :key="ambient"
-              class="glow"
-              :style="{ backgroundImage: `url(${ambient})` }"
-            />
-          </Transition>
           <video
             v-if="asset.kind === 'video'"
             :key="asset.id"
@@ -320,16 +310,6 @@ onBeforeUnmount(() => {
   isolation: isolate;
 }
 
-.glow {
-  position: absolute;
-  inset: -40px;
-  z-index: -1;
-  background-size: 100% 100%;
-  filter: blur(70px) saturate(1.3);
-  opacity: 0.32;
-  pointer-events: none;
-}
-
 /* Los van de inhoud: een staande of 4:3-foto mag het vak niet hoger maken, anders schuift de
    informatie eronder uit beeld. */
 .stage video,
@@ -433,16 +413,6 @@ onBeforeUnmount(() => {
   min-width: 64px;
   color: var(--muted);
   text-align: center;
-}
-
-.glow-enter-active,
-.glow-leave-active {
-  transition: opacity 0.5s ease;
-}
-
-.glow-enter-from,
-.glow-leave-to {
-  opacity: 0;
 }
 
 @keyframes fade {

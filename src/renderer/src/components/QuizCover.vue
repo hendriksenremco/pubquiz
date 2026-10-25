@@ -34,12 +34,6 @@ const url = computed(() =>
   color: var(--faint);
 }
 
-.cover.empty {
-  background:
-    radial-gradient(circle at 25% 30%, rgba(124, 177, 255, 0.16), transparent 60%),
-    radial-gradient(circle at 80% 80%, rgba(255, 165, 61, 0.14), transparent 55%), var(--surface-2);
-}
-
 .cover video,
 .cover img {
   width: 100%;
