@@ -1,4 +1,4 @@
-# Quizmeister
+# QuizNote
 
 Desktop-app (macOS) om pubquizen in elkaar te klikken en live te draaien:
 
@@ -23,7 +23,7 @@ Crasht de app tijdens een show, dan biedt hij bij de volgende start aan om te he
 
 ### Een quiz maken met je AI
 
-Quizmeister heeft een MCP-server, zodat je je eigen AI-assistent kunt vragen: *“Maak een pubquiz in Quizmeister met zes rondes over Italië.”* De quiz verschijnt dan in de app, met vragen, antwoorden en een antwoordenronde. Koppelen doe je één keer via **Nieuwe quiz → Met je AI…**: voor Claude Desktop met één knop, voor andere AI-apps staan de instellingen erbij om te kopiëren.
+QuizNote heeft een MCP-server, zodat je je eigen AI-assistent kunt vragen: *“Maak een pubquiz in QuizNote met zes rondes over Italië.”* De quiz verschijnt dan in de app, met vragen, antwoorden en een antwoordenronde. Koppelen doe je één keer via **Nieuwe quiz → Met je AI…**: voor Claude Desktop met één knop, voor andere AI-apps staan de instellingen erbij om te kopiëren.
 
 - De AI kan quizzen opzoeken (`list_quizzes`, `get_quiz`), maken (`create_quiz`, eventueel op basis van een eerdere quiz) en per ronde aanpassen (`add_rounds`, `replace_round`, `remove_round`).
 - Liedjes en foto's moeten als bestanden op de Mac staan; de AI kan ze niet zelf maken of downloaden. Noem een map, dan gebruikt hij die.
@@ -50,7 +50,7 @@ pnpm build:mac     # ongesigneerde .dmg in dist/
 
 Start je vanuit een omgeving die `ELECTRON_RUN_AS_NODE=1` zet (sommige editor-extensies), haal die variabele dan eerst weg: `env -u ELECTRON_RUN_AS_NODE pnpm dev`.
 
-**AI-koppeling (MCP).** `src/mcp/server.ts` wordt `out/main/mcp.js`: een MCP-server die een AI-app start met `ELECTRON_RUN_AS_NODE=1 <app-binary> …/out/main/mcp.js` (of gewone Node). Hij geeft elke opdracht via een Unix-socket (`<userData>/mcp.sock`, alleen voor de gebruiker) door aan de app, die hem in `src/main/agent.ts` uitvoert; draait de app niet, dan start de server hem. De vorm waarin een AI rondes aanlevert staat in `src/shared/draft.ts`. Voor tests: `QUIZMEISTER_SOCKET` (andere socket), `QUIZMEISTER_NO_LAUNCH` (app niet starten) en `QUIZMEISTER_CLAUDE_CONFIG` (ander instellingenbestand van Claude Desktop).
+**AI-koppeling (MCP).** `src/mcp/server.ts` wordt `out/main/mcp.js`: een MCP-server die een AI-app start met `ELECTRON_RUN_AS_NODE=1 <app-binary> …/out/main/mcp.js` (of gewone Node). Hij geeft elke opdracht via een Unix-socket (`<userData>/mcp.sock`, alleen voor de gebruiker) door aan de app, die hem in `src/main/agent.ts` uitvoert; draait de app niet, dan start de server hem. De vorm waarin een AI rondes aanlevert staat in `src/shared/draft.ts`. Voor tests: `QUIZNOTE_SOCKET` (andere socket), `QUIZNOTE_NO_LAUNCH` (app niet starten) en `QUIZNOTE_CLAUDE_CONFIG` (ander instellingenbestand van Claude Desktop).
 
 ### Opbouw
 

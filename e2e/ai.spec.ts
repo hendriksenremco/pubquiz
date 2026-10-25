@@ -33,8 +33,8 @@ async function connect(command: string, args: string[], env: Record<string, stri
       env: {
         ...(process.env as Record<string, string>),
         ...env,
-        QUIZMEISTER_SOCKET: join(userData, 'mcp.sock'),
-        QUIZMEISTER_NO_LAUNCH: '1'
+        QUIZNOTE_SOCKET: join(userData, 'mcp.sock'),
+        QUIZNOTE_NO_LAUNCH: '1'
       }
     })
   )
@@ -58,7 +58,7 @@ test.beforeAll(async () => {
     JSON.stringify({ mcpServers: { ander: { command: 'iets' } }, theme: 'dark' })
   )
   ;({ app, operator } = await launch(userData, undefined, {
-    QUIZMEISTER_CLAUDE_CONFIG: claudeConfig
+    QUIZNOTE_CLAUDE_CONFIG: claudeConfig
   }))
   ai = await connect(process.execPath, [resolve('out/main/mcp.js')])
 })
@@ -196,7 +196,7 @@ test('tijdens een show past de AI de lopende quiz niet aan en wisselt hij niet v
       { type: 'questions', title: 'Ronde 1', questions: [{ question: 'Vraag?', answer: 'Ja' }] }
     ]
   })
-  expect(waiting.json.message).toContain('waits on the Quizmeister dashboard')
+  expect(waiting.json.message).toContain('waits on the QuizNote dashboard')
   await expect(operator.locator('.now-title')).toBeVisible()
   await expect(operator.locator('.notice')).toContainText('Volgende week')
 
@@ -204,7 +204,7 @@ test('tijdens een show past de AI de lopende quiz niet aan en wisselt hij niet v
   await confirmIn(operator, 'Stop show')
 })
 
-test('vanaf het dashboard koppel je Quizmeister in één keer aan Claude Desktop', async () => {
+test('vanaf het dashboard koppel je QuizNote in één keer aan Claude Desktop', async () => {
   await operator.getByRole('button', { name: 'Quizzen' }).click()
   await operator.locator('.new-tile').click()
   await operator.getByRole('button', { name: 'Met je AI…' }).click()
@@ -218,10 +218,10 @@ test('vanaf het dashboard koppel je Quizmeister in één keer aan Claude Desktop
   // De andere instellingen van Claude blijven staan.
   const config = JSON.parse(readFileSync(claudeConfig, 'utf8'))
   expect(config.theme).toBe('dark')
-  expect(Object.keys(config.mcpServers)).toEqual(['ander', 'quizmeister'])
+  expect(Object.keys(config.mcpServers)).toEqual(['ander', 'quiznote'])
 
   // Precies zoals Claude Desktop hem start (de app-binary als Node) werkt hij ook.
-  const { command, args, env } = config.mcpServers.quizmeister
+  const { command, args, env } = config.mcpServers.quiznote
   expect(env).toEqual({ ELECTRON_RUN_AS_NODE: '1' })
   const claude = await connect(command, args, env)
   try {

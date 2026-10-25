@@ -87,23 +87,30 @@ describe('Settings.setTour', () => {
 })
 
 describe('adoptSettings', () => {
-  it('neemt instellingen één keer over uit de map van de oude naam', async () => {
+  it('neemt instellingen één keer over uit de map van de jongste oude naam', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'pubquiz-adopt-'))
-    const from = join(dir, 'Pubquiz')
-    const to = join(dir, 'Quizmeister')
+    const pubquiz = join(dir, 'Pubquiz')
+    const quizmeister = join(dir, 'Quizmeister')
+    const to = join(dir, 'QuizNote')
     try {
-      mkdirSync(from)
-      writeFileSync(join(from, 'settings.json'), JSON.stringify({ recent: ['/q/a'] }))
-      await adoptSettings(from, to)
+      mkdirSync(pubquiz)
+      mkdirSync(quizmeister)
+      writeFileSync(join(pubquiz, 'settings.json'), JSON.stringify({ recent: ['/q/oud'] }))
+      writeFileSync(join(quizmeister, 'settings.json'), JSON.stringify({ recent: ['/q/a'] }))
+      await adoptSettings([quizmeister, pubquiz], to)
       expect((await Settings.load(to)).recent).toEqual(['/q/a'])
 
       // Daarna niet meer: wat in de nieuwe map staat, blijft staan.
-      writeFileSync(join(from, 'settings.json'), JSON.stringify({ recent: ['/q/b'] }))
-      await adoptSettings(from, to)
+      writeFileSync(join(quizmeister, 'settings.json'), JSON.stringify({ recent: ['/q/b'] }))
+      await adoptSettings([quizmeister, pubquiz], to)
       expect((await Settings.load(to)).recent).toEqual(['/q/a'])
 
+      // Alleen de werknaam heeft instellingen: dan komen ze daarvandaan.
+      await adoptSettings([join(dir, 'bestaat-niet'), pubquiz], join(dir, 'Tweede'))
+      expect((await Settings.load(join(dir, 'Tweede'))).recent).toEqual(['/q/oud'])
+
       // Geen oude map: niets aan de hand.
-      await adoptSettings(join(dir, 'bestaat-niet'), join(dir, 'Nieuw'))
+      await adoptSettings([join(dir, 'bestaat-niet')], join(dir, 'Nieuw'))
       expect((await Settings.load(join(dir, 'Nieuw'))).recent).toEqual([])
     } finally {
       rmSync(dir, { recursive: true, force: true })

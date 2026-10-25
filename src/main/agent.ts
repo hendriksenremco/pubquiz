@@ -32,7 +32,7 @@ import {
 } from './quiz-files'
 
 /**
- * Wat een AI-assistent via de MCP-server (src/mcp) met Quizmeister kan: quizzen opzoeken, maken en
+ * Wat een AI-assistent via de MCP-server (src/mcp) met QuizNote kan: quizzen opzoeken, maken en
  * per ronde aanpassen. Alles gaat via de app, zodat de editor meteen meekijkt en een show nooit
  * wordt verstoord.
  */
@@ -169,8 +169,8 @@ class Agent {
     }
     return {
       message: this.ctl.live
-        ? 'Created. A show is running, so the quiz waits on the Quizmeister dashboard.'
-        : 'Created and opened in Quizmeister.',
+        ? 'Created. A show is running, so the quiz waits on the QuizNote dashboard.'
+        : 'Created and opened in QuizNote.',
       quiz: describeQuiz(quiz, dir)
     }
   }
@@ -181,7 +181,7 @@ class Agent {
     const isOpen = this.ctl.current?.dir === dir
     if (isOpen && this.ctl.live) {
       throw new DraftError(
-        'A show is running with this quiz in Quizmeister. Change it after the show.'
+        'A show is running with this quiz in QuizNote. Change it after the show.'
       )
     }
     const quiz = await this.read(dir)
@@ -311,9 +311,9 @@ function mcpServer(): AiSetup['server'] {
   }
 }
 
-/** QUIZMEISTER_CLAUDE_CONFIG: voor tests, zodat de echte instellingen van Claude ongemoeid blijven. */
+/** QUIZNOTE_CLAUDE_CONFIG: voor tests, zodat de echte instellingen van Claude ongemoeid blijven. */
 const claudeConfig = () =>
-  process.env['QUIZMEISTER_CLAUDE_CONFIG'] ??
+  process.env['QUIZNOTE_CLAUDE_CONFIG'] ??
   join(app.getPath('appData'), 'Claude', 'claude_desktop_config.json')
 
 export async function aiSetup(): Promise<AiSetup> {
@@ -322,11 +322,11 @@ export async function aiSetup(): Promise<AiSetup> {
   return {
     server: mcpServer(),
     claudeInstalled: await exists(dirname(path)),
-    claudeConnected: !!config?.mcpServers?.['quizmeister']
+    claudeConnected: !!config?.mcpServers?.['quiznote']
   }
 }
 
-/** Voegt Quizmeister toe aan de MCP-servers van Claude Desktop; de rest blijft staan. */
+/** Voegt QuizNote toe aan de MCP-servers van Claude Desktop; de rest blijft staan. */
 export async function connectClaude(): Promise<string | null> {
   const path = claudeConfig()
   if (!(await exists(dirname(path)))) return 'Claude Desktop is niet gevonden op deze Mac.'
@@ -335,11 +335,11 @@ export async function connectClaude(): Promise<string | null> {
     try {
       config = JSON.parse(await fs.readFile(path, 'utf8')) as Record<string, unknown>
     } catch {
-      return 'De instellingen van Claude Desktop zijn niet te lezen. Voeg Quizmeister daar zelf toe met de instellingen hieronder.'
+      return 'De instellingen van Claude Desktop zijn niet te lezen. Voeg QuizNote daar zelf toe met de instellingen hieronder.'
     }
   }
   const servers = (config['mcpServers'] ?? {}) as Record<string, unknown>
-  config['mcpServers'] = { ...servers, quizmeister: mcpServer() }
+  config['mcpServers'] = { ...servers, quiznote: mcpServer() }
   await writeJson(path, config)
   return null
 }

@@ -1,5 +1,5 @@
-appId: com.gutsgusto.pubquiz
-productName: Quizmeister
+appId: app.quiznote
+productName: QuizNote
 directories:
   buildResources: build
 files:
@@ -22,8 +22,8 @@ extraResources:
     to: Rondleiding.pubquiz
 fileAssociations:
   - ext: pubquiz
-    name: Quizmeister-quiz
-    description: Quizmeister-quiz
+    name: QuizNote-quiz
+    description: QuizNote-quiz
     role: Editor
     isPackage: true
 mac:
@@ -34,5 +34,5 @@ mac:
   identity: null
   notarize: false
 dmg:
-  artifactName: Quizmeister-${version}.${ext}
+  artifactName: QuizNote-${version}.${ext}
 npmRebuild: false

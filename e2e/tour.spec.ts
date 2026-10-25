@@ -76,7 +76,7 @@ test('welkom: uitleg op de beamer, de tv houdt zijn logo', async () => {
   await startNextRound('Welkom')
   const beamer = await windowFor('screen/beamer')
   const tv = await windowFor('screen/tv')
-  await showsText(beamer, '.slide .title', 'Welkom bij Quizmeister')
+  await showsText(beamer, '.slide .title', 'Welkom bij QuizNote')
   await expect(tv.locator('.slide')).toHaveCount(0)
   await shoot('welkom')
   await operator.keyboard.press('ArrowRight')
