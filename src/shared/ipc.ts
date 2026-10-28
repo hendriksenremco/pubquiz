@@ -73,13 +73,13 @@ export interface RecentQuiz {
   tour: boolean
 }
 
-/** Quizmeister koppelen aan een AI-assistent (MCP); zie src/mcp. */
+/** QuizNote koppelen aan een AI-assistent (MCP); zie src/mcp. */
 export interface AiSetup {
   /** Hoe een AI-app de MCP-server start. */
   server: { command: string; args: string[]; env: Record<string, string> }
   /** Claude Desktop staat op deze Mac (zijn instellingenmap bestaat). */
   claudeInstalled: boolean
-  /** Quizmeister staat al in de instellingen van Claude Desktop. */
+  /** QuizNote staat al in de instellingen van Claude Desktop. */
   claudeConnected: boolean
 }
 
@@ -109,7 +109,7 @@ export interface PubquizApi {
   closeQuiz(): Promise<void>
   recentQuizzes(): Promise<RecentQuiz[]>
   aiSetup(): Promise<AiSetup>
-  /** Zet Quizmeister in de instellingen van Claude Desktop; geeft een foutmelding of null. */
+  /** Zet QuizNote in de instellingen van Claude Desktop; geeft een foutmelding of null. */
   connectClaude(): Promise<string | null>
   copyText(text: string): void
   /** Na "Afsluiten" in het venster dat main vroeg (show loopt nog). */

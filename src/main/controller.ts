@@ -76,7 +76,7 @@ export class AppController {
   }
 
   get windowTitle(): string {
-    return this.quiz ? `${this.quiz.title} — Quizmeister` : 'Quizmeister'
+    return this.quiz ? `${this.quiz.title} — QuizNote` : 'QuizNote'
   }
 
   get live(): boolean {

@@ -4,7 +4,7 @@ import type { AiSetup } from '@shared/ipc'
 import Dialog from '../../components/Dialog.vue'
 import Icon from '../../components/Icon.vue'
 
-/** Een quiz laten maken door je eigen AI-assistent: Quizmeister als MCP-server koppelen. */
+/** Een quiz laten maken door je eigen AI-assistent: QuizNote als MCP-server koppelen. */
 const emit = defineEmits<{ close: [] }>()
 const api = window.pubquiz
 
@@ -14,7 +14,7 @@ const busy = ref(false)
 const copied = ref(false)
 
 const snippet = computed(() =>
-  setup.value ? JSON.stringify({ mcpServers: { quizmeister: setup.value.server } }, null, 2) : ''
+  setup.value ? JSON.stringify({ mcpServers: { quiznote: setup.value.server } }, null, 2) : ''
 )
 
 onMounted(async () => {
@@ -38,7 +38,7 @@ function copy() {
 <template>
   <Dialog title="Een quiz maken met je AI" @close="emit('close')">
     <p class="muted">Vraag je AI-assistent bijvoorbeeld:</p>
-    <p class="example">Maak een pubquiz in Quizmeister met zes rondes over Italië.</p>
+    <p class="example">Maak een pubquiz in QuizNote met zes rondes over Italië.</p>
     <p class="muted">
       De quiz verschijnt dan hier, met vragen, antwoorden en een antwoordenronde. Muziek en foto's
       maakt een AI niet zelf: noem een map met je liedjes of foto's, of voeg ze daarna toe.
@@ -63,7 +63,7 @@ function copy() {
 
       <section class="step">
         <h4>Andere AI-apps</h4>
-        <p class="muted small">Voeg Quizmeister toe als MCP-server met deze instellingen:</p>
+        <p class="muted small">Voeg QuizNote toe als MCP-server met deze instellingen:</p>
         <pre class="snippet">{{ snippet }}</pre>
         <button class="btn btn-sm copy" @click="copy">
           <Icon :name="copied ? 'check' : 'copy'" :size="13" />

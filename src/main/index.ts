@@ -54,9 +54,13 @@ app.whenReady().then(async () => {
   else if (!app.isPackaged) app.dock?.setIcon(join(__dirname, '../../resources/icon.png'))
   configurePermissions(session.defaultSession, process.env['ELECTRON_RENDERER_URL'])
 
-  // De app heette eerst Pubquiz; zijn instellingen verhuizen één keer mee.
+  // De app heette eerst Pubquiz en daarna even Quizmeister; zijn instellingen verhuizen één keer mee.
   if (!process.env['PUBQUIZ_USER_DATA']) {
-    await adoptSettings(join(app.getPath('appData'), 'Pubquiz'), app.getPath('userData'))
+    const appData = app.getPath('appData')
+    await adoptSettings(
+      [join(appData, 'Quizmeister'), join(appData, 'Pubquiz')],
+      app.getPath('userData')
+    )
   }
   const settings = await Settings.load(app.getPath('userData'))
   // PUBQUIZ_LIBRARY: voor tests, zodat er niets in Documenten belandt.

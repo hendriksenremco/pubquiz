@@ -62,7 +62,7 @@ export function createAudioWindow(): BrowserWindow {
     show: false,
     width: 400,
     height: 300,
-    title: 'Quizmeister audio',
+    title: 'QuizNote audio',
     webPreferences: webPreferences()
   })
   loadRoute(win, '/audio')
