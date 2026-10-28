@@ -125,6 +125,40 @@ test('wisselt scherm tijdens een ronde en valt daarna terug', async () => {
   await expect(beamer.locator('.slide')).toHaveCount(0)
 })
 
+test('houdt het beeld 16:9 op een breder of hoger scherm, met zwarte randen', async () => {
+  const beamer = await windowFor('screen/beamer')
+  const resize = (width: number, height: number) =>
+    app.evaluate(
+      ({ BrowserWindow }, size) => {
+        const win = BrowserWindow.getAllWindows().find((w) =>
+          w.webContents.getURL().includes('#/screen/beamer')
+        )!
+        win.setAspectRatio(0)
+        win.setContentSize(size.width, size.height)
+      },
+      { width, height }
+    )
+  const canvas = async () => (await beamer.locator('.canvas').boundingBox())!
+
+  // Ultrabreed, zoals een 21:9-monitor: zwarte randen links en rechts, niets valt eraf.
+  await resize(1260, 540)
+  await expect.poll(async () => Math.round((await canvas()).width)).toBe(960)
+  const wide = await canvas()
+  expect(wide.height).toBeCloseTo(540, 0)
+  expect(wide.x).toBeCloseTo(150, 0)
+  await beamer.screenshot({ path: 'test-results/screen-ultrawide.png' })
+
+  // Hoger, zoals een 4:3-beamer: zwarte randen boven en onder.
+  await resize(720, 540)
+  await expect.poll(async () => Math.round((await canvas()).height)).toBe(405)
+  const tall = await canvas()
+  expect(tall.width).toBeCloseTo(720, 0)
+  expect(tall.y).toBeCloseTo(67.5, 0)
+
+  await resize(960, 540)
+  await expect.poll(async () => Math.round((await canvas()).height)).toBe(540)
+})
+
 test('achtergrondmuziek speelt, pauzeert in een pauze-ronde en duckt in een duck-ronde', async () => {
   await expect.poll(async () => (await audio()).background?.key).toBe('bg@zaal')
   await expect.poll(async () => (await audio()).background?.gain ?? 0).toBeGreaterThan(0.55)
