@@ -149,6 +149,11 @@ function fromFolder(assets: MediaAsset[], close: () => void) {
 // Bestanden op de ronde: afbeeldingen worden slides, geluid wordt fragmenten.
 const dropping = ref(false)
 
+// Alleen bestanden lichten de ronde op; een slide op volgorde slepen is geen import.
+function onDragOver(event: DragEvent) {
+  if ([...(event.dataTransfer?.types ?? [])].includes('Files')) dropping.value = true
+}
+
 async function onDrop(event: DragEvent) {
   dropping.value = false
   const paths = pathsFromDrop(event)
@@ -167,7 +172,7 @@ const empty = computed(() => !props.round.slides.length && !props.round.fragment
     <div
       class="canvas scroll"
       :class="{ dropping }"
-      @dragover.prevent="dropping = true"
+      @dragover.prevent="onDragOver"
       @dragleave.self="dropping = false"
       @drop.prevent.stop="onDrop"
     >

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
+import { moveById, renumberSlides } from '@shared/order'
 import { slideNumber } from '@shared/resolve'
 import type { Round, Slide } from '@shared/types'
 import SlideView from '../../components/SlideView.vue'
@@ -9,7 +10,7 @@ import { useSession } from '../../stores/session'
  * De slides van een ronde als lijst: links wat de zaal ziet, rechts de tekst om meteen te typen.
  * Vorm, afbeelding en achtergrond staan in het paneel rechts (SlideInspector).
  */
-defineProps<{ round: Round; selectedId: string | null }>()
+const props = defineProps<{ round: Round; selectedId: string | null }>()
 const emit = defineEmits<{ select: [id: string] }>()
 const session = useSession()
 const quiz = computed(() => session.quiz!)
@@ -19,6 +20,39 @@ function kind(round: Round, s: Slide): string {
   if (s.layout === 'number') return 'Nummer'
   return `Afbeelding ${slideNumber(round, s)}`
 }
+
+// Op volgorde slepen aan de miniatuur, zodat tekst selecteren in de velden gewoon blijft werken.
+// Bestanden slepen gaat hier niet over: die laten we door naar de ronde (importeren).
+const dragging = ref<string | null>(null)
+const dropAt = ref<{ id: string; after: boolean } | null>(null)
+
+function onDragStart(event: DragEvent, id: string) {
+  dragging.value = id
+  if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move'
+}
+function onDragOver(event: DragEvent, id: string) {
+  if (!dragging.value) return
+  event.preventDefault()
+  event.stopPropagation()
+  const box = (event.currentTarget as HTMLElement).getBoundingClientRect()
+  dropAt.value = { id, after: event.clientY > box.top + box.height / 2 }
+}
+function onDrop(event: DragEvent) {
+  if (!dragging.value) return
+  event.preventDefault()
+  event.stopPropagation()
+  if (dropAt.value) {
+    moveById(props.round.slides, dragging.value, dropAt.value.id, dropAt.value.after)
+    renumberSlides(props.round)
+  }
+  onDragEnd()
+}
+function onDragEnd() {
+  dragging.value = null
+  dropAt.value = null
+}
+const lineAt = (id: string, after: boolean) =>
+  dropAt.value?.id === id && dropAt.value.after === after && dragging.value !== id
 </script>
 
 <template>
@@ -27,15 +61,25 @@ function kind(round: Round, s: Slide): string {
       v-for="s in round.slides"
       :key="s.id"
       class="item"
-      :class="{ on: s.id === selectedId }"
+      :class="{
+        on: s.id === selectedId,
+        lifted: s.id === dragging,
+        'drop-before': lineAt(s.id, false),
+        'drop-after': lineAt(s.id, true)
+      }"
       @click="emit('select', s.id)"
       @focusin="emit('select', s.id)"
+      @dragover="onDragOver($event, s.id)"
+      @drop="onDrop"
     >
       <button
         type="button"
         class="thumb"
         :class="{ video: typeof s.backdrop !== 'object' }"
         :aria-label="`Kies ${s.title || kind(round, s)}`"
+        draggable="true"
+        @dragstart="onDragStart($event, s.id)"
+        @dragend="onDragEnd"
       >
         <SlideView :slide="s" :quiz="quiz" :number="slideNumber(round, s)" />
       </button>
@@ -43,7 +87,12 @@ function kind(round: Round, s: Slide): string {
       <div class="text">
         <template v-if="s.layout === 'question'">
           <span class="kicker">
-            <input v-model="s.title" class="quiet kicker-input" aria-label="Kop" placeholder="Vraag" />
+            <input
+              v-model="s.title"
+              class="quiet kicker-input"
+              aria-label="Kop"
+              placeholder="Vraag"
+            />
             <span v-if="s.numberOnly" class="note">alleen het nummer in beeld</span>
           </span>
           <textarea
@@ -94,12 +143,35 @@ function kind(round: Round, s: Slide): string {
 }
 
 .item {
+  position: relative;
   display: flex;
   align-items: flex-start;
   gap: 18px;
   padding: 10px;
   border-radius: var(--radius-lg);
   cursor: default;
+}
+
+.item.lifted {
+  opacity: 0.4;
+}
+
+/* Waar de slide terechtkomt: een lijn in de ruimte tussen twee slides. */
+.item.drop-before::before,
+.item.drop-after::after {
+  content: '';
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--accent);
+}
+.item.drop-before::before {
+  top: -3px;
+}
+.item.drop-after::after {
+  bottom: -3px;
 }
 
 .item:hover {
@@ -121,7 +193,12 @@ function kind(round: Round, s: Slide): string {
   border-radius: var(--radius);
   background: var(--surface-2);
   container-type: size;
-  cursor: pointer;
+  cursor: grab;
+}
+
+/* De miniatuur zelf is de greep; zonder dit sleept Chromium de afbeelding erin als bestand. */
+.thumb > * {
+  pointer-events: none;
 }
 
 /* Hint dat er video achter zit, zonder video's te decoderen. */
