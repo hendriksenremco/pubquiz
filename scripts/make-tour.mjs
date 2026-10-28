@@ -416,13 +416,15 @@ const still = (size, color = '0x0f1420') => [
 ]
 
 // Standaard van de tv: een warme gloed met het logo klein in de hoek, zoals bij een zender.
-// Zo botst het niet met de tekst van slides die eroverheen komen.
+// Zo botst het niet met de tekst van slides die eroverheen komen. Een achtergrond vult het hele
+// scherm, dus op een 21:9-scherm valt er boven en onder 13% af en op een 4:3-beamer links en
+// rechts; het logo staat daarom zo ver van de rand dat het altijd in beeld blijft.
 const center = 'exp(-(pow(X-W/2,2)+pow(Y-H/2,2))/(2*pow(W*0.3,2)))'
 ffmpeg('logo.png', [
   ...still('1280x720'),
   '-vf',
   `format=rgb24,geq=r='15+60*${center}':g='20+38*${center}':b='32+14*${center}',` +
-    `drawtext=${fontfile}text='QuizNote':fontcolor=0xffa53d:fontsize=64:x=56:y=44`
+    `drawtext=${fontfile}text='QuizNote':fontcolor=0xffa53d:fontsize=64:x=192:y=112`
 ])
 
 /** Gekleurde schijven op een doorzichtige achtergrond: [x als deel van de breedte, rgb]. */
