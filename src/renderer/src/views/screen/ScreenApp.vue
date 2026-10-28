@@ -33,15 +33,13 @@ onBeforeUnmount(() => navigator.mediaDevices.removeEventListener('devicechange',
 
 <template>
   <div class="screen">
-    <div class="canvas">
-      <ScreenStage
-        v-if="session.quiz"
-        :quiz="session.quiz"
-        :state="session.state"
-        :screen-id="param"
-        :sink-id="sinkId"
-      />
-    </div>
+    <ScreenStage
+      v-if="session.quiz"
+      :quiz="session.quiz"
+      :state="session.state"
+      :screen-id="param"
+      :sink-id="sinkId"
+    />
   </div>
 </template>
 
@@ -49,16 +47,7 @@ onBeforeUnmount(() => navigator.mediaDevices.removeEventListener('devicechange',
 .screen {
   position: fixed;
   inset: 0;
-  display: grid;
-  place-items: center;
   background: #000;
   cursor: none;
-}
-
-/* Altijd 16:9, zoals de previews en het beeldmateriaal: op een breder of hoger scherm komen er
-   zwarte randen bij, in plaats van dat de randen van het beeld wegvallen. */
-.canvas {
-  width: min(100vw, calc(100vh * 16 / 9));
-  aspect-ratio: 16 / 9;
 }
 </style>

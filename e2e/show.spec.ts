@@ -125,7 +125,7 @@ test('wisselt scherm tijdens een ronde en valt daarna terug', async () => {
   await expect(beamer.locator('.slide')).toHaveCount(0)
 })
 
-test('houdt het beeld 16:9 op een breder of hoger scherm, met zwarte randen', async () => {
+test('vult het scherm met de achtergrond en houdt de inhoud 16:9', async () => {
   const beamer = await windowFor('screen/beamer')
   const resize = (width: number, height: number) =>
     app.evaluate(
@@ -138,25 +138,32 @@ test('houdt het beeld 16:9 op een breder of hoger scherm, met zwarte randen', as
       },
       { width, height }
     )
-  const canvas = async () => (await beamer.locator('.canvas').boundingBox())!
+  const box = async (selector: string) => (await beamer.locator(selector).first().boundingBox())!
 
-  // Ultrabreed, zoals een 21:9-monitor: zwarte randen links en rechts, niets valt eraf.
+  await operator.locator('.rounds .round').nth(1).click()
+  await expect(beamer.locator('.slide .title')).toHaveText('Ronde 2')
+
+  // Ultrabreed, zoals een 21:9-monitor: video en dimmen tot in de hoeken, de tekst in het midden.
   await resize(1260, 540)
-  await expect.poll(async () => Math.round((await canvas()).width)).toBe(960)
-  const wide = await canvas()
-  expect(wide.height).toBeCloseTo(540, 0)
-  expect(wide.x).toBeCloseTo(150, 0)
+  await expect.poll(async () => Math.round((await box('.safe')).width)).toBe(960)
+  expect((await box('.safe')).x).toBeCloseTo(150, 0)
+  expect((await box('.slide')).x).toBeCloseTo(150, 0)
+  expect((await box('.layer.on video')).width).toBeCloseTo(1260, 0)
+  expect((await box('.slide-backdrop')).width).toBeCloseTo(1260, 0)
+  // Na de overvloeier (600 ms), zodat het screenshot het eindbeeld laat zien.
+  await beamer.waitForTimeout(800)
   await beamer.screenshot({ path: 'test-results/screen-ultrawide.png' })
 
-  // Hoger, zoals een 4:3-beamer: zwarte randen boven en onder.
+  // Hoger, zoals een 4:3-beamer: de inhoud houdt boven en onder ruimte, de video vult alles.
   await resize(720, 540)
-  await expect.poll(async () => Math.round((await canvas()).height)).toBe(405)
-  const tall = await canvas()
-  expect(tall.width).toBeCloseTo(720, 0)
-  expect(tall.y).toBeCloseTo(67.5, 0)
+  await expect.poll(async () => Math.round((await box('.safe')).height)).toBe(405)
+  expect((await box('.safe')).y).toBeCloseTo(67.5, 0)
+  expect((await box('.layer.on video')).height).toBeCloseTo(540, 0)
 
   await resize(960, 540)
-  await expect.poll(async () => Math.round((await canvas()).height)).toBe(540)
+  await expect.poll(async () => Math.round((await box('.safe')).height)).toBe(540)
+  await operator.keyboard.press('e')
+  await expect(beamer.locator('.slide')).toHaveCount(0)
 })
 
 test('achtergrondmuziek speelt, pauzeert in een pauze-ronde en duckt in een duck-ronde', async () => {

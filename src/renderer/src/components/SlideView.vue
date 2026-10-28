@@ -2,19 +2,19 @@
 import { computed } from 'vue'
 import type { Quiz, Slide } from '@shared/types'
 import { assetUrl } from '../lib/media'
+import { slideBackdrop } from '../lib/slide-backdrop'
 
-/** `number`: nummer van een afbeelding in zijn ronde, linksboven in beeld. */
-const props = withDefaults(defineProps<{ slide: Slide; quiz: Quiz; number?: number | null }>(), {
-  number: null
-})
+/**
+ * `number`: nummer van een afbeelding in zijn ronde, linksboven in beeld.
+ * `withBackdrop: false`: zonder dimmen of kleur; een scherm legt die zelf over de hele breedte.
+ */
+const props = withDefaults(
+  defineProps<{ slide: Slide; quiz: Quiz; number?: number | null; withBackdrop?: boolean }>(),
+  { number: null, withBackdrop: true }
+)
 
 const image = computed(() => assetUrl(props.quiz, props.slide.imageAssetId))
-const backdrop = computed(() => {
-  const b = props.slide.backdrop
-  if (b === 'dim') return { background: 'rgba(0, 0, 0, 0.55)' }
-  if (b === 'over-video') return {}
-  return { background: b.color }
-})
+const backdrop = computed(() => (props.withBackdrop ? slideBackdrop(props.slide) : {}))
 </script>
 
 <template>
