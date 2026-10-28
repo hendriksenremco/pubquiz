@@ -142,6 +142,8 @@ export class ScreenWindows {
       ...display.bounds,
       title: slot.name,
       frame: false,
+      // macOS rondt de hoeken van vensters zonder rand af; een beamer hoort tot in de hoeken te vullen.
+      roundedCorners: false,
       show: false,
       focusable: false,
       hasShadow: false,
