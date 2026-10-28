@@ -46,6 +46,7 @@ pnpm test:e2e      # bouwt en test de echte app met Playwright: onzichtbaar, ged
                    # (PUBQUIZ_HEADED=1 pnpm test:e2e om de vensters wel te zien)
 pnpm typecheck
 pnpm build:mac     # ongesigneerde .dmg in dist/
+pnpm install:mac   # bouwt de app en zet hem direct in /Applications (sluit de app eerst)
 ```
 
 Start je vanuit een omgeving die `ELECTRON_RUN_AS_NODE=1` zet (sommige editor-extensies), haal die variabele dan eerst weg: `env -u ELECTRON_RUN_AS_NODE pnpm dev`.
