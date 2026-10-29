@@ -3,6 +3,12 @@ import { computed, ref, shallowRef, watch } from 'vue'
 import { createShowState } from '@shared/factory'
 import type { AirPlayDevice } from '@shared/airplay'
 import type { RecoveryInfo } from '@shared/ipc'
+import {
+  pluginEnabled,
+  type PluginId,
+  type PluginSetting,
+  type PluginSettings
+} from '@shared/plugins'
 import type { DisplayInfo, HardwareMapping, Notice, Quiz, ShowState } from '@shared/types'
 import { probeDuration } from '../lib/media'
 
@@ -25,6 +31,7 @@ export const useSession = defineStore('session', () => {
   const dirty = ref(false)
   const libraryDir = ref('')
   const airplay = shallowRef<AirPlayDevice[]>([])
+  const plugins = shallowRef<PluginSettings>({})
   const notices = ref<Notice[]>([])
   const ready = ref(false)
 
@@ -140,6 +147,14 @@ export const useSession = defineStore('session', () => {
     notices.value = notices.value.filter((n) => n.id !== id)
   }
 
+  // ── Plug-ins ────────────────────────────────────────────────────────────────
+  const pluginOn = (id: PluginId) => pluginEnabled(plugins.value, id)
+
+  function setPlugin(id: PluginId, setting: PluginSetting) {
+    plugins.value = { ...plugins.value, [id]: setting }
+    void api.setPlugin(id, JSON.parse(JSON.stringify(setting)))
+  }
+
   // ── Init ────────────────────────────────────────────────────────────────────
   async function init(options: { editable?: boolean } = {}) {
     editable = options.editable ?? false
@@ -153,6 +168,7 @@ export const useSession = defineStore('session', () => {
     dirty.value = snap.dirty
     libraryDir.value = snap.libraryDir
     airplay.value = snap.airplay
+    plugins.value = snap.plugins
 
     api.onQuiz((q, dir) => {
       applyRemoteQuiz(q, dir)
@@ -163,6 +179,7 @@ export const useSession = defineStore('session', () => {
     api.onHardware((h) => (hardware.value = h))
     api.onDisplays((d) => (displays.value = d))
     api.onAirPlay((d) => (airplay.value = d))
+    api.onPlugins((p) => (plugins.value = p))
     api.onSaved((d) => (dirty.value = d))
     api.onNotice((n) => notify(n))
     ready.value = true
@@ -179,6 +196,7 @@ export const useSession = defineStore('session', () => {
     dirty,
     libraryDir,
     airplay,
+    plugins,
     notices,
     ready,
     live,
@@ -189,6 +207,8 @@ export const useSession = defineStore('session', () => {
     undo,
     redo,
     notify,
-    dismiss
+    dismiss,
+    pluginOn,
+    setPlugin
   }
 })

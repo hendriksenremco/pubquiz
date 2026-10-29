@@ -6,7 +6,22 @@ export function buildMenu(controller: AppController): void {
   const send = (action: MenuAction) => controller.operator?.webContents.send(IPC.menu, action)
 
   const template: MenuItemConstructorOptions[] = [
-    { role: 'appMenu' },
+    {
+      role: 'appMenu',
+      submenu: [
+        { role: 'about' },
+        { type: 'separator' },
+        { label: 'Instellingen…', accelerator: 'CmdOrCtrl+,', click: () => send('settings') },
+        { type: 'separator' },
+        { role: 'services' },
+        { type: 'separator' },
+        { role: 'hide' },
+        { role: 'hideOthers' },
+        { role: 'unhide' },
+        { type: 'separator' },
+        { role: 'quit' }
+      ]
+    },
     {
       label: 'Archief',
       submenu: [

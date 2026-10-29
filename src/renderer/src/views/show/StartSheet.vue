@@ -6,6 +6,7 @@ import { answerItems, findBrokenReferences, screenHasSound } from '@shared/resol
 import type { HardwareMapping, ScreenTarget } from '@shared/types'
 import Icon from '../../components/Icon.vue'
 import Select, { type SelectOption } from '../../components/Select.vue'
+import PluginSlot from '../../plugins/PluginSlot.vue'
 import {
   listAudioOutputs,
   resolveSinkId,
@@ -383,6 +384,8 @@ const savedAt = computed(() =>
             </button>
           </div>
         </div>
+
+        <PluginSlot name="startSheet" />
 
         <ul v-if="problems.length" class="problems">
           <li v-for="p in problems" :key="p.text" :class="p.level">{{ p.text }}</li>

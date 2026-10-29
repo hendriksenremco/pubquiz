@@ -35,6 +35,8 @@ const api: PubquizApi = {
   openAirPlaySettings: (kind) => ipcRenderer.invoke(IPC.openAirPlaySettings, kind),
   testTone: (channelId) => ipcRenderer.send(IPC.testTone, channelId),
   dismissRecovery: () => ipcRenderer.send(IPC.dismissRecovery),
+  setPlugin: (id, setting) => ipcRenderer.invoke(IPC.setPlugin, id, setting),
+  pluginInvoke: (id, action, payload) => ipcRenderer.invoke(IPC.pluginInvoke, id, action, payload),
 
   audioEvent: (event) => ipcRenderer.send(IPC.audioEvent, event),
   onAudioCommand: (cb) => subscribe(IPC.audioCommand, cb),
@@ -44,6 +46,7 @@ const api: PubquizApi = {
   onHardware: (cb) => subscribe(IPC.hardware, cb),
   onDisplays: (cb) => subscribe(IPC.displays, cb),
   onAirPlay: (cb) => subscribe(IPC.airplay, cb),
+  onPlugins: (cb) => subscribe(IPC.plugins, cb),
   onNotice: (cb) => subscribe(IPC.notice, cb),
   onSaved: (cb) => subscribe(IPC.saved, cb),
   onMenu: (cb) => subscribe(IPC.menu, cb)

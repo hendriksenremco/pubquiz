@@ -1,5 +1,6 @@
 import type { AirPlayDevice } from './airplay'
 import type { FormOptions } from './forms'
+import type { PluginId, PluginSetting, PluginSettings } from './plugins'
 import type { TemplateOptions } from './template'
 import type { DisplayInfo, HardwareMapping, MediaAsset, Notice, Quiz, ShowState } from './types'
 
@@ -49,6 +50,7 @@ export interface Snapshot {
   dirty: boolean
   libraryDir: string
   airplay: AirPlayDevice[]
+  plugins: PluginSettings
 }
 
 export interface RecoveryInfo {
@@ -83,7 +85,8 @@ export interface AiSetup {
   claudeConnected: boolean
 }
 
-export type MenuAction = 'new' | 'open' | 'exportZip' | 'importZip' | 'reveal' | 'undo' | 'redo'
+export type MenuAction =
+  'new' | 'open' | 'exportZip' | 'importZip' | 'reveal' | 'undo' | 'redo' | 'settings'
 
 export interface ImportResult {
   assets: MediaAsset[]
@@ -129,6 +132,10 @@ export interface PubquizApi {
   openAirPlaySettings(kind: 'screen' | 'audio'): Promise<void>
   testTone(channelId: string): void
   dismissRecovery(): void
+  /** Plug-in aan- of uitzetten, of zijn instellingen wijzigen (voor deze Mac). */
+  setPlugin(id: PluginId, setting: PluginSetting): Promise<void>
+  /** Vraag aan een plug-in die aan staat; null als hij uit staat. */
+  pluginInvoke(id: PluginId, action: string, payload?: unknown): Promise<unknown>
 
   audioEvent(event: AudioEngineEvent): void
   onAudioCommand(cb: (command: AudioEngineCommand) => void): () => void
@@ -138,6 +145,7 @@ export interface PubquizApi {
   onHardware(cb: (hardware: HardwareMapping) => void): () => void
   onDisplays(cb: (displays: DisplayInfo[]) => void): () => void
   onAirPlay(cb: (devices: AirPlayDevice[]) => void): () => void
+  onPlugins(cb: (plugins: PluginSettings) => void): () => void
   onNotice(cb: (notice: Notice) => void): () => void
   onSaved(cb: (dirty: boolean) => void): () => void
   onMenu(cb: (action: MenuAction) => void): () => void
@@ -170,6 +178,9 @@ export const IPC = {
   airplay: 'pq:airplay',
   testTone: 'pq:test-tone',
   dismissRecovery: 'pq:dismiss-recovery',
+  setPlugin: 'pq:set-plugin',
+  pluginInvoke: 'pq:plugin-invoke',
+  plugins: 'pq:plugins',
   audioEvent: 'pq:audio-event',
   audioCommand: 'pq:audio-command',
   quiz: 'pq:quiz',
