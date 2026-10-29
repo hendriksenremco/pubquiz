@@ -10,6 +10,7 @@ import {
   type RecoveryInfo,
   type Snapshot
 } from '@shared/ipc'
+import { PLUGINS, type PluginId, type PluginSetting } from '@shared/plugins'
 import { QuizSchema } from '@shared/quiz-schema'
 import { findRound } from '@shared/resolve'
 import type { TemplateOptions } from '@shared/template'
@@ -31,6 +32,7 @@ import {
   writeQuiz
 } from './quiz-files'
 import { renderFormPdf } from './pdf'
+import { Plugins } from './plugins'
 import { Settings, type RecoveryData } from './settings'
 import { ShowController } from './show'
 import { headless } from './windows'
@@ -58,6 +60,7 @@ export class AppController {
     quiz: () => this.quiz,
     publish: (state) => this.onState(state)
   })
+  readonly plugins = new Plugins((level, message) => this.notify(level, message))
 
   constructor(
     private readonly settings: Settings,
@@ -65,6 +68,7 @@ export class AppController {
     readonly libraryDir: string
   ) {
     this.screens.watch((change, display) => this.onDisplayChange(change, display))
+    this.plugins.apply(settings.plugins, null, this.show.current)
   }
 
   get mediaRoot(): string | null {
@@ -108,6 +112,7 @@ export class AppController {
       recovery: this.recoveryInfo(),
       libraryDir: this.libraryDir,
       airplay: this.airplay.list,
+      plugins: this.settings.plugins,
       dirty: this.dirty
     }
   }
@@ -410,6 +415,13 @@ export class AppController {
     if (this.live) this.syncScreens(true)
   }
 
+  setPlugin(id: PluginId, setting: PluginSetting): void {
+    if (!PLUGINS.some((p) => p.id === id)) return
+    this.settings.setPlugin(id, setting)
+    this.broadcast(IPC.plugins, [this.settings.plugins])
+    this.plugins.apply(this.settings.plugins, this.quiz, this.show.current)
+  }
+
   audioEvent(event: AudioEngineEvent): void {
     if (event.type === 'error') this.notify('error', `Audio: ${event.message}`)
     this.show.audioEvent(event)
@@ -498,6 +510,7 @@ export class AppController {
 
   private onState(state: ShowState): void {
     this.broadcast(IPC.state, [state])
+    this.plugins.update(this.quiz, state)
     if (!state.live || !this.quizDir || this.recoveryTimer) return
     this.recoveryTimer = setTimeout(() => {
       this.recoveryTimer = null

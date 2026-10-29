@@ -1,6 +1,7 @@
 import { join } from 'path'
 import { promises as fs } from 'fs'
 import { sameDisplayName } from '@shared/airplay'
+import type { PluginId, PluginSetting, PluginSettings } from '@shared/plugins'
 import type {
   AudioTarget,
   DisplayInfo,
@@ -24,6 +25,8 @@ interface SettingsData {
   screenSound: Record<string, AudioTarget>
   /** Waar de rondleiding bij de eerste start is neergezet; null = nog niet gebeurd. */
   tourDir: string | null
+  /** Plug-ins die aan of uit staan, met hun instellingen; ontbreekt = uit. */
+  plugins: PluginSettings
 }
 
 export interface RecoveryData {
@@ -51,7 +54,8 @@ export class Settings {
       screens: stored?.screens ?? {},
       audio: stored?.audio ?? {},
       screenSound: stored?.screenSound ?? {},
-      tourDir: stored?.tourDir ?? null
+      tourDir: stored?.tourDir ?? null,
+      plugins: stored?.plugins ?? {}
     })
   }
 
@@ -66,6 +70,15 @@ export class Settings {
 
   removeRecent(path: string): void {
     this.data.recent = this.data.recent.filter((p) => p !== path)
+    void this.save()
+  }
+
+  get plugins(): PluginSettings {
+    return this.data.plugins
+  }
+
+  setPlugin(id: PluginId, setting: PluginSetting): void {
+    this.data.plugins = { ...this.data.plugins, [id]: setting }
     void this.save()
   }
 

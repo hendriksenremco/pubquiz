@@ -5,6 +5,7 @@ import BackdropPicker from '../../components/BackdropPicker.vue'
 import Icon from '../../components/Icon.vue'
 import ImageChip from '../../components/ImageChip.vue'
 import StagePreview from '../../components/StagePreview.vue'
+import PluginSlot from '../../plugins/PluginSlot.vue'
 import { useSession } from '../../stores/session'
 
 /** Paneel rechts voor de gekozen slide: hoe hij eruitziet en waar hij komt. */
@@ -135,6 +136,7 @@ function remove() {
         <span class="row-label">Achtergrond</span>
         <BackdropPicker :slide="slide" />
       </div>
+      <PluginSlot name="slideInspector" :round="round" :slide="slide" />
       <div v-if="screens.length > 1" class="inspector-row">
         <span class="row-label">Op</span>
         <div class="checks" role="group" aria-label="Op welke schermen">

@@ -7,6 +7,7 @@ import type { Round, RoundBackground, ScreenContent } from '@shared/types'
 import ContentChip from '../../components/ContentChip.vue'
 import Icon from '../../components/Icon.vue'
 import MediaPicker from '../../components/MediaPicker.vue'
+import PluginSlot from '../../plugins/PluginSlot.vue'
 import { useSession } from '../../stores/session'
 
 /** Paneel rechts voor de ronde zelf: schermen, muziek, fragmenten, loop en antwoorden. */
@@ -166,6 +167,8 @@ function setAnswersFor(roundId: string, on: boolean) {
         />
       </template>
     </div>
+
+    <PluginSlot name="roundSettings" :round="round" />
 
     <div v-if="round.fragments.length" class="inspector-group">
       <span class="label">Fragmenten</span>

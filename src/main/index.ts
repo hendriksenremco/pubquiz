@@ -3,6 +3,7 @@ import { join } from 'path'
 import { IPC, type AudioEngineEvent, type ShowCommand } from '@shared/ipc'
 import type { TemplateOptions } from '@shared/template'
 import type { FormOptions } from '@shared/forms'
+import type { PluginId, PluginSetting } from '@shared/plugins'
 import type { HardwareMapping, Quiz } from '@shared/types'
 import { AgentBridge, aiSetup, connectClaude, handleAgent } from './agent'
 import { AppController } from './controller'
@@ -122,6 +123,7 @@ app.on('before-quit', (event) => {
   const ctl = controller
   ctl.screens.closeAll()
   ctl.airplay.stop()
+  ctl.plugins.stop()
   bridge?.stop()
   void ctl.flushSave().finally(() => app.quit())
 })
@@ -161,6 +163,12 @@ function registerIpc(ctl: AppController): void {
   )
   ipcMain.on(IPC.testTone, (_e, channelId: string) => ctl.testTone(channelId))
   ipcMain.on(IPC.dismissRecovery, () => ctl.dismissRecovery())
+  ipcMain.handle(IPC.setPlugin, (_e, id: PluginId, setting: PluginSetting) =>
+    ctl.setPlugin(id, setting)
+  )
+  ipcMain.handle(IPC.pluginInvoke, (_e, id: PluginId, action: string, payload: unknown) =>
+    ctl.plugins.invoke(id, action, payload)
+  )
   ipcMain.on(IPC.audioEvent, (_e, event: AudioEngineEvent) => ctl.audioEvent(event))
 }
 

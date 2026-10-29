@@ -13,6 +13,7 @@ import StartSheet from '../show/StartSheet.vue'
 import HomeView from './HomeView.vue'
 import AiDialog from './AiDialog.vue'
 import NewQuizDialog from './NewQuizDialog.vue'
+import SettingsDialog from './SettingsDialog.vue'
 
 const api = window.pubquiz
 const session = useSession()
@@ -38,6 +39,7 @@ async function open(path?: string, openIn: 'edit' | 'show' = 'edit') {
 /** Open dialoog voor een nieuwe quiz; `source` = "op basis van" die quiz. */
 const newQuiz = ref<{ source: { path: string; title: string } | null } | null>(null)
 const aiOpen = ref(false)
+const settingsOpen = ref(false)
 
 function create() {
   session.flush()
@@ -80,7 +82,8 @@ const actions: Record<MenuAction, () => void> = {
   reveal: () => void api.revealQuiz(),
   // In tekstvelden laat het menu ⌘Z aan het veld zelf.
   undo: () => (isEditable(document.activeElement) ? document.execCommand('undo') : session.undo()),
-  redo: () => (isEditable(document.activeElement) ? document.execCommand('redo') : session.redo())
+  redo: () => (isEditable(document.activeElement) ? document.execCommand('redo') : session.redo()),
+  settings: () => (settingsOpen.value = true)
 }
 
 onMounted(async () => {
@@ -116,8 +119,7 @@ watch(
 
 // Een afgebroken show van deze quiz: meteen het venster om hem te hervatten.
 watch(
-  () =>
-    !!session.recovery && session.recovery.quizDir === session.quizDir && !!session.quiz,
+  () => !!session.recovery && session.recovery.quizDir === session.quizDir && !!session.quiz,
   (pending) => {
     if (pending && !session.live) starting.value = true
   },
@@ -164,6 +166,12 @@ watch(
           </template>
         </div>
       </template>
+      <template v-else>
+        <div class="spacer" />
+        <button class="btn btn-ghost" @click="settingsOpen = true">
+          <Icon name="sliders" :size="15" /> Instellingen
+        </button>
+      </template>
     </header>
 
     <main v-if="session.ready" class="body">
@@ -182,6 +190,7 @@ watch(
     <StartSheet v-if="starting && session.quiz && !session.live" @close="starting = false" />
     <NewQuizDialog v-if="newQuiz" :source="newQuiz.source" @close="newQuiz = null" />
     <AiDialog v-if="aiOpen" @close="aiOpen = false" />
+    <SettingsDialog v-if="settingsOpen" @close="settingsOpen = false" />
     <ConfirmHost />
     <NoticeStack />
   </div>

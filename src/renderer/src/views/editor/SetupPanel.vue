@@ -8,6 +8,7 @@ import Icon from '../../components/Icon.vue'
 import MediaPicker from '../../components/MediaPicker.vue'
 import Select from '../../components/Select.vue'
 import StagePreview from '../../components/StagePreview.vue'
+import PluginSlot from '../../plugins/PluginSlot.vue'
 import { vFill } from '../../lib/fill'
 import { ask } from '../../lib/confirm'
 import { percent } from '../../lib/format'
@@ -234,6 +235,8 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
           </div>
         </div>
       </section>
+
+      <PluginSlot name="quizSettings" />
 
       <section>
         <div class="section-head"><h3>Bestand</h3></div>
