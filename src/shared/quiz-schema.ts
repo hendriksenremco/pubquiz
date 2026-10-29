@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { PluginDataSchema } from './plugins'
 import { SCHEMA_VERSION } from './version'
 
 export { SCHEMA_VERSION }
@@ -90,7 +91,8 @@ export const SlideSchema = z.object({
   /** Voor de antwoordenronde (vraag-, nummer- en afbeeldingsslides). */
   answer: z.string().optional(),
   /** Afbeelding die bij het antwoord de vraag vervangt, bv. de hele foto na een uitsnede. */
-  answerImageAssetId: id.optional()
+  answerImageAssetId: id.optional(),
+  plugins: PluginDataSchema.optional()
 })
 
 export const RoundBackgroundSchema = z.union([
@@ -121,7 +123,8 @@ export const RoundSchema = z.object({
   slides: z.array(SlideSchema),
   background: RoundBackgroundSchema,
   fragments: z.array(FragmentSchema),
-  autoplay: AutoplaySettingsSchema
+  autoplay: AutoplaySettingsSchema,
+  plugins: PluginDataSchema.optional()
 })
 
 export const QuizSchema = z.object({
@@ -134,5 +137,6 @@ export const QuizSchema = z.object({
   screens: z.array(ScreenSlotSchema),
   channels: z.array(AudioChannelSchema),
   background: BackgroundSchema.nullable(),
-  rounds: z.array(RoundSchema)
+  rounds: z.array(RoundSchema),
+  plugins: PluginDataSchema.optional()
 })
