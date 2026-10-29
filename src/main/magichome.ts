@@ -1,4 +1,4 @@
-import { connect } from 'net'
+import { connect, type Socket } from 'net'
 import { LightSchema, resolveLight, sameLight, stateLight, type Light } from '@shared/light'
 import {
   lightMessages,
@@ -14,6 +14,10 @@ import type { Quiz, ShowState } from '@shared/types'
 import type { MainPlugin, Notify } from './plugins'
 
 const TIMEOUT_MS = 2000
+/** Zo lang blijft de verbinding open na de laatste opdracht. */
+const IDLE_MS = 15_000
+/** Tussen twee berichten, zodat de controller ze los verwerkt. */
+const GAP_MS = 50
 
 /**
  * Plug-in MagicHome-licht: stuurt tijdens de show het licht van de slide, de ronde of de quiz
@@ -26,6 +30,7 @@ const TIMEOUT_MS = 2000
  */
 export class MagicHomePlugin implements MainPlugin {
   private address: MagicHomeAddress | null = null
+  private link: Link | null = null
   private wanted: Light | null = null
   private sent: Light | null = null
   /** Loopt er al een verzending, dan neemt die het nieuwste licht ook mee. */
@@ -44,6 +49,8 @@ export class MagicHomePlugin implements MainPlugin {
     const address = parseAddress(typeof config.host === 'string' ? config.host : '')
     if (JSON.stringify(address) === JSON.stringify(this.address)) return
     this.address = address
+    this.link?.close()
+    this.link = address ? new Link(address) : null
     // Een andere controller weet nog van niets.
     this.sent = null
     this.failing = false
@@ -70,17 +77,23 @@ export class MagicHomePlugin implements MainPlugin {
       return light.success ? this.preview(light.data) : null
     }
     if (action !== 'probe') return null
-    const host = typeof payload === 'string' ? payload : ''
-    const address = parseAddress(host)
+    const address = parseAddress(typeof payload === 'string' ? payload : '')
     if (!address) return { ok: false, error: 'Vul het IP-adres van de controller in' }
+    // Dezelfde controller: over de verbinding die er al is, niet nog een erbij.
+    const same = this.link && JSON.stringify(address) === JSON.stringify(this.address)
+    const link = same ? this.link! : new Link(address)
     try {
-      return { ok: true, state: await probe(address) }
+      return { ok: true, state: await link.send([]) }
     } catch (err) {
       return { ok: false, error: explain(err, address) }
+    } finally {
+      if (!same) link.close()
     }
   }
 
   stop(): void {
+    this.link?.close()
+    this.link = null
     this.address = null
     this.wanted = null
     this.before = null
@@ -88,9 +101,9 @@ export class MagicHomePlugin implements MainPlugin {
 
   /** Laat een licht zien zonder show; null = klaar, terug naar hoe het was. */
   private async preview(light: Light | null): Promise<MagicHomeResult> {
-    const address = this.address
+    const { address, link } = this
     if (this.live) return { ok: false, error: 'Tijdens de show volgt het licht de show' }
-    if (!address) return { ok: false, error: 'Vul eerst het adres van de controller in' }
+    if (!address || !link) return { ok: false, error: 'Vul eerst het adres van de controller in' }
     if (!light) {
       await this.endPreview()
       return { ok: true }
@@ -98,7 +111,7 @@ export class MagicHomePlugin implements MainPlugin {
     if (!this.before) {
       // Eerst een vorig voorbeeld laten terugzetten, anders lijkt dat voorbeeld "hoe het was".
       await this.restoring
-      this.before ??= probe(address).then(stateLight)
+      this.before ??= link.send([]).then(stateLight)
     }
     const before = this.before
     try {
@@ -136,16 +149,16 @@ export class MagicHomePlugin implements MainPlugin {
   private async drain(): Promise<void> {
     this.sending = true
     try {
-      while (this.address && this.wanted && !sameLight(this.wanted, this.sent)) {
-        const address = this.address
+      while (this.link && this.wanted && !sameLight(this.wanted, this.sent)) {
+        const link = this.link
         const light = this.wanted
         try {
-          await send(address, lightMessages(light))
+          await link.send(lightMessages(light))
           this.sent = light
           this.failing = false
         } catch (err) {
-          if (this.address !== address) continue
-          if (!this.failing) this.notify('warning', explain(err, address))
+          if (this.link !== link) continue
+          if (!this.failing) this.notify('warning', explain(err, link.address))
           this.failing = true
           return
         }
@@ -157,46 +170,134 @@ export class MagicHomePlugin implements MainPlugin {
   }
 }
 
-/** Eén verbinding per wijziging: niets om open te houden of te herstellen als het wifi hapert. */
-function send(address: MagicHomeAddress, messages: Uint8Array[]): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const socket = connect(address)
-    let connected = false
-    // Na het versturen sluit de controller zelf, of ruimen we hem na de timeout op.
-    socket.setTimeout(TIMEOUT_MS, () =>
-      socket.destroy(connected ? undefined : new Error('timeout'))
-    )
-    socket.on('error', reject)
-    // Antwoorden lezen we niet, maar wel weghalen, zodat de verbinding netjes dichtgaat.
-    socket.on('data', () => {})
-    socket.once('connect', () => {
-      connected = true
-      for (const m of messages) socket.write(m)
-      socket.end(() => resolve())
+/**
+ * Eén verbinding met de controller, die open blijft zolang er iets te sturen is. Meteen na het
+ * sturen sluiten werkt niet: wat dan nog niet verwerkt was, laat de controller vallen. En veel
+ * verbindingen kort na elkaar laten hem vastlopen (beide gezien op 2026-10-29).
+ */
+class Link {
+  private socket: Socket | null = null
+  private opening: Promise<Socket> | null = null
+  private buffer: Uint8Array = new Uint8Array(0)
+  private waiting: { resolve: (state: MagicHomeState) => void; reject: (err: Error) => void }[] = []
+  private idleTimer: ReturnType<typeof setTimeout> | null = null
+  /** Telt bij elke close: een verbinding die daarna nog tot stand komt, is niet meer nodig. */
+  private generation = 0
+
+  constructor(readonly address: MagicHomeAddress) {}
+
+  /**
+   * Stuurt de berichten en daarna de statusvraag. Komt het antwoord, dan heeft de controller alles
+   * verwerkt (hij werkt op volgorde); het antwoord is wat hij nu toont.
+   */
+  async send(messages: Uint8Array[]): Promise<MagicHomeState> {
+    if (this.idleTimer) clearTimeout(this.idleTimer)
+    try {
+      const socket = await this.open()
+      for (const m of messages) {
+        socket.write(m)
+        await delay(GAP_MS)
+      }
+      const reply = this.nextState()
+      socket.write(queryState())
+      return await reply
+    } catch (err) {
+      this.close()
+      throw err
+    } finally {
+      this.idleTimer = setTimeout(() => this.close(), IDLE_MS)
+    }
+  }
+
+  close(): void {
+    if (this.idleTimer) clearTimeout(this.idleTimer)
+    this.idleTimer = null
+    this.generation++
+    this.opening = null
+    const socket = this.socket
+    this.reset(new Error('gesloten'))
+    // Netjes sluiten: alles is al beantwoord. Sluit de controller niet terug, dan alsnog weg.
+    socket?.end()
+    socket?.setTimeout(TIMEOUT_MS, () => socket.destroy())
+  }
+
+  private open(): Promise<Socket> {
+    if (this.socket) return Promise.resolve(this.socket)
+    if (this.opening) return this.opening
+    const generation = this.generation
+    const opening = new Promise<Socket>((resolve, reject) => {
+      const socket = connect(this.address)
+      const fail = (err: Error) => {
+        if (this.opening === opening) this.opening = null
+        socket.destroy()
+        reject(err)
+      }
+      socket.setTimeout(TIMEOUT_MS, () => fail(new Error('timeout')))
+      socket.once('error', fail)
+      socket.once('connect', () => {
+        if (generation !== this.generation) return fail(new Error('gesloten'))
+        socket.setTimeout(0)
+        socket.off('error', fail)
+        socket.on('error', (err) => this.drop(socket, err))
+        socket.on('close', () => this.drop(socket, new Error('verbinding verbroken')))
+        socket.on('data', (chunk: Buffer) => this.receive(chunk))
+        this.socket = socket
+        this.opening = null
+        resolve(socket)
+      })
     })
-  })
+    this.opening = opening
+    return opening
+  }
+
+  /** De volgende toestand die binnenkomt; ook als hij die uit zichzelf meldt. */
+  private nextState(): Promise<MagicHomeState> {
+    return new Promise((resolve, reject) => {
+      const waiter = {
+        resolve: (state: MagicHomeState) => {
+          clearTimeout(timer)
+          resolve(state)
+        },
+        reject: (err: Error) => {
+          clearTimeout(timer)
+          reject(err)
+        }
+      }
+      const timer = setTimeout(() => {
+        this.waiting = this.waiting.filter((w) => w !== waiter)
+        reject(new Error('timeout'))
+      }, TIMEOUT_MS)
+      this.waiting.push(waiter)
+    })
+  }
+
+  private receive(chunk: Buffer): void {
+    const { states, rest } = readStates(Uint8Array.from([...this.buffer, ...chunk]))
+    this.buffer = rest
+    const state = states.at(-1)
+    if (!state) return
+    const waiting = this.waiting
+    this.waiting = []
+    for (const w of waiting) w.resolve(state)
+  }
+
+  /** De controller of het netwerk verbrak de verbinding. */
+  private drop(socket: Socket, err: Error): void {
+    if (socket !== this.socket) return
+    socket.destroy()
+    this.reset(err)
+  }
+
+  private reset(err: Error): void {
+    this.socket = null
+    this.buffer = new Uint8Array(0)
+    const waiting = this.waiting
+    this.waiting = []
+    for (const w of waiting) w.reject(err)
+  }
 }
 
-/** Vraagt alleen de toestand op; verandert niets aan het licht. */
-function probe(address: MagicHomeAddress): Promise<MagicHomeState> {
-  return new Promise((resolve, reject) => {
-    const socket = connect(address)
-    let buffer: Uint8Array = new Uint8Array(0)
-    const finish = (err: Error | null, state?: MagicHomeState) => {
-      socket.destroy()
-      if (err) reject(err)
-      else resolve(state!)
-    }
-    socket.setTimeout(TIMEOUT_MS, () => finish(new Error('timeout')))
-    socket.on('error', (err) => finish(err))
-    socket.once('connect', () => socket.write(queryState()))
-    socket.on('data', (chunk: Buffer) => {
-      const { states, rest } = readStates(Uint8Array.from([...buffer, ...chunk]))
-      buffer = rest
-      if (states[0]) finish(null, states[0])
-    })
-  })
-}
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 function explain(err: unknown, address: MagicHomeAddress): string {
   const code = (err as NodeJS.ErrnoException).code

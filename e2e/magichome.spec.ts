@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 import { readFileSync, rmSync } from 'fs'
-import { createServer, type AddressInfo } from 'net'
 import { dirname, join } from 'path'
+import { command, fakeController } from './fake-magichome'
 import {
   confirmIn,
   copyFixture,
@@ -11,31 +11,6 @@ import {
   tempDir,
   useWindowedScreens
 } from './helpers'
-
-const hex = (bytes: number[]) => bytes.map((b) => b.toString(16).padStart(2, '0')).join(' ')
-/** Antwoord op de statusvraag: aan, vaste kleur groen (zo antwoordde de controller op kantoor). */
-const STATE = [0x81, 0xa1, 0x23, 0x00, 0x61, 0x64, 0x00, 0xff, 0x00, 0x00, 0x03, 0x00, 0xfa, 0x06]
-const ON = '71 23 0f a3'
-
-/** Nooit de echte controller: een nep-controller op localhost die onthoudt wat hij kreeg. */
-async function fakeController() {
-  const received: string[] = []
-  const server = createServer((socket) => {
-    const bytes: number[] = []
-    socket.on('data', (chunk) => {
-      bytes.push(...chunk)
-      if (chunk[0] === 0x81) socket.write(Uint8Array.from(STATE))
-    })
-    socket.on('end', () => {
-      received.push(hex(bytes))
-      socket.end()
-    })
-    socket.on('error', () => {})
-  })
-  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
-  const { port } = server.address() as AddressInfo
-  return { host: `127.0.0.1:${port}`, received, close: () => server.close() }
-}
 
 /** Via Instellingen op het dashboard; met `host` ook het adres van de controller. */
 async function setPlugin(operator: Page, on: boolean, host?: string) {
@@ -60,11 +35,12 @@ async function selectSlide(operator: Page, index: number) {
   await operator.locator('.slide-list .item').nth(index).locator('.thumb').click()
 }
 
-const RED = `${ON} 31 ff 00 00 00 00 f0 0f 2f`
-const BLUE = `${ON} 31 00 00 ff 00 00 f0 0f 2f`
-const GREEN = `${ON} 31 00 ff 00 00 00 f0 0f 2f`
+const { on: ON } = command
+const RED = [ON, command.color(0xff, 0, 0)]
+const BLUE = [ON, command.color(0, 0, 0xff)]
+const GREEN = [ON, command.color(0, 0xff, 0)]
 /** Effect 39, "Rennend punt, rood, naar buiten", op snelheid 60. */
-const RUNNING = `${ON} 61 00 8a 3c 0f 36`
+const RUNNING = [ON, '61 00 8a 3c 0f 36']
 
 test('licht per ronde en per slide via de plug-in MagicHome', async () => {
   const device = await fakeController()
@@ -72,7 +48,8 @@ test('licht per ronde en per slide via de plug-in MagicHome', async () => {
   const quizDir = copyFixture()
   const { app, operator } = await launch(userData, quizDir)
   const savedQuiz = () => JSON.parse(readFileSync(join(quizDir, 'quiz.json'), 'utf8'))
-  const last = () => device.received.at(-1)
+  /** De laatste opdracht die de nep-controller verwerkte, met het aanzetten ervoor. */
+  const last = () => device.log.slice(-2)
   const slideLight = operator.getByRole('button', { name: 'Licht bij deze slide' })
   try {
     // Uit (standaard): nergens licht te zien.
@@ -81,7 +58,7 @@ test('licht per ronde en per slide via de plug-in MagicHome', async () => {
     await expect(slideLight).toHaveCount(0)
 
     await setPlugin(operator, true, device.host)
-    expect(device.received).toEqual(['81 8a 8b 96'])
+    expect(device.log).toEqual([])
 
     // De ronde rood, met een voorbeeld op de lamp; dicht = terug naar hoe het was (groen).
     await operator.locator('.sidebar .round').first().click()
@@ -90,21 +67,20 @@ test('licht per ronde en per slide via de plug-in MagicHome', async () => {
     const panel = operator.locator('.popover-panel')
     await panel.getByRole('checkbox', { name: 'Voorbeeld op de lamp' }).check()
     await panel.getByRole('button', { name: 'Kleur', exact: true }).click()
-    await expect.poll(last).toBe(RED)
-    expect(device.received.slice(1)).toEqual(['81 8a 8b 96', RED])
+    await expect.poll(() => device.log).toEqual(RED)
     await panel.getByRole('button', { name: 'Blauw', exact: true }).click()
-    await expect.poll(last).toBe(BLUE)
+    await expect.poll(last).toEqual(BLUE)
     await panel.getByRole('button', { name: 'Rood', exact: true }).click()
-    await expect.poll(last).toBe(RED)
+    await expect.poll(last).toEqual(RED)
     await operator.keyboard.press('Escape')
-    await expect.poll(last).toBe(GREEN)
+    await expect.poll(last).toEqual(GREEN)
 
     // De tweede slide: een effect uit een raster, een rennend punt op rood naar buiten.
     await selectSlide(operator, 1)
     await expect(slideLight).toContainText('Zoals de ronde')
     await slideLight.click()
     // Het voorbeeld staat nog aan: de lamp toont wat de slide nu krijgt, die van de ronde.
-    await expect.poll(last).toBe(RED)
+    await expect.poll(last).toEqual(RED)
     await panel.getByRole('button', { name: 'Effect', exact: true }).click()
     await expect(panel.getByRole('listbox', { name: 'Basis' })).toBeVisible()
     await panel.getByRole('button', { name: /^Rennend punt/, expanded: false }).click()
@@ -112,11 +88,11 @@ test('licht per ronde en per slide via de plug-in MagicHome', async () => {
     await panel
       .getByRole('button', { name: 'Rennend punt, rood, naar buiten', exact: true })
       .click()
-    await expect.poll(last).toBe(RUNNING)
+    await expect.poll(last).toEqual(RUNNING)
     await operator.waitForTimeout(200)
     await operator.screenshot({ path: 'test-results/magichome-effect.png' })
     await operator.keyboard.press('Escape')
-    await expect.poll(last).toBe(GREEN)
+    await expect.poll(last).toEqual(GREEN)
     await expect(slideLight).toContainText('Rennend punt, rood, naar buiten')
 
     await expect
@@ -135,17 +111,17 @@ test('licht per ronde en per slide via de plug-in MagicHome', async () => {
     await expect(sheet.locator('.light-status')).toHaveText('Verbonden. Nu: Groen.')
     await useWindowedScreens(operator)
     await operator.screenshot({ path: 'test-results/magichome-start.png' })
-    const before = device.received.length
+    const before = device.log.length
     await startShow(operator)
 
     // Nog geen ronde en geen standaard: het licht blijft zoals het is.
     await operator.waitForTimeout(300)
-    expect(device.received).toHaveLength(before)
+    expect(device.log).toHaveLength(before)
 
     await operator.locator('.rounds .round').first().click()
-    await expect.poll(last).toBe(RED)
+    await expect.poll(last).toEqual(RED)
     await operator.keyboard.press('PageDown')
-    await expect.poll(last).toBe(RUNNING)
+    await expect.poll(last).toEqual(RUNNING)
 
     // Uitgezet: niets meer te zien, maar wat in de quiz staat, blijft.
     await operator.getByRole('button', { name: 'Stop show' }).click()
@@ -160,7 +136,7 @@ test('licht per ronde en per slide via de plug-in MagicHome', async () => {
     })
   } finally {
     await app.close()
-    device.close()
+    await device.close()
     rmSync(userData, { recursive: true, force: true })
     rmSync(dirname(quizDir), { recursive: true, force: true })
   }

@@ -26,7 +26,7 @@ describe('berichten', () => {
   })
 
   it('zetten een kleur en een effect', () => {
-    expect(text(color('#ff0000'))).toBe('31 ff 00 00 00 00 f0 0f 2f')
+    expect(text(color('#ff0000'))).toBe('41 ff 00 00 00 00 f0 0f 3f')
     expect(text(effect(1, 50))).toBe('61 00 64 32 0f 06')
     // Boven de 255 loopt het nummer over twee bytes.
     expect(text(effect(300, 100)).slice(0, 8)).toBe('61 01 8f')
@@ -36,7 +36,7 @@ describe('berichten', () => {
     expect(lightMessages({ type: 'off' }).map(text)).toEqual(['71 24 0f a4'])
     expect(lightMessages({ type: 'color', color: '#ff0000' }).map(text)).toEqual([
       '71 23 0f a3',
-      '31 ff 00 00 00 00 f0 0f 2f'
+      '41 ff 00 00 00 00 f0 0f 3f'
     ])
     expect(lightMessages({ type: 'effect', effect: 1, speed: 50 }).map(text)).toEqual([
       '71 23 0f a3',
@@ -47,6 +47,11 @@ describe('berichten', () => {
 
 describe('toestand', () => {
   it('leest het antwoord van de controller', () => {
+    // Een kleur zonder opslaan staat als modus 00 62 in de toestand.
+    expect(parseState(bytes('81 a1 23 00 62 3c ff 00 00 00 03 00 fa df'))).toMatchObject({
+      effect: null,
+      color: '#ff0000'
+    })
     expect(parseState(bytes(STATE))).toEqual({
       model: 0xa1,
       on: true,

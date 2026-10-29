@@ -51,12 +51,13 @@ export const queryState = (): Uint8Array => message([0x81, 0x8a, 0x8b])
 export const power = (on: boolean): Uint8Array => message([0x71, on ? 0x23 : 0x24, 0x0f])
 
 /**
- * Vaste kleur. `31` bewaart hem in de controller, zodat hij na stroom eraf terugkomt; zo doet
- * `flux_led` het standaard. `F0`: alleen de RGB-kleuren schrijven.
+ * Vaste kleur, zonder hem in de controller te bewaren (`41`). Met `31` (bewaren, de standaard van
+ * `flux_led`) is de A1 daarna zo'n 3 seconden bezig en beantwoordt hij niets; met `41` volgt hij
+ * elke seconde een nieuwe kleur (getest op 2026-10-29). `F0`: alleen de RGB-kleuren schrijven.
  */
 export function color(hex: string): Uint8Array {
   const [r, g, b] = rgb(hex)
-  return message([0x31, r, g, b, 0x00, 0x00, 0xf0, 0x0f])
+  return message([0x41, r, g, b, 0x00, 0x00, 0xf0, 0x0f])
 }
 
 /** Ingebouwd effect 1–300 met een snelheid van 0 tot 100. */

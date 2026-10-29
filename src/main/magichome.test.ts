@@ -1,39 +1,14 @@
-import { createServer, type AddressInfo } from 'net'
 import { describe, expect, it, vi } from 'vitest'
 import { createQuiz, createRound, createShowState, createSlide } from '@shared/factory'
 import { setLight } from '@shared/light'
 import type { ShowState } from '@shared/types'
+import { command, fakeController } from '../../e2e/fake-magichome'
 import { MagicHomePlugin } from './magichome'
 
-const hex = (data: Uint8Array) => [...data].map((b) => b.toString(16).padStart(2, '0')).join(' ')
-const STATE = Uint8Array.from([
-  0x81, 0xa1, 0x23, 0x00, 0x61, 0x64, 0x00, 0xff, 0x00, 0x00, 0x03, 0x00, 0xfa, 0x06
-])
-const ON = '71 23 0f a3'
-const RED = '31 ff 00 00 00 00 f0 0f 2f'
-
-/** Nep-controller op localhost: onthoudt wat elke verbinding stuurde en beantwoordt de statusvraag. */
-async function fakeController() {
-  const received: string[] = []
-  const server = createServer((socket) => {
-    const bytes: number[] = []
-    socket.on('data', (chunk) => {
-      bytes.push(...chunk)
-      if (chunk[0] === 0x81) socket.write(STATE)
-    })
-    socket.on('end', () => {
-      received.push(hex(Uint8Array.from(bytes)))
-      socket.end()
-    })
-  })
-  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
-  const { port } = server.address() as AddressInfo
-  return {
-    host: `127.0.0.1:${port}`,
-    received,
-    close: () => new Promise((resolve) => server.close(resolve))
-  }
-}
+const ON = command.on
+const RED = command.color(0xff, 0, 0)
+const GREEN = command.color(0, 0xff, 0)
+const FLASH = command.effect(1, 50)
 
 function setup() {
   const quiz = createQuiz('Test')
@@ -53,7 +28,7 @@ function setup() {
 }
 
 describe('MagicHomePlugin', () => {
-  it('stuurt tijdens de show het licht van de ronde en de slide, en niets dubbel', async () => {
+  it('stuurt tijdens de show het licht van de ronde en de slide, over één verbinding', async () => {
     const device = await fakeController()
     const notify = vi.fn()
     const plugin = new MagicHomePlugin(notify)
@@ -62,13 +37,15 @@ describe('MagicHomePlugin', () => {
       plugin.configure({ host: device.host })
       plugin.update(quiz, { ...state(), live: false })
       plugin.update(quiz, state())
-      await vi.waitFor(() => expect(device.received).toEqual([`${ON} ${RED}`]))
+      await vi.waitFor(() => expect(device.log).toEqual([ON, RED]))
 
       // Zelfde licht: niets. Andere slide: zijn eigen effect.
       plugin.update(quiz, state())
       plugin.update(quiz, state({ slideIndex: 1 }))
-      await vi.waitFor(() => expect(device.received).toHaveLength(2))
-      expect(device.received[1]).toBe(`${ON} 61 00 64 32 0f 06`)
+      await vi.waitFor(() => expect(device.log).toEqual([ON, RED, ON, FLASH]))
+      // De controller laat vallen wat hij nog niet verwerkt had als je meteen sluit; de
+      // verbinding blijft dus open, en wordt hergebruikt.
+      expect(device.stats.connections).toBe(1)
       expect(notify).not.toHaveBeenCalled()
     } finally {
       plugin.stop()
@@ -86,9 +63,9 @@ describe('MagicHomePlugin', () => {
       plugin.update(quiz, state({ slideIndex: 1 }))
       plugin.update(quiz, state({ slideIndex: 0 }))
       plugin.update(quiz, state({ slideIndex: 1 }))
-      await vi.waitFor(() => expect(device.received).toHaveLength(2))
-      await new Promise((resolve) => setTimeout(resolve, 100))
-      expect(device.received).toEqual([`${ON} ${RED}`, `${ON} 61 00 64 32 0f 06`])
+      await vi.waitFor(() => expect(device.log).toEqual([ON, RED, ON, FLASH]))
+      await new Promise((resolve) => setTimeout(resolve, 200))
+      expect(device.log).toHaveLength(4)
     } finally {
       plugin.stop()
       await device.close()
@@ -103,7 +80,7 @@ describe('MagicHomePlugin', () => {
         ok: true,
         state: { model: 0xa1, on: true, effect: null, speed: 100, color: '#00ff00', firmware: 3 }
       })
-      await vi.waitFor(() => expect(device.received).toEqual(['81 8a 8b 96']))
+      expect(device.log).toEqual([])
       expect(await plugin.invoke('probe', 'geen adres')).toMatchObject({ ok: false })
     } finally {
       await device.close()
@@ -119,14 +96,14 @@ describe('MagicHomePlugin', () => {
       expect(await plugin.invoke('preview', { type: 'color', color: '#ff0000' })).toEqual({
         ok: true
       })
-      // Eerst opvragen hoe het licht was (groen), dan het voorbeeld.
-      await vi.waitFor(() => expect(device.received).toEqual(['81 8a 8b 96', `${ON} ${RED}`]))
+      await vi.waitFor(() => expect(device.log).toEqual([ON, RED]))
       await plugin.invoke('preview', { type: 'effect', effect: 1, speed: 50 })
-      await vi.waitFor(() => expect(device.received).toHaveLength(3))
-      expect(device.received[2]).toBe(`${ON} 61 00 64 32 0f 06`)
+      await vi.waitFor(() => expect(device.log).toEqual([ON, RED, ON, FLASH]))
 
+      // Voor het voorbeeld stond hij aan, in vast groen.
       await plugin.invoke('preview', null)
-      await vi.waitFor(() => expect(device.received[3]).toBe(`${ON} 31 00 ff 00 00 00 f0 0f 2f`))
+      expect(device.log.slice(-2)).toEqual([ON, GREEN])
+      expect(device.stats.connections).toBe(1)
 
       // Tijdens de show bepaalt de show het licht.
       plugin.update(quiz, state())
@@ -158,5 +135,6 @@ describe('MagicHomePlugin', () => {
       ok: false,
       error: expect.stringContaining('weigert de verbinding')
     })
+    plugin.stop()
   })
 })
