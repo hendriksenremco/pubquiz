@@ -3,6 +3,7 @@ import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { activeRound, answerItems, findAsset, resolveScreen } from '@shared/resolve'
 import type { Quiz, ScreenContent, ShowState } from '@shared/types'
 import { assetUrl } from '../lib/media'
+import { slideBackdrop } from '../lib/slide-backdrop'
 import { useNow } from '../lib/use-now'
 import { levelsOf, useWaveform } from '../lib/waveform'
 import SlideView from './SlideView.vue'
@@ -241,50 +242,64 @@ onBeforeUnmount(() => {
     </div>
 
     <Transition name="fade">
-      <SlideView
+      <div
         v-if="resolved.slide"
         :key="resolved.slide.id"
-        :slide="resolved.slide"
-        :number="resolved.slideNumber"
-        :quiz="quiz"
+        class="slide-backdrop"
+        :style="slideBackdrop(resolved.slide)"
       />
     </Transition>
 
-    <Transition name="fade">
-      <!-- Het grote getal is altijd het fragmentnummer; de pauze telt klein eronder af. -->
-      <!-- Nummer en aftellen wisselen in hetzelfde hoekvak; het antwoord fadet als eigen kaart in. -->
-      <div
-        v-if="resolved.overlay"
-        :key="resolved.overlay.kind === 'answer' ? 'answer' : 'corner'"
-        class="overlay"
-        :class="[
-          resolved.overlay.kind,
-          resolved.overlay.kind === 'answer' ? resolved.overlay.placement : null
-        ]"
-      >
-        <template v-if="resolved.overlay.kind === 'fragment'">
-          <div v-if="resolved.overlay.context" class="ov-context">
-            {{ resolved.overlay.context }}
-          </div>
-          <div class="ov-label">Fragment</div>
-          <div class="ov-number">{{ resolved.overlay.number }}</div>
-          <Waveform v-if="waveBars" class="ov-wave" :bars="waveBars" :playing="waveTiming" />
-        </template>
-        <!-- Antwoordenronde: het moment van de avond, dus groot en in het midden. -->
-        <template v-else-if="resolved.overlay.kind === 'answer'">
-          <div class="ov-context">{{ resolved.overlay.context }}</div>
-          <div class="ov-answer">{{ resolved.overlay.answer }}</div>
-        </template>
-        <template v-else>
-          <div class="ov-label">Volgende</div>
-          <div class="ov-number">{{ resolved.overlay.nextNumber }}</div>
-          <div class="ov-count">over {{ resolved.overlay.seconds }} s</div>
-          <div class="ov-bar">
-            <span :style="{ transform: `scaleX(${resolved.overlay.remaining})` }" />
-          </div>
-        </template>
-      </div>
-    </Transition>
+    <!-- De achtergrond vult het hele scherm; de inhoud blijft 16:9, zoals in de previews, zodat er
+         op een breder of hoger scherm niets van afvalt. -->
+    <div class="safe">
+      <Transition name="fade">
+        <SlideView
+          v-if="resolved.slide"
+          :key="resolved.slide.id"
+          :slide="resolved.slide"
+          :number="resolved.slideNumber"
+          :quiz="quiz"
+          :with-backdrop="false"
+        />
+      </Transition>
+
+      <Transition name="fade">
+        <!-- Het grote getal is altijd het fragmentnummer; de pauze telt klein eronder af. -->
+        <!-- Nummer en aftellen wisselen in hetzelfde hoekvak; het antwoord fadet als eigen kaart in. -->
+        <div
+          v-if="resolved.overlay"
+          :key="resolved.overlay.kind === 'answer' ? 'answer' : 'corner'"
+          class="overlay"
+          :class="[
+            resolved.overlay.kind,
+            resolved.overlay.kind === 'answer' ? resolved.overlay.placement : null
+          ]"
+        >
+          <template v-if="resolved.overlay.kind === 'fragment'">
+            <div v-if="resolved.overlay.context" class="ov-context">
+              {{ resolved.overlay.context }}
+            </div>
+            <div class="ov-label">Fragment</div>
+            <div class="ov-number">{{ resolved.overlay.number }}</div>
+            <Waveform v-if="waveBars" class="ov-wave" :bars="waveBars" :playing="waveTiming" />
+          </template>
+          <!-- Antwoordenronde: het moment van de avond, dus groot en in het midden. -->
+          <template v-else-if="resolved.overlay.kind === 'answer'">
+            <div class="ov-context">{{ resolved.overlay.context }}</div>
+            <div class="ov-answer">{{ resolved.overlay.answer }}</div>
+          </template>
+          <template v-else>
+            <div class="ov-label">Volgende</div>
+            <div class="ov-number">{{ resolved.overlay.nextNumber }}</div>
+            <div class="ov-count">over {{ resolved.overlay.seconds }} s</div>
+            <div class="ov-bar">
+              <span :style="{ transform: `scaleX(${resolved.overlay.remaining})` }" />
+            </div>
+          </template>
+        </div>
+      </Transition>
+    </div>
 
     <div v-if="preview && resolved.blackout" class="blackout-badge">Zwart</div>
   </div>
@@ -318,6 +333,21 @@ onBeforeUnmount(() => {
   height: 100%;
   object-fit: cover;
   display: block;
+}
+
+.slide-backdrop {
+  position: absolute;
+  inset: 0;
+}
+
+/* Het grootste 16:9-vlak in het midden; slides en het fragmentnummer meten zich hieraan af. */
+.safe {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: min(100cqw, calc(100cqh * 16 / 9));
+  height: min(100cqh, calc(100cqw * 9 / 16));
+  container-type: size;
 }
 
 .overlay {

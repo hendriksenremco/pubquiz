@@ -125,6 +125,47 @@ test('wisselt scherm tijdens een ronde en valt daarna terug', async () => {
   await expect(beamer.locator('.slide')).toHaveCount(0)
 })
 
+test('vult het scherm met de achtergrond en houdt de inhoud 16:9', async () => {
+  const beamer = await windowFor('screen/beamer')
+  const resize = (width: number, height: number) =>
+    app.evaluate(
+      ({ BrowserWindow }, size) => {
+        const win = BrowserWindow.getAllWindows().find((w) =>
+          w.webContents.getURL().includes('#/screen/beamer')
+        )!
+        win.setAspectRatio(0)
+        win.setContentSize(size.width, size.height)
+      },
+      { width, height }
+    )
+  const box = async (selector: string) => (await beamer.locator(selector).first().boundingBox())!
+
+  await operator.locator('.rounds .round').nth(1).click()
+  await expect(beamer.locator('.slide .title')).toHaveText('Ronde 2')
+
+  // Ultrabreed, zoals een 21:9-monitor: video en dimmen tot in de hoeken, de tekst in het midden.
+  await resize(1260, 540)
+  await expect.poll(async () => Math.round((await box('.safe')).width)).toBe(960)
+  expect((await box('.safe')).x).toBeCloseTo(150, 0)
+  expect((await box('.slide')).x).toBeCloseTo(150, 0)
+  expect((await box('.layer.on video')).width).toBeCloseTo(1260, 0)
+  expect((await box('.slide-backdrop')).width).toBeCloseTo(1260, 0)
+  // Na de overvloeier (600 ms), zodat het screenshot het eindbeeld laat zien.
+  await beamer.waitForTimeout(800)
+  await beamer.screenshot({ path: 'test-results/screen-ultrawide.png' })
+
+  // Hoger, zoals een 4:3-beamer: de inhoud houdt boven en onder ruimte, de video vult alles.
+  await resize(720, 540)
+  await expect.poll(async () => Math.round((await box('.safe')).height)).toBe(405)
+  expect((await box('.safe')).y).toBeCloseTo(67.5, 0)
+  expect((await box('.layer.on video')).height).toBeCloseTo(540, 0)
+
+  await resize(960, 540)
+  await expect.poll(async () => Math.round((await box('.safe')).height)).toBe(540)
+  await operator.keyboard.press('e')
+  await expect(beamer.locator('.slide')).toHaveCount(0)
+})
+
 test('achtergrondmuziek speelt, pauzeert in een pauze-ronde en duckt in een duck-ronde', async () => {
   await expect.poll(async () => (await audio()).background?.key).toBe('bg@zaal')
   await expect.poll(async () => (await audio()).background?.gain ?? 0).toBeGreaterThan(0.55)
