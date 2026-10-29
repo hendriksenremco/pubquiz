@@ -74,8 +74,10 @@ describe('lightLabel', () => {
   it('noemt bekende kleuren en effecten bij naam', () => {
     expect(lightLabel(RED)).toBe('Rood')
     expect(lightLabel({ type: 'color', color: '#123456' })).toBe('#123456')
-    expect(lightLabel(PARTY)).toBe('Alles door elkaar')
-    expect(lightLabel({ type: 'effect', effect: 37, speed: 50 })).toBe('Effect 37')
+    expect(lightLabel(PARTY)).toBe('Looplicht + snel wisselen + flitsen')
+    expect(lightLabel({ type: 'effect', effect: 39, speed: 50 })).toBe(
+      'Rennend punt, rood, naar buiten'
+    )
     expect(lightLabel({ type: 'off' })).toBe('Uit')
   })
 })

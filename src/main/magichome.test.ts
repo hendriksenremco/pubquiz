@@ -110,6 +110,33 @@ describe('MagicHomePlugin', () => {
     }
   })
 
+  it('laat buiten de show een voorbeeld zien en zet daarna terug hoe het was', async () => {
+    const device = await fakeController()
+    const plugin = new MagicHomePlugin(vi.fn())
+    const { quiz, state } = setup()
+    try {
+      plugin.configure({ host: device.host })
+      expect(await plugin.invoke('preview', { type: 'color', color: '#ff0000' })).toEqual({
+        ok: true
+      })
+      // Eerst opvragen hoe het licht was (groen), dan het voorbeeld.
+      await vi.waitFor(() => expect(device.received).toEqual(['81 8a 8b 96', `${ON} ${RED}`]))
+      await plugin.invoke('preview', { type: 'effect', effect: 1, speed: 50 })
+      await vi.waitFor(() => expect(device.received).toHaveLength(3))
+      expect(device.received[2]).toBe(`${ON} 61 00 64 32 0f 06`)
+
+      await plugin.invoke('preview', null)
+      await vi.waitFor(() => expect(device.received[3]).toBe(`${ON} 31 00 ff 00 00 00 f0 0f 2f`))
+
+      // Tijdens de show bepaalt de show het licht.
+      plugin.update(quiz, state())
+      expect(await plugin.invoke('preview', { type: 'off' })).toMatchObject({ ok: false })
+    } finally {
+      plugin.stop()
+      await device.close()
+    }
+  })
+
   it('meldt een onbereikbare controller één keer', async () => {
     const device = await fakeController()
     const host = device.host
@@ -125,5 +152,11 @@ describe('MagicHomePlugin', () => {
     expect(notify).toHaveBeenCalledTimes(1)
     expect(notify.mock.calls[0][1]).toContain('weigert de verbinding')
     expect(await plugin.invoke('probe', host)).toMatchObject({ ok: false })
+
+    plugin.update(quiz, { ...state(), live: false })
+    expect(await plugin.invoke('preview', { type: 'off' })).toMatchObject({
+      ok: false,
+      error: expect.stringContaining('weigert de verbinding')
+    })
   })
 })

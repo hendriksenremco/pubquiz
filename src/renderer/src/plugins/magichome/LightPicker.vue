@@ -1,23 +1,19 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import {
-  DEFAULT_SPEED,
-  LIGHT_COLORS,
-  LIGHT_EFFECTS,
-  effectDescription,
-  lightLabel,
-  type Light
-} from '@shared/light'
-import { EFFECT_MAX, EFFECT_MIN } from '@shared/magichome'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { DEFAULT_EFFECT, DEFAULT_SPEED, LIGHT_COLORS, lightLabel, type Light } from '@shared/light'
+import { EFFECT_COLORS, EFFECT_GROUPS, effectInfo, gridRows } from '@shared/light-effects'
 import Icon from '../../components/Icon.vue'
 import Popover from '../../components/Popover.vue'
 import { vFill } from '../../lib/fill'
+import { useSession } from '../../stores/session'
+import { preview, previewOn, useControllerHost } from './controller'
 import LightDot from './LightDot.vue'
 
 /**
  * Veld dat openklapt tot een keuze voor het licht: een kleur, een effect, uit, of niets eigens
  * (undefined). Wat "niets eigens" betekent, hangt van de plek af: zoals de ronde, de standaard, of
  * het licht niet aansturen. `fallback`: wat er dan brandt, voor het bolletje in het veld.
+ * Met "Voorbeeld op de lamp" laat de controller zien wat je kiest zolang het paneel open is.
  */
 const props = withDefaults(
   defineProps<{
@@ -31,6 +27,7 @@ const props = withDefaults(
   { fallback: null }
 )
 const model = defineModel<Light | undefined>()
+const session = useSession()
 
 type Choice = 'inherit' | Light['type']
 const choice = computed<Choice>(() => model.value?.type ?? 'inherit')
@@ -46,9 +43,10 @@ function choose(value: Choice) {
   if (value === 'inherit') model.value = undefined
   else if (value === 'off') model.value = { type: 'off' }
   else if (value === 'color') model.value = { type: 'color', color: LIGHT_COLORS[0].color }
-  else model.value = { type: 'effect', effect: LIGHT_EFFECTS[0].effect, speed: DEFAULT_SPEED }
+  else model.value = { type: 'effect', effect: DEFAULT_EFFECT, speed: DEFAULT_SPEED }
 }
 
+// ── Kleur ────────────────────────────────────────────────────────────────────
 const color = computed(() => (model.value?.type === 'color' ? model.value.color : null))
 
 /** Eigen kleurcode, bv. "#ff8000" of "ff8000"; iets anders laat de kleur staan. */
@@ -58,22 +56,31 @@ function setColor(input: HTMLInputElement) {
   input.value = color.value ?? ''
 }
 
+// ── Effect: alle 300, in groepen; de groep van het gekozen effect staat open ─────────────
 const effect = computed(() => (model.value?.type === 'effect' ? model.value : null))
+const openGroup = ref<string | null>(null)
+watch(
+  () => effect.value?.effect,
+  (id) => {
+    if (id !== undefined && openGroup.value === null)
+      openGroup.value = effectInfo(id)?.group ?? null
+  },
+  { immediate: true }
+)
+
+function toggleGroup(name: string) {
+  openGroup.value = openGroup.value === name ? null : name
+}
 
 function setEffect(id: number) {
   model.value = { type: 'effect', effect: id, speed: effect.value?.speed ?? DEFAULT_SPEED }
-}
-
-function setEffectNumber(input: HTMLInputElement) {
-  const id = Math.round(Number(input.value))
-  if (Number.isFinite(id) && id >= EFFECT_MIN && id <= EFFECT_MAX) setEffect(id)
-  input.value = String(effect.value?.effect ?? '')
 }
 
 function setSpeed(input: HTMLInputElement) {
   if (effect.value) model.value = { ...effect.value, speed: Number(input.value) }
 }
 
+// ── Veld ─────────────────────────────────────────────────────────────────────
 const shown = computed(() => model.value ?? props.fallback)
 const valueText = computed(() => (model.value ? lightLabel(model.value) : props.inheritText))
 const title = computed(() =>
@@ -81,10 +88,39 @@ const title = computed(() =>
     ? `${props.label}: ${valueText.value}`
     : `${props.label}: ${props.inheritText} (${lightLabel(props.fallback)})`
 )
+
+// ── Voorbeeld op de lamp ─────────────────────────────────────────────────────
+const { host } = useControllerHost()
+const isOpen = ref(false)
+const previewNote = computed(() => {
+  if (session.live) return 'Tijdens de show volgt de lamp de show.'
+  if (!host.value) return 'Vul eerst het adres van de controller in bij Instellingen.'
+  return previewError.value
+})
+const canPreview = computed(() => !session.live && !!host.value)
+const previewing = computed(() => previewOn.value && isOpen.value && canPreview.value)
+const previewError = ref('')
+let showing = false
+
+// Het veld krijgt bij elke wijziging een nieuw object; vergelijken op inhoud.
+watch([previewing, () => JSON.stringify(shown.value ?? null)], async () => {
+  if (previewing.value) {
+    showing = true
+    const result = await preview(shown.value ?? null)
+    previewError.value = result.ok ? '' : result.error
+  } else if (showing) {
+    showing = false
+    previewError.value = ''
+    void preview(null)
+  }
+})
+onBeforeUnmount(() => {
+  if (showing) void preview(null)
+})
 </script>
 
 <template>
-  <Popover :width="300" block>
+  <Popover :width="360" block @toggle="isOpen = $event">
     <template #trigger="{ open, toggle }">
       <button
         type="button"
@@ -150,36 +186,62 @@ const title = computed(() =>
       </template>
 
       <template v-else-if="effect">
-        <div class="effects" role="listbox" aria-label="Effect">
-          <button
-            v-for="e in LIGHT_EFFECTS"
-            :key="e.effect"
-            type="button"
-            role="option"
-            class="menu-item"
-            :class="{ on: effect.effect === e.effect }"
-            :aria-selected="effect.effect === e.effect"
-            @click="setEffect(e.effect)"
-          >
-            <span class="grow">{{ e.name }}</span>
-            <Icon v-if="effect.effect === e.effect" name="check" :size="14" />
-          </button>
+        <div class="groups">
+          <section v-for="g in EFFECT_GROUPS" :key="g.name" class="effect-group">
+            <button
+              type="button"
+              class="group-head"
+              :aria-expanded="openGroup === g.name"
+              @click="toggleGroup(g.name)"
+            >
+              <Icon
+                name="right"
+                :size="13"
+                class="chev"
+                :class="{ turned: openGroup === g.name }"
+              />
+              <span class="grow">{{ g.name }}</span>
+              <span v-if="effectInfo(effect.effect)?.group === g.name" class="here" />
+              <span class="count">{{ g.effects.length }}</span>
+            </button>
+
+            <template v-if="openGroup === g.name">
+              <div v-if="g.grid" class="grid" role="group" :aria-label="g.name">
+                <span class="col-label">{{ g.grid.colorLabel }}</span>
+                <div v-for="row in gridRows(g)" :key="row.direction" class="grid-row">
+                  <span class="direction">{{ row.direction }}</span>
+                  <button
+                    v-for="info in row.cells"
+                    :key="info.effect"
+                    type="button"
+                    class="cell"
+                    :class="{ on: effect.effect === info.effect }"
+                    :style="{ background: EFFECT_COLORS[info.color!].swatch }"
+                    :aria-label="info.name"
+                    :title="info.name"
+                    :aria-pressed="effect.effect === info.effect"
+                    @click="setEffect(info.effect)"
+                  />
+                </div>
+              </div>
+              <div v-else class="list" role="listbox" :aria-label="g.name">
+                <button
+                  v-for="e in g.effects"
+                  :key="e.effect"
+                  type="button"
+                  role="option"
+                  class="menu-item"
+                  :class="{ on: effect.effect === e.effect }"
+                  :aria-selected="effect.effect === e.effect"
+                  @click="setEffect(e.effect)"
+                >
+                  <span class="grow">{{ e.name }}</span>
+                  <Icon v-if="effect.effect === e.effect" name="check" :size="14" />
+                </button>
+              </div>
+            </template>
+          </section>
         </div>
-        <label class="row">
-          <span class="muted">Nummer</span>
-          <input
-            :value="effect.effect"
-            type="number"
-            :min="EFFECT_MIN"
-            :max="EFFECT_MAX"
-            step="1"
-            class="input input-sm short"
-            aria-label="Effectnummer"
-            @change="setEffectNumber($event.target as HTMLInputElement)"
-          />
-          <span class="muted small">van {{ EFFECT_MAX }}</span>
-        </label>
-        <p class="muted small description">{{ effectDescription(effect.effect) }}</p>
         <label class="row">
           <span class="muted">Snelheid</span>
           <input
@@ -195,6 +257,14 @@ const title = computed(() =>
           />
         </label>
       </template>
+
+      <div class="preview">
+        <label class="row check">
+          <input v-model="previewOn" type="checkbox" :disabled="!canPreview" />
+          Voorbeeld op de lamp
+        </label>
+        <p v-if="previewNote" class="muted small note">{{ previewNote }}</p>
+      </div>
     </div>
   </Popover>
 </template>
@@ -213,15 +283,20 @@ const title = computed(() =>
   gap: 6px;
 }
 
-.swatch {
-  aspect-ratio: 1;
+.swatch,
+.cell {
   border: 0;
   border-radius: 8px;
   box-shadow: inset 0 0 0 1px var(--line-strong);
   cursor: pointer;
 }
 
-.swatch.on {
+.swatch {
+  aspect-ratio: 1;
+}
+
+.swatch.on,
+.cell.on {
   box-shadow:
     0 0 0 2px var(--surface-3),
     0 0 0 4px var(--accent);
@@ -249,14 +324,98 @@ const title = computed(() =>
   text-transform: lowercase;
 }
 
-.effects {
+.groups {
   display: flex;
   flex-direction: column;
+  max-height: 340px;
   margin: 0 -4px;
+  overflow-y: auto;
 }
 
-.effects .menu-item {
+.group-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 32px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.group-head:hover {
+  background: var(--surface-4);
+}
+
+.group-head .chev {
+  color: var(--faint);
+  transition: transform 0.12s;
+}
+
+.group-head .chev.turned {
+  transform: rotate(90deg);
+}
+
+.here {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.count {
+  color: var(--faint);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  padding: 0 0 6px 21px;
+}
+
+.list .menu-item {
   padding-block: 6px;
+}
+
+.grid {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 2px 8px 10px 29px;
+}
+
+.col-label {
+  padding-left: 125px;
+  color: var(--faint);
+  font-size: 11px;
+}
+
+.grid-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.direction {
+  flex: none;
+  width: 120px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.cell {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
 }
 
 .row {
@@ -270,17 +429,23 @@ const title = computed(() =>
   width: 64px;
 }
 
-.short {
-  width: 64px;
+.preview {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
+.check {
+  cursor: pointer;
 }
 
 .small {
   font-size: 12px;
 }
 
-.description {
-  margin-top: -6px;
-  padding-left: 74px;
+.note {
   line-height: 1.4;
 }
 </style>

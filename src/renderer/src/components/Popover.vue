@@ -11,6 +11,7 @@ const props = withDefaults(
   defineProps<{ align?: 'left' | 'right'; width?: number; block?: boolean }>(),
   { align: 'left', width: undefined, block: false }
 )
+const emit = defineEmits<{ toggle: [open: boolean] }>()
 const open = ref(false)
 const root = ref<HTMLElement | null>(null)
 const panel = ref<HTMLElement | null>(null)
@@ -46,6 +47,7 @@ function onKey(event: KeyboardEvent) {
 const resize = new ResizeObserver(() => place())
 
 watch(open, async (isOpen) => {
+  emit('toggle', isOpen)
   if (isOpen) {
     document.addEventListener('pointerdown', onDocumentPointer, true)
     document.addEventListener('keydown', onKey)

@@ -3,8 +3,8 @@
  * Net als de schermen: slide ⊕ ronde ⊕ standaard. Staat nergens iets, dan blijft het licht zoals het is.
  */
 import { z } from 'zod'
-import { EFFECT_MAX, EFFECT_MIN } from './magichome'
-import { EFFECT_NAMES } from './magichome-effects'
+import { effectInfo } from './light-effects'
+import { EFFECT_MAX, EFFECT_MIN, type MagicHomeState } from './magichome'
 import type { PluginData } from './plugins'
 import { activeRound } from './resolve'
 import type { Quiz, ShowState } from './types'
@@ -74,30 +74,21 @@ export const LIGHT_COLORS = [
   { color: '#ffa040', name: 'Warm wit' }
 ] as const
 
-/** Een handvol duidelijk verschillende effecten; de andere kies je op nummer. */
-export const LIGHT_EFFECTS = [
-  { effect: 2, name: 'Kleuren lopen in elkaar over' },
-  { effect: 4, name: 'Kleuren wisselen snel' },
-  { effect: 5, name: 'Flitsen in kleur' },
-  { effect: 3, name: 'Kleuren lopen door' },
-  { effect: 10, name: 'Regenboog heen en weer' },
-  { effect: 6, name: 'Lichtpunt heen en weer' },
-  { effect: 9, name: 'Vanuit het midden naar buiten' },
-  { effect: 11, name: 'Lichtspoor' },
-  { effect: 299, name: 'Alles door elkaar' },
-  { effect: 1, name: 'Alle effecten na elkaar' }
-] as const
-
+/** Waar "Effect" mee begint: rustig, alle kleuren. */
+export const DEFAULT_EFFECT = 2
 export const DEFAULT_SPEED = 60
 
-/** Naam voor in de app: de eigen naam, of het nummer met de Engelse naam van de controller. */
 export function effectName(effect: number): string {
-  const own = LIGHT_EFFECTS.find((e) => e.effect === effect)
-  return own ? own.name : `Effect ${effect}`
+  return effectInfo(effect)?.name ?? `Effect ${effect}`
 }
 
-export function effectDescription(effect: number): string {
-  return EFFECT_NAMES[effect - 1] ?? ''
+/** Het licht zoals de controller het meldt, om na een voorbeeld naar terug te gaan. */
+export function stateLight(state: MagicHomeState): Light {
+  if (!state.on) return { type: 'off' }
+  if (state.effect !== null) {
+    return { type: 'effect', effect: state.effect, speed: Math.min(state.speed, 100) }
+  }
+  return { type: 'color', color: state.color }
 }
 
 export function lightLabel(light: Light): string {

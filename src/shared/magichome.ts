@@ -24,6 +24,8 @@ export interface MagicHomeState {
   firmware: number
 }
 
+export type MagicHomeResult = { ok: true } | { ok: false; error: string }
+
 /** Uitslag van "test de verbinding". */
 export type MagicHomeProbe = { ok: true; state: MagicHomeState } | { ok: false; error: string }
 
