@@ -92,6 +92,11 @@ export class RemotePlugin implements MainPlugin {
     this.schedule()
   }
 
+  /** Bv. het licht met de hand gekozen op de Mac. */
+  changed(): void {
+    this.schedule()
+  }
+
   async invoke(action: string): Promise<RemoteLink | null> {
     if (action === 'renew') {
       this.disconnect()
@@ -205,7 +210,6 @@ export class RemotePlugin implements MainPlugin {
     if (!this.state.live) return { ok: false, error: 'Start eerst de show op de Mac' }
     if (action.type === 'light') {
       const result = await this.host.invoke('magichome', 'choose', action.light)
-      this.schedule()
       return (
         (result as RemoteResult | null) ?? { ok: false, error: 'Het licht staat uit op de Mac' }
       )
