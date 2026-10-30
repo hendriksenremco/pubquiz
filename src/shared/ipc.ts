@@ -10,6 +10,8 @@ export type ShowCommand =
   | { type: 'startRound'; roundId: string }
   | { type: 'endRound' }
   | { type: 'nextRound' }
+  /** In een ronde de ronde ervoor; tussen twee rondes de ronde die net klaar is. */
+  | { type: 'prevRound' }
   | { type: 'setSlide'; index: number }
   | { type: 'nextSlide' }
   | { type: 'prevSlide' }

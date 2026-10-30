@@ -80,6 +80,22 @@ export function activeRound(quiz: Quiz, state: ShowState): Round | null {
   return findRound(quiz, state.activeRoundId)
 }
 
+/**
+ * De volgende of vorige ronde vanaf waar de show staat. Tussen twee rondes in is de vorige de
+ * ronde die net klaar is, en de volgende die erna.
+ */
+export function adjacentRound(
+  quiz: Quiz,
+  state: ShowState,
+  direction: 'next' | 'prev'
+): Round | null {
+  const ref = state.activeRoundId ?? state.lastRoundId
+  const index = ref ? quiz.rounds.findIndex((r) => r.id === ref) : -1
+  if (direction === 'next') return quiz.rounds[index + 1] ?? null
+  if (index === -1) return null
+  return (state.activeRoundId ? quiz.rounds[index - 1] : quiz.rounds[index]) ?? null
+}
+
 export function slideTargets(slide: Slide, screenId: string): boolean {
   return slide.targetScreens === 'all' || slide.targetScreens.includes(screenId)
 }

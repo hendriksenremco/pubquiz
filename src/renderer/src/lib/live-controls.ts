@@ -1,6 +1,6 @@
 import { computed } from 'vue'
 import type { ShowCommand } from '@shared/ipc'
-import { activeRound, answerItems } from '@shared/resolve'
+import { activeRound, adjacentRound, answerItems } from '@shared/resolve'
 import { useSession } from '../stores/session'
 import { ask } from './confirm'
 
@@ -29,11 +29,7 @@ export function useLiveControls() {
     else send({ type: direction === 'next' ? 'nextSlide' : 'prevSlide' })
   }
 
-  const nextRound = computed(() => {
-    const ref = state.value.activeRoundId ?? state.value.lastRoundId
-    const index = ref ? quiz.value.rounds.findIndex((r) => r.id === ref) : -1
-    return quiz.value.rounds[index + 1] ?? null
-  })
+  const nextRound = computed(() => adjacentRound(quiz.value, state.value, 'next'))
 
   const allBlack = computed(
     () =>
