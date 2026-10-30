@@ -63,6 +63,23 @@ describe('ShowController', () => {
     expect(t.state.activeRoundId).toBe('r3')
   })
 
+  it('gaat terug naar de vorige ronde, en tussen rondes naar die van net', () => {
+    const t = setup()
+    t.show.handle({ type: 'prevRound' })
+    expect(t.state.activeRoundId).toBeNull()
+    t.show.handle({ type: 'startRound', roundId: 'r3' })
+    t.show.handle({ type: 'nextSlide' })
+    t.show.handle({ type: 'prevRound' })
+    expect(t.state.activeRoundId).toBe('r2')
+    expect(t.state.slideIndex).toBe(0)
+    t.show.handle({ type: 'endRound' })
+    t.show.handle({ type: 'prevRound' })
+    expect(t.state.activeRoundId).toBe('r2')
+    t.show.handle({ type: 'prevRound' })
+    t.show.handle({ type: 'prevRound' })
+    expect(t.state.activeRoundId).toBe('r1')
+  })
+
   it('bladert door slides binnen de grenzen', () => {
     const t = setup()
     t.show.handle({ type: 'startRound', roundId: 'r1' })

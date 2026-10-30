@@ -1,5 +1,13 @@
+import type { InjectionKey } from 'vue'
 import { mediaUrl } from '@shared/ipc'
 import type { MediaAsset, Quiz } from '@shared/types'
+
+/**
+ * Waar een slide zijn afbeelding vandaan haalt, op asset-id. Zonder: uit de quiz via pq-media; de
+ * afstandsbediening op de telefoon haalt hem bij de Mac (zie remote/RemoteApp.vue).
+ */
+export const ASSET_URL: InjectionKey<(assetId: string | undefined) => string | null> =
+  Symbol('asset-url')
 
 export function assetUrl(quiz: Quiz | null, assetId: string | undefined): string | null {
   const asset = quiz?.assets.find((a) => a.id === assetId)

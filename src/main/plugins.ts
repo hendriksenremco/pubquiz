@@ -1,8 +1,25 @@
+import { app } from 'electron'
+import { join } from 'path'
+import type { ShowCommand } from '@shared/ipc'
 import type { PluginId, PluginSettings } from '@shared/plugins'
 import type { Notice, Quiz, ShowState } from '@shared/types'
 import { MagicHomePlugin } from './magichome'
+import { RemotePlugin, type RemoteOptions } from './remote'
 
 export type Notify = (level: Notice['level'], message: string) => void
+
+/** Wat de app een plug-in in main geeft. */
+export interface PluginHost {
+  notify: Notify
+  /** Bewaart zijn eigen instellingen voor deze Mac; daarna volgt configure. */
+  saveConfig(config: Record<string, unknown>): void
+  /** Een opdracht aan de show, zoals een knop in de app hem geeft. */
+  command(command: ShowCommand): void
+  /** Waar een bestand uit de geopende quiz staat; null = geen quiz, of buiten de quizmap. */
+  mediaFile(file: string): string | null
+  /** Een vraag aan een andere plug-in; null als die uit staat. */
+  invoke(id: PluginId, action: string, payload?: unknown): Promise<unknown>
+}
 
 /** Wat een plug-in in main doet. De app maakt hem aan zodra hij aangezet wordt. */
 export interface MainPlugin {
@@ -16,15 +33,34 @@ export interface MainPlugin {
   stop(): void
 }
 
-const FACTORIES: Record<PluginId, (notify: Notify) => MainPlugin> = {
-  magichome: (notify) => new MagicHomePlugin(notify)
+const FACTORIES: Record<PluginId, (host: PluginHost) => MainPlugin> = {
+  magichome: (host) => new MagicHomePlugin(host.notify),
+  remote: (host) => new RemotePlugin(host, remoteOptions())
+}
+
+/**
+ * De pagina voor de telefoon: uit de build, of tijdens het ontwikkelen van Vite.
+ * PUBQUIZ_REMOTE_HOST en _PORT: voor tests, alleen op localhost en een vrije poort.
+ */
+function remoteOptions(): RemoteOptions {
+  const devServer = !app.isPackaged ? process.env['ELECTRON_RENDERER_URL'] : undefined
+  const port = process.env['PUBQUIZ_REMOTE_PORT']
+  return {
+    page: devServer ? { devServer } : { dir: join(__dirname, '../renderer') },
+    host: process.env['PUBQUIZ_REMOTE_HOST'],
+    port: port ? Number(port) : undefined
+  }
 }
 
 /** De plug-ins die aan staan. */
 export class Plugins {
   private running = new Map<PluginId, MainPlugin>()
 
-  constructor(private readonly notify: Notify) {}
+  constructor(
+    private readonly host: Omit<PluginHost, 'saveConfig' | 'invoke'> & {
+      saveConfig(id: PluginId, config: Record<string, unknown>): void
+    }
+  ) {}
 
   /** Start, stopt en stelt plug-ins in zoals de instellingen zeggen. */
   apply(settings: PluginSettings, quiz: Quiz | null, state: ShowState): void {
@@ -37,7 +73,7 @@ export class Plugins {
         continue
       }
       if (!plugin) {
-        plugin = FACTORIES[id](this.notify)
+        plugin = FACTORIES[id](this.hostFor(id))
         this.running.set(id, plugin)
       }
       plugin.configure(setting.config)
@@ -56,5 +92,15 @@ export class Plugins {
   stop(): void {
     for (const plugin of this.running.values()) plugin.stop()
     this.running.clear()
+  }
+
+  private hostFor(id: PluginId): PluginHost {
+    return {
+      notify: this.host.notify,
+      saveConfig: (config) => this.host.saveConfig(id, config),
+      command: this.host.command,
+      mediaFile: this.host.mediaFile,
+      invoke: (other, action, payload) => this.invoke(other, action, payload)
+    }
   }
 }

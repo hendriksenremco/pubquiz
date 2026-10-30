@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted } from 'vue'
-import { slideNumber } from '@shared/resolve'
+import { slideText } from '@shared/resolve'
 import ScreenStage from '../../components/ScreenStage.vue'
 import { useLiveControls } from '../../lib/live-controls'
 import { useNow } from '../../lib/use-now'
@@ -76,13 +76,6 @@ function onKey(event: KeyboardEvent) {
 
 onMounted(() => window.addEventListener('keydown', onKey))
 onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
-
-function slideText(index: number): string {
-  const s = round.value!.slides[index]
-  if (s.layout === 'image')
-    return `Afbeelding ${slideNumber(round.value!, s)}${s.title ? `: ${s.title}` : ''}`
-  return s.title || s.body || '(leeg)'
-}
 </script>
 
 <template>
@@ -152,7 +145,7 @@ function slideText(index: number): string {
             @click="send({ type: 'setSlide', index: i })"
           >
             <span class="slide-kind">{{ i + 1 }}</span>
-            <span class="slide-text">{{ slideText(i) }}</span>
+            <span class="slide-text">{{ slideText(round, s) }}</span>
           </button>
         </div>
       </section>

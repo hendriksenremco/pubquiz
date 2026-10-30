@@ -5,12 +5,13 @@ import { newId } from '@shared/factory'
 import { formFileName, type FormOptions } from '@shared/forms'
 import {
   IPC,
+  mediaUrl,
   type AudioEngineEvent,
   type RecentQuiz,
   type RecoveryInfo,
   type Snapshot
 } from '@shared/ipc'
-import { PLUGINS, type PluginId, type PluginSetting } from '@shared/plugins'
+import { PLUGIN_OFF, PLUGINS, type PluginId, type PluginSetting } from '@shared/plugins'
 import { QuizSchema } from '@shared/quiz-schema'
 import { findRound } from '@shared/resolve'
 import type { TemplateOptions } from '@shared/template'
@@ -31,6 +32,7 @@ import {
   summarizeQuiz,
   writeQuiz
 } from './quiz-files'
+import { locateMedia } from './media-path'
 import { renderFormPdf } from './pdf'
 import { Plugins } from './plugins'
 import { Settings, type RecoveryData } from './settings'
@@ -60,7 +62,19 @@ export class AppController {
     quiz: () => this.quiz,
     publish: (state) => this.onState(state)
   })
-  readonly plugins = new Plugins((level, message) => this.notify(level, message))
+  readonly plugins = new Plugins({
+    notify: (level, message) => this.notify(level, message),
+    saveConfig: (id, config) =>
+      this.setPlugin(id, { ...(this.settings.plugins[id] ?? PLUGIN_OFF), config }),
+    command: (command) => this.show.handle(command),
+    mediaFile: (file) => {
+      const location = locateMedia(mediaUrl(file), {
+        current: () => this.quizDir,
+        isRecent: () => false
+      })
+      return 'file' in location ? location.file : null
+    }
+  })
 
   constructor(
     private readonly settings: Settings,

@@ -2,6 +2,7 @@
  * De live-toestand is altijd: standaard van de quiz ⊕ overrides van de actieve ronde.
  * Na "Einde ronde" (activeRoundId = null) valt alles vanzelf terug naar de standaard.
  */
+import type { ShowCommand } from './ipc'
 import type { Fragment, MediaAsset, Quiz, Round, ScreenContent, ShowState, Slide } from './types'
 import { autoplayCountdown } from './autoplay'
 import { answerSlides } from './factory'
@@ -78,6 +79,22 @@ export function findAsset(quiz: Quiz, assetId: string | undefined): MediaAsset |
 
 export function activeRound(quiz: Quiz, state: ShowState): Round | null {
   return findRound(quiz, state.activeRoundId)
+}
+
+/**
+ * De volgende of vorige ronde vanaf waar de show staat. Tussen twee rondes in is de vorige de
+ * ronde die net klaar is, en de volgende die erna.
+ */
+export function adjacentRound(
+  quiz: Quiz,
+  state: ShowState,
+  direction: 'next' | 'prev'
+): Round | null {
+  const ref = state.activeRoundId ?? state.lastRoundId
+  const index = ref ? quiz.rounds.findIndex((r) => r.id === ref) : -1
+  if (direction === 'next') return quiz.rounds[index + 1] ?? null
+  if (index === -1) return null
+  return (state.activeRoundId ? quiz.rounds[index - 1] : quiz.rounds[index]) ?? null
 }
 
 export function slideTargets(slide: Slide, screenId: string): boolean {
@@ -216,6 +233,35 @@ export function nextLoopSlide(round: Round, slideIndex: number): number {
 export function slideNumber(round: Round, slide: Slide): number | null {
   const index = answerSlides(round).findIndex((s) => s.id === slide.id)
   return index === -1 ? null : index + 1
+}
+
+/** Korte tekst voor een slide in een lijst, bv. tijdens de show. */
+export function slideText(round: Round, slide: Slide): string {
+  if (slide.layout === 'image')
+    return `Afbeelding ${slideNumber(round, slide)}${slide.title ? `: ${slide.title}` : ''}`
+  return slide.title || slide.body || '(leeg)'
+}
+
+/**
+ * Wat vorige en volgende bedienen (← →, een presenter-clicker, de afstandsbediening): in een
+ * antwoordenronde de antwoorden, in een ronde met fragmenten de fragmenten, anders de slides.
+ */
+export type StepTarget = 'answers' | 'fragments' | 'slides'
+
+export function stepTarget(quiz: Quiz, round: Round | null): StepTarget {
+  if (round && answerItems(quiz, round).length > 0) return 'answers'
+  return round?.fragments.length ? 'fragments' : 'slides'
+}
+
+export function stepCommand(target: StepTarget, direction: 'next' | 'prev'): ShowCommand {
+  if (target === 'answers') return { type: 'answers', action: direction }
+  if (target === 'fragments') return { type: 'stepFragment', direction }
+  return { type: direction === 'next' ? 'nextSlide' : 'prevSlide' }
+}
+
+/** Staan alle schermen op zwart? */
+export function allBlack(quiz: Quiz, state: ShowState): boolean {
+  return quiz.screens.length > 0 && quiz.screens.every((s) => state.blackout.includes(s.id))
 }
 
 /** Eén ding om in een antwoordenronde langs te lopen: een vraag, afbeelding of fragment. */

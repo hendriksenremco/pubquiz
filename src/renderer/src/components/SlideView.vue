@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, inject } from 'vue'
 import type { Quiz, Slide } from '@shared/types'
-import { assetUrl } from '../lib/media'
+import { ASSET_URL, assetUrl } from '../lib/media'
 import { slideBackdrop } from '../lib/slide-backdrop'
 
 /**
@@ -9,11 +9,18 @@ import { slideBackdrop } from '../lib/slide-backdrop'
  * `withBackdrop: false`: zonder dimmen of kleur; een scherm legt die zelf over de hele breedte.
  */
 const props = withDefaults(
-  defineProps<{ slide: Slide; quiz: Quiz; number?: number | null; withBackdrop?: boolean }>(),
-  { number: null, withBackdrop: true }
+  defineProps<{
+    slide: Slide
+    /** Voor de afbeelding; niet nodig waar ASSET_URL die levert. */
+    quiz?: Quiz | null
+    number?: number | null
+    withBackdrop?: boolean
+  }>(),
+  { quiz: null, number: null, withBackdrop: true }
 )
 
-const image = computed(() => assetUrl(props.quiz, props.slide.imageAssetId))
+const imageUrl = inject(ASSET_URL, (id: string | undefined) => assetUrl(props.quiz, id))
+const image = computed(() => imageUrl(props.slide.imageAssetId))
 const backdrop = computed(() => (props.withBackdrop ? slideBackdrop(props.slide) : {}))
 </script>
 

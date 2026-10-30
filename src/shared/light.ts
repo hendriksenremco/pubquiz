@@ -22,6 +22,13 @@ export const LightSchema = z.discriminatedUnion('type', [
 
 export type Light = z.infer<typeof LightSchema>
 
+/** Wat het licht tijdens de show doet; `light` null = de show stuurt het niet aan. */
+export interface LightStatus {
+  light: Light | null
+  /** Met de hand gekozen (afstandsbediening), tot de show zelf een ander licht kiest. */
+  manual: boolean
+}
+
 const PLUGIN = 'magichome'
 
 interface HasPlugins {
@@ -48,6 +55,18 @@ export function resolveLight(quiz: Quiz, state: ShowState): Light | null {
   const round = activeRound(quiz, state)
   const slide = round && state.slideIndex >= 0 ? round.slides[state.slideIndex] : undefined
   return lightOf(slide) ?? lightOf(round) ?? lightOf(quiz) ?? null
+}
+
+/** De lichten die de quiz gebruikt, elk één keer: eerst de standaard, dan per ronde en slide. */
+export function quizLights(quiz: Quiz): Light[] {
+  const all = [lightOf(quiz), ...quiz.rounds.flatMap((r) => [lightOf(r), ...r.slides.map(lightOf)])]
+  const seen = new Set<string>()
+  return all.filter((light): light is Light => {
+    const key = JSON.stringify(light)
+    if (!light || seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
 }
 
 /** Stuurt de quiz ergens het licht aan? */

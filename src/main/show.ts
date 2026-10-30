@@ -2,7 +2,14 @@ import { stepAnswers, type AnswerAction } from '@shared/answers'
 import { AUTOPLAY_IDLE, adjacentFragment, stepAutoplay, type AutoplayEvent } from '@shared/autoplay'
 import { createShowState, newId } from '@shared/factory'
 import type { AudioEngineEvent, AutoplayAction, ShowCommand } from '@shared/ipc'
-import { answerItems, findAsset, findRound, loopActive, nextLoopSlide } from '@shared/resolve'
+import {
+  adjacentRound,
+  answerItems,
+  findAsset,
+  findRound,
+  loopActive,
+  nextLoopSlide
+} from '@shared/resolve'
 import type { Fragment, Quiz, Round, ShowState } from '@shared/types'
 
 export interface ShowHost {
@@ -73,11 +80,10 @@ export class ShowController {
         s.activeRoundId = null
         s.slideIndex = -1
         break
-      case 'nextRound': {
-        const ref = s.activeRoundId ?? s.lastRoundId
-        const index = ref ? quiz.rounds.findIndex((r) => r.id === ref) : -1
-        const next = quiz.rounds[index + 1]
-        if (next) this.startRound(quiz, next.id)
+      case 'nextRound':
+      case 'prevRound': {
+        const target = adjacentRound(quiz, s, command.type === 'nextRound' ? 'next' : 'prev')
+        if (target) this.startRound(quiz, target.id)
         break
       }
       // Met de hand bladeren zet de loop-timer opnieuw; in een loop gaat → na de laatste naar de eerste.

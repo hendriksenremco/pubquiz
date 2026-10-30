@@ -5,6 +5,8 @@ import QuizLight from './magichome/QuizLight.vue'
 import RoundLight from './magichome/RoundLight.vue'
 import SlideLight from './magichome/SlideLight.vue'
 import StartLight from './magichome/StartLight.vue'
+import RemoteButton from './remote/RemoteButton.vue'
+import RemoteQr from './remote/RemoteQr.vue'
 
 /** Plekken in de app waar een plug-in iets kan tonen; zie PluginSlot.vue. */
 export type PluginSlotName =
@@ -12,6 +14,8 @@ export type PluginSlotName =
   | 'roundSettings'
   | 'slideInspector'
   | 'startSheet'
+  /** In de werkbalk van de show. */
+  | 'liveControls'
   /** Bij Instellingen, onder de plug-in zelf, zolang hij aan staat. */
   | 'settings'
 
@@ -30,5 +34,9 @@ export const RENDERER_PLUGINS: RendererPlugin[] = [
       startSheet: StartLight,
       settings: MagicHomeSettings
     }
+  },
+  {
+    id: 'remote',
+    slots: { liveControls: RemoteButton, settings: RemoteQr }
   }
 ]

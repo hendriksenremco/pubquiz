@@ -85,6 +85,7 @@ export async function fakeController() {
 
 export const command = {
   on: '71 23 0f a3',
+  off: '71 24 0f a4',
   /** Kleur zonder opslaan. */
   color: (r: number, g: number, b: number) => hex(withChecksum([0x41, r, g, b, 0, 0, 0xf0, 0x0f])),
   effect: (id: number, speed: number) =>
