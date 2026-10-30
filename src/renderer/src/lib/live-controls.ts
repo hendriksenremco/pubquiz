@@ -1,6 +1,6 @@
 import { computed } from 'vue'
 import type { ShowCommand } from '@shared/ipc'
-import { activeRound, adjacentRound, answerItems } from '@shared/resolve'
+import { activeRound, adjacentRound, allBlack as isAllBlack, answerItems } from '@shared/resolve'
 import { useSession } from '../stores/session'
 import { ask } from './confirm'
 
@@ -31,11 +31,7 @@ export function useLiveControls() {
 
   const nextRound = computed(() => adjacentRound(quiz.value, state.value, 'next'))
 
-  const allBlack = computed(
-    () =>
-      quiz.value.screens.length > 0 &&
-      quiz.value.screens.every((s) => state.value.blackout.includes(s.id))
-  )
+  const allBlack = computed(() => isAllBlack(quiz.value, state.value))
   function toggleBlackout(screenId?: string) {
     const on = screenId ? !state.value.blackout.includes(screenId) : !allBlack.value
     send({ type: 'blackout', screenId, on })

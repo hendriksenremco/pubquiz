@@ -57,6 +57,18 @@ export function resolveLight(quiz: Quiz, state: ShowState): Light | null {
   return lightOf(slide) ?? lightOf(round) ?? lightOf(quiz) ?? null
 }
 
+/** De lichten die de quiz gebruikt, elk één keer: eerst de standaard, dan per ronde en slide. */
+export function quizLights(quiz: Quiz): Light[] {
+  const all = [lightOf(quiz), ...quiz.rounds.flatMap((r) => [lightOf(r), ...r.slides.map(lightOf)])]
+  const seen = new Set<string>()
+  return all.filter((light): light is Light => {
+    const key = JSON.stringify(light)
+    if (!light || seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}
+
 /** Stuurt de quiz ergens het licht aan? */
 export function quizUsesLight(quiz: Quiz): boolean {
   return (
