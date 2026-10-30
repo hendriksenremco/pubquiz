@@ -57,7 +57,11 @@ export class MagicHomePlugin implements MainPlugin {
   private before: Promise<Light> | null = null
   private restoring: Promise<void> = Promise.resolve()
 
-  constructor(private readonly notify: Notify) {}
+  constructor(
+    private readonly notify: Notify,
+    /** Met de hand een ander licht: de afstandsbediening toont het meteen. */
+    private readonly onChange: () => void = () => {}
+  ) {}
 
   configure(config: Record<string, unknown>): void {
     const address = parseAddress(typeof config.host === 'string' ? config.host : '')
@@ -128,6 +132,7 @@ export class MagicHomePlugin implements MainPlugin {
     if (!this.link) return { ok: false, error: 'Vul eerst het adres van de controller in' }
     this.manual = light ? { light, showLight: this.showLight } : null
     this.want(light ?? this.showLight)
+    this.onChange()
     return { ok: true }
   }
 

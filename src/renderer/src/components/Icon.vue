@@ -33,6 +33,7 @@ const PATHS = {
   'volume-off': 'M11 5L6 9H3v6h3l5 4zM16 9l5 6M21 9l-5 6',
   next: 'M5 5l10 7-10 7zM19 5v14',
   end: 'M6 6h12v12H6z',
+  restart: 'M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5',
   folder: 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z',
   'folder-plus':
     'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM12 11v5M9.5 13.5h5',

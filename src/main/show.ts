@@ -8,7 +8,8 @@ import {
   findAsset,
   findRound,
   loopActive,
-  nextLoopSlide
+  nextLoopSlide,
+  restartRound
 } from '@shared/resolve'
 import type { Fragment, Quiz, Round, ShowState } from '@shared/types'
 
@@ -86,6 +87,15 @@ export class ShowController {
         if (target) this.startRound(quiz, target.id)
         break
       }
+      case 'restartRound': {
+        const target = restartRound(quiz, s)
+        if (!target) break
+        this.enterRound(target)
+        this.forgetPlayed(target)
+        const items = new Set(answerItems(quiz, target).map((item) => item.id))
+        s.answered = s.answered.filter((id) => !items.has(id))
+        break
+      }
       // Met de hand bladeren zet de loop-timer opnieuw; in een loop gaat → na de laatste naar de eerste.
       case 'setSlide':
         if (round) s.slideIndex = clamp(command.index, -1, round.slides.length - 1)
@@ -143,12 +153,9 @@ export class ShowController {
         this.stopPlayback()
         s.backgroundEnabled = false
         break
-      case 'resetPlayed': {
-        const ids = new Set(round?.fragments.map((f) => f.id))
-        s.played = s.played.filter((id) => !ids.has(id))
-        if (s.lastFragmentId && ids.has(s.lastFragmentId)) s.lastFragmentId = null
+      case 'resetPlayed':
+        if (round) this.forgetPlayed(round)
         break
-      }
     }
     this.publish()
   }
@@ -223,13 +230,27 @@ export class ShowController {
 
   private startRound(quiz: Quiz, roundId: string): void {
     const round = findRound(quiz, roundId)
-    if (!round || this.state.activeRoundId === roundId) return
+    if (round && this.state.activeRoundId !== roundId) this.enterRound(round)
+  }
+
+  /** Naar het begin van de ronde: eerste slide, niets speelt. */
+  private enterRound(round: Round): void {
     this.stopPlayback()
     this.state.answer = null
     this.state.loopPaused = false
+    this.state.loopUntil = null
     this.state.activeRoundId = round.id
     this.state.lastRoundId = round.id
     this.state.slideIndex = round.slides.length > 0 ? 0 : -1
+  }
+
+  /** De fragmenten van de ronde weer ongespeeld; → begint weer bij het eerste. */
+  private forgetPlayed(round: Round): void {
+    const ids = new Set(round.fragments.map((f) => f.id))
+    this.state.played = this.state.played.filter((id) => !ids.has(id))
+    if (this.state.lastFragmentId && ids.has(this.state.lastFragmentId)) {
+      this.state.lastFragmentId = null
+    }
   }
 
   private stopPlayback(): void {

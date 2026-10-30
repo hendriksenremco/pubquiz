@@ -35,7 +35,8 @@ async function setup(light: unknown = null) {
     saveConfig: vi.fn((config: Record<string, unknown>) => plugin!.configure(config)),
     invoke: vi.fn(async (_id: string, action: string) =>
       action === 'status' ? light : { ok: true }
-    )
+    ),
+    changed: vi.fn()
   } satisfies PluginHost
   plugin = new RemotePlugin(host, { page: { dir }, host: '127.0.0.1', port: 0 })
   plugin.configure({})
@@ -157,11 +158,15 @@ describe('RemotePlugin', () => {
     plugin.update(quiz, live())
     expect((await act({ type: 'step', direction: 'next' })).status).toBe(200)
     await act({ type: 'round', direction: 'prev' })
+    await act({ type: 'restartRound' })
+    await act({ type: 'endRound' })
     await act({ type: 'blackout', on: true })
     await act({ type: 'mute', on: true })
     expect(host.command.mock.calls.map(([c]) => c)).toEqual([
       { type: 'nextSlide' },
       { type: 'prevRound' },
+      { type: 'restartRound' },
+      { type: 'endRound' },
       { type: 'blackout', on: true },
       { type: 'stopAll' }
     ])
@@ -182,6 +187,19 @@ describe('RemotePlugin', () => {
     off.plugin.update(off.quiz, off.live())
     const result = await off.act({ type: 'light', light: red })
     expect(await result.json()).toEqual({ ok: false, error: 'Het licht staat uit op de Mac' })
+  })
+
+  it('toont meteen een licht dat op de Mac met de hand gekozen is', async () => {
+    const red = { type: 'color', color: '#ff0000' }
+    const status: { light: unknown; manual: boolean } = { light: null, manual: false }
+    const { plugin, quiz, live, api } = await setup(status)
+    plugin.update(quiz, live())
+    const events = await subscribe(api('/api/events'))
+    expect(await events.next()).toMatchObject({ light: { light: null, manual: false } })
+    Object.assign(status, { light: red, manual: true })
+    plugin.changed()
+    expect(await events.next()).toMatchObject({ light: { light: red, manual: true } })
+    await events.cancel()
   })
 
   it('een nieuwe code sluit verbonden telefoons buiten', async () => {
@@ -210,7 +228,8 @@ describe('RemotePlugin tijdens het ontwikkelen', () => {
       command: vi.fn(),
       saveConfig: vi.fn(),
       invoke: vi.fn(),
-      mediaFile: vi.fn()
+      mediaFile: vi.fn(),
+      changed: vi.fn()
     }
     plugin = new RemotePlugin(host, { page: { devServer }, host: '127.0.0.1', port: 0 })
     try {

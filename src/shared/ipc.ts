@@ -12,6 +12,11 @@ export type ShowCommand =
   | { type: 'nextRound' }
   /** In een ronde de ronde ervoor; tussen twee rondes de ronde die net klaar is. */
   | { type: 'prevRound' }
+  /**
+   * De ronde opnieuw vanaf het begin, met fragmenten en antwoorden weer ongespeeld; tussen twee
+   * rondes de ronde die net klaar is.
+   */
+  | { type: 'restartRound' }
   | { type: 'setSlide'; index: number }
   | { type: 'nextSlide' }
   | { type: 'prevSlide' }

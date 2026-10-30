@@ -3,12 +3,13 @@ import { computed, ref } from 'vue'
 import { DEFAULT_SPEED, LIGHT_COLORS, lightLabel, sameLight, type Light } from '@shared/light'
 import { EFFECT_COLORS, EFFECT_GROUPS, effectInfo, gridRows } from '@shared/light-effects'
 import type { RemoteLight } from '@shared/remote'
-import Icon from '../components/Icon.vue'
-import LightDot from '../plugins/magichome/LightDot.vue'
+import Icon from '../../components/Icon.vue'
+import LightDot from './LightDot.vue'
 
 /**
  * Het licht met de hand kiezen: een licht uit de quiz, een kleur, uit of een effect. Het geldt
- * tot de show zelf een ander licht kiest; "Volg de show" gaat er meteen naar terug.
+ * tot de show zelf een ander licht kiest; "Volg de show" gaat er meteen naar terug. Op de
+ * telefoon en in de werkbalk van de show.
  */
 const props = defineProps<{ light: RemoteLight; disabled: boolean }>()
 const emit = defineEmits<{ choose: [light: Light | null] }>()
