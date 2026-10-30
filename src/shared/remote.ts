@@ -14,6 +14,7 @@ import {
   answerItems,
   loopActive,
   resolveScreen,
+  restartRound,
   stepCommand,
   stepTarget,
   type StepTarget
@@ -29,6 +30,8 @@ export interface RemoteView {
   rounds: number
   prevRound: string | null
   nextRound: string | null
+  /** De ronde die "Ronde opnieuw" start. */
+  restartRound: string | null
   /** Wat vorige en volgende nu bedienen; null = er loopt geen ronde. */
   step: RemoteStep | null
   /** De slide die nu in beeld staat (ook bij beeld op zwart), voor de preview. */
@@ -63,6 +66,8 @@ export interface RemoteLight extends LightStatus {
 
 export const RemoteActionSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('round'), direction: z.enum(['next', 'prev']) }),
+  z.object({ type: z.literal('restartRound') }),
+  z.object({ type: z.literal('endRound') }),
   /** Vorige of volgende slide, fragment of antwoordstap; zie RemoteStep. */
   z.object({ type: z.literal('step'), direction: z.enum(['next', 'prev']) }),
   z.object({ type: z.literal('blackout'), on: z.boolean() }),
@@ -98,6 +103,7 @@ export function remoteView(
     rounds: quiz?.rounds.length ?? 0,
     prevRound: (quiz && adjacentRound(quiz, state, 'prev')?.title) ?? null,
     nextRound: (quiz && adjacentRound(quiz, state, 'next')?.title) ?? null,
+    restartRound: (quiz && restartRound(quiz, state)?.title) ?? null,
     step: quiz && round ? remoteStep(quiz, round, state) : null,
     screen: quiz ? onScreen(quiz, state) : null,
     screens: !!quiz?.screens.length,
@@ -120,6 +126,9 @@ export function remoteCommand(
   switch (action.type) {
     case 'round':
       return { type: action.direction === 'next' ? 'nextRound' : 'prevRound' }
+    case 'restartRound':
+    case 'endRound':
+      return { type: action.type }
     case 'step':
       return stepCommand(stepTarget(quiz, activeRound(quiz, state)), action.direction)
     case 'blackout':
@@ -132,7 +141,8 @@ export function remoteCommand(
   }
 }
 
-function remoteStep(quiz: Quiz, round: Round, state: ShowState): RemoteStep {
+/** Ook voor de knoppen op de Mac, zodat die hetzelfde tonen en kunnen. */
+export function remoteStep(quiz: Quiz, round: Round, state: ShowState): RemoteStep {
   const target = stepTarget(quiz, round)
   const base = { target, text: null, answer: null, playing: false }
   const playing = (id: string | undefined) => !!id && state.fragment?.fragmentId === id
