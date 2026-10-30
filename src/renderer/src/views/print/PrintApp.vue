@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted } from 'vue'
+import { computed, nextTick, onMounted, ref } from 'vue'
 import {
+  cardSheets,
   formSections,
   itemText,
   sheetPages,
+  type CardFit,
   type FormOptions,
   type SheetBlock
 } from '@shared/forms'
@@ -23,6 +25,22 @@ const sections = computed(() => (session.quiz ? formSections(session.quiz, optio
 const pages = computed(() => sheetPages(sections.value))
 const key = options.doc === 'key'
 
+/** Eerst elke ronde op één kaart om te meten; daarna verdeeld over zoveel kaarten als nodig. */
+const fits = ref<CardFit[] | null>(null)
+const cards = computed(() =>
+  cardSheets(
+    sections.value,
+    fits.value ?? sections.value.map((s) => ({ room: Infinity, rows: s.items.map(() => 0) }))
+  )
+)
+
+function measureCards() {
+  fits.value = [...document.querySelectorAll('.qcard')].map((card) => ({
+    room: card.querySelector('.qcard-body')!.getBoundingClientRect().height,
+    rows: [...card.querySelectorAll('tr')].map((tr) => tr.getBoundingClientRect().height)
+  }))
+}
+
 // Main wacht hierop voordat hij afdrukt: quiz binnen, fonts en afbeeldingen geladen.
 let markReady = () => {}
 ;(window as unknown as { __pubquizPrintReady: Promise<boolean> }).__pubquizPrintReady = new Promise(
@@ -33,6 +51,11 @@ onMounted(async () => {
   await session.init()
   await nextTick()
   await document.fonts.ready
+  // Afbeeldingen op een kaart hebben een vaste maat: meten kan voordat ze geladen zijn.
+  if (options.doc === 'cards') {
+    measureCards()
+    await nextTick()
+  }
   await Promise.all(
     [...document.images].map((img) =>
       img.complete
@@ -109,37 +132,40 @@ function placement(block: SheetBlock) {
       </div>
     </template>
 
-    <!-- Vragenkaarten: per ronde een ansichtkaart om voor te lezen. Is hij vol, dan loopt de ronde
-         door op een volgende kaart, met de titel er opnieuw boven (thead herhaalt per pagina). -->
+    <!-- Vragenkaarten: vier ansichtkaarten op een liggende A4, met knip-stippellijnen ertussen.
+         Per ronde een kaart om voor te lezen; is hij vol, dan loopt de ronde door op de volgende
+         kaart, met de titel er opnieuw boven. -->
     <template v-else>
-      <section v-for="s in sections" :key="s.round.id" class="qcard">
-        <table>
-          <thead>
-            <tr>
-              <th colspan="3">
-                <span class="qcard-head">
-                  <span class="qcard-title">{{ s.round.title }}</span>
-                  <span class="quiz-name">{{ session.quiz.title }}</span>
-                </span>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="item in s.items" :key="item.id">
-              <td class="num">{{ item.number }}</td>
-              <td class="question">
-                <img v-if="imageOf(item)" :src="imageOf(item)!" alt="" />
-                <span v-if="s.mixed" class="noun">{{ capital(item.noun) }} </span>
-                <span v-if="itemText(item)">{{ itemText(item) }}</span>
-                <span v-else class="missing">{{ capital(item.noun) }} {{ item.number }}</span>
-              </td>
-              <td class="qcard-answer" :class="{ missing: !item.answer }">
-                {{ item.answer || '—' }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
+      <div v-for="(sheet, p) in cards" :key="p" class="card-sheet">
+        <section
+          v-for="card in sheet"
+          :key="`${card.section.round.id}-${card.items[0].id}`"
+          class="qcard"
+        >
+          <header class="qcard-head">
+            <span class="qcard-title">{{ card.section.round.title }}</span>
+            <span class="quiz-name">{{ session.quiz.title }}</span>
+          </header>
+          <div class="qcard-body">
+            <table>
+              <tbody>
+                <tr v-for="item in card.items" :key="item.id">
+                  <td class="num">{{ item.number }}</td>
+                  <td class="question">
+                    <img v-if="imageOf(item)" :src="imageOf(item)!" alt="" />
+                    <span v-if="card.section.mixed" class="noun">{{ capital(item.noun) }} </span>
+                    <span v-if="itemText(item)">{{ itemText(item) }}</span>
+                    <span v-else class="missing">{{ capital(item.noun) }} {{ item.number }}</span>
+                  </td>
+                  <td class="qcard-answer" :class="{ missing: !item.answer }">
+                    {{ item.answer || '—' }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
     </template>
   </div>
 </template>
@@ -345,14 +371,57 @@ h2 {
   font-weight: 400;
 }
 
-/* ── Vragenkaarten (A6 liggend) ─────────────────────────────────────────── */
+/* ── Vragenkaarten (vier keer A6 liggend op een liggende A4) ─────────────── */
 
-.qcard {
+/* Het blad zonder marges, met vaste maten: ook in het (smallere) venster waarin gemeten wordt. */
+.card-sheet {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, 148.5mm);
+  grid-template-rows: repeat(2, 105mm);
+  width: 297mm;
+  height: 210mm;
   break-after: page;
 }
 
-.qcard:last-child {
+.card-sheet:last-child {
   break-after: auto;
+}
+
+/* Knip-stippellijnen: één keer horizontaal en één keer verticaal door het midden van het blad. */
+.card-sheet::before,
+.card-sheet::after {
+  content: '';
+  position: absolute;
+  border: 0 dashed #b3b3b3;
+}
+
+.card-sheet::before {
+  top: 0;
+  bottom: 0;
+  left: 148.5mm;
+  border-left-width: 0.3mm;
+}
+
+.card-sheet::after {
+  top: 105mm;
+  right: 0;
+  left: 0;
+  border-top-width: 0.3mm;
+}
+
+/* Binnenmarge ruim genoeg voor printers die niet tot de rand kunnen drukken. */
+.qcard {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  padding: 8mm 9mm 7mm;
+}
+
+.qcard-body {
+  flex: 1;
+  min-height: 0;
 }
 
 .qcard table {
@@ -360,17 +429,12 @@ h2 {
   border-collapse: collapse;
 }
 
-.qcard th {
-  padding: 0 0 2mm;
-  font-weight: inherit;
-  text-align: left;
-}
-
 .qcard-head {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 4mm;
+  margin-bottom: 2mm;
   padding-bottom: 1.6mm;
   border-bottom: 0.4mm solid #141414;
 }
@@ -380,10 +444,6 @@ h2 {
   font-size: 13pt;
   font-weight: 750;
   letter-spacing: -0.01em;
-}
-
-.qcard tr {
-  break-inside: avoid;
 }
 
 .qcard td {
