@@ -56,6 +56,7 @@ test('de show bedienen met een telefoon via de QR-code', async () => {
   const toolbar = operator.locator('.live-controls')
   const macRound = operator.locator('.live .round.on')
   const macSlide = operator.locator('.live .slide.on .slide-kind')
+  const mac = operator.getByRole('region', { name: 'Bediening' })
   try {
     // Aanzetten bij Instellingen; daar staat de QR-code meteen, om vóór de show te koppelen.
     await operator.locator('.topbar').getByRole('button', { name: 'Quizzen' }).click()
@@ -132,9 +133,37 @@ test('de show bedienen met een telefoon via de QR-code', async () => {
     await phone.screenshot({ path: 'test-results/remote-phone-fragment.png' })
     await phone.getByRole('button', { name: 'Vorig fragment' }).click()
     await expect(frag(1)).toHaveClass(/on/)
-    await phone.getByRole('button', { name: /Vorige ronde/ }).click()
+
+    // Ronde opnieuw: alles weer ongespeeld, en volgende begint weer bij het eerste fragment.
+    await phone.getByRole('button', { name: /Ronde opnieuw/ }).click()
+    await expect(phone.getByText('8 fragmenten', { exact: true })).toBeVisible()
+    await expect(operator.locator('.frag.played')).toHaveCount(0)
+    await expect(operator.locator('.frag.on')).toHaveCount(0)
+    await phone.getByRole('button', { name: 'Volgend fragment' }).click()
+    await expect(frag(1)).toHaveClass(/on/)
+
+    // Na Einde ronde start Ronde opnieuw de ronde van net; hier met dezelfde knop op de Mac.
+    await phone.getByRole('button', { name: /Einde ronde/ }).click()
+    await expect(macRound).toHaveCount(0)
+    await expect(phone.locator('h1')).toHaveText('Hierna: Pauze')
+    await expect(mac.getByRole('button', { name: /Ronde opnieuw/ })).toContainText(
+      'Ronde 2: muziek'
+    )
+    await mac.getByRole('button', { name: /Ronde opnieuw/ }).click()
+    await expect(macRound).toContainText('Ronde 2: muziek')
+    await expect(phone.getByText('8 fragmenten', { exact: true })).toBeVisible()
+    await operator.screenshot({ path: 'test-results/remote-mac-controls.png' })
+
+    // Op de Mac dezelfde knoppen als op de telefoon.
+    await mac.getByRole('button', { name: /Vorige ronde/ }).click()
     await expect(macRound).toContainText('Ronde 1: algemeen')
     await expect(phone.getByText('Slide 1 van 3')).toBeVisible()
+    await expect(mac.getByText('Slide 1 van 3')).toBeVisible()
+    await expect(mac.getByRole('button', { name: 'Vorige slide' })).toBeEnabled()
+    await mac.getByRole('button', { name: 'Volgende slide' }).click()
+    await expect(phone.getByText('Slide 2 van 3')).toBeVisible()
+    await mac.getByRole('button', { name: 'Vorige slide' }).click()
+    await expect(macSlide).toHaveText('1')
 
     // Beeld op zwart en geluid uit doen hetzelfde als de knoppen op de Mac.
     await phone.getByRole('button', { name: 'Beeld op zwart' }).click()
@@ -167,6 +196,18 @@ test('de show bedienen met een telefoon via de QR-code', async () => {
     await phone.screenshot({ path: 'test-results/remote-phone-light.png', fullPage: true })
     await light.getByRole('button', { name: 'Volg de show' }).click()
     await expect(light.getByRole('button', { name: 'Volg de show' })).toHaveCount(0)
+
+    // Hetzelfde licht-paneel in de werkbalk op de Mac; de telefoon ziet de keuze meteen.
+    await toolbar.getByRole('button', { name: 'Licht' }).click()
+    const macLight = operator.locator('.popover-panel').getByRole('region', { name: 'Licht' })
+    await macLight.getByRole('button', { name: 'Rood', exact: true }).click()
+    await expect.poll(() => device.log.at(-1)).toBe(command.color(0xff, 0, 0))
+    await expect(light.getByText(/^Met de hand gekozen/)).toBeVisible()
+    await expect(macLight.locator('.current-label')).toHaveText('Rood')
+    await operator.screenshot({ path: 'test-results/remote-mac-light.png' })
+    await macLight.getByRole('button', { name: 'Volg de show' }).click()
+    await expect(light.getByRole('button', { name: 'Volg de show' })).toHaveCount(0)
+    await operator.keyboard.press('Escape')
 
     // Een tablet: de bediening links, het licht rechts.
     const tablet = await openRemote(app, url, TABLET)
