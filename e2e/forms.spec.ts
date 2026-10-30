@@ -80,11 +80,11 @@ test('maakt het antwoordformulier, de antwoorden en de vragenkaarten als pdf', a
   expect(pageSizeMm(key)).toEqual([210, 297])
   expect(pageCount(key)).toBe(1)
 
-  // Vragenkaarten: ansichtkaartformaat, een kaart per ronde.
+  // Vragenkaarten: een ansichtkaart per ronde, vier op een liggende A4; de drie passen op één.
   await dialog.getByRole('button', { name: 'Vragenkaarten opslaan' }).click()
   const cards = await saved('Demo-pubquiz – vragenkaarten.pdf')
-  expect(pageSizeMm(cards)).toEqual([148, 105])
-  expect(pageCount(cards)).toBe(3)
+  expect(pageSizeMm(cards)).toEqual([297, 210])
+  expect(pageCount(cards)).toBe(1)
 })
 
 test('acties staan zichtbaar in beeld, niet achter drie stippen', async () => {

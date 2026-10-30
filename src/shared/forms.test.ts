@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { freshDemoQuiz } from '../main/demo-fixture'
 import {
+  cardSheets,
   formFileName,
   formRounds,
   formSections,
   itemText,
   sheetPages,
+  type CardFit,
   type FormSection
 } from './forms'
 import { migrateQuiz } from './migrate'
@@ -54,6 +56,27 @@ describe('formulieren', () => {
     // 24 regels passen niet in een vak: hele rij, en dus op de volgende rij of het volgende blad.
     expect(slots(sheetPages([algemeen, big, muziek]))).toEqual([['0', '2w'], ['0']])
     expect(slots(sheetPages([big, big, big]))).toEqual([['0w', '2w'], ['0w']])
+  })
+
+  it('zet vier vragenkaarten op een A4 en laat een volle ronde doorlopen', () => {
+    const [algemeen, muziek, intros] = formSections(demo, ['r1', 'r2', 'r4'])
+    const fit = (s: FormSection, room = 100): CardFit => ({ room, rows: s.items.map(() => 10) })
+    const cards = (sheets: ReturnType<typeof cardSheets>) =>
+      sheets.map((sheet) => sheet.map((c) => `${c.section.round.id}:${c.items.length}`))
+
+    expect(cards(cardSheets([algemeen, muziek], [fit(algemeen), fit(muziek)]))).toEqual([
+      ['r1:2', 'r2:8']
+    ])
+    // Ruimte voor drie regels: de acht intro's worden 3 + 3 + 2.
+    const all = [algemeen, muziek, intros]
+    expect(cards(cardSheets(all, [fit(algemeen), fit(muziek), fit(intros, 35)]))).toEqual([
+      ['r1:2', 'r2:8', 'r4:3', 'r4:3'],
+      ['r4:2']
+    ])
+    // Een regel hoger dan de kaart staat op een eigen kaart, en schuift de rest niet weg.
+    expect(cards(cardSheets([algemeen], [{ room: 30, rows: [50, 10] }]))).toEqual([
+      ['r1:1', 'r1:1']
+    ])
   })
 
   it('geeft per nummer de tekst voor de quizmaster', () => {

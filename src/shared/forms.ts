@@ -92,6 +92,51 @@ export function sheetPages(sections: FormSection[]): SheetBlock[][] {
   return pages
 }
 
+/** Een vragenkaart: een ronde, of het stuk ervan dat op één kaart past. */
+export interface QuestionCard {
+  section: FormSection
+  items: AnswerItem[]
+}
+
+/** Vier ansichtkaarten (A6) op een liggende A4, twee bij twee. */
+export const CARDS_PER_SHEET = 4
+
+/** Gemeten op de kaart: de ruimte onder de kop en de hoogte van elke regel van de ronde. */
+export interface CardFit {
+  room: number
+  rows: number[]
+}
+
+/**
+ * Verdeelt de vragen over ansichtkaarten, vier per A4, in de volgorde van de quiz. Past een ronde
+ * niet op één kaart, dan loopt hij door op de volgende. Een regel die te hoog is voor een hele
+ * kaart krijgt er een voor zich alleen.
+ */
+export function cardSheets(sections: FormSection[], fits: CardFit[]): QuestionCard[][] {
+  const cards = sections.flatMap((section, s) => {
+    const { room, rows } = fits[s]
+    const parts: QuestionCard[] = []
+    let items: AnswerItem[] = []
+    let used = 0
+    section.items.forEach((item, i) => {
+      if (items.length && used + rows[i] > room) {
+        parts.push({ section, items })
+        items = []
+        used = 0
+      }
+      items.push(item)
+      used += rows[i]
+    })
+    parts.push({ section, items })
+    return parts
+  })
+  const sheets: QuestionCard[][] = []
+  for (let i = 0; i < cards.length; i += CARDS_PER_SHEET) {
+    sheets.push(cards.slice(i, i + CARDS_PER_SHEET))
+  }
+  return sheets
+}
+
 /** "Pubquiz november – antwoordformulier.pdf", zonder tekens die in een bestandsnaam niet mogen. */
 export function formFileName(quiz: Quiz, doc: FormDoc): string {
   const title = quiz.title.replace(/[/\\:]/g, '-').trim() || 'Pubquiz'
