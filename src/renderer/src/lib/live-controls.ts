@@ -1,6 +1,12 @@
 import { computed } from 'vue'
 import type { ShowCommand } from '@shared/ipc'
-import { activeRound, adjacentRound, allBlack as isAllBlack, answerItems } from '@shared/resolve'
+import {
+  activeRound,
+  adjacentRound,
+  allBlack as isAllBlack,
+  stepCommand,
+  stepTarget
+} from '@shared/resolve'
 import { useSession } from '../stores/session'
 import { ask } from './confirm'
 
@@ -13,21 +19,10 @@ export function useLiveControls() {
   const round = computed(() => activeRound(quiz.value, state.value))
   const send = (command: ShowCommand) => api.command(command)
 
-  /**
-   * Wat ← → (en een presenter-clicker) bedienen: in een antwoordenronde de antwoorden, in een
-   * ronde met fragmenten de fragmenten, anders de slides.
-   */
-  const hasAnswers = computed(
-    () => !!round.value && answerItems(quiz.value, round.value).length > 0
-  )
-  const arrows = computed(() =>
-    hasAnswers.value ? 'answers' : round.value?.fragments.length ? 'fragments' : 'slides'
-  )
-  function step(direction: 'next' | 'prev') {
-    if (arrows.value === 'answers') send({ type: 'answers', action: direction })
-    else if (arrows.value === 'fragments') send({ type: 'stepFragment', direction })
-    else send({ type: direction === 'next' ? 'nextSlide' : 'prevSlide' })
-  }
+  /** Wat ← → (en een presenter-clicker) bedienen; zie stepTarget. */
+  const arrows = computed(() => stepTarget(quiz.value, round.value))
+  const hasAnswers = computed(() => arrows.value === 'answers')
+  const step = (direction: 'next' | 'prev') => send(stepCommand(arrows.value, direction))
 
   const nextRound = computed(() => adjacentRound(quiz.value, state.value, 'next'))
 

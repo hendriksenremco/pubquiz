@@ -2,6 +2,7 @@
  * De live-toestand is altijd: standaard van de quiz ⊕ overrides van de actieve ronde.
  * Na "Einde ronde" (activeRoundId = null) valt alles vanzelf terug naar de standaard.
  */
+import type { ShowCommand } from './ipc'
 import type { Fragment, MediaAsset, Quiz, Round, ScreenContent, ShowState, Slide } from './types'
 import { autoplayCountdown } from './autoplay'
 import { answerSlides } from './factory'
@@ -239,6 +240,23 @@ export function slideText(round: Round, slide: Slide): string {
   if (slide.layout === 'image')
     return `Afbeelding ${slideNumber(round, slide)}${slide.title ? `: ${slide.title}` : ''}`
   return slide.title || slide.body || '(leeg)'
+}
+
+/**
+ * Wat vorige en volgende bedienen (← →, een presenter-clicker, de afstandsbediening): in een
+ * antwoordenronde de antwoorden, in een ronde met fragmenten de fragmenten, anders de slides.
+ */
+export type StepTarget = 'answers' | 'fragments' | 'slides'
+
+export function stepTarget(quiz: Quiz, round: Round | null): StepTarget {
+  if (round && answerItems(quiz, round).length > 0) return 'answers'
+  return round?.fragments.length ? 'fragments' : 'slides'
+}
+
+export function stepCommand(target: StepTarget, direction: 'next' | 'prev'): ShowCommand {
+  if (target === 'answers') return { type: 'answers', action: direction }
+  if (target === 'fragments') return { type: 'stepFragment', direction }
+  return { type: direction === 'next' ? 'nextSlide' : 'prevSlide' }
 }
 
 /** Staan alle schermen op zwart? */
