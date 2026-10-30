@@ -1,5 +1,12 @@
 import { connect, type Socket } from 'net'
-import { LightSchema, resolveLight, sameLight, stateLight, type Light } from '@shared/light'
+import {
+  LightSchema,
+  resolveLight,
+  sameLight,
+  stateLight,
+  type Light,
+  type LightStatus
+} from '@shared/light'
 import {
   lightMessages,
   parseAddress,
@@ -26,11 +33,18 @@ const GAP_MS = 50
  * laatste nog weg. Lukt het niet, dan één melding, en bij de volgende wijziging een nieuwe poging.
  *
  * Buiten de show kan de editor een licht als voorbeeld laten zien; daarna gaat de controller terug
- * naar hoe hij was.
+ * naar hoe hij was. Tijdens de show kan de afstandsbediening met de hand een licht kiezen.
  */
 export class MagicHomePlugin implements MainPlugin {
   private address: MagicHomeAddress | null = null
   private link: Link | null = null
+  /** Het licht van de show zelf (slide ⊕ ronde ⊕ quiz); null = de show stuurt het niet aan. */
+  private showLight: Light | null = null
+  /**
+   * Met de hand gekozen tijdens de show. Geldt tot de show zelf een ander licht kiest dan toen
+   * (`showLight`), of tot de show stopt.
+   */
+  private manual: { light: Light; showLight: Light | null } | null = null
   private wanted: Light | null = null
   private sent: Light | null = null
   /** Loopt er al een verzending, dan neemt die het nieuwste licht ook mee. */
@@ -66,16 +80,24 @@ export class MagicHomePlugin implements MainPlugin {
     }
     this.live = state.live
     const light = quiz ? resolveLight(quiz, state) : null
-    if (!light) return
-    this.wanted = light
-    void this.flush()
+    if (!state.live || (this.manual && light && !sameLight(light, this.manual.showLight))) {
+      this.manual = null
+    }
+    this.showLight = light
+    this.want(this.manual?.light ?? light)
   }
 
-  async invoke(action: string, payload: unknown): Promise<MagicHomeProbe | MagicHomeResult | null> {
-    if (action === 'preview') {
+  async invoke(
+    action: string,
+    payload: unknown
+  ): Promise<MagicHomeProbe | MagicHomeResult | LightStatus | null> {
+    if (action === 'preview' || action === 'choose') {
       const light = LightSchema.nullable().safeParse(payload)
-      return light.success ? this.preview(light.data) : null
+      if (!light.success) return null
+      return action === 'preview' ? this.preview(light.data) : this.choose(light.data)
     }
+    if (action === 'status')
+      return { light: this.manual?.light ?? this.showLight, manual: !!this.manual }
     if (action !== 'probe') return null
     const address = parseAddress(typeof payload === 'string' ? payload : '')
     if (!address) return { ok: false, error: 'Vul het IP-adres van de controller in' }
@@ -96,7 +118,24 @@ export class MagicHomePlugin implements MainPlugin {
     this.link = null
     this.address = null
     this.wanted = null
+    this.manual = null
     this.before = null
+  }
+
+  /** Tijdens de show met de hand een licht kiezen; null = weer het licht van de show. */
+  private choose(light: Light | null): MagicHomeResult {
+    if (!this.live) return { ok: false, error: 'Alleen tijdens de show' }
+    if (!this.link) return { ok: false, error: 'Vul eerst het adres van de controller in' }
+    this.manual = light ? { light, showLight: this.showLight } : null
+    this.want(light ?? this.showLight)
+    return { ok: true }
+  }
+
+  /** Stuurt dit licht, of laat het licht zoals het is (null). */
+  private want(light: Light | null): void {
+    if (!light) return
+    this.wanted = light
+    void this.flush()
   }
 
   /** Laat een licht zien zonder show; null = klaar, terug naar hoe het was. */

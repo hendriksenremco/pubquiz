@@ -22,6 +22,13 @@ export const LightSchema = z.discriminatedUnion('type', [
 
 export type Light = z.infer<typeof LightSchema>
 
+/** Wat het licht tijdens de show doet; `light` null = de show stuurt het niet aan. */
+export interface LightStatus {
+  light: Light | null
+  /** Met de hand gekozen (afstandsbediening), tot de show zelf een ander licht kiest. */
+  manual: boolean
+}
+
 const PLUGIN = 'magichome'
 
 interface HasPlugins {

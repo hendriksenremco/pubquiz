@@ -114,6 +114,44 @@ describe('MagicHomePlugin', () => {
     }
   })
 
+  it('houdt een met de hand gekozen licht tot de show zelf een ander licht kiest', async () => {
+    const device = await fakeController()
+    const plugin = new MagicHomePlugin(vi.fn())
+    const { quiz, state } = setup()
+    const blue = { type: 'color', color: '#0000ff' } as const
+    try {
+      plugin.configure({ host: device.host })
+      expect(await plugin.invoke('choose', blue)).toMatchObject({ ok: false })
+
+      plugin.update(quiz, state())
+      await vi.waitFor(() => expect(device.log).toEqual([ON, RED]))
+      expect(await plugin.invoke('choose', blue)).toEqual({ ok: true })
+      await vi.waitFor(() => expect(device.log.at(-1)).toBe(command.color(0, 0, 0xff)))
+      expect(await plugin.invoke('status', null)).toEqual({ light: blue, manual: true })
+
+      // Zelfde licht van de show (bv. de muziek gaat uit): blauw blijft.
+      plugin.update(quiz, state({ backgroundEnabled: false }))
+      expect(await plugin.invoke('status', null)).toEqual({ light: blue, manual: true })
+
+      // De volgende slide heeft een eigen effect: de show neemt het weer over.
+      plugin.update(quiz, state({ slideIndex: 1 }))
+      await vi.waitFor(() => expect(device.log.at(-1)).toBe(FLASH))
+      expect(await plugin.invoke('status', null)).toEqual({
+        light: { type: 'effect', effect: 1, speed: 50 },
+        manual: false
+      })
+
+      // Terug naar de show: het licht van de slide.
+      await plugin.invoke('choose', { type: 'off' })
+      await vi.waitFor(() => expect(device.log.at(-1)).toBe(command.off))
+      await plugin.invoke('choose', null)
+      await vi.waitFor(() => expect(device.log.at(-1)).toBe(FLASH))
+    } finally {
+      plugin.stop()
+      await device.close()
+    }
+  })
+
   it('meldt een onbereikbare controller één keer', async () => {
     const device = await fakeController()
     const host = device.host
