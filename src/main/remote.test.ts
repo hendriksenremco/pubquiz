@@ -1,4 +1,6 @@
 import { mkdirSync, mkdtempSync, writeFileSync } from 'fs'
+import { createServer } from 'http'
+import type { AddressInfo } from 'net'
 import { tmpdir } from 'os'
 import { join } from 'path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -93,7 +95,9 @@ describe('RemotePlugin', () => {
     const page = await fetch(`${url.origin}/`)
     expect(page.headers.get('content-type')).toContain('text/html')
     expect(await page.text()).toContain('Afstandsbediening')
-    expect((await fetch(`${url.origin}/assets/remote.js`)).status).toBe(200)
+    const script = await fetch(`${url.origin}/assets/remote.js`)
+    expect(script.headers.get('content-encoding')).toBe('gzip')
+    expect(await script.text()).toBe('console.log(1)')
     expect((await fetch(`${url.origin}/index.html`)).status).toBe(404)
     expect((await fetch(`${url.origin}/assets/..%2Findex.html`)).status).toBe(404)
   })
@@ -101,6 +105,8 @@ describe('RemotePlugin', () => {
   it('weigert wie de sleutel niet heeft', async () => {
     const { api, act } = await setup()
     expect((await fetch(api('/api/events', 'fout'))).status).toBe(401)
+    expect((await fetch(api('/api/check', 'fout'))).status).toBe(401)
+    expect((await fetch(api('/api/check'))).status).toBe(200)
     expect((await act({ type: 'slide', direction: 'next' }, '')).status).toBe(401)
   })
 
@@ -165,6 +171,33 @@ describe('RemotePlugin', () => {
     expect(renewed?.url).not.toContain(key)
     expect(await events.closed()).toBe(true)
     expect((await fetch(api('/api/events'))).status).toBe(401)
+  })
+})
+
+describe('RemotePlugin tijdens het ontwikkelen', () => {
+  it('haalt de pagina bij de Vite-server, met diens eigen hostnaam', async () => {
+    const seen: { url?: string; host?: string }[] = []
+    const vite = createServer((req, res) => {
+      seen.push({ url: req.url, host: req.headers.host })
+      res.writeHead(200, { 'Content-Type': 'text/html' })
+      res.end('van vite')
+    })
+    await new Promise<void>((resolve) => vite.listen(0, '127.0.0.1', resolve))
+    const devServer = `http://localhost:${(vite.address() as AddressInfo).port}`
+    const host = { notify: vi.fn(), command: vi.fn(), saveConfig: vi.fn(), invoke: vi.fn() }
+    plugin = new RemotePlugin(host, { page: { devServer }, host: '127.0.0.1', port: 0 })
+    try {
+      plugin.configure({ key: 'k'.repeat(22) })
+      const { origin } = new URL((await plugin.invoke('link'))!.url!)
+      expect(await (await fetch(`${origin}/?key=${'k'.repeat(22)}`)).text()).toBe('van vite')
+      await fetch(`${origin}/src/remote/main.ts?t=1`)
+      expect(seen).toEqual([
+        { url: '/remote.html', host: new URL(devServer).host },
+        { url: '/src/remote/main.ts?t=1', host: new URL(devServer).host }
+      ])
+    } finally {
+      vite.close()
+    }
   })
 })
 

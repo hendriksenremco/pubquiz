@@ -45,6 +45,14 @@ export const RemoteActionSchema = z.discriminatedUnion('type', [
 /** Wat de telefoon vraagt. Aan/uit is de gewenste stand, geen wissel: twee keer tikken mag. */
 export type RemoteAction = z.infer<typeof RemoteActionSchema>
 
+/** Wat de app bij de QR-code toont. */
+export interface RemoteLink {
+  /** null = geen netwerk, of de server kon niet starten. */
+  url: string | null
+  /** Telefoons en tablets die nu verbonden zijn. */
+  devices: number
+}
+
 /** Antwoord van de Mac op een actie. */
 export type RemoteResult = { ok: true } | { ok: false; error: string }
 

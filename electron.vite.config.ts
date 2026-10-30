@@ -26,6 +26,15 @@ export default defineConfig({
         '@renderer': resolve('src/renderer/src')
       }
     },
+    build: {
+      rollupOptions: {
+        // De pagina voor de telefoon (plug-in Afstandsbediening) komt naast de app.
+        input: {
+          index: resolve('src/renderer/index.html'),
+          remote: resolve('src/renderer/remote.html')
+        }
+      }
+    },
     plugins: [vue()]
   }
 })

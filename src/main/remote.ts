@@ -11,6 +11,7 @@ import {
 import type { AddressInfo } from 'net'
 import { networkInterfaces, type NetworkInterfaceInfo } from 'os'
 import { extname, relative, resolve, sep } from 'path'
+import { createGzip } from 'zlib'
 import { createShowState } from '@shared/factory'
 import type { LightStatus } from '@shared/light'
 import {
@@ -18,6 +19,7 @@ import {
   remoteCommand,
   remoteView,
   type RemoteAction,
+  type RemoteLink,
   type RemoteResult,
   type RemoteView
 } from '@shared/remote'
@@ -40,14 +42,6 @@ export interface RemoteOptions {
   host?: string
   /** Standaard REMOTE_PORT, en is die bezet een willekeurige; 0 = meteen een willekeurige. */
   port?: number
-}
-
-/** Wat de app bij de QR-code toont. */
-export interface RemoteLink {
-  /** null = geen netwerk, of de server kon niet starten. */
-  url: string | null
-  /** Telefoons en tablets die nu verbonden zijn. */
-  devices: number
 }
 
 /**
@@ -149,6 +143,7 @@ export class RemotePlugin implements MainPlugin {
     const url = new URL(req.url ?? '/', 'http://remote')
     try {
       if (url.pathname === '/api/events') this.events(url, res)
+      else if (url.pathname === '/api/check') this.check(url, res)
       else if (url.pathname === '/api/action') await this.action(url, req, res)
       else await servePage(this.options.page, url, req, res)
     } catch {
@@ -175,6 +170,13 @@ export class RemotePlugin implements MainPlugin {
     // Iedereen opnieuw: wie al verbonden was, kan iets gemist hebben dat de nieuwe wel krijgt.
     this.sent = ''
     this.schedule()
+  }
+
+  /** Klopt de sleutel nog? Voor de telefoon als zijn verbinding gesloten werd. */
+  private check(url: URL, res: ServerResponse): void {
+    if (!this.authorized(url))
+      return reply(res, 401, { ok: false, error: 'Scan de QR-code opnieuw' })
+    reply(res, 200, { ok: true })
   }
 
   private async action(url: URL, req: IncomingMessage, res: ServerResponse): Promise<void> {
@@ -336,7 +338,11 @@ async function servePage(
     return reply(res, 405, { ok: false, error: 'Alleen GET' })
   }
   const path = url.pathname === '/' ? '/remote.html' : url.pathname
-  if ('devServer' in page) return proxy(new URL(path + url.search, page.devServer), req, res)
+  if ('devServer' in page) {
+    // De sleutel hoeft Vite niet te zien; zijn eigen query's (?v=, ?vue&type=) wel.
+    const search = url.pathname === '/' ? '' : url.search
+    return proxy(new URL(path + search, page.devServer), req, res)
+  }
 
   const file = resolve(page.dir, `.${decodeURIComponent(path)}`)
   const inside = relative(page.dir, file)
@@ -346,15 +352,21 @@ async function servePage(
     res.writeHead(404, HEADERS)
     return void res.end()
   }
+  const type = TYPES[extname(file)] ?? 'application/octet-stream'
+  // Tekst ingepakt: de telefoon laadt Vue en de effectnamen zo in een kwart van de tijd.
+  const gzip = type.includes('charset') && /\bgzip\b/.test(req.headers['accept-encoding'] ?? '')
   res.writeHead(200, {
     ...HEADERS,
-    'Content-Type': TYPES[extname(file)] ?? 'application/octet-stream',
-    'Content-Length': stat.size,
+    'Content-Type': type,
+    ...(gzip ? { 'Content-Encoding': 'gzip' } : { 'Content-Length': stat.size }),
+    Vary: 'Accept-Encoding',
     // Bestanden in assets/ hebben een hash in hun naam.
     'Cache-Control': inside === 'remote.html' ? 'no-cache' : 'public, max-age=31536000, immutable'
   })
   if (req.method === 'HEAD') return void res.end()
-  createReadStream(file).pipe(res)
+  const stream = createReadStream(file)
+  if (gzip) stream.pipe(createGzip()).pipe(res)
+  else stream.pipe(res)
 }
 
 /** Tijdens het ontwikkelen (pnpm dev): de pagina komt van de Vite-server, die alleen op localhost luistert. */
