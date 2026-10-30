@@ -100,12 +100,15 @@ test('de show bedienen met een telefoon via de QR-code', async () => {
     await expect(phone.locator('h1')).toHaveText('Ronde 1: algemeen')
     await expect(phone.getByText('Slide 1 van 3')).toBeVisible()
     await expect(preview).toContainText('Algemene kennis')
-    await phone.getByRole('button', { name: 'Volgende slide' }).click()
+    const nextSlide = phone.getByRole('button', { name: 'Volgende slide' })
+    const before = await nextSlide.boundingBox()
+    await nextSlide.click()
     await expect(macSlide).toHaveText('2')
-    // De vraag staat in de preview, en leesbaar eronder.
+    // De vraag staat in de preview, en leesbaar onder de knoppen: die verspringen er niet door.
     const question = 'Wat is de hoofdstad van Australië?'
     await expect(preview).toContainText(question)
     await expect(phone.locator('.step-text')).toHaveText(question)
+    expect(await nextSlide.boundingBox()).toEqual(before)
     await phone.screenshot({ path: 'test-results/remote-phone-question.png' })
     await phone.getByRole('button', { name: 'Volgende slide' }).click()
     await expect(macSlide).toHaveText('3')

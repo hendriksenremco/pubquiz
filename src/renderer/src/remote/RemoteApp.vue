@@ -89,10 +89,8 @@ onMounted(connect)
           />
           <span v-else class="empty">Geen slide in beeld</span>
         </div>
-        <p v-if="step?.text" class="step-text">{{ step.text }}</p>
-        <p v-if="step?.answer" class="answer">
-          <span class="answer-label">Antwoord</span>{{ step.answer }}
-        </p>
+        <!-- De knoppen meteen onder de preview (vaste hoogte): wat er onder komt, kan ze niet
+             verschuiven terwijl je tikt. -->
         <div class="pair">
           <button
             class="key"
@@ -111,6 +109,10 @@ onMounted(connect)
             <Icon name="right" :size="34" />
           </button>
         </div>
+        <p v-if="step?.text" class="step-text">{{ step.text }}</p>
+        <p v-if="step?.answer" class="answer">
+          <span class="answer-label">Antwoord</span>{{ step.answer }}
+        </p>
       </section>
 
       <section class="pair" aria-label="Rondes">
