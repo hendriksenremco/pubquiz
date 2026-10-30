@@ -97,6 +97,11 @@ export function adjacentRound(
   return (state.activeRoundId ? quiz.rounds[index - 1] : quiz.rounds[index]) ?? null
 }
 
+/** Welke ronde "Ronde opnieuw" start: de ronde die loopt, of anders de ronde die net klaar is. */
+export function restartRound(quiz: Quiz, state: ShowState): Round | null {
+  return findRound(quiz, state.activeRoundId ?? state.lastRoundId)
+}
+
 export function slideTargets(slide: Slide, screenId: string): boolean {
   return slide.targetScreens === 'all' || slide.targetScreens.includes(screenId)
 }
@@ -251,6 +256,13 @@ export type StepTarget = 'answers' | 'fragments' | 'slides'
 export function stepTarget(quiz: Quiz, round: Round | null): StepTarget {
   if (round && answerItems(quiz, round).length > 0) return 'answers'
   return round?.fragments.length ? 'fragments' : 'slides'
+}
+
+/** Hoe vorige en volgende heten, op de Mac en op de telefoon. */
+export const STEP_NAMES: Record<StepTarget, readonly [prev: string, next: string]> = {
+  slides: ['Vorige slide', 'Volgende slide'],
+  fragments: ['Vorig fragment', 'Volgend fragment'],
+  answers: ['Vorige stap', 'Volgende stap']
 }
 
 export function stepCommand(target: StepTarget, direction: 'next' | 'prev'): ShowCommand {

@@ -176,6 +176,33 @@ describe('ShowController', () => {
     expect(t.state.autoplay).toMatchObject({ status: 'playing', index: 0 })
   })
 
+  it('start een ronde opnieuw vanaf het begin, ook als hij net klaar is', () => {
+    const t = setup()
+    t.show.handle({ type: 'restartRound' })
+    expect(t.state.activeRoundId).toBeNull()
+
+    t.show.handle({ type: 'startRound', roundId: 'r1' })
+    t.show.handle({ type: 'nextSlide' })
+    t.show.handle({ type: 'startRound', roundId: 'r2' })
+    t.show.handle({ type: 'nextSlide' })
+    t.show.handle({ type: 'playFragment', fragmentId: 'r2-f1' })
+    t.show.handle({ type: 'stepFragment', direction: 'next' })
+    t.show.handle({ type: 'restartRound' })
+    expect(t.state).toMatchObject({ activeRoundId: 'r2', slideIndex: 0, played: [] })
+    expect(t.state.fragment).toBeNull()
+
+    // Een tweede keer luisteren: → en de reeks beginnen weer bij het eerste fragment.
+    t.show.handle({ type: 'stepFragment', direction: 'next' })
+    expect(t.state.fragment?.fragmentId).toBe('r2-f1')
+    t.show.handle({ type: 'restartRound' })
+    t.show.handle({ type: 'autoplay', action: 'start' })
+    expect(t.state.fragment?.fragmentId).toBe('r2-f1')
+
+    t.show.handle({ type: 'endRound' })
+    t.show.handle({ type: 'restartRound' })
+    expect(t.state).toMatchObject({ activeRoundId: 'r2', slideIndex: 0 })
+  })
+
   it('stopt fragment en autoplay bij een rondewissel', () => {
     const t = setup()
     t.show.handle({ type: 'startRound', roundId: 'r2' })
@@ -242,7 +269,13 @@ describe('ShowController', () => {
     t.show.handle({ type: 'answers', action: 'next' })
     expect(t.state.fragment).toMatchObject({ fragmentId: 'r2-f2' })
 
+    // Opnieuw: weer bij het begin, en geen antwoord meer afgevinkt.
+    t.show.handle({ type: 'restartRound' })
+    expect(t.state.answer).toBeNull()
+    expect(t.state.answered).toEqual([])
+
     // Een andere ronde starten sluit de antwoorden af.
+    t.show.handle({ type: 'answers', action: 'next' })
     t.show.handle({ type: 'endRound' })
     expect(t.state.answer).toBeNull()
   })
