@@ -2,6 +2,7 @@
 import Icon from '../../components/Icon.vue'
 import Popover from '../../components/Popover.vue'
 import { useLiveControls } from '../../lib/live-controls'
+import PluginSlot from '../../plugins/PluginSlot.vue'
 
 /** Werkbalk tijdens de show: noodknoppen, sneltoetsen, terug naar bewerken en stoppen. */
 const emit = defineEmits<{ edit: [] }>()
@@ -33,6 +34,7 @@ const { allBlack, toggleBlackout, muted, toggleSound, stopShow, shortcuts } = us
 
     <span class="sep" />
 
+    <PluginSlot name="liveControls" />
     <Popover align="right" :width="320">
       <template #trigger="{ open, toggle }">
         <button class="btn btn-ghost" :class="{ active: open }" @click="toggle">Sneltoetsen</button>

@@ -24,6 +24,7 @@ const PATHS = {
   image: 'M4 5h16v14H4zM4 15l4-4 4 4 3-3 5 5M15 9h.01',
   check: 'M5 12l5 5 9-10',
   power: 'M12 3v9M6.3 6.3a8 8 0 1 0 11.4 0',
+  phone: 'M8 3h8a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM11 18h2',
   home: 'M3 11l9-7 9 7M5 9.5V20h5v-6h4v6h5V9.5',
   pencil: 'M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4',
   printer: 'M7 9V4h10v5M7 17H4V9h16v8h-3M7 14h10v6H7z',

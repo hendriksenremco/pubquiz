@@ -15,7 +15,7 @@ export const PLUGINS = [
     id: 'remote',
     name: 'Afstandsbediening',
     description:
-      'De show bedienen met een telefoon of tablet op hetzelfde wifi-netwerk: scan de QR-code tijdens de show.'
+      'De show bedienen met een telefoon of tablet op hetzelfde wifi-netwerk, via een QR-code.'
   }
 ] as const
 
