@@ -10,6 +10,12 @@ export const PLUGINS = [
     name: 'MagicHome-licht',
     description:
       'Ledstrips met een MagicHome-controller een kleur of effect geven, per ronde en per slide.'
+  },
+  {
+    id: 'remote',
+    name: 'Afstandsbediening',
+    description:
+      'De show bedienen met een telefoon of tablet op hetzelfde wifi-netwerk: scan de QR-code tijdens de show.'
   }
 ] as const
 
