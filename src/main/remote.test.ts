@@ -17,6 +17,9 @@ function fakeBuild(): string {
   writeFileSync(join(dir, 'remote.html'), '<!doctype html><title>Afstandsbediening</title>')
   writeFileSync(join(dir, 'index.html'), 'de app zelf')
   writeFileSync(join(dir, 'assets', 'remote.js'), 'console.log(1)')
+  mkdirSync(join(dir, 'quiz', 'media'), { recursive: true })
+  writeFileSync(join(dir, 'quiz', 'media', 'kaart.png'), 'png')
+  writeFileSync(join(dir, 'quiz', 'media', 'liedje.m4a'), 'm4a')
   return dir
 }
 
@@ -24,7 +27,9 @@ let plugin: RemotePlugin | null = null
 afterEach(() => plugin?.stop())
 
 async function setup(light: unknown = null) {
+  const dir = fakeBuild()
   const host = {
+    mediaFile: (file: string) => join(dir, 'quiz', file),
     notify: vi.fn(),
     command: vi.fn(),
     saveConfig: vi.fn((config: Record<string, unknown>) => plugin!.configure(config)),
@@ -32,7 +37,7 @@ async function setup(light: unknown = null) {
       action === 'status' ? light : { ok: true }
     )
   } satisfies PluginHost
-  plugin = new RemotePlugin(host, { page: { dir: fakeBuild() }, host: '127.0.0.1', port: 0 })
+  plugin = new RemotePlugin(host, { page: { dir }, host: '127.0.0.1', port: 0 })
   plugin.configure({})
   const link = (await plugin.invoke('link'))!
   const url = new URL(link.url!)
@@ -41,6 +46,10 @@ async function setup(light: unknown = null) {
   const round = createRound('normal', 1)
   round.slides.push(createSlide('question', 'Vraag 1'))
   quiz.rounds = [round]
+  quiz.assets = [
+    { id: 'kaart', kind: 'image', file: 'media/kaart.png', name: 'kaart.png' },
+    { id: 'liedje', kind: 'audio', file: 'media/liedje.m4a', name: 'liedje.m4a' }
+  ]
   const live = (patch: Partial<ShowState> = {}): ShowState => ({
     ...createShowState(),
     live: true,
@@ -102,12 +111,23 @@ describe('RemotePlugin', () => {
     expect((await fetch(`${url.origin}/assets/..%2Findex.html`)).status).toBe(404)
   })
 
+  it('geeft afbeeldingen uit de quiz voor de preview, en verder niets', async () => {
+    const { plugin, quiz, live, api } = await setup()
+    plugin.update(quiz, live())
+    const image = await fetch(api('/media/kaart'))
+    expect(image.headers.get('content-type')).toBe('image/png')
+    expect(await image.text()).toBe('png')
+    expect((await fetch(api('/media/liedje'))).status).toBe(404)
+    expect((await fetch(api('/media/bestaat-niet'))).status).toBe(404)
+    expect((await fetch(api('/media/kaart', 'fout'))).status).toBe(401)
+  })
+
   it('weigert wie de sleutel niet heeft', async () => {
     const { api, act } = await setup()
     expect((await fetch(api('/api/events', 'fout'))).status).toBe(401)
     expect((await fetch(api('/api/check', 'fout'))).status).toBe(401)
     expect((await fetch(api('/api/check'))).status).toBe(200)
-    expect((await act({ type: 'slide', direction: 'next' }, '')).status).toBe(401)
+    expect((await act({ type: 'step', direction: 'next' }, '')).status).toBe(401)
   })
 
   it('stuurt de toestand en elke wijziging', async () => {
@@ -121,7 +141,8 @@ describe('RemotePlugin', () => {
       quiz: 'Kroegquiz',
       live: true,
       round: { title: 'Ronde 1', number: 1 },
-      slide: { index: 0, count: 2, next: true }
+      step: { target: 'slides', label: 'Slide 1 van 2', next: true },
+      screen: { slide: { layout: 'title', title: 'Ronde 1' } }
     })
     expect(await plugin.invoke('link')).toMatchObject({ devices: 1 })
     await events.cancel()
@@ -129,12 +150,12 @@ describe('RemotePlugin', () => {
 
   it('geeft knoppen door aan de show, alleen als die loopt', async () => {
     const { host, plugin, quiz, live, act } = await setup()
-    const blocked = await act({ type: 'slide', direction: 'next' })
+    const blocked = await act({ type: 'step', direction: 'next' })
     expect(blocked.status).toBe(409)
     expect(await blocked.json()).toEqual({ ok: false, error: 'Start eerst de show op de Mac' })
 
     plugin.update(quiz, live())
-    expect((await act({ type: 'slide', direction: 'next' })).status).toBe(200)
+    expect((await act({ type: 'step', direction: 'next' })).status).toBe(200)
     await act({ type: 'round', direction: 'prev' })
     await act({ type: 'blackout', on: true })
     await act({ type: 'mute', on: true })
@@ -184,7 +205,13 @@ describe('RemotePlugin tijdens het ontwikkelen', () => {
     })
     await new Promise<void>((resolve) => vite.listen(0, '127.0.0.1', resolve))
     const devServer = `http://localhost:${(vite.address() as AddressInfo).port}`
-    const host = { notify: vi.fn(), command: vi.fn(), saveConfig: vi.fn(), invoke: vi.fn() }
+    const host = {
+      notify: vi.fn(),
+      command: vi.fn(),
+      saveConfig: vi.fn(),
+      invoke: vi.fn(),
+      mediaFile: vi.fn()
+    }
     plugin = new RemotePlugin(host, { page: { devServer }, host: '127.0.0.1', port: 0 })
     try {
       plugin.configure({ key: 'k'.repeat(22) })

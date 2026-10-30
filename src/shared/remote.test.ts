@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createQuiz, createRound, createShowState, createSlide } from './factory'
+import { createFragment, createQuiz, createRound, createShowState, createSlide } from './factory'
 import { quizLights, setLight, type Light } from './light'
 import { remoteCommand, remoteView, RemoteActionSchema } from './remote'
 import type { ShowState } from './types'
@@ -10,20 +10,28 @@ const PARTY: Light = { type: 'effect', effect: 299, speed: 60 }
 function setup() {
   const quiz = createQuiz('Kroegquiz')
   const first = createRound('normal', 1)
-  first.slides.push(createSlide('question', 'Hoofdstad van Peru?'))
-  const second = createRound('normal', 2)
-  second.slides = []
-  quiz.rounds = [first, second]
+  first.slides.push({
+    ...createSlide('question', 'Vraag 1'),
+    body: 'Hoofdstad van Peru?',
+    numberOnly: true,
+    answer: 'Lima'
+  })
+  const music = createRound('music', 2)
+  const channel = quiz.channels[1].id
+  music.fragments = [1, 2, 3].map((n) => createFragment('a', channel, n, `Liedje ${n}`))
+  quiz.rounds = [first, music]
+  const answers = createRound('answers', 3, quiz)
+  quiz.rounds.push(answers)
   const live = (patch: Partial<ShowState> = {}): ShowState => ({
     ...createShowState(),
     live: true,
     ...patch
   })
-  return { quiz, first, second, live }
+  return { quiz, first, music, answers, live }
 }
 
 describe('remoteView', () => {
-  it('toont de ronde, de slide en waar je heen kunt', () => {
+  it('toont de ronde, de slide in beeld met de vraag, en waar je heen kunt', () => {
     const { quiz, first, live } = setup()
     const view = remoteView(
       quiz,
@@ -34,10 +42,17 @@ describe('remoteView', () => {
       quiz: 'Kroegquiz',
       live: true,
       round: { title: 'Ronde 1', number: 1 },
-      rounds: 2,
+      rounds: 3,
       prevRound: null,
-      nextRound: 'Ronde 2',
-      slide: { index: 1, count: 2, text: 'Hoofdstad van Peru?', prev: true, next: false },
+      nextRound: 'Ronde 2: muziek',
+      step: {
+        target: 'slides',
+        label: 'Slide 2 van 2',
+        text: 'Hoofdstad van Peru?',
+        prev: true,
+        next: false
+      },
+      screen: { slide: { id: first.slides[1].id, numberOnly: true }, number: 1 },
       screens: true,
       blackout: false,
       muted: false,
@@ -45,30 +60,79 @@ describe('remoteView', () => {
     })
   })
 
-  it('tussen twee rondes: geen slide, en de vorige is de ronde van net', () => {
+  it('tussen twee rondes: geen stappen, en de vorige is de ronde van net', () => {
     const { quiz, first, live } = setup()
     const view = remoteView(quiz, live({ lastRoundId: first.id }), null)
     expect(view).toMatchObject({
       round: null,
-      slide: null,
+      step: null,
+      screen: null,
       prevRound: 'Ronde 1',
-      nextRound: 'Ronde 2'
+      nextRound: 'Ronde 2: muziek'
     })
   })
 
-  it('een ronde zonder slides heeft geen slideknoppen', () => {
-    const { quiz, second, live } = setup()
-    expect(remoteView(quiz, live({ activeRoundId: second.id }), null).slide).toBeNull()
+  it('in een muziekronde bladeren vorige en volgende door de fragmenten', () => {
+    const { quiz, music, live } = setup()
+    const round = { activeRoundId: music.id, slideIndex: 0 }
+    expect(remoteView(quiz, live(round), null).step).toMatchObject({
+      target: 'fragments',
+      label: '3 fragmenten',
+      text: null,
+      prev: false,
+      next: true
+    })
+    const second = music.fragments[1]
+    const playing = live({
+      ...round,
+      lastFragmentId: second.id,
+      fragment: { key: 'k', roundId: music.id, fragmentId: second.id, startedAt: 0, duration: 10 }
+    })
+    expect(remoteView(quiz, playing, null)).toMatchObject({
+      step: { label: 'Fragment 2 van 3', text: 'Liedje 2', playing: true, prev: true, next: true },
+      screen: { slide: { layout: 'title', title: 'Ronde 2' } }
+    })
   })
 
-  it('beeld op zwart als alle schermen zwart zijn, geluid uit als de achtergrond uit staat', () => {
-    const { quiz, live } = setup()
+  it('in een antwoordenronde lopen ze de antwoorden langs, met het antwoord zodra het in beeld is', () => {
+    const { quiz, answers, live } = setup()
+    const at = (index: number, revealed: boolean) =>
+      remoteView(
+        quiz,
+        live({ activeRoundId: answers.id, answer: { roundId: answers.id, index, revealed } }),
+        null
+      ).step
+    expect(at(0, false)).toMatchObject({
+      target: 'answers',
+      label: 'Vraag 1, Ronde 1',
+      text: 'Hoofdstad van Peru?',
+      answer: null
+    })
+    expect(at(0, true)).toMatchObject({ answer: 'Lima', next: true })
+    expect(at(3, true)).toMatchObject({
+      label: 'Fragment 3, Ronde 2: muziek',
+      answer: 'Liedje 3',
+      next: false
+    })
+  })
+
+  it('de preview toont de slide ook als het beeld op zwart staat', () => {
+    const { quiz, first, live } = setup()
     const beamer = quiz.screens[0].id
-    expect(
-      remoteView(quiz, live({ blackout: [beamer], backgroundEnabled: false }), null)
-    ).toMatchObject({
+    const view = remoteView(
+      quiz,
+      live({
+        activeRoundId: first.id,
+        slideIndex: 0,
+        blackout: [beamer],
+        backgroundEnabled: false
+      }),
+      null
+    )
+    expect(view).toMatchObject({
       blackout: true,
-      muted: true
+      muted: true,
+      screen: { slide: { title: 'Ronde 1' } }
     })
   })
 
@@ -90,6 +154,8 @@ describe('remoteView', () => {
       quiz: null,
       live: false,
       rounds: 0,
+      step: null,
+      screen: null,
       screens: false,
       blackout: false
     })
@@ -97,31 +163,49 @@ describe('remoteView', () => {
 })
 
 describe('remoteCommand', () => {
-  it('vertaalt knoppen naar opdrachten voor de show', () => {
-    const state = createShowState()
-    expect(remoteCommand(state, { type: 'round', direction: 'prev' })).toEqual({
-      type: 'prevRound'
-    })
-    expect(remoteCommand(state, { type: 'slide', direction: 'next' })).toEqual({
+  it('vorige en volgende doen wat ← → op de Mac doen', () => {
+    const { quiz, first, music, answers, live } = setup()
+    const next = { type: 'step', direction: 'next' } as const
+    expect(remoteCommand(quiz, live({ activeRoundId: first.id }), next)).toEqual({
       type: 'nextSlide'
     })
-    expect(remoteCommand(state, { type: 'blackout', on: true })).toEqual({
+    expect(remoteCommand(quiz, live({ activeRoundId: music.id }), next)).toEqual({
+      type: 'stepFragment',
+      direction: 'next'
+    })
+    expect(remoteCommand(quiz, live({ activeRoundId: answers.id }), next)).toEqual({
+      type: 'answers',
+      action: 'next'
+    })
+  })
+
+  it('vertaalt de andere knoppen naar opdrachten voor de show', () => {
+    const { quiz } = setup()
+    const state = createShowState()
+    expect(remoteCommand(quiz, state, { type: 'round', direction: 'prev' })).toEqual({
+      type: 'prevRound'
+    })
+    expect(remoteCommand(quiz, state, { type: 'blackout', on: true })).toEqual({
       type: 'blackout',
       on: true
     })
-    expect(remoteCommand(state, { type: 'light', light: RED })).toBeNull()
+    expect(remoteCommand(quiz, state, { type: 'light', light: RED })).toBeNull()
   })
 
   it('geluid aan of uit is een stand, geen wissel', () => {
+    const { quiz } = setup()
     const on = createShowState()
     const off = { ...on, backgroundEnabled: false }
-    expect(remoteCommand(on, { type: 'mute', on: true })).toEqual({ type: 'stopAll' })
-    expect(remoteCommand(off, { type: 'mute', on: false })).toEqual({ type: 'toggleBackground' })
-    expect(remoteCommand(on, { type: 'mute', on: false })).toBeNull()
+    expect(remoteCommand(quiz, on, { type: 'mute', on: true })).toEqual({ type: 'stopAll' })
+    expect(remoteCommand(quiz, off, { type: 'mute', on: false })).toEqual({
+      type: 'toggleBackground'
+    })
+    expect(remoteCommand(quiz, on, { type: 'mute', on: false })).toBeNull()
   })
 
   it('weigert onbekende acties', () => {
     expect(RemoteActionSchema.safeParse({ type: 'stopShow' }).success).toBe(false)
+    expect(RemoteActionSchema.safeParse({ type: 'slide', direction: 'next' }).success).toBe(false)
     expect(
       RemoteActionSchema.safeParse({ type: 'light', light: { type: 'color', color: 'red' } })
         .success

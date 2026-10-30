@@ -1,17 +1,31 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, provide } from 'vue'
 import Icon from '../components/Icon.vue'
-import { connect, link, send, toast, view } from './connection'
+import SlideView from '../components/SlideView.vue'
+import { ASSET_URL } from '../lib/media'
+import { connect, imageUrl, link, send, toast, view } from './connection'
 import LightPanel from './LightPanel.vue'
 
 /**
- * De afstandsbediening op een telefoon of tablet: rondes, slides, beeld op zwart en geluid, en
+ * De afstandsbediening op een telefoon of tablet: de slide die in beeld staat, vorige en volgende
+ * (zoals ← → op de Mac: slides, fragmenten of antwoorden), rondes, beeld op zwart en geluid, en
  * het licht als de plug-in MagicHome-licht aan staat. Volgt de show op de Mac; buiten de show
  * staat alles stil.
  */
 const live = computed(() => !!view.value?.live && link.value === 'open')
 const round = computed(() => view.value?.round ?? null)
-const slide = computed(() => view.value?.slide ?? null)
+const step = computed(() => view.value?.step ?? null)
+const screen = computed(() => view.value?.screen ?? null)
+provide(ASSET_URL, imageUrl)
+
+const STEP_NAMES = {
+  slides: ['Vorige slide', 'Volgende slide'],
+  fragments: ['Vorig fragment', 'Volgend fragment'],
+  answers: ['Vorige stap', 'Volgende stap']
+} as const
+const stepNames = computed(() =>
+  step.value ? STEP_NAMES[step.value.target] : ['Vorige', 'Volgende']
+)
 
 const status = computed(() => {
   if (link.value === 'lost') return { text: 'Geen verbinding', tone: 'warn' }
@@ -31,14 +45,6 @@ const heading = computed(() => {
   if (!v.quiz) return 'Geen quiz open op de Mac'
   if (!v.live) return 'Start de show op de Mac'
   return round.value?.title ?? (v.nextRound ? `Hierna: ${v.nextRound}` : 'Dit was de laatste ronde')
-})
-
-const slideLabel = computed(() => {
-  const s = slide.value
-  if (!s) return round.value ? 'Geen slides in deze ronde' : 'Slides'
-  return s.index === -1
-    ? `Geen slide, ${s.count} in deze ronde`
-    : `Slide ${s.index + 1} van ${s.count}`
 })
 
 onMounted(connect)
@@ -69,25 +75,38 @@ onMounted(connect)
         <h1>{{ heading }}</h1>
       </section>
 
-      <section class="card" aria-label="Slides">
-        <div class="slide-info">
-          <span class="eyebrow">{{ slideLabel }}</span>
-          <p v-if="slide?.text" class="slide-text">{{ slide.text }}</p>
+      <section class="card" aria-label="In beeld">
+        <div class="step-head">
+          <span class="eyebrow grow">{{ step?.label ?? 'In beeld' }}</span>
+          <span v-if="step?.playing" class="playing"><span class="dot" />Speelt</span>
         </div>
+        <div class="preview" :class="{ black: view?.blackout }" aria-label="Preview van de slide">
+          <SlideView
+            v-if="screen"
+            :key="screen.slide.id"
+            :slide="screen.slide"
+            :number="screen.number"
+          />
+          <span v-else class="empty">Geen slide in beeld</span>
+        </div>
+        <p v-if="step?.text" class="step-text">{{ step.text }}</p>
+        <p v-if="step?.answer" class="answer">
+          <span class="answer-label">Antwoord</span>{{ step.answer }}
+        </p>
         <div class="pair">
           <button
             class="key"
-            :disabled="!live || !slide?.prev"
-            aria-label="Vorige slide"
-            @click="send({ type: 'slide', direction: 'prev' })"
+            :disabled="!live || !step?.prev"
+            :aria-label="stepNames[0]"
+            @click="send({ type: 'step', direction: 'prev' })"
           >
             <Icon name="left" :size="34" />
           </button>
           <button
             class="key primary"
-            :disabled="!live || !slide?.next"
-            aria-label="Volgende slide"
-            @click="send({ type: 'slide', direction: 'next' })"
+            :disabled="!live || !step?.next"
+            :aria-label="stepNames[1]"
+            @click="send({ type: 'step', direction: 'next' })"
           >
             <Icon name="right" :size="34" />
           </button>
@@ -275,21 +294,75 @@ h1 {
   background: var(--surface-1);
 }
 
-.slide-info {
+.step-head {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-height: 46px;
+  align-items: center;
+  gap: 8px;
+  min-height: 24px;
   padding: 0 2px;
 }
 
-.slide-text {
-  display: -webkit-box;
+.playing {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.playing .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* Zoals de schermen op de Mac in de show: de slide op zwart, gedimd als het beeld op zwart staat. */
+.preview {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 16 / 9;
   overflow: hidden;
+  border-radius: var(--radius);
+  background: #000;
+  container-type: size;
+}
+
+.preview.black {
+  opacity: 0.4;
+}
+
+.empty {
+  color: var(--faint);
+  font-size: 13px;
+}
+
+.step-text {
+  padding: 0 2px;
   font-size: 17px;
   font-weight: 600;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  line-height: 1.35;
+  white-space: pre-line;
+}
+
+.answer {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 17px;
+  font-weight: 650;
+}
+
+.answer-label {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .pair {

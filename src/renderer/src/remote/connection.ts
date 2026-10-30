@@ -11,6 +11,10 @@ const TOAST_MS = 4000
 const key = new URLSearchParams(location.search).get('key') ?? ''
 const withKey = (path: string) => `${path}?key=${encodeURIComponent(key)}`
 
+/** Een afbeelding uit de quiz, voor de preview; de Mac geeft hem alleen met de sleutel. */
+export const imageUrl = (assetId: string | undefined): string | null =>
+  assetId ? withKey(`/media/${encodeURIComponent(assetId)}`) : null
+
 export const view = shallowRef<RemoteView | null>(null)
 export const link = ref<LinkState>(key ? 'connecting' : 'denied')
 export const toast = ref('')

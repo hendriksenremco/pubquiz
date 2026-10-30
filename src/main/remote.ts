@@ -25,6 +25,7 @@ import {
 } from '@shared/remote'
 import type { Quiz, ShowState } from '@shared/types'
 import type { MainPlugin, PluginHost } from './plugins'
+import { mimeType } from './range'
 
 /** "QUIZ" op een telefoontoetsenbord. Vast, zodat een bladwijzer op de telefoon blijft werken. */
 export const REMOTE_PORT = 7849
@@ -145,6 +146,7 @@ export class RemotePlugin implements MainPlugin {
       if (url.pathname === '/api/events') this.events(url, res)
       else if (url.pathname === '/api/check') this.check(url, res)
       else if (url.pathname === '/api/action') await this.action(url, req, res)
+      else if (url.pathname.startsWith('/media/')) await this.media(url, req, res)
       else await servePage(this.options.page, url, req, res)
     } catch {
       if (res.headersSent) res.destroy()
@@ -179,6 +181,16 @@ export class RemotePlugin implements MainPlugin {
     reply(res, 200, { ok: true })
   }
 
+  /** Een afbeelding uit de quiz voor de preview: alleen op id, en alleen afbeeldingen. */
+  private async media(url: URL, req: IncomingMessage, res: ServerResponse): Promise<void> {
+    if (!this.authorized(url))
+      return reply(res, 401, { ok: false, error: 'Scan de QR-code opnieuw' })
+    const id = decodeURIComponent(url.pathname.slice('/media/'.length))
+    const asset = this.quiz?.assets.find((a) => a.id === id && a.kind === 'image')
+    const file = asset ? this.host.mediaFile(asset.file) : null
+    await sendFile(file, file ? mimeType(file) : '', 'private, max-age=3600', req, res)
+  }
+
   private async action(url: URL, req: IncomingMessage, res: ServerResponse): Promise<void> {
     if (req.method !== 'POST') return reply(res, 405, { ok: false, error: 'Alleen POST' })
     if (!this.authorized(url))
@@ -198,7 +210,7 @@ export class RemotePlugin implements MainPlugin {
         (result as RemoteResult | null) ?? { ok: false, error: 'Het licht staat uit op de Mac' }
       )
     }
-    const command = remoteCommand(this.state, action)
+    const command = this.quiz && remoteCommand(this.quiz, this.state, action)
     if (command) this.host.command(command)
     return { ok: true }
   }
@@ -347,12 +359,29 @@ async function servePage(
   const file = resolve(page.dir, `.${decodeURIComponent(path)}`)
   const inside = relative(page.dir, file)
   const allowed = inside === 'remote.html' || inside.startsWith(`assets${sep}`)
-  const stat = allowed ? await fs.stat(file).catch(() => null) : null
-  if (!stat?.isFile()) {
+  await sendFile(
+    allowed ? file : null,
+    TYPES[extname(file)] ?? 'application/octet-stream',
+    // Bestanden in assets/ hebben een hash in hun naam.
+    inside === 'remote.html' ? 'no-cache' : 'public, max-age=31536000, immutable',
+    req,
+    res
+  )
+}
+
+/** Een bestand, of 404 als het er niet is (null: niet toegestaan). */
+async function sendFile(
+  file: string | null,
+  type: string,
+  cache: string,
+  req: IncomingMessage,
+  res: ServerResponse
+): Promise<void> {
+  const stat = file ? await fs.stat(file).catch(() => null) : null
+  if (!file || !stat?.isFile()) {
     res.writeHead(404, HEADERS)
     return void res.end()
   }
-  const type = TYPES[extname(file)] ?? 'application/octet-stream'
   // Tekst ingepakt: de telefoon laadt Vue en de effectnamen zo in een kwart van de tijd.
   const gzip = type.includes('charset') && /\bgzip\b/.test(req.headers['accept-encoding'] ?? '')
   res.writeHead(200, {
@@ -360,8 +389,7 @@ async function servePage(
     'Content-Type': type,
     ...(gzip ? { 'Content-Encoding': 'gzip' } : { 'Content-Length': stat.size }),
     Vary: 'Accept-Encoding',
-    // Bestanden in assets/ hebben een hash in hun naam.
-    'Cache-Control': inside === 'remote.html' ? 'no-cache' : 'public, max-age=31536000, immutable'
+    'Cache-Control': cache
   })
   if (req.method === 'HEAD') return void res.end()
   const stream = createReadStream(file)

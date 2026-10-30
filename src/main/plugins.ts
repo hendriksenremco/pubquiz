@@ -15,6 +15,8 @@ export interface PluginHost {
   saveConfig(config: Record<string, unknown>): void
   /** Een opdracht aan de show, zoals een knop in de app hem geeft. */
   command(command: ShowCommand): void
+  /** Waar een bestand uit de geopende quiz staat; null = geen quiz, of buiten de quizmap. */
+  mediaFile(file: string): string | null
   /** Een vraag aan een andere plug-in; null als die uit staat. */
   invoke(id: PluginId, action: string, payload?: unknown): Promise<unknown>
 }
@@ -97,6 +99,7 @@ export class Plugins {
       notify: this.host.notify,
       saveConfig: (config) => this.host.saveConfig(id, config),
       command: this.host.command,
+      mediaFile: this.host.mediaFile,
       invoke: (other, action, payload) => this.invoke(other, action, payload)
     }
   }

@@ -91,24 +91,47 @@ test('de show bedienen met een telefoon via de QR-code', async () => {
     await operator.screenshot({ path: 'test-results/remote-qr.png' })
     await operator.keyboard.press('Escape')
 
-    // Rondes en slides.
+    // Rondes en slides, met een preview van de slide die in beeld staat.
+    const preview = phone.getByLabel('Preview van de slide')
     await expect(phone.locator('h1')).toHaveText('Hierna: Ronde 1: algemeen')
-    await expect(phone.getByRole('button', { name: 'Volgende slide' })).toBeDisabled()
+    await expect(phone.getByRole('button', { name: 'Volgende', exact: true })).toBeDisabled()
     await phone.getByRole('button', { name: /Volgende ronde/ }).click()
     await expect(macRound).toContainText('Ronde 1: algemeen')
     await expect(phone.locator('h1')).toHaveText('Ronde 1: algemeen')
-    await expect(phone.getByText(/^Slide 1 van \d+$/)).toBeVisible()
+    await expect(phone.getByText('Slide 1 van 3')).toBeVisible()
+    await expect(preview).toContainText('Algemene kennis')
     await phone.getByRole('button', { name: 'Volgende slide' }).click()
     await expect(macSlide).toHaveText('2')
+    // De vraag staat in de preview, en leesbaar eronder.
+    const question = 'Wat is de hoofdstad van Australië?'
+    await expect(preview).toContainText(question)
+    await expect(phone.locator('.step-text')).toHaveText(question)
+    await phone.screenshot({ path: 'test-results/remote-phone-question.png' })
     await phone.getByRole('button', { name: 'Volgende slide' }).click()
     await expect(macSlide).toHaveText('3')
+    await expect(phone.locator('.step-text')).toHaveCount(0)
     await phone.getByRole('button', { name: 'Vorige slide' }).click()
     await expect(macSlide).toHaveText('2')
+
+    // In een muziekronde bladeren dezelfde knoppen door de fragmenten, zoals ← → op de Mac.
+    const frag = (n: number) => operator.locator('.frag').nth(n - 1)
     await phone.getByRole('button', { name: /Volgende ronde/ }).click()
     await expect(macRound).toContainText('Ronde 2: muziek')
+    await expect(phone.getByText('8 fragmenten', { exact: true })).toBeVisible()
+    await expect(phone.getByRole('button', { name: 'Vorig fragment' })).toBeDisabled()
+    await phone.getByRole('button', { name: 'Volgend fragment' }).click()
+    await expect(frag(1)).toHaveClass(/on/)
+    await expect(phone.getByText('Fragment 1 van 8')).toBeVisible()
+    await expect(phone.locator('.playing')).toHaveText('Speelt')
+    await phone.getByRole('button', { name: 'Volgend fragment' }).click()
+    await expect(frag(2)).toHaveClass(/on/)
+    await expect(phone.getByText('Fragment 2 van 8')).toBeVisible()
+    await phone.screenshot({ path: 'test-results/remote-phone-fragment.png' })
+    await phone.getByRole('button', { name: 'Vorig fragment' }).click()
+    await expect(frag(1)).toHaveClass(/on/)
     await phone.getByRole('button', { name: /Vorige ronde/ }).click()
     await expect(macRound).toContainText('Ronde 1: algemeen')
-    await expect(phone.getByText(/^Slide 1 van \d+$/)).toBeVisible()
+    await expect(phone.getByText('Slide 1 van 3')).toBeVisible()
 
     // Beeld op zwart en geluid uit doen hetzelfde als de knoppen op de Mac.
     await phone.getByRole('button', { name: 'Beeld op zwart' }).click()
@@ -162,7 +185,7 @@ test('de show bedienen met een telefoon via de QR-code', async () => {
     await confirmIn(operator, 'Stop show')
     const after = await openRemote(app, renewed, PHONE)
     await expect(after.locator('h1')).toHaveText('Start de show op de Mac')
-    await expect(after.getByRole('button', { name: 'Volgende slide' })).toBeDisabled()
+    await expect(after.getByRole('button', { name: 'Volgende', exact: true })).toBeDisabled()
     await expect(after.locator('.status')).toHaveText('Niet live')
   } finally {
     await app.close()
