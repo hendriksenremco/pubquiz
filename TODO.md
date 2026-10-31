@@ -49,7 +49,7 @@ De rest van de lijst hangt hiervan af.
 - [ ] **[Remco] Wie brengt de app uit:** Remco als privépersoon, of een (nieuwe) onderneming? De app staat los van Guts & Gusto.
   - Dit bepaalt met welk Apple-team de app gesigneerd wordt.
   - Het bepaalt ook welke naam in de app staat en welke gegevens op de site komen.
-- [ ] **[Remco] Waar de download komt te staan.**
+- [x] **[Remco] Waar de download komt te staan:** GitHub Releases van deze (openbare) repo (klaar op 31 oktober 2026).
   - Advies: GitHub Releases, in een aparte openbare repo. De broncode-repo hoeft dan niet openbaar te worden.
   - Diezelfde plek kan de app later gebruiken om updates op te halen.
   - Nog niet bevestigd.
@@ -69,12 +69,12 @@ De rest van de lijst hangt hiervan af.
 
 ## 2. Signeren en notariseren
 
-**Nu:** in `electron-builder.yml` staan `identity: null` en `notarize: false`. macOS blokkeert de app daardoor bij de eerste start. De gebruiker moet dan naar Systeeminstellingen › Privacy en beveiliging en daar op "Open toch" klikken.
+**Nu (31 oktober 2026):** releases worden gesigneerd en genotariseerd door `.github/workflows/release.yml` (een tag `v*` of met de hand). Versie 0.1.0 staat online, universeel (Apple Silicon en Intel). Lokaal blijft `pnpm build:mac` ongesigneerd.
 
-- [ ] **[Remco] Certificaat en notarisatie-sleutel.**
+- [x] **[Remco] Certificaat en notarisatie-sleutel** (klaar op 31 oktober 2026): Developer ID van Remco (individueel), en de API-sleutel "QuizNote notarization". Staan als secrets in de repo.
   - Maak een "Developer ID Application"-certificaat in het juiste Apple-team en zet het in de sleutelhanger. Op 25 oktober stond er geen op deze Mac.
   - Maak voor het notariseren een App Store Connect API-sleutel of een app-specifiek wachtwoord aan.
-- [ ] **[Claude] electron-builder instellen.**
+- [x] **[Claude] electron-builder instellen** (klaar op 31 oktober 2026): `electron-builder.release.yml` en `.github/workflows/release.yml`.
   - Zet `identity` en `hardenedRuntime: true`, en vul `notarize` in.
   - De gegevens komen uit omgevingsvariabelen, nooit uit de repo.
   - Loop `build/entitlements.mac.plist` na. Nu staan daarin `allow-jit`, `allow-unsigned-executable-memory` en `allow-dyld-environment-variables`.
@@ -150,10 +150,10 @@ Alleen als Remco daarvoor kiest; zie hoofdstuk 1.
 ## 6. Site (`~/Documents/pubquiz-site`)
 
 - [ ] **[Remco] Pushen.** De lokale `develop` loopt voor op GitHub: op 31 oktober 12 commits, met onder meer de merkbestanden, de naam QuizNote, Firebase en de opruimronde. Push alleen als Remco het zegt.
-- [ ] **[Claude] Downloadknop.**
+- [x] **[Claude] Downloadknop** (klaar op 31 oktober 2026): naar `releases/latest/download/QuizNote.dmg`.
   - Vul `downloadUrl` in `nuxt.config.ts` in (of `NUXT_PUBLIC_DOWNLOAD_URL`) zodra de dmg ergens staat.
   - Is het veld leeg, dan toont de site een melding in plaats van de knop.
-- [ ] **[Claude] De uitleg over "Open toch" bij de download weghalen** zodra de app genotariseerd is.
+- [x] **[Claude] De uitleg over "Open toch" bij de download weghalen** (klaar op 31 oktober 2026) zodra de app genotariseerd is.
 - [ ] **[Claude, eerst vragen] Teksten op de site bijwerken.**
   - De CLAUDE.md van de site zet "bediening vanaf de telefoon" onder "Niet beloven", maar die zit nu in de app (plug-in Afstandsbediening). Het licht (MagicHome) ook.
   - Vraag Remco of ze op de site mogen. Allebei zijn ze nog niet met echte telefoons getest, en het licht nog niet op andere locaties.
