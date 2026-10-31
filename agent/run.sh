@@ -54,6 +54,19 @@ elif [ -n "$LIMIT_ISSUE" ]; then
   gh issue close "$LIMIT_ISSUE" --comment "De run van $(date '+%-d %B %Y %H:%M') lukte weer." >/dev/null
 fi
 
+# Melding op Remco's telefoon (via een Homey-webhook). De URL staat alleen op de server,
+# in ~/.config/quiznote-agent/notify-url, niet in de repo.
+notify() {
+  local url_file="$HOME/.config/quiznote-agent/notify-url"
+  [ -r "$url_file" ] || return 0
+  curl -fsS --max-time 10 -G "$(cat "$url_file")" --data-urlencode "tag=$1" >/dev/null || true
+}
+MELDING="$(grep -m1 -oP '^MELDING: \K.*' "$LOG" || true)"
+[ -n "$MELDING" ] && notify "$MELDING"
+if grep -qiE 'usage limit|rate limit|limit reached|requires usage credits|out of (usage|credits)' "$LOG" && [ -z "$LIMIT_ISSUE" ]; then
+  notify "De agent staat stil: gebruikslimiet van Claude bereikt. Hij probeert het over een uur opnieuw."
+fi
+
 # Logs van meer dan 30 dagen weg.
 find "$DIR/logs" -name '*.log' -mtime +30 -delete
 
