@@ -210,10 +210,15 @@ Nieuwe optionele koppelingen, zoals Spotify of YouTube, volgen hetzelfde patroon
   - de afstandsbediening op een echte telefoon of tablet. In de e2e-test is de "telefoon" een verborgen Electron-venster.
 - Ga er niet van uit dat deze onderdelen in een café werken voordat Remco ze daar heeft geprobeerd.
 
+## Agent en CI
+
+- **CI:** elke pull request naar `master` draait op macOS in GitHub Actions (`.github/workflows/ci.yml`): typecheck, unit-tests, e2e-tests en een ongesigneerde dmg.
+- **Agent:** op de thuisserver werkt elke nacht een Claude-sessie zelf aan TODO.md. Hoe en wat staat in `agent/`. Zijn pull requests hebben het label `agent`, zijn vragen aan Remco zijn issues met het label `vraag`.
+
 ## Meer
 
 - `TODO.md`: wat er nog moet gebeuren voor de release.
 - `MAGICHOME.md`: de controller, het protocol en wat we over het netwerk hebben geleerd.
 - `README.md`: gebruik en opbouw van de app. Loopt achter.
-- `~/Documents/pubquiz-site`: de site. Nuxt 4, branches `master` en `develop`; daar push je alleen als Remco het vraagt.
+- `~/Documents/pubquiz-site`: de site. Nuxt 4, branches `master` en `develop`. Pushen naar `develop` mag; een push naar `master` zet de site live (zie de CLAUDE.md van de site).
 - Het geheugen van Claude voor dit project, op de Mac van Remco: `~/.claude/projects/-Users-remcohendriksen-Documents-pubquiz/memory/`.

@@ -1,0 +1,9 @@
+[Unit]
+Description=QuizNote-agent: één run
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash -lc %h/quiznote-agent/pubquiz/agent/run.sh
+TimeoutStartSec=3h
