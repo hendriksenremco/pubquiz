@@ -1,0 +1,66 @@
+# Maakt een release: bouwt QuizNote op macOS, signeert met de Developer ID van Remco,
+# notariseert bij Apple en zet de dmg op GitHub Releases.
+# Start met een tag (git tag v0.1.0 && git push origin v0.1.0) of met de hand.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: macos-latest
+    env:
+      # Geen geheimen: de Key ID en de Issuer ID van de App Store Connect API-sleutel "QuizNote notarization".
+      APPLE_API_KEY_ID: 35G8C4Q54X
+      APPLE_API_ISSUER: 3973c4a8-a91e-450e-a9d3-acf77f12cbcd
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 8
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      # Volledige ffmpeg: de rondleiding gebruikt het filter drawtext.
+      - name: ffmpeg
+        run: |
+          brew install ffmpeg-full
+          echo "$(brew --prefix ffmpeg-full)/bin" >> "$GITHUB_PATH"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm tour:build
+
+      - name: Bouwen, signeren en notariseren
+        env:
+          CSC_LINK: ${{ secrets.MAC_CERT_P12 }}
+          CSC_KEY_PASSWORD: ${{ secrets.MAC_CERT_PASSWORD }}
+          APPLE_API_KEY_CONTENT: ${{ secrets.APPLE_API_KEY }}
+        run: |
+          export APPLE_API_KEY="$RUNNER_TEMP/AuthKey_${APPLE_API_KEY_ID}.p8"
+          printf '%s' "$APPLE_API_KEY_CONTENT" > "$APPLE_API_KEY"
+          npx electron-builder --mac --universal --config electron-builder.release.yml --publish never
+
+      - name: Controleren
+        run: |
+          APP="$(ls -d dist/mac-universal/QuizNote.app)"
+          codesign --verify --deep --strict --verbose=2 "$APP"
+          spctl -a -vv "$APP"
+          xcrun stapler validate dist/QuizNote.dmg || true
+
+      - name: Release op GitHub
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="v$(node -p "require('./package.json').version")"
+          gh release view "$VERSION" >/dev/null 2>&1 || gh release create "$VERSION" --title "QuizNote $VERSION" --notes "QuizNote $VERSION voor macOS (Apple Silicon en Intel)."
+          gh release upload "$VERSION" dist/QuizNote.dmg dist/QuizNote-*-mac.zip dist/latest-mac.yml --clobber

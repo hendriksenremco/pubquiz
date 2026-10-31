@@ -1,0 +1,18 @@
+# Instellingen voor een echte release: gesigneerd met de Developer ID van Remco en genotariseerd.
+# Gebruikt door .github/workflows/release.yml. Lokaal blijft `pnpm build:mac` ongesigneerd.
+extends: ./electron-builder.yml
+mac:
+  target:
+    - dmg
+    - zip
+  category: public.app-category.entertainment
+  identity: Remco Hendriksen
+  hardenedRuntime: true
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+  notarize: true
+zip:
+  artifactName: QuizNote-${version}-mac.${ext}
+# Vaste naam, zodat de site altijd naar .../releases/latest/download/QuizNote.dmg kan linken.
+dmg:
+  artifactName: QuizNote.${ext}
