@@ -23,7 +23,8 @@ flock -n 9 || { echo "De agent draait al." >&2; exit 0; }
   clone https://github.com/hendriksenremco/pubquiz.git "$REPO"
 cd "$REPO"
 # Alleen in deze clone gebruikt git het token van de agent.
-git config credential.helper ''
+git config --unset-all credential.helper || true
+git config --add credential.helper ''
 git config --add credential.helper '!gh auth git-credential'
 git remote set-url origin https://github.com/hendriksenremco/pubquiz.git
 git fetch --prune origin
