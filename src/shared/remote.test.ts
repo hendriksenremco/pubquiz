@@ -45,6 +45,7 @@ describe('remoteView', () => {
       rounds: 3,
       prevRound: null,
       nextRound: 'Ronde 2: muziek',
+      restartRound: 'Ronde 1',
       step: {
         target: 'slides',
         label: 'Slide 2 van 2',
@@ -68,7 +69,8 @@ describe('remoteView', () => {
       step: null,
       screen: null,
       prevRound: 'Ronde 1',
-      nextRound: 'Ronde 2: muziek'
+      nextRound: 'Ronde 2: muziek',
+      restartRound: 'Ronde 1'
     })
   })
 
@@ -185,6 +187,8 @@ describe('remoteCommand', () => {
     expect(remoteCommand(quiz, state, { type: 'round', direction: 'prev' })).toEqual({
       type: 'prevRound'
     })
+    expect(remoteCommand(quiz, state, { type: 'restartRound' })).toEqual({ type: 'restartRound' })
+    expect(remoteCommand(quiz, state, { type: 'endRound' })).toEqual({ type: 'endRound' })
     expect(remoteCommand(quiz, state, { type: 'blackout', on: true })).toEqual({
       type: 'blackout',
       on: true

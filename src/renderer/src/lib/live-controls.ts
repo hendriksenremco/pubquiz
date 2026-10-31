@@ -1,16 +1,22 @@
 import { computed } from 'vue'
 import type { ShowCommand } from '@shared/ipc'
+import { remoteStep } from '@shared/remote'
 import {
   activeRound,
   adjacentRound,
   allBlack as isAllBlack,
+  restartRound,
+  STEP_NAMES,
   stepCommand,
   stepTarget
 } from '@shared/resolve'
 import { useSession } from '../stores/session'
 import { ask } from './confirm'
 
-/** Bediening van de live show, gedeeld door de werkbalk en de sneltoetsen van ShowLive. */
+/**
+ * Bediening van de live show, gedeeld door de werkbalk en de sneltoetsen van ShowLive. Dezelfde
+ * knoppen als op de afstandsbediening (src/renderer/src/remote).
+ */
 export function useLiveControls() {
   const api = window.pubquiz
   const session = useSession()
@@ -23,8 +29,15 @@ export function useLiveControls() {
   const arrows = computed(() => stepTarget(quiz.value, round.value))
   const hasAnswers = computed(() => arrows.value === 'answers')
   const step = (direction: 'next' | 'prev') => send(stepCommand(arrows.value, direction))
+  /** Waar ← → staan en of ze verder kunnen; null = er loopt geen ronde. */
+  const stepView = computed(() =>
+    round.value ? remoteStep(quiz.value, round.value, state.value) : null
+  )
+  const stepNames = computed(() => STEP_NAMES[arrows.value])
 
+  const prevRound = computed(() => adjacentRound(quiz.value, state.value, 'prev'))
   const nextRound = computed(() => adjacentRound(quiz.value, state.value, 'next'))
+  const restartable = computed(() => restartRound(quiz.value, state.value))
 
   const allBlack = computed(() => isAllBlack(quiz.value, state.value))
   function toggleBlackout(screenId?: string) {
@@ -69,6 +82,7 @@ export function useLiveControls() {
   const shortcuts = computed((): [string, string][] => [
     ['← →', ARROWS[arrows.value]],
     ['Enter', 'Start de volgende ronde'],
+    ['R', 'Ronde opnieuw vanaf het begin'],
     ['E', 'Einde ronde'],
     ['1–9', 'Speel een fragment'],
     ['Spatie', 'Stop het fragment'],
@@ -82,10 +96,14 @@ export function useLiveControls() {
   return {
     send,
     round,
+    prevRound,
     nextRound,
+    restartable,
     hasAnswers,
     arrows,
     step,
+    stepView,
+    stepNames,
     allBlack,
     toggleBlackout,
     muted,

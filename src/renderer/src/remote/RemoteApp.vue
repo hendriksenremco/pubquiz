@@ -1,16 +1,17 @@
 <script setup lang="ts">
 import { computed, onMounted, provide } from 'vue'
+import { STEP_NAMES } from '@shared/resolve'
 import Icon from '../components/Icon.vue'
 import SlideView from '../components/SlideView.vue'
 import { ASSET_URL } from '../lib/media'
+import LightPanel from '../plugins/magichome/LightPanel.vue'
 import { connect, imageUrl, link, send, toast, view } from './connection'
-import LightPanel from './LightPanel.vue'
 
 /**
  * De afstandsbediening op een telefoon of tablet: de slide die in beeld staat, vorige en volgende
  * (zoals ← → op de Mac: slides, fragmenten of antwoorden), rondes, beeld op zwart en geluid, en
  * het licht als de plug-in MagicHome-licht aan staat. Volgt de show op de Mac; buiten de show
- * staat alles stil.
+ * staat alles stil. Dezelfde knoppen staan in de show op de Mac (ShowLive en de werkbalk).
  */
 const live = computed(() => !!view.value?.live && link.value === 'open')
 const round = computed(() => view.value?.round ?? null)
@@ -18,11 +19,6 @@ const step = computed(() => view.value?.step ?? null)
 const screen = computed(() => view.value?.screen ?? null)
 provide(ASSET_URL, imageUrl)
 
-const STEP_NAMES = {
-  slides: ['Vorige slide', 'Volgende slide'],
-  fragments: ['Vorig fragment', 'Volgend fragment'],
-  answers: ['Vorige stap', 'Volgende stap']
-} as const
 const stepNames = computed(() =>
   step.value ? STEP_NAMES[step.value.target] : ['Vorige', 'Volgende']
 )
@@ -131,6 +127,18 @@ onMounted(connect)
         >
           <span class="tile-label">Volgende ronde<Icon name="right" :size="16" /></span>
           <span class="tile-sub">{{ view?.nextRound ?? '–' }}</span>
+        </button>
+        <button
+          class="tile"
+          :disabled="!live || !view?.restartRound"
+          @click="send({ type: 'restartRound' })"
+        >
+          <span class="tile-label"><Icon name="restart" :size="15" />Ronde opnieuw</span>
+          <span class="tile-sub">{{ view?.restartRound ?? '–' }}</span>
+        </button>
+        <button class="tile end" :disabled="!live || !round" @click="send({ type: 'endRound' })">
+          <span class="tile-label">Einde ronde<Icon name="end" :size="14" /></span>
+          <span class="tile-sub">{{ round?.title ?? '–' }}</span>
         </button>
       </section>
 

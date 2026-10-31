@@ -116,7 +116,8 @@ describe('MagicHomePlugin', () => {
 
   it('houdt een met de hand gekozen licht tot de show zelf een ander licht kiest', async () => {
     const device = await fakeController()
-    const plugin = new MagicHomePlugin(vi.fn())
+    const changed = vi.fn()
+    const plugin = new MagicHomePlugin(vi.fn(), changed)
     const { quiz, state } = setup()
     const blue = { type: 'color', color: '#0000ff' } as const
     try {
@@ -126,6 +127,7 @@ describe('MagicHomePlugin', () => {
       plugin.update(quiz, state())
       await vi.waitFor(() => expect(device.log).toEqual([ON, RED]))
       expect(await plugin.invoke('choose', blue)).toEqual({ ok: true })
+      expect(changed).toHaveBeenCalledOnce()
       await vi.waitFor(() => expect(device.log.at(-1)).toBe(command.color(0, 0, 0xff)))
       expect(await plugin.invoke('status', null)).toEqual({ light: blue, manual: true })
 

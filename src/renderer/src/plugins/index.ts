@@ -1,6 +1,7 @@
 import type { Component } from 'vue'
 import type { PluginId } from '@shared/plugins'
 import MagicHomeSettings from './magichome/MagicHomeSettings.vue'
+import LiveLight from './magichome/LiveLight.vue'
 import QuizLight from './magichome/QuizLight.vue'
 import RoundLight from './magichome/RoundLight.vue'
 import SlideLight from './magichome/SlideLight.vue'
@@ -32,6 +33,7 @@ export const RENDERER_PLUGINS: RendererPlugin[] = [
       roundSettings: RoundLight,
       slideInspector: SlideLight,
       startSheet: StartLight,
+      liveControls: LiveLight,
       settings: MagicHomeSettings
     }
   },

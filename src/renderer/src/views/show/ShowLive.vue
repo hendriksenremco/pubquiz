@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted } from 'vue'
 import { slideText } from '@shared/resolve'
+import Icon from '../../components/Icon.vue'
 import ScreenStage from '../../components/ScreenStage.vue'
 import { useLiveControls } from '../../lib/live-controls'
 import { useNow } from '../../lib/use-now'
@@ -11,7 +12,8 @@ import Mixer from './Mixer.vue'
 
 /**
  * De show, zoals de presentatieweergave van Keynote: wat er nu op de schermen staat, groot;
- * rechts wat hierna komt met één grote knop. De noodknoppen staan in de werkbalk.
+ * rechts de bediening, met dezelfde knoppen als de afstandsbediening. De noodknoppen staan in de
+ * werkbalk.
  */
 const session = useSession()
 const quiz = computed(() => session.quiz!)
@@ -19,10 +21,14 @@ const state = computed(() => session.state)
 const {
   send,
   round,
+  prevRound,
   nextRound,
+  restartable,
   hasAnswers,
   arrows,
   step,
+  stepView,
+  stepNames,
   toggleBlackout,
   toggleSound,
   toggleAutoplay,
@@ -45,6 +51,7 @@ const KEYS: Record<string, () => void> = {
   ArrowLeft: () => step('prev'),
   PageUp: () => step('prev'),
   Enter: () => send({ type: 'nextRound' }),
+  r: () => send({ type: 'restartRound' }),
   e: () => send({ type: 'endRound' }),
   ' ': () => send({ type: 'stopFragment' }),
   a: toggleAutoplay,
@@ -159,25 +166,61 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
     </main>
 
     <aside class="side scroll">
-      <section class="up-next">
-        <span class="label">Hierna</span>
-        <p class="next-title">{{ nextRound?.title ?? 'Dit was de laatste ronde' }}</p>
-        <button
-          class="btn btn-primary btn-lg next-btn"
-          :disabled="!nextRound"
-          @click="send({ type: 'nextRound' })"
-        >
-          <span class="next-label">{{ nextRound ? `Start ${nextRound.title}` : 'Klaar' }}</span>
-          <span class="kbd">⏎</span>
-        </button>
-        <button
-          class="btn btn-ghost"
-          :disabled="!round"
-          title="Schermen en muziek terug naar de standaard"
-          @click="send({ type: 'endRound' })"
-        >
-          Einde ronde <span class="kbd">E</span>
-        </button>
+      <section class="control" aria-label="Bediening">
+        <span class="label">{{ stepView?.label ?? 'Tussen twee rondes' }}</span>
+        <div class="pair">
+          <button
+            class="btn key"
+            :disabled="!stepView?.prev"
+            :aria-label="stepNames[0]"
+            :title="`${stepNames[0]} (←)`"
+            @click="step('prev')"
+          >
+            <Icon name="left" :size="26" />
+          </button>
+          <button
+            class="btn btn-primary key"
+            :disabled="!stepView?.next"
+            :aria-label="stepNames[1]"
+            :title="`${stepNames[1]} (→)`"
+            @click="step('next')"
+          >
+            <Icon name="right" :size="26" />
+          </button>
+        </div>
+        <div class="pair">
+          <button class="btn tile" :disabled="!prevRound" @click="send({ type: 'prevRound' })">
+            <span class="tile-label"><Icon name="left" :size="14" />Vorige ronde</span>
+            <span class="tile-sub">{{ prevRound?.title ?? '–' }}</span>
+          </button>
+          <button
+            class="btn tile end"
+            :disabled="!nextRound"
+            title="Start de volgende ronde (Enter)"
+            @click="send({ type: 'nextRound' })"
+          >
+            <span class="tile-label">Volgende ronde<Icon name="right" :size="14" /></span>
+            <span class="tile-sub">{{ nextRound?.title ?? '–' }}</span>
+          </button>
+          <button
+            class="btn tile"
+            :disabled="!restartable"
+            title="Vanaf het begin, met de fragmenten weer ongespeeld (R)"
+            @click="send({ type: 'restartRound' })"
+          >
+            <span class="tile-label"><Icon name="restart" :size="13" />Ronde opnieuw</span>
+            <span class="tile-sub">{{ restartable?.title ?? '–' }}</span>
+          </button>
+          <button
+            class="btn tile end"
+            :disabled="!round"
+            title="Schermen en muziek terug naar de standaard (E)"
+            @click="send({ type: 'endRound' })"
+          >
+            <span class="tile-label">Einde ronde<Icon name="end" :size="12" /></span>
+            <span class="tile-sub">{{ round?.title ?? '–' }}</span>
+          </button>
+        </div>
       </section>
 
       <section v-if="round?.hostNotes" class="notes-section">
@@ -194,7 +237,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 <style scoped>
 .live {
   display: grid;
-  grid-template-columns: 220px minmax(0, 1fr) 300px;
+  grid-template-columns: 220px minmax(0, 1fr) 330px;
   height: 100%;
 }
 
@@ -368,25 +411,56 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
   background: var(--surface-1);
 }
 
-.up-next {
+.control {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.next-title {
-  font: 650 17px var(--display);
+.pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
 }
 
-.next-btn {
-  justify-content: space-between;
-  height: 48px;
-  margin-top: 4px;
-  font-size: 15px;
+.key {
+  height: 64px;
+  border-radius: var(--radius-lg);
 }
 
-.next-label {
+.tile {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2px;
+  height: auto;
+  min-width: 0;
+  min-height: 54px;
+  padding: 8px 10px;
+  border-radius: var(--radius-lg);
+  text-align: left;
+}
+
+.tile.end {
+  align-items: flex-end;
+  text-align: right;
+}
+
+.tile-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.tile-sub {
+  max-width: 100%;
   overflow: hidden;
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
   text-overflow: ellipsis;
 }
 

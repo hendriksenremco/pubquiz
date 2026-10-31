@@ -19,6 +19,8 @@ export interface PluginHost {
   mediaFile(file: string): string | null
   /** Een vraag aan een andere plug-in; null als die uit staat. */
   invoke(id: PluginId, action: string, payload?: unknown): Promise<unknown>
+  /** Zijn stand is veranderd buiten de show om (bv. met de hand); de andere plug-ins horen het. */
+  changed(): void
 }
 
 /** Wat een plug-in in main doet. De app maakt hem aan zodra hij aangezet wordt. */
@@ -29,12 +31,14 @@ export interface MainPlugin {
   update(quiz: Quiz | null, state: ShowState): void
   /** Een vraag vanuit een venster, bv. "test de verbinding". */
   invoke(action: string, payload: unknown): Promise<unknown>
+  /** Een andere plug-in meldt dat zijn stand veranderd is. */
+  changed?(id: PluginId): void
   /** Uitgezet, of de app stopt. */
   stop(): void
 }
 
 const FACTORIES: Record<PluginId, (host: PluginHost) => MainPlugin> = {
-  magichome: (host) => new MagicHomePlugin(host.notify),
+  magichome: (host) => new MagicHomePlugin(host.notify, host.changed),
   remote: (host) => new RemotePlugin(host, remoteOptions())
 }
 
@@ -57,7 +61,7 @@ export class Plugins {
   private running = new Map<PluginId, MainPlugin>()
 
   constructor(
-    private readonly host: Omit<PluginHost, 'saveConfig' | 'invoke'> & {
+    private readonly host: Omit<PluginHost, 'saveConfig' | 'invoke' | 'changed'> & {
       saveConfig(id: PluginId, config: Record<string, unknown>): void
     }
   ) {}
@@ -100,7 +104,10 @@ export class Plugins {
       saveConfig: (config) => this.host.saveConfig(id, config),
       command: this.host.command,
       mediaFile: this.host.mediaFile,
-      invoke: (other, action, payload) => this.invoke(other, action, payload)
+      invoke: (other, action, payload) => this.invoke(other, action, payload),
+      changed: () => {
+        for (const [other, plugin] of this.running) if (other !== id) plugin.changed?.(id)
+      }
     }
   }
 }
