@@ -33,7 +33,9 @@ git clean -qfd -e node_modules
 pnpm install --frozen-lockfile >/dev/null
 
 unset ELECTRON_RUN_AS_NODE
+# Vast model: het standaardmodel op de server kan extra tegoed vragen.
 claude -p "$(cat agent/prompt.md)" \
+  --model opus \
   --permission-mode auto \
   --permission-prompts none \
   >"$LOG" 2>&1 || echo "De run is mislukt; zie $LOG" >&2
