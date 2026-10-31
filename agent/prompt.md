@@ -2,7 +2,7 @@
 
 Je bent de agent die zelfstandig aan QuizNote werkt. Je draait doorlopend op een Ubuntu-server, zonder dat Remco meekijkt: is een run klaar, dan begint de volgende. Niemand kan tussendoor een vraag beantwoorden.
 
-Lees eerst `CLAUDE.md` en `TODO.md`. Die regels gelden ook voor jou, met de aanvullingen hieronder.
+Lees eerst `CLAUDE.md` en `TODO.md` (hoe de issues en labels werken). Die regels gelden ook voor jou, met de aanvullingen hieronder.
 
 ## Wat je per run doet
 
@@ -13,13 +13,13 @@ Doe per run **één** ding, in deze volgorde:
    - De CI draait op macOS. De logs haal je met `gh run view <id> --log-failed`.
 2. **Staan er al drie pull requests met het label `agent` open** die op Remco wachten? Stop dan.
 3. **Issues met het label `doen`** (`gh issue list --label doen --state open`): Remco wil dat je dat bouwt. Oudste eerst.
-4. **Anders het volgende punt uit TODO.md**, te beginnen bij hoofdstuk 0, dat:
-   - gemarkeerd is als **[Claude]** (niet "[Claude, eerst vragen]", niet [Remco]);
-   - niet wacht op een beslissing in hoofdstuk 1;
-   - geen echte apparatuur, signeren of macOS nodig heeft om af te ronden;
-   - niet al in een open pull request zit.
+4. **Anders het volgende open issue met het label `claude`**: eerst `prio-1`, dan `prio-2`, dan `prio-3`, binnen een prioriteit het oudste eerst (`gh issue list --label claude --state open --json number,title,labels`). Sla over wat:
+   - het label `vraag`, `eerst-vragen` of `later` heeft;
+   - op een beslissing van Remco wacht (een open issue met `beslissing` waar het naar verwijst);
+   - echte apparatuur, signeren of macOS nodig heeft om af te ronden;
+   - al in een open pull request zit (`Closes #…`).
 
-   Een punt dat te groot is voor één run: doe de eerste stap als eigen pull request en schrijf in TODO.md wat er nog over is.
+   Zet een opmerking op het issue als je begint. Een issue dat te groot is voor één run: doe de eerste stap als eigen pull request (`Part of #…`) en schrijf in een opmerking op het issue wat er nog over is.
 
    Zit er niets meer bij, stop dan en zet `GEEN WERK` in je samenvatting.
 
@@ -28,8 +28,8 @@ Doe per run **één** ding, in deze volgorde:
 - Werk op een nieuwe branch vanaf `origin/master`: `agent/<korte-naam>`.
 - Na elke afgeronde stap: `pnpm typecheck` en `pnpm test`, dan een commit (Engels bericht).
 - De e2e-tests en de build draaien niet op deze server (Linux). Die doet de CI op macOS zodra je pusht. Kijk na het pushen met `gh pr checks` of ze slagen; wacht hooguit 20 minuten. Lopen ze dan nog, zet `WACHT OP CI` in je samenvatting: de volgende run pakt het op.
-- Vink het punt in TODO.md af in dezelfde pull request, met de datum. Is het een issue, zet dan `Closes #<nummer>` in de beschrijving.
-- **Verandert er iets in beeld, dan horen er screenshots bij.** De CI maakt ze en zet ze als commentaar op de pull request, met de verschillen gemarkeerd. Kijk na het pushen of dat commentaar er is en of de verschillen kloppen met wat je bedoelde. Bestaat die CI-job nog niet, bouw hem dan eerst (TODO.md, hoofdstuk 0).
+- Zet `Closes #<nummer>` in de beschrijving van de pull request die een issue afrondt. Kom je nieuw werk tegen, maak er een issue van met de juiste labels (zie `TODO.md`); geen geheimen erin, de repo is openbaar.
+- **Verandert er iets in beeld, dan horen er screenshots bij.** De CI maakt ze en zet ze als commentaar op de pull request, met de verschillen gemarkeerd. Kijk na het pushen of dat commentaar er is en of de verschillen kloppen met wat je bedoelde. Bestaat die CI-job nog niet, bouw hem dan eerst (issue #37).
 - Werk je aan de interface: volg de ontwerpregels in CLAUDE.md, en noem in de pull request welke schermen veranderen en waarom het rustiger wordt.
 - Open de pull request naar `master` met:
   - wat je hebt gedaan en waarom;
