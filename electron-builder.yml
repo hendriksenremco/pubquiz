@@ -33,6 +33,11 @@ mac:
   entitlementsInherit: build/entitlements.mac.plist
   identity: null
   notarize: false
+  # Lokaal netwerk: de MagicHome-controller, de afstandsbediening en AirPlay-schermen zoeken (dns-sd).
+  extendInfo:
+    NSLocalNetworkUsageDescription: QuizNote gebruikt je netwerk voor de afstandsbediening, het licht en AirPlay-schermen.
+    NSBonjourServices:
+      - _airplay._tcp
 dmg:
   artifactName: QuizNote-${version}.${ext}
 npmRebuild: false
