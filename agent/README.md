@@ -2,7 +2,7 @@
 
 Een Claude-sessie die doorlopend zelf aan QuizNote werkt, op de thuisserver (Ubuntu). Wat hij per run doet, staat in [`prompt.md`](prompt.md).
 
-- Hij kiest het volgende **[Claude]**-punt uit `TODO.md`, of pakt eerst zijn eigen pull requests op (falende CI, commentaar van Remco).
+- Hij kiest het volgende open issue met het label `claude`, of pakt eerst zijn eigen pull requests op (falende CI, commentaar van Remco).
 - Hij werkt op een branch `agent/…` en opent een pull request met het label `agent`. Samenvoegen doet Remco.
 - Moet Remco iets beslissen, dan opent hij een issue met het label `vraag`.
 - De e2e-tests en de build draaien niet op de server maar in GitHub Actions op macOS (`.github/workflows/ci.yml`).
