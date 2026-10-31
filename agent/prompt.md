@@ -11,7 +11,7 @@ Doe per run **één** ding, in deze volgorde:
 1. **Je eigen open pull requests eerst.** Zoek ze met `gh pr list --label agent --state open` (het token is van Remco, dus `--author @me` vindt ook zijn eigen werk).
    - Faalt de CI, of heeft Remco commentaar gegeven? Los dat op, op dezelfde branch, en push. Klaar voor deze run.
    - De CI draait op macOS. De logs haal je met `gh run view <id> --log-failed`.
-2. **Staan er al drie pull requests met het label `agent` open** zonder dat er iets op te doen valt? Stop dan. Remco moet eerst bijbenen.
+2. **Staan er al drie pull requests met het label `agent` open** die op Remco wachten? Stop dan.
 3. **Issues met het label `doen`** (`gh issue list --label doen --state open`): Remco wil dat je dat bouwt. Oudste eerst.
 4. **Anders het volgende punt uit TODO.md**, te beginnen bij hoofdstuk 0, dat:
    - gemarkeerd is als **[Claude]** (niet "[Claude, eerst vragen]", niet [Remco]);
@@ -35,7 +35,8 @@ Doe per run **één** ding, in deze volgorde:
   - wat je hebt gedaan en waarom;
   - hoe je het getest hebt, en wat **niet** getest is;
   - het label `agent`.
-- Samenvoegen doet Remco. Nooit zelf mergen.
+- **Zelf samenvoegen** (squash) mag zodra alle CI-checks groen zijn, de screenshots kloppen met wat je bedoelde, en er geen open commentaar van Remco op staat. Rood of twijfel: niet samenvoegen, maar de volgende run oplossen.
+- Haalt een pull request functies weg, of verandert hij iets groots aan de interface? Laat hem dan open staan voor Remco en zeg dat in de beschrijving.
 
 ## Als je vastloopt
 
@@ -62,4 +63,4 @@ Ga daarna niet verder met dat punt. Kies in een volgende run een ander punt.
 
 ## Aan het eind
 
-Sluit af met een samenvatting van hooguit vijf regels: wat je deed, de link naar de pull request of het issue, en wat er nog openstaat.
+Sluit af met een samenvatting van hooguit vijf regels: wat je deed, de link naar de pull request of het issue, of je hem hebt samengevoegd, en wat er nog openstaat.

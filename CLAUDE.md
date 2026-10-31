@@ -34,7 +34,8 @@ Wat er nog moet gebeuren voordat de app uit kan, staat in **TODO.md**. Werk je d
 
 - Maak na elke afgeronde wijziging een eigen commit, nadat typecheck en tests slagen. Spaar geen werk op voor één grote commit.
 - Werk op een feature-branch vanaf `master` en push zelf.
-- Open aan het eind zelf een pull request naar `master`. Kijk eerst met `gh pr list --state all` of er al een is. Samenvoegen doet Remco.
+- Open aan het eind zelf een pull request naar `master`. Kijk eerst met `gh pr list --state all` of er al een is.
+- Samenvoegen doe je zelf, zodra alle CI-checks groen zijn. Haalt de pull request functies weg of verandert hij iets groots aan de interface, laat hem dan voor Remco staan.
 - Branches heten `master` en `develop`, nooit `main`.
 - Staat er in de checkout ander werk, bijvoorbeeld van een andere sessie of de branch van een open pull request? Gebruik dan een git worktree in plaats van van branch te wisselen.
 
