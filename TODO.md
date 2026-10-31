@@ -11,6 +11,26 @@ Stand op 31 oktober 2026.
 
 Is een punt af, vink het dan aan en zet erbij wanneer het klaar was. Kom je iets nieuws tegen, zet het erbij.
 
+## 0. Doorlopend werk van de agent
+
+Deze punten gaan vóór de rest. De agent op de thuisserver pakt ze op; zie `agent/`.
+
+- [ ] **[Claude] Screenshots in elke pull request.** Een job in `.github/workflows/ci.yml`, op macOS:
+  - draai de e2e-tests op `master` en op de branch van de pull request;
+  - vergelijk de screenshots in `test-results/` per bestandsnaam, met ImageMagick (`compare`);
+  - maak van elk veranderd scherm een plaatje met de verschillen in amber (`#ffa53d`) gemarkeerd, naast het oude scherm;
+  - zet de plaatjes op een aparte branch `pr-screenshots` (map `pr-<nummer>/`) en zet ze in één commentaar op de pull request, dat bij elke push wordt bijgewerkt;
+  - geen verschillen: dan zegt het commentaar dat.
+- [ ] **[Claude] Plug-ins generieker maken.** Nu heeft elke plug-in eigen code in main, de renderer en de show.
+  - Breng eerst in kaart wat MagicHome en Afstandsbediening gemeen hebben, en wat een volgende plug-in (Spotify, YouTube) nodig zou hebben.
+  - Schrijf een voorstel in `PLUGINS.md`: één interface voor instellingen, quizgegevens (quiz ⊕ ronde ⊕ slide), knoppen in de show en status.
+  - Open een issue met het label `vraag` met het voorstel en jouw advies. Bouw pas na het antwoord, in kleine stappen.
+- [ ] **[Claude] De interface eenvoudiger.** De app is complex geworden.
+  - Loop de schermen één voor één door: startscherm, editor, inspector, Quiz-instellingen, show voorbereiden, de show zelf.
+  - Per scherm één pull request die het rustiger maakt: minder tegelijk in beeld, duidelijkere rangorde, dezelfde woorden overal. Volg de ontwerpregels in CLAUDE.md.
+  - Hooguit één UI-pull request tegelijk open. Haal geen functies weg zonder het eerst te vragen.
+- **Ideeën uit onderzoek.** Een wekelijkse taak onderzoekt concurrenten en zet voorstellen als issue met het label `idee`. Zet Remco er het label `doen` op, dan bouwt de agent het.
+
 ## 1. Beslissingen
 
 De rest van de lijst hangt hiervan af.
@@ -125,6 +145,10 @@ Alleen als Remco daarvoor kiest; zie hoofdstuk 1.
 - [ ] **[Claude, eerst vragen] Teksten op de site bijwerken.**
   - De CLAUDE.md van de site zet "bediening vanaf de telefoon" onder "Niet beloven", maar die zit nu in de app (plug-in Afstandsbediening). Het licht (MagicHome) ook.
   - Vraag Remco of ze op de site mogen. Allebei zijn ze nog niet met echte telefoons getest, en het licht nog niet op andere locaties.
+- [ ] **[Claude] Contact op de site.** Een duidelijke manier om contact op te nemen, in beeld (niet weggestopt), in het Nederlands en het Engels.
+  - Begin eenvoudig: een mailadres (remco@quiznote.app; support@ bestaat niet) in de footer en bij de download, en een korte "Vragen of ideeën?"-regel.
+  - Een formulier alleen als het zonder eigen server en zonder cookies kan; anders eerst vragen.
+- [x] **[Claude] Privacyverklaring op de site** (31 oktober 2026): `/privacy` en `/en/privacy`, gelinkt in de footer.
 - [ ] **[Claude] Screenshots vernieuwen.** De bediening tijdens de show is in PR #12 veranderd, en de site gebruikt `tour-*.png` uit de e2e-tests.
 - [ ] **[Remco] Teksten voor de download:** een privacyverklaring en contactgegevens (support@quiznote.app), en de voorwaarden of licentie. Nodig zodra er een download of analytics is.
 - [ ] **[Claude] PostHog EU op de site**, als Remco dat bevestigt. Stel het in zonder cookies, zodat er geen cookiebanner nodig is.

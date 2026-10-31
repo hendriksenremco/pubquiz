@@ -8,15 +8,18 @@ Lees eerst `CLAUDE.md` en `TODO.md`. Die regels gelden ook voor jou, met de aanv
 
 Doe per run **één** ding, in deze volgorde:
 
-1. **Je eigen open pull requests eerst.** Zoek ze met `gh pr list --author @me --state open`.
+1. **Je eigen open pull requests eerst.** Zoek ze met `gh pr list --label agent --state open` (het token is van Remco, dus `--author @me` vindt ook zijn eigen werk).
    - Faalt de CI, of heeft Remco commentaar gegeven? Los dat op, op dezelfde branch, en push. Klaar voor deze run.
    - De CI draait op macOS. De logs haal je met `gh run view <id> --log-failed`.
-2. **Staan er al drie van jouw pull requests open** zonder dat er iets op te doen valt? Stop dan. Remco moet eerst bijbenen.
-3. **Anders het volgende punt uit TODO.md** dat:
+2. **Staan er al drie pull requests met het label `agent` open** zonder dat er iets op te doen valt? Stop dan. Remco moet eerst bijbenen.
+3. **Issues met het label `doen`** (`gh issue list --label doen --state open`): Remco wil dat je dat bouwt. Oudste eerst.
+4. **Anders het volgende punt uit TODO.md**, te beginnen bij hoofdstuk 0, dat:
    - gemarkeerd is als **[Claude]** (niet "[Claude, eerst vragen]", niet [Remco]);
    - niet wacht op een beslissing in hoofdstuk 1;
    - geen echte apparatuur, signeren of macOS nodig heeft om af te ronden;
    - niet al in een open pull request zit.
+
+   Een punt dat te groot is voor één run: doe de eerste stap als eigen pull request en schrijf in TODO.md wat er nog over is.
 
    Zit er niets meer bij, stop dan en zeg dat in je samenvatting.
 
@@ -25,7 +28,9 @@ Doe per run **één** ding, in deze volgorde:
 - Werk op een nieuwe branch vanaf `origin/master`: `agent/<korte-naam>`.
 - Na elke afgeronde stap: `pnpm typecheck` en `pnpm test`, dan een commit (Engels bericht).
 - De e2e-tests en de build draaien niet op deze server (Linux). Die doet de CI op macOS zodra je pusht. Kijk na het pushen met `gh pr checks` of ze slagen; wacht hooguit 20 minuten.
-- Vink het punt in TODO.md af in dezelfde pull request, met de datum.
+- Vink het punt in TODO.md af in dezelfde pull request, met de datum. Is het een issue, zet dan `Closes #<nummer>` in de beschrijving.
+- **Verandert er iets in beeld, dan horen er screenshots bij.** De CI maakt ze en zet ze als commentaar op de pull request, met de verschillen gemarkeerd. Kijk na het pushen of dat commentaar er is en of de verschillen kloppen met wat je bedoelde. Bestaat die CI-job nog niet, bouw hem dan eerst (TODO.md, hoofdstuk 0).
+- Werk je aan de interface: volg de ontwerpregels in CLAUDE.md, en noem in de pull request welke schermen veranderen en waarom het rustiger wordt.
 - Open de pull request naar `master` met:
   - wat je hebt gedaan en waarom;
   - hoe je het getest hebt, en wat **niet** getest is;
