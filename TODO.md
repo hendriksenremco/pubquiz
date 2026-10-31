@@ -46,7 +46,7 @@ De rest van de lijst hangt hiervan af.
 - [ ] **[Remco] Prijs en licentie.** Wordt de app gratis, betaald, of eerst een gratis bèta?
   - Dit bepaalt of de app licenties of betalingen nodig heeft. Nu zit er niets van in.
   - Het bepaalt ook welke voorwaarden er op de site komen.
-- [ ] **[Remco] Wie brengt de app uit:** Remco als privépersoon, of een (nieuwe) onderneming? De app staat los van Guts & Gusto.
+- [x] **[Remco] Wie brengt de app uit:** Remco als privépersoon, met zijn individuele Apple-account (klaar op 31 oktober 2026). Remco als privépersoon, of een (nieuwe) onderneming? De app staat los van Guts & Gusto.
   - Dit bepaalt met welk Apple-team de app gesigneerd wordt.
   - Het bepaalt ook welke naam in de app staat en welke gegevens op de site komen.
 - [x] **[Remco] Waar de download komt te staan:** GitHub Releases van deze (openbare) repo (klaar op 31 oktober 2026).
@@ -63,7 +63,7 @@ De rest van de lijst hangt hiervan af.
   - Moet de app ook iets meten? En zo ja: wat, en vraag je eerst toestemming (opt-in)?
   - Daarna is een privacyverklaring nodig.
 - [ ] **[Remco] Foutrapporten.** Wil je meldingen van crashes bij gebruikers, bijvoorbeeld met Sentry of PostHog? Zonder iets hoor je alleen van problemen als iemand mailt.
-- [ ] **[Remco] Welke Macs.**
+- [x] **[Remco] Welke Macs:** Apple Silicon en Intel, als universele app (klaar op 31 oktober 2026).
   - Alleen Apple Silicon, of ook Intel? Voor Intel is een universal build nodig, of twee dmg's.
   - Welke macOS-versie heb je minimaal nodig?
 
@@ -90,7 +90,7 @@ De rest van de lijst hangt hiervan af.
   - Werkt `ELECTRON_RUN_AS_NODE=1 <app-binary> …/mcp.js` met hardened runtime, en met `mcp.js` in `app.asar`?
   - Koppel Claude Desktop en laat de AI een quiz maken.
   - De Electron-fuse `RunAsNode` moet aan blijven.
-- [ ] **[Claude] Controleren.**
+- [x] **[Claude] Controleren** (klaar op 31 oktober 2026): `codesign` en `spctl` draaien in de release-workflow.
   - Draai `codesign --verify --deep --strict` en `spctl -a -vv` op de app.
   - Open de dmg op een andere Mac, of onder een schone gebruiker.
 
@@ -100,7 +100,7 @@ De rest van de lijst hangt hiervan af.
   - Dit vraagt een gesigneerde app, en een `zip`-target naast de dmg.
   - Installeer nooit tijdens een show: pas na "Stop show" of bij het afsluiten.
 - [x] **[Claude] Versies.** Een changelog bij elke release, en een venster "Over QuizNote" met het versienummer. Klaar op 31 oktober 2026: `CHANGELOG.md`, en Over QuizNote in het appmenu. Werk bij elke release de bovenste kop van de changelog bij; een test controleert dat die bij de versie in `package.json` hoort.
-- [ ] **[Claude] Release-script.** Een script of een GitHub Actions-workflow op een macOS-runner die bouwt, signeert, notariseert en de release aanmaakt.
+- [x] **[Claude] Release-script** (klaar op 31 oktober 2026): `.github/workflows/release.yml`. Een script of een GitHub Actions-workflow op een macOS-runner die bouwt, signeert, notariseert en de release aanmaakt.
   - Geheimen gaan in de repository-secrets.
   - `pnpm build:mac` maakt ook de rondleiding (`tour:build`), die met de app wordt meegeleverd.
 
@@ -149,7 +149,7 @@ Alleen als Remco daarvoor kiest; zie hoofdstuk 1.
 
 ## 6. Site (`~/Documents/pubquiz-site`)
 
-- [ ] **[Remco] Pushen.** De lokale `develop` loopt voor op GitHub: op 31 oktober 12 commits, met onder meer de merkbestanden, de naam QuizNote, Firebase en de opruimronde. Push alleen als Remco het zegt.
+- [x] **[Remco] Pushen** (klaar op 31 oktober 2026). De lokale `develop` loopt voor op GitHub: op 31 oktober 12 commits, met onder meer de merkbestanden, de naam QuizNote, Firebase en de opruimronde. Push alleen als Remco het zegt.
 - [x] **[Claude] Downloadknop** (klaar op 31 oktober 2026): naar `releases/latest/download/QuizNote.dmg`.
   - Vul `downloadUrl` in `nuxt.config.ts` in (of `NUXT_PUBLIC_DOWNLOAD_URL`) zodra de dmg ergens staat.
   - Is het veld leeg, dan toont de site een melding in plaats van de knop.
@@ -162,8 +162,8 @@ Alleen als Remco daarvoor kiest; zie hoofdstuk 1.
   - Een formulier alleen als het zonder eigen server en zonder cookies kan; anders eerst vragen.
 - [x] **[Claude] Privacyverklaring op de site** (31 oktober 2026): `/privacy` en `/en/privacy`, gelinkt in de footer.
 - [ ] **[Claude] Screenshots vernieuwen.** De bediening tijdens de show is in PR #12 veranderd, en de site gebruikt `tour-*.png` uit de e2e-tests.
-- [ ] **[Remco] Teksten voor de download:** een privacyverklaring en contactgegevens (support@quiznote.app), en de voorwaarden of licentie. Nodig zodra er een download of analytics is.
-- [ ] **[Claude] PostHog EU op de site**, als Remco dat bevestigt. Stel het in zonder cookies, zodat er geen cookiebanner nodig is.
+- [ ] **[Remco] Teksten voor de download:** de privacyverklaring staat online (31 oktober 2026); nog nodig: contactgegevens (remco@quiznote.app), en de voorwaarden of licentie. Nodig zodra er een download of analytics is.
+- [x] **[Claude] PostHog EU op de site** (klaar op 31 oktober 2026), zonder cookies, als Remco dat bevestigt. Stel het in zonder cookies, zodat er geen cookiebanner nodig is.
 - [ ] **[Remco] quiznote.nl doorsturen naar quiznote.app.** quiznote.nl staat nog op de parkeerpagina van TransIP (A-record 37.97.254.27).
 - **Deployen:** dat doet Remco met `pnpm deploy:site`, of hij geeft eerst toestemming.
 
