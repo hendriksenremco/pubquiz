@@ -26,7 +26,7 @@ De rest van de lijst hangt hiervan af.
   - Diezelfde plek kan de app later gebruiken om updates op te halen.
   - Nog niet bevestigd.
 - [ ] **[Remco] Engels.** De app is alleen Nederlands, maar de eerste doelgroep is ook Engelstalig; de naam is daarop gekozen.
-  - Kies: eerst een Nederlandse release, of pas uitbrengen met een Engelse versie. Zie hoofdstuk 6.
+  - Kies: eerst een Nederlandse release, of pas uitbrengen met een Engelse versie. Zie hoofdstuk 5.
 - [ ] **[Remco] De oude werknaam in bestandsnamen.** Quizzen heten `<naam>.pubquiz` en staan in `Documenten/Pubquizzen`. Dat ziet de gebruiker.
   - Vóór de eerste release is omzetten goedkoop, bijvoorbeeld naar `.quiznote` en `Documenten/QuizNote`.
   - Na de release moet de app beide namen blijven lezen.
@@ -39,11 +39,7 @@ De rest van de lijst hangt hiervan af.
   - Alleen Apple Silicon, of ook Intel? Voor Intel is een universal build nodig, of twee dmg's.
   - Welke macOS-versie heb je minimaal nodig?
 
-## 2. Open pull requests
-
-- [ ] **[Remco]** #12 `restart-round` en #13 `question-cards`: samenvoegen of feedback geven.
-
-## 3. Signeren en notariseren
+## 2. Signeren en notariseren
 
 **Nu:** in `electron-builder.yml` staan `identity: null` en `notarize: false`. macOS blokkeert de app daardoor bij de eerste start. De gebruiker moet dan naar Systeeminstellingen › Privacy en beveiliging en daar op "Open toch" klikken.
 
@@ -70,7 +66,7 @@ De rest van de lijst hangt hiervan af.
   - Draai `codesign --verify --deep --strict` en `spctl -a -vv` op de app.
   - Open de dmg op een andere Mac, of onder een schone gebruiker.
 
-## 4. Updates en releases
+## 3. Updates en releases
 
 - [ ] **[Claude] Automatische updates** met `electron-updater` en GitHub Releases.
   - Dit vraagt een gesigneerde app, en een `zip`-target naast de dmg.
@@ -80,7 +76,7 @@ De rest van de lijst hangt hiervan af.
   - Geheimen gaan in de repository-secrets.
   - `pnpm build:mac` maakt ook de rondleiding (`tour:build`), die met de app wordt meegeleverd.
 
-## 5. Kwaliteit vóór de eerste release
+## 4. Kwaliteit vóór de eerste release
 
 - [ ] **[Claude] Alle e2e-tests groen.** Twee tests in `e2e/home.spec.ts` falen ook op master: één altijd, de andere soms. Repareer ze.
 - [ ] **[Remco en Claude] Een volledige proefavond met echte apparatuur:**
@@ -107,7 +103,7 @@ De rest van de lijst hangt hiervan af.
   - de plug-ins Licht en Afstandsbediening;
   - Ronde opnieuw (toets R).
 
-## 6. Engelse app
+## 5. Engelse app
 
 Alleen als Remco daarvoor kiest; zie hoofdstuk 1.
 
@@ -119,7 +115,7 @@ Alleen als Remco daarvoor kiest; zie hoofdstuk 1.
     - de beschrijvingen van de MCP-tools;
     - de pagina op de telefoon.
 
-## 7. Site (`~/Documents/pubquiz-site`)
+## 6. Site (`~/Documents/pubquiz-site`)
 
 - [ ] **[Remco] Pushen.** De lokale `develop` staat 9 commits voor op GitHub: de merkbestanden, de naam QuizNote, de screenshots, de DMARC-herinnering en Firebase. Push alleen als Remco het zegt.
 - [ ] **[Claude] Downloadknop.**
@@ -135,7 +131,7 @@ Alleen als Remco daarvoor kiest; zie hoofdstuk 1.
 - [ ] **[Remco] quiznote.nl doorsturen naar quiznote.app.** quiznote.nl staat nog op de parkeerpagina van TransIP (A-record 37.97.254.27).
 - **Deployen:** dat doet Remco met `pnpm deploy:site`, of hij geeft eerst toestemming.
 
-## 8. Mail en domein
+## 7. Mail en domein
 
 - [ ] **[Remco] DMARC strenger zetten, vanaf 8 november 2026.**
   - Stuur eerst een testmail en controleer dat SPF, DKIM en DMARC alle drie op PASS staan.
@@ -144,7 +140,7 @@ Alleen als Remco daarvoor kiest; zie hoofdstuk 1.
   - De herinnering staat ook in `~/Documents/pubquiz-site/HERINNERINGEN.md`. Haal hem op beide plekken weg als het gedaan is.
 - [ ] **[Remco] Nagaan of "Mail verzenden als"** voor hallo@ en support@quiznote.app werkt in Gmail.
 
-## 9. Merk en juridisch
+## 8. Merk en juridisch
 
 - [ ] **[Remco] Merkonderzoek voor QuizNote** vóór de lancering, voor zover bekend nog niet gedaan.
   - Zoek in EUIPO/TMview, BOIP, UKIPO en USPTO, in de klassen 9 en 42.

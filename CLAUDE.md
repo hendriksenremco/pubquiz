@@ -15,7 +15,7 @@ Wat er nog moet gebeuren voordat de app uit kan, staat in **TODO.md**. Werk je d
 - **Versie:** 0.1.0, alleen voor macOS en alleen in het Nederlands.
 - **Release:** `pnpm build:mac` maakt een ongesigneerde dmg. Er is nog geen release en geen download.
 - **Site:** live op https://quiznote.app (Firebase Hosting), nog zonder downloadknop. De site heeft een eigen repo: `~/Documents/pubquiz-site`, met een eigen CLAUDE.md.
-- **Open pull requests:** #12 `restart-round` en #13 `question-cards`. Remco voegt zelf samen; kijk met `gh pr list --state all` wat er sindsdien is gebeurd.
+- **Laatst samengevoegd (30 oktober):** #12 en #13. Kijk met `gh pr list --state all` wat er sindsdien is gebeurd.
   - #12: Ronde opnieuw, dezelfde knoppen op de Mac en de telefoon, en het licht in de werkbalk van de show.
   - #13: vier vragenkaarten per A4, met snijlijnen.
 - **README.md loopt achter.** Deze onderdelen staan er niet in:
