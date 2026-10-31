@@ -22,9 +22,9 @@ Deze punten gaan vóór de rest. De agent op de thuisserver pakt ze op; zie `age
   - zet de plaatjes op een aparte branch `pr-screenshots` (map `pr-<nummer>/`) en zet ze in één commentaar op de pull request, dat bij elke push wordt bijgewerkt;
   - geen verschillen: dan zegt het commentaar dat.
 - [ ] **[Claude] Plug-ins generieker maken.** Nu heeft elke plug-in eigen code in main, de renderer en de show.
-  - Breng eerst in kaart wat MagicHome en Afstandsbediening gemeen hebben, en wat een volgende plug-in (Spotify, YouTube) nodig zou hebben.
-  - Schrijf een voorstel in `PLUGINS.md`: één interface voor instellingen, quizgegevens (quiz ⊕ ronde ⊕ slide), knoppen in de show en status.
-  - Open een issue met het label `vraag` met het voorstel en jouw advies. Bouw pas na het antwoord, in kleine stappen.
+  - [x] Breng eerst in kaart wat MagicHome en Afstandsbediening gemeen hebben, en wat een volgende plug-in (Spotify, YouTube) nodig zou hebben (klaar op 1 november 2026).
+  - [x] Schrijf een voorstel in `PLUGINS.md`: één interface voor instellingen, quizgegevens (quiz ⊕ ronde ⊕ slide), knoppen in de show en status (klaar op 1 november 2026).
+  - [x] Open een issue met het label `vraag` met het voorstel en jouw advies (1 november 2026). Bouw pas na het antwoord, in kleine stappen: de vier stappen staan onderaan `PLUGINS.md`.
 - [ ] **[Claude] De interface eenvoudiger.** De app is complex geworden.
   - Loop de schermen één voor één door: startscherm, editor, inspector, Quiz-instellingen, show voorbereiden, de show zelf.
   - Per scherm één pull request die het rustiger maakt: minder tegelijk in beeld, duidelijkere rangorde, dezelfde woorden overal. Volg de ontwerpregels in CLAUDE.md.
