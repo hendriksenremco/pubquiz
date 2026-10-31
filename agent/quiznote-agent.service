@@ -1,9 +1,15 @@
 [Unit]
-Description=QuizNote-agent: één run
+Description=QuizNote-agent: doorlopend, de ene run na de andere
 Wants=network-online.target
 After=network-online.target
 
 [Service]
-Type=oneshot
-ExecStart=/bin/bash -lc %h/quiznote-agent/pubquiz/agent/run.sh
-TimeoutStartSec=3h
+Type=simple
+# Haalt run.sh elke keer vers van master, zodat een wijziging in de repo meteen geldt.
+ExecStart=/bin/bash -lc "cd ~/quiznote-agent/pubquiz && git fetch -q origin && git show origin/master:agent/run.sh > ~/quiznote-agent/run.sh && exec bash ~/quiznote-agent/run.sh"
+Restart=always
+RestartSec=30
+TimeoutStopSec=60
+
+[Install]
+WantedBy=default.target

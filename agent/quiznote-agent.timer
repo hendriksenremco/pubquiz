@@ -1,9 +1,0 @@
-[Unit]
-Description=QuizNote-agent elke nacht
-
-[Timer]
-OnCalendar=*-*-* 02:17
-Persistent=true
-
-[Install]
-WantedBy=timers.target
