@@ -9,18 +9,20 @@ Een Claude-sessie die elke nacht zelf aan QuizNote werkt, op de thuisserver (Ubu
 
 ## Eenmalig inrichten op de server
 
-Nodig: `git`, Node 22, pnpm 8, de GitHub CLI (`gh`) en Claude Code, ingelogd.
+Nodig: `git`, Node 22, pnpm 8, de GitHub CLI (`gh`) en Claude Code, ingelogd. `gh` hoeft niet ingelogd te zijn: de agent gebruikt zijn eigen token.
 
 ```sh
 # 1. GitHub: een fine-grained token met alleen toegang tot hendriksenremco/pubquiz
-#    (Contents, Pull requests en Issues: read and write).
-gh auth login
-gh auth setup-git
+#    (Contents, Issues en Pull requests: read and write; Actions en Commit statuses: read).
+#    Het token staat in een eigen bestand; de gewone GitHub-login van de server blijft onaangeroerd.
+umask 077; mkdir -p ~/.config/quiznote-agent
+cat > ~/.config/quiznote-agent/github-token   # plak het token, Enter, Ctrl+D
 
 # 2. De clone voor de agent, en de labels.
 mkdir -p ~/quiznote-agent
-gh repo clone hendriksenremco/pubquiz ~/quiznote-agent/pubquiz
+git clone https://github.com/hendriksenremco/pubquiz.git ~/quiznote-agent/pubquiz
 cd ~/quiznote-agent/pubquiz
+export GH_TOKEN="$(cat ~/.config/quiznote-agent/github-token)"
 gh label create agent --color 1f6feb --description "Werk van de QuizNote-agent" || true
 gh label create vraag --color ffa53d --description "Vraag van de agent aan Remco" || true
 

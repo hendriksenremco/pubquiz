@@ -7,13 +7,25 @@ REPO="$DIR/pubquiz"
 mkdir -p "$DIR/logs"
 LOG="$DIR/logs/$(date +%F_%H%M).log"
 
+# Het GitHub-token van de agent staat in een eigen bestand. Zo blijft de gewone
+# GitHub-login van de server (gh, git) onaangeroerd.
+TOKEN_FILE="${QUIZNOTE_AGENT_TOKEN:-$HOME/.config/quiznote-agent/github-token}"
+[ -r "$TOKEN_FILE" ] || { echo "Geen token in $TOKEN_FILE" >&2; exit 1; }
+export GH_TOKEN="$(tr -d '[:space:]' < "$TOKEN_FILE")"
+export GH_CONFIG_DIR="$DIR/gh"   # eigen gh-instellingen, los van ~/.config/gh
+
 # Nooit twee runs tegelijk.
 exec 9>"$DIR/.lock"
 flock -n 9 || { echo "De agent draait al." >&2; exit 0; }
 
 # Deze clone is alleen voor de agent: elke run begint schoon vanaf master.
-[ -d "$REPO/.git" ] || gh repo clone hendriksenremco/pubquiz "$REPO"
+[ -d "$REPO/.git" ] || git -c credential.helper= -c 'credential.helper=!gh auth git-credential' \
+  clone https://github.com/hendriksenremco/pubquiz.git "$REPO"
 cd "$REPO"
+# Alleen in deze clone gebruikt git het token van de agent.
+git config credential.helper ''
+git config --add credential.helper '!gh auth git-credential'
+git remote set-url origin https://github.com/hendriksenremco/pubquiz.git
 git fetch --prune origin
 git checkout -q -f master
 git reset -q --hard origin/master
