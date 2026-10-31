@@ -40,5 +40,18 @@ claude -p "$(cat agent/prompt.md)" \
   --permission-prompts none \
   >"$LOG" 2>&1 || echo "De run is mislukt; zie $LOG" >&2
 
+# Gebruikslimiet van Claude bereikt? Meld het één keer als issue en wacht tot de volgende run.
+# Lukt een run weer, dan gaat dat issue vanzelf dicht.
+LIMIT_TITLE="Agent: gebruikslimiet van Claude bereikt"
+LIMIT_ISSUE="$(gh issue list --state open --search "\"$LIMIT_TITLE\" in:title" --json number -q '.[0].number' 2>/dev/null || true)"
+if grep -qiE 'usage limit|rate limit|limit reached|requires usage credits|out of (usage|credits)' "$LOG"; then
+  if [ -z "$LIMIT_ISSUE" ]; then
+    gh issue create --title "$LIMIT_TITLE" --label vraag \
+      --body "De run van $(date '+%-d %B %Y %H:%M') stopte op de gebruikslimiet van Claude. De agent probeert het bij de volgende run opnieuw en sluit dit issue zodra het weer lukt. Melding: $(grep -iE -m1 'limit|credits' "$LOG")" >/dev/null
+  fi
+elif [ -n "$LIMIT_ISSUE" ]; then
+  gh issue close "$LIMIT_ISSUE" --comment "De run van $(date '+%-d %B %Y %H:%M') lukte weer." >/dev/null
+fi
+
 # Logs van meer dan 30 dagen weg.
 find "$DIR/logs" -name '*.log' -mtime +30 -delete
