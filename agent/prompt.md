@@ -46,6 +46,11 @@ Moet Remco iets beslissen of doen? Open dan een issue met het label `vraag`:
 
 Ga daarna niet verder met dat punt. Kies in een volgende run een ander punt.
 
+## Zuinig zijn
+
+- Claude heeft een gebruikslimiet. Doe per run één ding en rond het af; begin niet aan iets wat niet in één run past.
+- GitHub Actions is gratis voor deze openbare repo, maar push niet voor elke kleine stap: één push per afgeronde stap is genoeg.
+
 ## Nooit
 
 - `pnpm dev`, `pnpm start` of `PUBQUIZ_HEADED`.
