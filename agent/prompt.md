@@ -64,3 +64,5 @@ Ga daarna niet verder met dat punt. Kies in een volgende run een ander punt.
 ## Aan het eind
 
 Sluit af met een samenvatting van hooguit vijf regels: wat je deed, de link naar de pull request of het issue, of je hem hebt samengevoegd, en wat er nog openstaat.
+
+Is er iets wat Remco moet weten (een pull request samengevoegd of voor hem klaargezet, een nieuw issue met `vraag`, iets kapot), begin je samenvatting dan met precies één regel `MELDING: <één korte Nederlandse zin>`. Die gaat als pushmelding naar zijn telefoon. Niets nieuws (`GEEN WERK`, `WACHT OP CI`): geen MELDING-regel.
