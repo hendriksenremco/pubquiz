@@ -11,6 +11,26 @@ Stand op 31 oktober 2026.
 
 Is een punt af, vink het dan aan en zet erbij wanneer het klaar was. Kom je iets nieuws tegen, zet het erbij.
 
+## 0. Doorlopend werk van de agent
+
+Deze punten gaan vóór de rest. De agent op de thuisserver pakt ze op; zie `agent/`.
+
+- [ ] **[Claude] Screenshots in elke pull request.** Een job in `.github/workflows/ci.yml`, op macOS:
+  - draai de e2e-tests op `master` en op de branch van de pull request;
+  - vergelijk de screenshots in `test-results/` per bestandsnaam, met ImageMagick (`compare`);
+  - maak van elk veranderd scherm een plaatje met de verschillen in amber (`#ffa53d`) gemarkeerd, naast het oude scherm;
+  - zet de plaatjes op een aparte branch `pr-screenshots` (map `pr-<nummer>/`) en zet ze in één commentaar op de pull request, dat bij elke push wordt bijgewerkt;
+  - geen verschillen: dan zegt het commentaar dat.
+- [ ] **[Claude] Plug-ins generieker maken.** Nu heeft elke plug-in eigen code in main, de renderer en de show.
+  - Breng eerst in kaart wat MagicHome en Afstandsbediening gemeen hebben, en wat een volgende plug-in (Spotify, YouTube) nodig zou hebben.
+  - Schrijf een voorstel in `PLUGINS.md`: één interface voor instellingen, quizgegevens (quiz ⊕ ronde ⊕ slide), knoppen in de show en status.
+  - Open een issue met het label `vraag` met het voorstel en jouw advies. Bouw pas na het antwoord, in kleine stappen.
+- [ ] **[Claude] De interface eenvoudiger.** De app is complex geworden.
+  - Loop de schermen één voor één door: startscherm, editor, inspector, Quiz-instellingen, show voorbereiden, de show zelf.
+  - Per scherm één pull request die het rustiger maakt: minder tegelijk in beeld, duidelijkere rangorde, dezelfde woorden overal. Volg de ontwerpregels in CLAUDE.md.
+  - Hooguit één UI-pull request tegelijk open. Haal geen functies weg zonder het eerst te vragen.
+- **Ideeën uit onderzoek.** Een wekelijkse taak onderzoekt concurrenten en zet voorstellen als issue met het label `idee`. Zet Remco er het label `doen` op, dan bouwt de agent het.
+
 ## 1. Beslissingen
 
 De rest van de lijst hangt hiervan af.
