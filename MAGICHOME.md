@@ -1,14 +1,18 @@
 # MagicHome LED controller in QuizNote
 
-Handoff from a Claude Code session in another repo (2026-10-29). Goal: let QuizNote control a
-MagicHome LED-strip controller over the local network.
+QuizNote controls a MagicHome LED-strip controller over the local network. This started as a
+handoff from a Claude Code session in another repo (2026-10-29).
 
-**Not decided yet:** what the lights should do during a quiz. Ask Remco before designing.
-Options to put to him:
+Built as the plug-in **MagicHome-licht** (`magichome`, PR #10). It's off by default and switched
+on per Mac under Instellingen.
 
-- a color or effect per round, like the other per-round overrides
-- a flash or effect at specific moments (round start, answers, fragment)
-- following the `B` (all black) key
+- **Light per part of the quiz:** a color, an effect or off per quiz, round or slide, resolved as
+  slide ⊕ round ⊕ quiz. Nothing set means the app leaves the lights alone.
+- **Choosing by hand during the show:** from the Licht button in the show toolbar, or from the
+  phone remote. A light chosen by hand holds until the show itself picks a different light. "Volg
+  de show" goes back straight away.
+- **Before the show:** the controller's IP address is entered under Instellingen or in Show
+  starten. The app remembers the last one.
 
 ## The device
 
@@ -47,16 +51,16 @@ Every message ends with a checksum byte: `sum(bytes) & 0xFF`.
 | Query state | `81 8A 8B 96` | yes |
 | Power on | `71 23 0F A3` | no |
 | Power off | `71 24 0F A4` | no |
-| Color, saved | `31 R G B 00 00 F0 0F <sum>` (red: `31 FF 00 00 00 00 F0 0F 2F`) | no |
-| Color, not saved | `41 R G B 00 00 F0 0F <sum>` | no |
+| Color, saved | `31 R G B 00 00 F0 0F <sum>` (red: `31 FF 00 00 00 00 F0 0F 2F`) | yes |
+| Color, not saved | `41 R G B 00 00 F0 0F <sum>` | yes |
 | Built-in effect | `61 <hi> <lo> <speed> 0F <sum>`, where `hi lo` = 16-bit `effect + 99` | no |
 
 - Effects are numbered 1–300. Names are in `flux_led/pattern.py` →
   `ORIGINAL_ADDRESSABLE_EFFECT_ID_NAME`. Effect 1 at speed 50: `61 00 64 32 0F 06`.
 - There's no separate brightness byte. `flux_led` scales the RGB values.
 - `F0` is the write mode for "colors only", which `flux_led` uses for RGB-only devices.
-- `31` stores the color in the controller's memory, `41` doesn't. For changes during a show, `41`
-  is probably better (less wear), but it's untested on this model.
+- `31` stores the color in the controller's memory, `41` doesn't. The app uses `41`; see the
+  lessons below.
 - A1 pushes state messages on its own when it's controlled from the app or a remote. Frame the
   incoming bytes by message type and length, and don't assume one response per request.
 
@@ -78,23 +82,30 @@ Manual check from the terminal:
 printf '\x81\x8a\x8b\x96' | nc -w 2 192.168.14.133 5577 | xxd
 ```
 
-## Where it fits in QuizNote
+## Lessons from the real controller (2026-10-29)
 
-Follow the AirPlay integration (`src/main/airplay.ts` + `src/shared/airplay.ts`):
+Measured on the A1 with Remco's permission:
 
-- **`src/shared/`**: pure functions for building messages, the checksum and parsing the state,
-  with vitest tests. The bytes above make good fixtures.
-- **`src/main/`**: the TCP connection via Node `net`. The renderer can't open sockets. Use short
-  timeouts, and an unreachable controller must never block or break the show (`NoticeStack`
-  exists for notices).
-- **IPC**: `src/shared/ipc.ts` and the preload bridge, like the other main ↔ renderer features.
-- **Per-round behavior**: goes through the quiz schema (`src/shared/quiz-schema.ts`, with a
-  migration in `migrate.ts`) and `resolve(quiz, showState)`, the same "default ⊕ round override"
-  model as screens and music.
-- **Controller address**: settings (`src/main/settings.ts`), the way the Show remembers displays
-  and audio outputs by name.
-- **Tests**: an env var for a fake device, like `PUBQUIZ_FAKE_AIRPLAY`, or a small fake TCP
-  server in e2e. Never the real device.
+1. **Closing a connection right after writing loses commands.** The controller drops whatever it
+   hasn't processed yet.
+2. **Too many connections lock it up.** After about 15 short connections in a row it stopped
+   answering locally until it was powered off and on. The MagicHome app then showed it as
+   "offline".
+3. **`31` is slow.** After `31` (saved color) the controller is busy for about 3 s and answers
+   nothing. `41` (not saved) keeps up with one change per second.
+
+That's why the app keeps one connection open and sends `41` (commit ec5f7ff).
+
+## Where it lives in QuizNote
+
+- `src/shared/magichome.ts` and `magichome-effects.ts`: building messages, the checksum and
+  parsing the state.
+- `src/shared/light.ts`: the light model and how it's resolved.
+- `src/shared/light-effects.ts`: effect names and groups.
+- `src/main/magichome.ts`: the plug-in in main, with the TCP connection and manual choices.
+- `src/renderer/src/plugins/magichome/`: the parts in the app, such as the light picker in the
+  editor and the panel in the show toolbar. The phone uses the same panel.
+- `e2e/fake-magichome.ts`: a fake controller on localhost for the tests. Never the real device.
 
 ## Careful with the real device
 
