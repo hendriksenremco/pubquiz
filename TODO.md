@@ -146,7 +146,7 @@ Alleen als Remco daarvoor kiest; zie hoofdstuk 1.
   - De CLAUDE.md van de site zet "bediening vanaf de telefoon" onder "Niet beloven", maar die zit nu in de app (plug-in Afstandsbediening). Het licht (MagicHome) ook.
   - Vraag Remco of ze op de site mogen. Allebei zijn ze nog niet met echte telefoons getest, en het licht nog niet op andere locaties.
 - [ ] **[Claude] Contact op de site.** Een duidelijke manier om contact op te nemen, in beeld (niet weggestopt), in het Nederlands en het Engels.
-  - Begin eenvoudig: een mailadres (support@quiznote.app) in de footer en bij de download, en een korte "Vragen of ideeën?"-regel.
+  - Begin eenvoudig: een mailadres (remco@quiznote.app; support@ bestaat niet) in de footer en bij de download, en een korte "Vragen of ideeën?"-regel.
   - Een formulier alleen als het zonder eigen server en zonder cookies kan; anders eerst vragen.
 - [x] **[Claude] Privacyverklaring op de site** (31 oktober 2026): `/privacy` en `/en/privacy`, gelinkt in de footer.
 - [ ] **[Claude] Screenshots vernieuwen.** De bediening tijdens de show is in PR #12 veranderd, en de site gebruikt `tour-*.png` uit de e2e-tests.
