@@ -29,6 +29,14 @@ Deze punten gaan vóór de rest. De agent op de thuisserver pakt ze op; zie `age
   - Loop de schermen één voor één door: startscherm, editor, inspector, Quiz-instellingen, show voorbereiden, de show zelf.
   - Per scherm één pull request die het rustiger maakt: minder tegelijk in beeld, duidelijkere rangorde, dezelfde woorden overal. Volg de ontwerpregels in CLAUDE.md.
   - Hooguit één UI-pull request tegelijk open. Haal geen functies weg zonder het eerst te vragen.
+- [ ] **[Claude] README.md voor ontwikkelaars.** De repo is openbaar; een nieuwe ontwikkelaar moet er zonder hulp mee aan de slag kunnen. In het Engels.
+  - Wat QuizNote is, met een screenshot.
+  - Installeren en draaien: Node, pnpm, ffmpeg, `pnpm install`, de commando's uit CLAUDE.md, en waarom `env -u ELECTRON_RUN_AS_NODE`.
+  - De opbouw van de code in het kort, met verwijzingen naar CLAUDE.md voor de details.
+  - Bijdragen: een issue openen, een branch vanaf `master`, commitberichten in het Engels, typecheck en tests vóór een pull request, wat de CI op een pull request doet (ook de screenshots), en dat Remco samenvoegt.
+  - Releases: een tag `v*` start `.github/workflows/release.yml`.
+  - Dit vervangt het punt "README.md bijwerken" in hoofdstuk 4.
+
 - **Ideeën uit onderzoek.** Een wekelijkse taak onderzoekt concurrenten en zet voorstellen als issue met het label `idee`. Zet Remco er het label `doen` op, dan bouwt de agent het.
 
 ## 1. Beslissingen

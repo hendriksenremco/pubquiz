@@ -11,7 +11,7 @@ mac:
   entitlements: build/entitlements.mac.plist
   entitlementsInherit: build/entitlements.mac.plist
   notarize: true
-zip:
+  # Geldt voor de zip (voor updates); de dmg krijgt hieronder een vaste naam.
   artifactName: QuizNote-${version}-mac.${ext}
 # Vaste naam, zodat de site altijd naar .../releases/latest/download/QuizNote.dmg kan linken.
 dmg:
