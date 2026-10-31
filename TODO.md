@@ -117,7 +117,7 @@ Alleen als Remco daarvoor kiest; zie hoofdstuk 1.
 
 ## 6. Site (`~/Documents/pubquiz-site`)
 
-- [ ] **[Remco] Pushen.** De lokale `develop` staat 9 commits voor op GitHub: de merkbestanden, de naam QuizNote, de screenshots, de DMARC-herinnering en Firebase. Push alleen als Remco het zegt.
+- [ ] **[Remco] Pushen.** De lokale `develop` loopt voor op GitHub: op 31 oktober 12 commits, met onder meer de merkbestanden, de naam QuizNote, Firebase en de opruimronde. Push alleen als Remco het zegt.
 - [ ] **[Claude] Downloadknop.**
   - Vul `downloadUrl` in `nuxt.config.ts` in (of `NUXT_PUBLIC_DOWNLOAD_URL`) zodra de dmg ergens staat.
   - Is het veld leeg, dan toont de site een melding in plaats van de knop.
