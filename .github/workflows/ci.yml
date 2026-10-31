@@ -40,7 +40,11 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-      - run: brew install ffmpeg
+      # Volledige ffmpeg: de demo en de rondleiding gebruiken het filter drawtext.
+      - name: ffmpeg
+        run: |
+          brew install ffmpeg-full
+          echo "$(brew --prefix ffmpeg-full)/bin" >> "$GITHUB_PATH"
       - run: pnpm install --frozen-lockfile
       - run: pnpm test:e2e
       - uses: actions/upload-artifact@v4
@@ -62,6 +66,11 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+      # Volledige ffmpeg: de demo en de rondleiding gebruiken het filter drawtext.
+      - name: ffmpeg
+        run: |
+          brew install ffmpeg-full
+          echo "$(brew --prefix ffmpeg-full)/bin" >> "$GITHUB_PATH"
       - run: pnpm install --frozen-lockfile
       - run: pnpm build:mac
       - uses: actions/upload-artifact@v4
