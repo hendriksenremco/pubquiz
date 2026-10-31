@@ -37,6 +37,15 @@ Deze punten gaan vóór de rest. De agent op de thuisserver pakt ze op; zie `age
   - Releases: een tag `v*` start `.github/workflows/release.yml`.
   - Dit vervangt het punt "README.md bijwerken" in hoofdstuk 4.
 
+- [ ] **[Claude] PostHog in de app**, als plug-in-achtige instelling die standaard uit staat.
+  - Bij de eerste start één duidelijke vraag: "Help QuizNote beter maken?" Met een uitleg van één zin over wat er wel en niet gemeten wordt. Later aan of uit te zetten bij Instellingen.
+  - Anoniem en weinig: app gestart (versie, macOS-versie, Apple Silicon of Intel), show gestart, welke rondesoorten en plug-ins gebruikt worden. **Nooit** quizinhoud, bestandsnamen, media of IP-adressen.
+  - Foutrapporten (onverwerkte fouten in main en renderer) via PostHog error tracking, binnen dezelfde toestemming.
+  - Werkt zonder internet: niets mag haperen tijdens een show. Events wachten tot er verbinding is, of vervallen.
+  - De projectsleutel is `phc_rGB9TQNdexJ5szAgvnfGbFJkH5CDxNWHA8H3JLoUrYfL` (niet geheim), host `https://eu.i.posthog.com`.
+  - Tests: geen enkel event zonder toestemming, en geen events in e2e-tests.
+  - Meld in de pull request dat de privacyverklaring op de site bijgewerkt moet worden; dat doet Claude in de site-repo.
+
 - **Ideeën uit onderzoek.** Een wekelijkse taak onderzoekt concurrenten en zet voorstellen als issue met het label `idee`. Zet Remco er het label `doen` op, dan bouwt de agent het.
 
 ## 1. Beslissingen
@@ -59,10 +68,10 @@ De rest van de lijst hangt hiervan af.
   - Vóór de eerste release is omzetten goedkoop, bijvoorbeeld naar `.quiznote` en `Documenten/QuizNote`.
   - Na de release moet de app beide namen blijven lezen.
   - Interne namen (`window.pubquiz`, `PUBQUIZ_*`) mogen blijven zoals ze zijn.
-- [ ] **[Remco] Analytics in de app.** PostHog EU is al gekozen voor de site en de app.
+- [x] **[Remco] Analytics in de app:** ja, met PostHog EU, opt-in en anoniem (besloten op 31 oktober 2026). Zie hoofdstuk 0. PostHog EU is al gekozen voor de site en de app.
   - Moet de app ook iets meten? En zo ja: wat, en vraag je eerst toestemming (opt-in)?
   - Daarna is een privacyverklaring nodig.
-- [ ] **[Remco] Foutrapporten.** Wil je meldingen van crashes bij gebruikers, bijvoorbeeld met Sentry of PostHog? Zonder iets hoor je alleen van problemen als iemand mailt.
+- [x] **[Remco] Foutrapporten:** ja, via PostHog (error tracking), binnen dezelfde opt-in (besloten op 31 oktober 2026). Wil je meldingen van crashes bij gebruikers, bijvoorbeeld met Sentry of PostHog? Zonder iets hoor je alleen van problemen als iemand mailt.
 - [x] **[Remco] Welke Macs:** Apple Silicon en Intel, als universele app (klaar op 31 oktober 2026).
   - Alleen Apple Silicon, of ook Intel? Voor Intel is een universal build nodig, of twee dmg's.
   - Welke macOS-versie heb je minimaal nodig?
@@ -161,6 +170,7 @@ Alleen als Remco daarvoor kiest; zie hoofdstuk 1.
   - Begin eenvoudig: een mailadres (remco@quiznote.app; support@ bestaat niet) in de footer en bij de download, en een korte "Vragen of ideeën?"-regel.
   - Een formulier alleen als het zonder eigen server en zonder cookies kan; anders eerst vragen.
 - [x] **[Claude] Privacyverklaring op de site** (31 oktober 2026): `/privacy` en `/en/privacy`, gelinkt in de footer.
+- [ ] **[Claude] Privacyverklaring bijwerken zodra de app meet.** Nu staat er dat de app niets verstuurt. Pas aan als "PostHog in de app" is samengevoegd: wat, alleen met toestemming, hoe je het uitzet.
 - [ ] **[Claude] Screenshots in de taal van de site.** Op `/en` horen Engelse screenshots, op `/` Nederlandse.
   - Kan pas als de app Engels spreekt (hoofdstuk 5). Laat de e2e-tests dan de rondleiding in beide talen fotograferen (`tour-*.nl.png` en `tour-*.en.png`).
   - De site kiest per taal de juiste set in `public/screens/`, ook de `alt`-teksten.
