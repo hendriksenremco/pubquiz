@@ -29,7 +29,7 @@ const DOCS: { doc: FormDoc; title: string; hint: string }[] = [
   {
     doc: 'cards',
     title: 'Vragenkaarten',
-    hint: 'Voor jou: per ronde de vragen met antwoord, op ansichtkaartformaat'
+    hint: 'Voor jou: per ronde de vragen met antwoord, vier ansichtkaarten per A4 om te knippen'
   }
 ]
 
