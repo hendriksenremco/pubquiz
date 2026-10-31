@@ -9,7 +9,7 @@ export function buildMenu(controller: AppController): void {
     {
       role: 'appMenu',
       submenu: [
-        { role: 'about' },
+        { role: 'about', label: `Over ${app.name}` },
         { type: 'separator' },
         { label: 'Instellingen…', accelerator: 'CmdOrCtrl+,', click: () => send('settings') },
         { type: 'separator' },

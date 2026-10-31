@@ -91,7 +91,7 @@ De rest van de lijst hangt hiervan af.
 - [ ] **[Claude] Automatische updates** met `electron-updater` en GitHub Releases.
   - Dit vraagt een gesigneerde app, en een `zip`-target naast de dmg.
   - Installeer nooit tijdens een show: pas na "Stop show" of bij het afsluiten.
-- [ ] **[Claude] Versies.** Een changelog bij elke release, en een venster "Over QuizNote" met het versienummer.
+- [x] **[Claude] Versies.** Een changelog bij elke release, en een venster "Over QuizNote" met het versienummer. Klaar op 31 oktober 2026: `CHANGELOG.md`, en Over QuizNote in het appmenu. Werk bij elke release de bovenste kop van de changelog bij; een test controleert dat die bij de versie in `package.json` hoort.
 - [ ] **[Claude] Release-script.** Een script of een GitHub Actions-workflow op een macOS-runner die bouwt, signeert, notariseert en de release aanmaakt.
   - Geheimen gaan in de repository-secrets.
   - `pnpm build:mac` maakt ook de rondleiding (`tour:build`), die met de app wordt meegeleverd.
@@ -99,6 +99,10 @@ De rest van de lijst hangt hiervan af.
 ## 4. Kwaliteit vóór de eerste release
 
 - [ ] **[Claude] Alle e2e-tests groen.** Twee tests in `e2e/home.spec.ts` falen ook op master: één altijd, de andere soms. Repareer ze.
+  - Op de CI (macOS-runner) falen op 31 oktober per run ook andere tests, telkens wisselend:
+    - `e2e/forms.spec.ts` "maakt het antwoordformulier…": de pdf bestaat al maar is nog leeg als de test hem leest (`saved()` wacht alleen op `existsSync`);
+    - `e2e/media.spec.ts` "toont een bestand groot als voorbeeld…": de video staat na 5 seconden nog op pauze;
+    - `e2e/answers.spec.ts`: "een afbeeldingenronde…" vindt `slideLoopSeconds` niet in `quiz.json`, en de twee tests erna falen daardoor ook.
 - [ ] **[Remco en Claude] Een volledige proefavond met echte apparatuur:**
   - een beamer en een tv;
   - twee audio-uitgangen en een presenter-clicker;

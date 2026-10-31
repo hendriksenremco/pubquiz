@@ -5,6 +5,7 @@ import type { TemplateOptions } from '@shared/template'
 import type { FormOptions } from '@shared/forms'
 import type { PluginId, PluginSetting } from '@shared/plugins'
 import type { HardwareMapping, Quiz } from '@shared/types'
+import { aboutPanelOptions } from './about'
 import { AgentBridge, aiSetup, connectClaude, handleAgent } from './agent'
 import { AppController } from './controller'
 import { handleMediaProtocol, registerMediaScheme } from './media-protocol'
@@ -72,6 +73,7 @@ app.whenReady().then(async () => {
   controller = ctl
   handleMediaProtocol({ current: () => ctl.mediaRoot, isRecent: (dir) => ctl.isRecent(dir) })
   registerIpc(ctl)
+  app.setAboutPanelOptions(aboutPanelOptions(app.name, app.getVersion()))
   buildMenu(ctl)
   // AI-assistenten praten via de MCP-server (src/mcp) over deze socket met de app.
   bridge = new AgentBridge(join(app.getPath('userData'), 'mcp.sock'), (tool, input) =>
