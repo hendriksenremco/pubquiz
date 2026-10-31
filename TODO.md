@@ -79,6 +79,10 @@ De rest van de lijst hangt hiervan af.
 ## 4. Kwaliteit vóór de eerste release
 
 - [ ] **[Claude] Alle e2e-tests groen.** Twee tests in `e2e/home.spec.ts` falen ook op master: één altijd, de andere soms. Repareer ze.
+  - Op de CI (macOS-runner) falen op 31 oktober per run ook andere tests, telkens wisselend:
+    - `e2e/forms.spec.ts` "maakt het antwoordformulier…": de pdf bestaat al maar is nog leeg als de test hem leest (`saved()` wacht alleen op `existsSync`);
+    - `e2e/media.spec.ts` "toont een bestand groot als voorbeeld…": de video staat na 5 seconden nog op pauze;
+    - `e2e/answers.spec.ts`: "een afbeeldingenronde…" vindt `slideLoopSeconds` niet in `quiz.json`, en de twee tests erna falen daardoor ook.
 - [ ] **[Remco en Claude] Een volledige proefavond met echte apparatuur:**
   - een beamer en een tv;
   - twee audio-uitgangen en een presenter-clicker;
