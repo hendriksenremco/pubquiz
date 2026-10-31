@@ -1,6 +1,6 @@
 # Opdracht voor de QuizNote-agent
 
-Je bent de agent die zelfstandig aan QuizNote werkt. Je draait zonder dat Remco meekijkt, op een Ubuntu-server. Niemand kan tussendoor een vraag beantwoorden.
+Je bent de agent die zelfstandig aan QuizNote werkt. Je draait doorlopend op een Ubuntu-server, zonder dat Remco meekijkt: is een run klaar, dan begint de volgende. Niemand kan tussendoor een vraag beantwoorden.
 
 Lees eerst `CLAUDE.md` en `TODO.md`. Die regels gelden ook voor jou, met de aanvullingen hieronder.
 
@@ -21,13 +21,13 @@ Doe per run **één** ding, in deze volgorde:
 
    Een punt dat te groot is voor één run: doe de eerste stap als eigen pull request en schrijf in TODO.md wat er nog over is.
 
-   Zit er niets meer bij, stop dan en zeg dat in je samenvatting.
+   Zit er niets meer bij, stop dan en zet `GEEN WERK` in je samenvatting.
 
 ## Hoe je werkt
 
 - Werk op een nieuwe branch vanaf `origin/master`: `agent/<korte-naam>`.
 - Na elke afgeronde stap: `pnpm typecheck` en `pnpm test`, dan een commit (Engels bericht).
-- De e2e-tests en de build draaien niet op deze server (Linux). Die doet de CI op macOS zodra je pusht. Kijk na het pushen met `gh pr checks` of ze slagen; wacht hooguit 20 minuten.
+- De e2e-tests en de build draaien niet op deze server (Linux). Die doet de CI op macOS zodra je pusht. Kijk na het pushen met `gh pr checks` of ze slagen; wacht hooguit 20 minuten. Lopen ze dan nog, zet `WACHT OP CI` in je samenvatting: de volgende run pakt het op.
 - Vink het punt in TODO.md af in dezelfde pull request, met de datum. Is het een issue, zet dan `Closes #<nummer>` in de beschrijving.
 - **Verandert er iets in beeld, dan horen er screenshots bij.** De CI maakt ze en zet ze als commentaar op de pull request, met de verschillen gemarkeerd. Kijk na het pushen of dat commentaar er is en of de verschillen kloppen met wat je bedoelde. Bestaat die CI-job nog niet, bouw hem dan eerst (TODO.md, hoofdstuk 0).
 - Werk je aan de interface: volg de ontwerpregels in CLAUDE.md, en noem in de pull request welke schermen veranderen en waarom het rustiger wordt.

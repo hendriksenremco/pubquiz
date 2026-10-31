@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Draait de QuizNote-agent één keer. Wordt gestart door de systemd-timer; zie agent/README.md.
+# Draait de QuizNote-agent één keer. De systemd-service start hem steeds opnieuw; zie agent/README.md.
 set -euo pipefail
 
 DIR="${QUIZNOTE_AGENT_DIR:-$HOME/quiznote-agent}"
@@ -55,3 +55,15 @@ fi
 
 # Logs van meer dan 30 dagen weg.
 find "$DIR/logs" -name '*.log' -mtime +30 -delete
+
+# De agent draait doorlopend: systemd start meteen een nieuwe run zodra deze klaar is.
+# Wacht eerst als er geen ruimte of geen werk is, zodat hij de limiet niet opstookt.
+if grep -qiE 'usage limit|rate limit|limit reached|requires usage credits|out of (usage|credits)' "$LOG"; then
+  sleep "${QUIZNOTE_AGENT_PAUSE_LIMIT:-3600}"     # gebruikslimiet: een uur
+elif grep -q 'GEEN WERK' "$LOG"; then
+  sleep "${QUIZNOTE_AGENT_PAUSE_IDLE:-3600}"      # niets te doen: een uur
+elif grep -q 'WACHT OP CI' "$LOG"; then
+  sleep "${QUIZNOTE_AGENT_PAUSE_CI:-600}"         # CI loopt nog: tien minuten
+else
+  sleep "${QUIZNOTE_AGENT_PAUSE:-60}"
+fi

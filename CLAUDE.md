@@ -214,7 +214,7 @@ Nieuwe optionele koppelingen, zoals Spotify of YouTube, volgen hetzelfde patroon
 ## Agent en CI
 
 - **CI:** elke pull request naar `master` draait op macOS in GitHub Actions (`.github/workflows/ci.yml`): typecheck, unit-tests, e2e-tests en een ongesigneerde dmg.
-- **Agent:** op de thuisserver werkt elke nacht een Claude-sessie zelf aan TODO.md. Hoe en wat staat in `agent/`. Zijn pull requests hebben het label `agent`, zijn vragen aan Remco zijn issues met het label `vraag`.
+- **Agent:** op de thuisserver werkt doorlopend een Claude-sessie zelf aan TODO.md: is een run klaar, dan begint de volgende. Hoe en wat staat in `agent/`. Zijn pull requests hebben het label `agent`, zijn vragen aan Remco zijn issues met het label `vraag`.
 
 ## Meer
 
