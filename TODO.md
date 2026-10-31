@@ -15,7 +15,7 @@ Is een punt af, vink het dan aan en zet erbij wanneer het klaar was. Kom je iets
 
 Deze punten gaan vóór de rest. De agent op de thuisserver pakt ze op; zie `agent/`.
 
-- [ ] **[Claude] Screenshots in elke pull request.** Een job in `.github/workflows/ci.yml`, op macOS:
+- [ ] **[Claude] Screenshots in elke pull request.** Het script `scripts/screenshot-diff.sh` is er (31 oktober 2026); de jobs voor `.github/workflows/ci.yml` staan in de pull request, maar het token van de agent mag geen workflows pushen. Wacht op Remco (issue met label `vraag`). Een job in `.github/workflows/ci.yml`, op macOS:
   - draai de e2e-tests op `master` en op de branch van de pull request;
   - vergelijk de screenshots in `test-results/` per bestandsnaam, met ImageMagick (`compare`);
   - maak van elk veranderd scherm een plaatje met de verschillen in amber (`#ffa53d`) gemarkeerd, naast het oude scherm;
