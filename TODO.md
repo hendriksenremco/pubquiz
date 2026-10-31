@@ -29,7 +29,7 @@ Deze punten gaan vóór de rest. De agent op de thuisserver pakt ze op; zie `age
   - Loop de schermen één voor één door: startscherm, editor, inspector, Quiz-instellingen, show voorbereiden, de show zelf.
   - Per scherm één pull request die het rustiger maakt: minder tegelijk in beeld, duidelijkere rangorde, dezelfde woorden overal. Volg de ontwerpregels in CLAUDE.md.
   - Hooguit één UI-pull request tegelijk open. Haal geen functies weg zonder het eerst te vragen.
-- [ ] **[Claude] README.md voor ontwikkelaars.** De repo is openbaar; een nieuwe ontwikkelaar moet er zonder hulp mee aan de slag kunnen. In het Engels.
+- [x] **[Claude] README.md voor ontwikkelaars** (klaar op 1 november 2026). De repo is openbaar; een nieuwe ontwikkelaar moet er zonder hulp mee aan de slag kunnen. In het Engels.
   - Wat QuizNote is, met een screenshot.
   - Installeren en draaien: Node, pnpm, ffmpeg, `pnpm install`, de commando's uit CLAUDE.md, en waarom `env -u ELECTRON_RUN_AS_NODE`.
   - De opbouw van de code in het kort, met verwijzingen naar CLAUDE.md voor de details.
@@ -138,11 +138,7 @@ De rest van de lijst hangt hiervan af.
   - Het verkeer op het lokale netwerk gaat zonder https, en de sleutel staat in de URL.
   - Wie de QR-code ziet of het netwerk afluistert, kan dus de show bedienen. Is dat aanvaardbaar op een café-wifi?
   - In elk geval moeten "Nieuwe code" en de plug-in uitzetten makkelijk te vinden zijn.
-- [ ] **[Claude] README.md bijwerken met wat er nu in de app zit:**
-  - antwoordenrondes en afbeeldingenrondes;
-  - afdrukken en videogeluid;
-  - de plug-ins Licht en Afstandsbediening;
-  - Ronde opnieuw (toets R).
+- [x] **[Claude] README.md bijwerken** (klaar op 1 november 2026): vervangen door de Engelse README voor ontwikkelaars in hoofdstuk 0. Wordt de screenshot-job samengevoegd (#28), haal dan in README.md de zin "is on its way (#28)" weg.
 
 ## 5. Engelse app
 
