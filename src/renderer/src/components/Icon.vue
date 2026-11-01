@@ -20,6 +20,7 @@ const PATHS = {
   left: 'M15 6l-6 6 6 6',
   right: 'M9 6l6 6-6 6',
   upload: 'M12 16V4M7 9l5-5 5 5M4 16v4h16v-4',
+  download: 'M12 4v12M7 11l5 5 5-5M4 16v4h16v-4',
   text: 'M5 6h14M12 6v13M9 19h6',
   image: 'M4 5h16v14H4zM4 15l4-4 4 4 3-3 5 5M15 9h.01',
   check: 'M5 12l5 5 9-10',

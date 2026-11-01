@@ -51,7 +51,9 @@ export const DIALOG_MESSAGES = defineMessages(
     importMediaTitle: 'Media importeren',
     importMediaMessage: 'Kies bestanden of een hele map',
     importMediaButton: 'Importeer',
-    mediaFilter: 'Video, audio en afbeeldingen'
+    mediaFilter: 'Video, audio en afbeeldingen',
+    importRoundsTitle: 'Ronde importeren',
+    roundFileFilter: 'Rondebestand van QuizNote'
   },
   {
     en: {
@@ -64,7 +66,9 @@ export const DIALOG_MESSAGES = defineMessages(
       importMediaTitle: 'Import Media',
       importMediaMessage: 'Choose files or a whole folder',
       importMediaButton: 'Import',
-      mediaFilter: 'Video, audio and pictures'
+      mediaFilter: 'Video, audio and pictures',
+      importRoundsTitle: 'Import Round',
+      roundFileFilter: 'QuizNote round file'
     }
   }
 )
@@ -96,7 +100,17 @@ export const NOTICE_MESSAGES = defineMessages(
     displayAdded: 'Display aangesloten: {name}',
     quizReady: 'Nieuwe quiz “{title}” staat klaar op het dashboard',
     remoteFailed: 'De afstandsbediening kon niet starten: {error}',
-    windowed: '{name} (venster)'
+    windowed: '{name} (venster)',
+    notRoundFile: 'Dit is geen rondebestand van QuizNote',
+    newerRoundFile: 'Dit rondebestand komt uit een nieuwere QuizNote. Werk de app bij.',
+    invalidRoundFile: 'Fout in het rondebestand: {error}',
+    unsafeRoundPath: 'Ongeldig pad in het rondebestand: {file}',
+    missingRoundMedia: 'Dit bestand ontbreekt in het rondebestand: {file}',
+    notAPicture: '{file} is geen afbeelding',
+    notAudio: '{file} is geen geluidsbestand',
+    noAudioChannel:
+      'Deze quiz heeft geen audiokanaal voor de liedjes. Voeg er een toe bij Quiz-instellingen.',
+    roundFileTooBig: 'Dit rondebestand is groter dan 1 GB'
   },
   {
     en: {
@@ -124,7 +138,16 @@ export const NOTICE_MESSAGES = defineMessages(
       displayAdded: 'Display connected: {name}',
       quizReady: 'New quiz “{title}” is ready on the dashboard',
       remoteFailed: 'The remote control could not start: {error}',
-      windowed: '{name} (window)'
+      windowed: '{name} (window)',
+      notRoundFile: 'This is not a QuizNote round file',
+      newerRoundFile: 'This round file comes from a newer QuizNote. Update the app.',
+      invalidRoundFile: 'Error in the round file: {error}',
+      unsafeRoundPath: 'Invalid path in the round file: {file}',
+      missingRoundMedia: 'This file is missing from the round file: {file}',
+      notAPicture: '{file} is not a picture',
+      notAudio: '{file} is not an audio file',
+      noAudioChannel: 'This quiz has no audio channel for the songs. Add one in Quiz settings.',
+      roundFileTooBig: 'This round file is larger than 1 GB'
     }
   }
 )

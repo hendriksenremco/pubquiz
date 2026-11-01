@@ -10,6 +10,7 @@ import type {
   PluginSettings,
   PluginStatuses
 } from './plugins'
+import type { RoundImport } from './round-file'
 import type { TemplateOptions } from './template'
 import type { DisplayInfo, HardwareMapping, MediaAsset, Notice, Quiz, ShowState } from './types'
 
@@ -140,6 +141,12 @@ export interface PubquizApi {
   removeRecent(path: string): Promise<void>
   updateQuiz(quiz: Quiz): void
   importMedia(paths?: string[]): Promise<ImportResult>
+  /**
+   * Leest een rondebestand (zonder pad: main vraagt welk) en kopieert zijn media naar de quiz.
+   * `quiz` is de werkkopie van de editor, `at` de plek voor de rondes. Null bij annuleren of een
+   * fout; die meldt main zelf.
+   */
+  importRounds(quiz: Quiz, at: number, path?: string): Promise<RoundImport | null>
   pathForFile(file: File): string
 
   command(command: ShowCommand): void
@@ -199,6 +206,7 @@ export const IPC = {
   removeRecent: 'pq:remove-recent',
   updateQuiz: 'pq:update-quiz',
   importMedia: 'pq:import-media',
+  importRounds: 'pq:import-rounds',
   command: 'pq:command',
   startShow: 'pq:start-show',
   stopShow: 'pq:stop-show',

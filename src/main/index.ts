@@ -214,6 +214,9 @@ function registerIpc(ctl: AppController): void {
   ipcMain.on(IPC.copyText, (_e, text: string) => clipboard.writeText(text))
   ipcMain.handle(IPC.removeRecent, (_e, path: string) => ctl.removeRecent(path))
   ipcMain.handle(IPC.importMedia, (_e, paths?: string[]) => ctl.importMedia(paths))
+  ipcMain.handle(IPC.importRounds, (_e, quiz: unknown, at: number, path?: string) =>
+    ctl.importRounds(quiz, at, path)
+  )
   ipcMain.on(IPC.updateQuiz, (e, quiz: Quiz) => ctl.updateQuiz(quiz, e.sender.id))
 
   ipcMain.on(IPC.command, (_e, command: ShowCommand) => ctl.show.handle(command))

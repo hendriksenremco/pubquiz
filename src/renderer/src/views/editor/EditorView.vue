@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { createRound, newId, type RoundPreset } from '@shared/factory'
+import { addRounds } from '@shared/round-file'
 import Icon from '../../components/Icon.vue'
 import Popover from '../../components/Popover.vue'
 import { ask } from '../../lib/confirm'
@@ -43,6 +44,23 @@ function addRound(preset: RoundPreset, close: () => void) {
   quiz.value.rounds.push(r)
   page.value = r.id
   close()
+}
+
+/** Ronde importeren…: de rondes uit een rondebestand komen na de gekozen ronde (issue #99). */
+async function importRounds() {
+  const index = quiz.value.rounds.findIndex((r) => r.id === selected.value)
+  const at = index >= 0 ? index + 1 : quiz.value.rounds.length
+  const result = await window.pubquiz.importRounds(JSON.parse(JSON.stringify(quiz.value)), at)
+  if (!result) return
+  const added = addRounds(quiz.value, result.drafts, result.assets, at, locale)
+  page.value = added[0].id
+  session.notify({
+    level: 'info',
+    message:
+      added.length === 1
+        ? t('importedOne', { title: added[0].title, file: result.file })
+        : t('importedMany', { count: added.length, file: result.file })
+  })
 }
 
 function duplicate(id: string) {
@@ -177,6 +195,10 @@ function onDropCapture() {
             </button>
           </template>
         </Popover>
+        <button class="nav-item add-round" :title="t('importRoundsHint')" @click="importRounds">
+          <Icon name="download" :size="14" />
+          <span>{{ t('importRounds') }}</span>
+        </button>
       </div>
 
       <nav class="nav">

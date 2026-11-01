@@ -15,6 +15,7 @@ import {
 import { PLUGIN_OFF, PLUGINS, type PluginId, type PluginSetting } from '@shared/plugins'
 import { QuizSchema } from '@shared/quiz-schema'
 import { findRound } from '@shared/resolve'
+import { ROUND_FILE_EXT, type RoundImport } from '@shared/round-file'
 import type { TemplateOptions } from '@shared/template'
 import type { HardwareMapping, Notice, Quiz, ShowState } from '@shared/types'
 import { AirPlayBrowser } from './airplay'
@@ -41,6 +42,7 @@ import { renderFormPdf } from './pdf'
 import { Plugins } from './plugins'
 import { SaveQueue } from './save-queue'
 import { Settings, type RecoveryData } from './settings'
+import { readRoundFile } from './round-file'
 import { ShowController } from './show'
 import { headless } from './windows'
 
@@ -344,6 +346,30 @@ export class AppController {
 
   removeRecent(path: string): void {
     this.settings.removeRecent(path)
+  }
+
+  /** Ronde importeren… in de editor (issue #99): leest een rondebestand voor de werkkopie `input`. */
+  async importRounds(input: unknown, at: number, path?: string): Promise<RoundImport | null> {
+    const parsed = QuizSchema.safeParse(input)
+    if (!this.quizDir || !parsed.success || !Number.isInteger(at)) return null
+    let source = path
+    if (!source) {
+      const result = await dialog.showOpenDialog(this.operator!, {
+        title: this.dialogText('importRoundsTitle'),
+        filters: [
+          { name: this.dialogText('roundFileFilter'), extensions: [ROUND_FILE_EXT.slice(1)] }
+        ],
+        properties: ['openFile']
+      })
+      if (result.canceled || !result.filePaths[0]) return null
+      source = result.filePaths[0]
+    }
+    try {
+      return await readRoundFile(source, this.quizDir, parsed.data, at, appLocale())
+    } catch (err) {
+      this.notify('error', this.t('importFailed', { error: this.failed(err) }))
+      return null
+    }
   }
 
   async importMedia(paths: string[] | undefined) {
