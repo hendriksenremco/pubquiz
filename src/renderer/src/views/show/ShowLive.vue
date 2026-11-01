@@ -137,7 +137,12 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
               :class="{ active: state.blackout.includes(slot.id) }"
               @click="toggleBlackout(slot.id)"
             >
-              <Icon name="screen-off" :size="14" /> {{ t('black') }}
+              <template v-if="state.blackout.includes(slot.id)">
+                <Icon name="monitor" :size="14" /> {{ t('blackoutOff') }}
+              </template>
+              <template v-else>
+                <Icon name="screen-off" :size="14" /> {{ t('blackoutOn') }}
+              </template>
             </button>
           </figcaption>
         </figure>

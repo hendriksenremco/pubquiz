@@ -128,7 +128,10 @@ test('speelt het videogeluid alleen op het scherm, duckt bij een fragment en zwi
   // Terug naar de standaard, dan beeld op zwart: alles stil.
   await operator.keyboard.press('e')
   await expect.poll(async () => (await sound(beamer)).volume).toBe(0.4)
-  await operator.getByRole('button', { name: /Beeld op zwart/ }).click()
+  await operator
+    .locator('.live-controls')
+    .getByRole('button', { name: /Beeld op zwart/ })
+    .click()
   await expect
     .poll(() =>
       beamer.evaluate(() => [...document.querySelectorAll('video')].every((v) => v.muted))
