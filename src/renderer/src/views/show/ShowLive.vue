@@ -1,20 +1,24 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted } from 'vue'
-import { slideText } from '@shared/resolve'
+import { slideNumber } from '@shared/resolve'
+import type { Round, Slide } from '@shared/types'
 import Icon from '../../components/Icon.vue'
 import ScreenStage from '../../components/ScreenStage.vue'
 import { useLiveControls } from '../../lib/live-controls'
+import { locale } from '../../lib/locale'
 import { useNow } from '../../lib/use-now'
 import { useSession } from '../../stores/session'
 import AnswersPad from './AnswersPad.vue'
 import FragmentPad from './FragmentPad.vue'
 import Mixer from './Mixer.vue'
+import { LIVE_MESSAGES } from './live-messages'
 
 /**
  * De show, zoals de presentatieweergave van Keynote: wat er nu op de schermen staat, groot;
  * rechts de bediening, met dezelfde knoppen als de afstandsbediening. De noodknoppen staan in de
  * werkbalk.
  */
+const t = LIVE_MESSAGES.in(locale)
 const session = useSession()
 const quiz = computed(() => session.quiz!)
 const state = computed(() => session.state)
@@ -39,11 +43,22 @@ const {
 const now = useNow(250, () => state.value.loopUntil !== null)
 const loopText = computed(() => {
   if (!round.value?.slideLoopSeconds) return null
-  if (state.value.loopPaused) return 'Loop gepauzeerd'
+  if (state.value.loopPaused) return t('loopPaused')
   const until = state.value.loopUntil
-  if (until === null) return 'Loop start na de titel'
-  return `Volgende over ${Math.max(1, Math.ceil((until - now.value) / 1000))} s`
+  if (until === null) return t('loopAfterTitle')
+  return t('loopNext', { seconds: Math.max(1, Math.ceil((until - now.value) / 1000)) })
 })
+
+/** Korte tekst voor een slide in de lijst. */
+function slideText(round: Round, slide: Slide): string {
+  if (slide.layout === 'image') {
+    const number = slideNumber(round, slide) ?? ''
+    return slide.title
+      ? t('imageSlideTitled', { number, title: slide.title })
+      : t('imageSlide', { number })
+  }
+  return slide.title || slide.body || t('emptySlide')
+}
 
 const KEYS: Record<string, () => void> = {
   ArrowRight: () => step('next'),
@@ -87,7 +102,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 
 <template>
   <div class="live">
-    <aside class="rounds scroll" aria-label="Rondes">
+    <aside class="rounds scroll" :aria-label="t('rounds')">
       <button
         v-for="r in quiz.rounds"
         :key="r.id"
@@ -98,14 +113,14 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
         <span class="dot" aria-hidden="true" />
         <span class="grow">
           <span class="round-title">{{ r.title }}</span>
-          <span v-if="r.id === state.activeRoundId" class="round-tag">Nu</span>
-          <span v-else-if="r.id === nextRound?.id" class="round-tag">Hierna</span>
+          <span v-if="r.id === state.activeRoundId" class="round-tag">{{ t('now') }}</span>
+          <span v-else-if="r.id === nextRound?.id" class="round-tag">{{ t('upNext') }}</span>
         </span>
       </button>
     </aside>
 
     <main class="center scroll">
-      <h2 class="now-title">{{ round?.title ?? 'Tussen twee rondes' }}</h2>
+      <h2 class="now-title">{{ round?.title ?? t('betweenRounds') }}</h2>
 
       <section class="screens">
         <figure v-for="slot in quiz.screens" :key="slot.id" class="screen">
@@ -119,7 +134,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
               :class="{ active: state.blackout.includes(slot.id) }"
               @click="toggleBlackout(slot.id)"
             >
-              Zwart
+              {{ t('black') }}
             </button>
           </figcaption>
         </figure>
@@ -127,11 +142,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 
       <section v-if="round && round.slides.length" class="slides-section">
         <div class="section-row">
-          <span class="label grow">Slides</span>
+          <span class="label grow">{{ t('slides') }}</span>
           <template v-if="loopText">
             <span class="muted loop">{{ loopText }}</span>
             <button class="btn btn-ghost btn-sm" @click="toggleLoop">
-              {{ state.loopPaused ? 'Loop verder' : 'Pauzeer loop' }} <span class="kbd">L</span>
+              {{ state.loopPaused ? t('loopResume') : t('loopPause') }} <span class="kbd">L</span>
             </button>
           </template>
         </div>
@@ -142,7 +157,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
             @click="send({ type: 'setSlide', index: -1 })"
           >
             <span class="slide-kind">–</span>
-            <span>Geen slide</span>
+            <span>{{ t('noSlide') }}</span>
           </button>
           <button
             v-for="(s, i) in round.slides"
@@ -166,8 +181,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
     </main>
 
     <aside class="side scroll">
-      <section class="control" aria-label="Bediening">
-        <span class="label">{{ stepView?.label ?? 'Tussen twee rondes' }}</span>
+      <section class="control" :aria-label="t('controls')">
+        <span class="label">{{ stepView?.label ?? t('betweenRounds') }}</span>
         <div class="pair">
           <button
             class="btn key"
@@ -190,41 +205,43 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
         </div>
         <div class="pair">
           <button class="btn tile" :disabled="!prevRound" @click="send({ type: 'prevRound' })">
-            <span class="tile-label"><Icon name="left" :size="14" />Vorige ronde</span>
+            <span class="tile-label"><Icon name="left" :size="14" />{{ t('prevRound') }}</span>
             <span class="tile-sub">{{ prevRound?.title ?? '–' }}</span>
           </button>
           <button
             class="btn tile end"
             :disabled="!nextRound"
-            title="Start de volgende ronde (Enter)"
+            :title="t('nextRoundHint')"
             @click="send({ type: 'nextRound' })"
           >
-            <span class="tile-label">Volgende ronde<Icon name="right" :size="14" /></span>
+            <span class="tile-label">{{ t('nextRound') }}<Icon name="right" :size="14" /></span>
             <span class="tile-sub">{{ nextRound?.title ?? '–' }}</span>
           </button>
           <button
             class="btn tile"
             :disabled="!restartable"
-            title="Vanaf het begin, met de fragmenten weer ongespeeld (R)"
+            :title="t('restartRoundHint')"
             @click="send({ type: 'restartRound' })"
           >
-            <span class="tile-label"><Icon name="restart" :size="13" />Ronde opnieuw</span>
+            <span class="tile-label"
+              ><Icon name="restart" :size="13" />{{ t('restartRound') }}</span
+            >
             <span class="tile-sub">{{ restartable?.title ?? '–' }}</span>
           </button>
           <button
             class="btn tile end"
             :disabled="!round"
-            title="Schermen en muziek terug naar de standaard (E)"
+            :title="t('endRoundHint')"
             @click="send({ type: 'endRound' })"
           >
-            <span class="tile-label">Einde ronde<Icon name="end" :size="12" /></span>
+            <span class="tile-label">{{ t('endRound') }}<Icon name="end" :size="12" /></span>
             <span class="tile-sub">{{ round?.title ?? '–' }}</span>
           </button>
         </div>
       </section>
 
       <section v-if="round?.hostNotes" class="notes-section">
-        <span class="label">Notities</span>
+        <span class="label">{{ t('notes') }}</span>
         <p class="notes">{{ round.hostNotes }}</p>
       </section>
 

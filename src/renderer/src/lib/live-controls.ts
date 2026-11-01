@@ -10,8 +10,12 @@ import {
   stepNames as namesOf,
   stepTarget
 } from '@shared/resolve'
+import { LIVE_MESSAGES } from '../views/show/live-messages'
 import { useSession } from '../stores/session'
 import { ask } from './confirm'
+import { locale } from './locale'
+
+const t = LIVE_MESSAGES.in(locale)
 
 /**
  * Bediening van de live show, gedeeld door de werkbalk en de sneltoetsen van ShowLive. Dezelfde
@@ -31,9 +35,9 @@ export function useLiveControls() {
   const step = (direction: 'next' | 'prev') => send(stepCommand(arrows.value, direction))
   /** Waar ← → staan en of ze verder kunnen; null = er loopt geen ronde. */
   const stepView = computed(() =>
-    round.value ? remoteStep(quiz.value, round.value, state.value) : null
+    round.value ? remoteStep(quiz.value, round.value, state.value, locale) : null
   )
-  const stepNames = computed(() => namesOf(arrows.value))
+  const stepNames = computed(() => namesOf(arrows.value, locale))
 
   const prevRound = computed(() => adjacentRound(quiz.value, state.value, 'prev'))
   const nextRound = computed(() => adjacentRound(quiz.value, state.value, 'next'))
@@ -65,32 +69,32 @@ export function useLiveControls() {
 
   async function stopShow() {
     const ok = await ask({
-      title: 'Show stoppen?',
-      message: 'De schermen gaan uit en de muziek stopt.',
-      confirm: 'Stop show',
+      title: t('stopTitle'),
+      message: t('stopMessage'),
+      confirm: t('stopShow'),
       danger: true
     })
     if (ok) await api.stopShow()
   }
 
   const ARROWS = {
-    answers: 'Vorige of volgende stap in de antwoorden',
-    fragments: 'Vorig of volgend fragment',
-    slides: 'Vorige of volgende slide'
+    answers: 'keyArrowsAnswers',
+    fragments: 'keyArrowsFragments',
+    slides: 'keyArrowsSlides'
   } as const
 
   const shortcuts = computed((): [string, string][] => [
-    ['← →', ARROWS[arrows.value]],
-    ['Enter', 'Start de volgende ronde'],
-    ['R', 'Ronde opnieuw vanaf het begin'],
-    ['E', 'Einde ronde'],
-    ['1–9', 'Speel een fragment'],
-    ['Spatie', 'Stop het fragment'],
-    ['A', 'Reeks starten of pauzeren'],
-    ['S', 'Volgende in de reeks'],
-    ['B', 'Beeld op zwart of terug'],
-    ['M', 'Geluid uit of aan'],
-    ['L', 'Loop van de slides pauzeren of verder']
+    ['← →', t(ARROWS[arrows.value])],
+    [t('keyEnter'), t('keyNextRound')],
+    ['R', t('keyRestart')],
+    ['E', t('keyEnd')],
+    ['1–9', t('keyFragment')],
+    [t('keySpace'), t('keyStopFragment')],
+    ['A', t('keyAutoplay')],
+    ['S', t('keySkip')],
+    ['B', t('keyBlackout')],
+    ['M', t('keyMute')],
+    ['L', t('keyLoop')]
   ])
 
   return {

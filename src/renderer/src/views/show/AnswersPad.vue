@@ -4,13 +4,16 @@ import type { ShowCommand } from '@shared/ipc'
 import { answerItems, findAsset, type AnswerItem } from '@shared/resolve'
 import type { Round } from '@shared/types'
 import MediaThumb from '../../components/MediaThumb.vue'
+import { locale } from '../../lib/locale'
 import { useSession } from '../../stores/session'
+import { ANSWER_NOUNS, ANSWERS_MESSAGES } from './live-messages'
 
 /**
  * Antwoordenronde: per vraag of afbeelding eerst de slide, per fragment eerst het nummer (het
  * fragment speelt opnieuw), en daarna het antwoord.
  */
 const props = defineProps<{ round: Round }>()
+const t = ANSWERS_MESSAGES.in(locale)
 const api = window.pubquiz
 const session = useSession()
 const send = (command: ShowCommand) => api.command(command)
@@ -34,24 +37,24 @@ const groups = computed(() => {
 const atEnd = computed(
   () => !!answer.value?.revealed && answer.value.index >= items.value.length - 1
 )
-const capital = (word: string) => word[0].toUpperCase() + word.slice(1)
-
 const nextLabel = computed(() => {
   const a = answer.value
-  if (!a) return 'Start antwoorden'
-  if (!a.revealed) return 'Toon antwoord'
+  if (!a) return t('start')
+  if (!a.revealed) return t('reveal')
   const next = items.value[a.index + 1]
-  if (!next) return 'Klaar'
-  return next.noun === 'fragment' ? 'Volgend fragment' : `Volgende ${next.noun}`
+  if (!next) return t('done')
+  return t(ANSWER_NOUNS[next.noun].next)
 })
 const status = computed(() => {
   const a = answer.value
   const item = a ? items.value[a.index] : undefined
   if (!a || !item) return null
-  const name = `${capital(item.noun)} ${item.number}`
-  if (a.revealed) return `${name}: antwoord in beeld`
-  return item.fragment ? `${name}: nummer in beeld` : `${name} in beeld`
+  const name = t(ANSWER_NOUNS[item.noun].item, { number: item.number })
+  if (a.revealed) return t('statusAnswer', { item: name })
+  return t(item.fragment ? 'statusNumber' : 'statusShown', { item: name })
 })
+
+const nounOf = (item: AnswerItem) => t(ANSWER_NOUNS[item.noun].noun)
 
 type Item = AnswerItem & { index: number }
 
@@ -60,19 +63,17 @@ const done = (item: Item) =>
 
 function stateOf(item: Item): string | null {
   const a = answer.value
-  if (item.fragment && session.state.fragment?.fragmentId === item.fragment.id) return 'speelt…'
+  if (item.fragment && session.state.fragment?.fragmentId === item.fragment.id) return t('playing')
   if (a?.index === item.index) {
-    if (a.revealed) return 'antwoord in beeld'
-    return item.fragment ? 'nummer in beeld' : `${item.noun} in beeld`
+    if (a.revealed) return t('answerShown')
+    return item.fragment ? t('numberShown') : t('nounShown', { noun: nounOf(item) })
   }
-  return done(item) ? '✓ gedaan' : null
+  return done(item) ? t('finished') : null
 }
 
 function hint(item: Item): string {
-  if (answer.value?.index === item.index) return 'Klik om het antwoord te tonen of te verbergen'
-  return item.fragment
-    ? 'Speel dit fragment en zet het nummer in beeld'
-    : `Zet deze ${item.noun} in beeld`
+  if (answer.value?.index === item.index) return t('hintToggle')
+  return item.fragment ? t('hintFragment') : t('hintShow', { noun: nounOf(item) })
 }
 
 const imageOf = (item: Item) => findAsset(session.quiz!, item.slide?.imageAssetId)
@@ -81,12 +82,12 @@ const imageOf = (item: Item) => findAsset(session.quiz!, item.slide?.imageAssetI
 <template>
   <section class="card answers">
     <header class="card-head">
-      <h3 class="grow">Antwoorden</h3>
+      <h3 class="grow">{{ t('title') }}</h3>
       <span
         v-if="!round.fragmentScreens.length"
         class="pill pill-warn"
-        title="Kies in de editor bij Antwoorden op welk scherm ze komen"
-        >Niet in beeld</span
+        :title="t('notShownHint')"
+        >{{ t('notShown') }}</span
       >
       <span v-else-if="status" class="pill pill-accent">{{ status }}</span>
       <button
@@ -94,7 +95,7 @@ const imageOf = (item: Item) => findAsset(session.quiz!, item.slide?.imageAssetI
         :disabled="!answer"
         @click="send({ type: 'answers', action: 'prev' })"
       >
-        Vorige <span class="kbd">←</span>
+        {{ t('prev') }} <span class="kbd">←</span>
       </button>
       <button
         class="btn btn-primary btn-sm"
@@ -106,10 +107,10 @@ const imageOf = (item: Item) => findAsset(session.quiz!, item.slide?.imageAssetI
       <button
         v-if="answer"
         class="btn btn-sm"
-        title="Nummer en antwoord uit beeld"
+        :title="t('stopHint')"
         @click="send({ type: 'answers', action: 'stop' })"
       >
-        Stop
+        {{ t('stop') }}
       </button>
     </header>
 
@@ -131,14 +132,14 @@ const imageOf = (item: Item) => findAsset(session.quiz!, item.slide?.imageAssetI
           >
             <span class="frag-top">
               <span class="frag-num mono">{{ item.number }}</span>
-              <span class="frag-noun">{{ item.noun }}</span>
+              <span class="frag-noun">{{ nounOf(item) }}</span>
               <MediaThumb v-if="imageOf(item)" :asset="imageOf(item)" class="frag-thumb" />
             </span>
             <span v-if="item.slide?.layout === 'question'" class="frag-question">
               {{ item.slide.body || item.slide.title }}
             </span>
             <span class="frag-answer" :class="{ missing: !item.answer }">
-              {{ item.answer || 'Geen antwoord ingevuld' }}
+              {{ item.answer || t('noAnswer') }}
             </span>
             <span v-if="stateOf(item)" class="frag-state">{{ stateOf(item) }}</span>
           </button>

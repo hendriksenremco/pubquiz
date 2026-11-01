@@ -2,10 +2,13 @@
 import Icon from '../../components/Icon.vue'
 import Popover from '../../components/Popover.vue'
 import { useLiveControls } from '../../lib/live-controls'
+import { locale } from '../../lib/locale'
 import PluginSlot from '../../plugins/PluginSlot.vue'
+import { LIVE_MESSAGES } from './live-messages'
 
 /** Werkbalk tijdens de show: noodknoppen, sneltoetsen, terug naar bewerken en stoppen. */
 const emit = defineEmits<{ edit: [] }>()
+const t = LIVE_MESSAGES.in(locale)
 const { allBlack, toggleBlackout, muted, toggleSound, stopShow, shortcuts } = useLiveControls()
 </script>
 
@@ -14,21 +17,21 @@ const { allBlack, toggleBlackout, muted, toggleSound, stopShow, shortcuts } = us
     <button
       class="btn"
       :class="{ alert: allBlack }"
-      :title="allBlack ? 'Alle schermen tonen weer hun beeld' : 'Alle schermen op zwart'"
+      :title="allBlack ? t('blackoutOffHint') : t('blackoutOnHint')"
       @click="toggleBlackout()"
     >
       <Icon :name="allBlack ? 'monitor' : 'screen-off'" :size="15" />
-      {{ allBlack ? 'Beeld terug' : 'Beeld op zwart' }}
+      {{ allBlack ? t('blackoutOff') : t('blackoutOn') }}
       <span class="kbd">B</span>
     </button>
     <button
       class="btn"
       :class="{ alert: muted }"
-      :title="muted ? 'Achtergrondmuziek weer aan' : 'Fragment stopt en achtergrondmuziek gaat uit'"
+      :title="muted ? t('muteOffHint') : t('muteOnHint')"
       @click="toggleSound"
     >
       <Icon :name="muted ? 'volume' : 'volume-off'" :size="15" />
-      {{ muted ? 'Geluid aan' : 'Geluid uit' }}
+      {{ muted ? t('muteOff') : t('muteOn') }}
       <span class="kbd">M</span>
     </button>
 
@@ -37,7 +40,9 @@ const { allBlack, toggleBlackout, muted, toggleSound, stopShow, shortcuts } = us
     <PluginSlot name="liveControls" />
     <Popover align="right" :width="320">
       <template #trigger="{ open, toggle }">
-        <button class="btn btn-ghost" :class="{ active: open }" @click="toggle">Sneltoetsen</button>
+        <button class="btn btn-ghost" :class="{ active: open }" @click="toggle">
+          {{ t('shortcuts') }}
+        </button>
       </template>
       <div class="shortcuts">
         <template v-for="[k, label] in shortcuts" :key="k">
@@ -47,10 +52,10 @@ const { allBlack, toggleBlackout, muted, toggleSound, stopShow, shortcuts } = us
       </div>
     </Popover>
     <button class="btn btn-ghost" @click="emit('edit')">
-      <Icon name="pencil" :size="14" /> Bewerken
+      <Icon name="pencil" :size="14" /> {{ t('edit') }}
     </button>
     <button class="btn btn-ghost btn-danger" @click="stopShow">
-      <Icon name="power" :size="14" /> Stop show
+      <Icon name="power" :size="14" /> {{ t('stopShow') }}
     </button>
   </div>
 </template>
