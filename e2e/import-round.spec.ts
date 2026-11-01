@@ -27,6 +27,33 @@ test.afterAll(async () => {
   rmSync(dirname(quizDir), { recursive: true, force: true })
 })
 
+/** Een rondebestand met één ronde zonder media. */
+function roundFile(name: string, title: string): string {
+  const path = join(files, `${name}.quiznoteronde`)
+  writeFileSync(
+    path,
+    writeZip([
+      {
+        name: 'ronde.json',
+        data: JSON.stringify({
+          formatVersion: 1,
+          type: 'questions',
+          title,
+          questions: [{ question: 'Hoeveel spelers heeft een voetbalteam?', answer: '11' }]
+        })
+      }
+    ])
+  )
+  return path
+}
+
+/** Zoals dubbelklikken in Finder: macOS geeft de app een `open-file`. */
+async function openInFinder(path: string) {
+  await app.evaluate(({ app }, file) => {
+    app.emit('open-file', { preventDefault() {} }, file)
+  }, path)
+}
+
 const savedQuiz = () => JSON.parse(readFileSync(join(quizDir, 'quiz.json'), 'utf8'))
 
 /** Laat de open-dialoog van macOS dit bestand kiezen. */
@@ -102,4 +129,27 @@ test('meldt een fout rondebestand en verandert niets', async () => {
     operator.locator('.notice', { hasText: 'Dit is geen rondebestand van QuizNote' })
   ).toBeVisible()
   expect(savedQuiz().rounds).toHaveLength(rounds)
+})
+
+test('importeert een rondebestand dat in Finder geopend wordt', async () => {
+  await openInFinder(roundFile('Sport', 'Sport'))
+  await expect(operator.locator('.notice', { hasText: 'Ronde “Sport” geïmporteerd' })).toBeVisible()
+  await expect(operator.locator('.sidebar .round.on .round-title')).toHaveText('Sport')
+  await expect
+    .poll(() => savedQuiz().rounds.some((r: { title: string }) => r.title === 'Sport'))
+    .toBe(true)
+})
+
+test('vraagt in welke quiz als er geen quiz open is', async () => {
+  await operator.locator('.topbar .back').click()
+  await expect(operator.locator('.sidebar')).toHaveCount(0)
+  await chooseFile(quizDir)
+  await openInFinder(roundFile('Film', 'Film en tv'))
+  await expect(
+    operator.locator('.notice', { hasText: 'Ronde “Film en tv” geïmporteerd' })
+  ).toBeVisible()
+  await expect(operator.locator('.sidebar .round.on .round-title')).toHaveText('Film en tv')
+  await expect
+    .poll(() => savedQuiz().rounds.some((r: { title: string }) => r.title === 'Film en tv'))
+    .toBe(true)
 })

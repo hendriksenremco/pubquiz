@@ -4,6 +4,7 @@ import { createQuiz, createRound } from './factory'
 import { QuizSchema } from './quiz-schema'
 import {
   addRounds,
+  isRoundFile,
   isSafeZipPath,
   parseRoundFile,
   roundFileMedia,
@@ -103,6 +104,15 @@ describe('parseRoundFile', () => {
         image
       ).toBe('unsafeRoundPath')
     }
+  })
+})
+
+describe('isRoundFile', () => {
+  it('herkent de extensie, ook met hoofdletters', () => {
+    expect(isRoundFile('/Users/x/Downloads/Sport.quiznoteronde')).toBe(true)
+    expect(isRoundFile('Sport.QuizNoteRonde')).toBe(true)
+    expect(isRoundFile('Sport.zip')).toBe(false)
+    expect(isRoundFile('/Pubquizzen/Sport.pubquiz')).toBe(false)
   })
 })
 

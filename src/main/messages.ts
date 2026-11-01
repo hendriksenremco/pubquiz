@@ -53,7 +53,8 @@ export const DIALOG_MESSAGES = defineMessages(
     importMediaButton: 'Importeer',
     mediaFilter: 'Video, audio en afbeeldingen',
     importRoundsTitle: 'Ronde importeren',
-    roundFileFilter: 'Rondebestand van QuizNote'
+    roundFileFilter: 'Rondebestand van QuizNote',
+    chooseQuizForRound: 'In welke quiz wil je “{file}” importeren?'
   },
   {
     en: {
@@ -68,7 +69,8 @@ export const DIALOG_MESSAGES = defineMessages(
       importMediaButton: 'Import',
       mediaFilter: 'Video, audio and pictures',
       importRoundsTitle: 'Import Round',
-      roundFileFilter: 'QuizNote round file'
+      roundFileFilter: 'QuizNote round file',
+      chooseQuizForRound: 'Which quiz do you want to import “{file}” into?'
     }
   }
 )

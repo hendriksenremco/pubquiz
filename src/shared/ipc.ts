@@ -147,6 +147,12 @@ export interface PubquizApi {
    * fout; die meldt main zelf.
    */
   importRounds(quiz: Quiz, at: number, path?: string): Promise<RoundImport | null>
+  /**
+   * Rondebestanden die in Finder geopend zijn (dubbelklik) en nog in de editor moeten; main
+   * vergeet ze zodra ze opgehaald zijn. `onRoundFiles` zegt dat er nieuwe wachten.
+   */
+  takeRoundFiles(): Promise<string[]>
+  onRoundFiles(cb: () => void): () => void
   pathForFile(file: File): string
 
   command(command: ShowCommand): void
@@ -207,6 +213,8 @@ export const IPC = {
   updateQuiz: 'pq:update-quiz',
   importMedia: 'pq:import-media',
   importRounds: 'pq:import-rounds',
+  takeRoundFiles: 'pq:take-round-files',
+  roundFiles: 'pq:round-files',
   command: 'pq:command',
   startShow: 'pq:start-show',
   stopShow: 'pq:stop-show',

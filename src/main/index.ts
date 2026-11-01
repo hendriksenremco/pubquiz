@@ -5,6 +5,7 @@ import { IPC, type AudioEngineEvent, type ShowCommand } from '@shared/ipc'
 import type { TemplateOptions } from '@shared/template'
 import type { FormOptions } from '@shared/forms'
 import type { PluginId, PluginSetting } from '@shared/plugins'
+import { isRoundFile } from '@shared/round-file'
 import type { HardwareMapping, Quiz } from '@shared/types'
 import { aboutPanelOptions } from './about'
 import { AgentBridge, aiSetup, connectClaude, handleAgent } from './agent'
@@ -28,13 +29,18 @@ if (process.env['PUBQUIZ_MUTE']) app.commandLine.appendSwitch('mute-audio')
 // macOS kan een .pubquiz openen vóór `ready`; bewaar het pad tot de controller er is.
 let pendingOpen: string | null =
   process.argv.find((arg) => arg.endsWith(QUIZ_EXT) || arg.endsWith(`${QUIZ_EXT}/`)) ?? null
+// Net zo voor rondebestanden (issue #99); die wachten ook tot het venster er is.
+const pendingRounds: string[] = process.argv.filter(isRoundFile)
 let controller: AppController | null = null
 let bridge: AgentBridge | null = null
 let quitConfirmed = false
 
 app.on('open-file', (event, path) => {
   event.preventDefault()
-  if (controller) void controller.openQuiz(path)
+  if (isRoundFile(path)) {
+    if (controller?.operator) void controller.openRoundFile(path)
+    else pendingRounds.push(path)
+  } else if (controller) void controller.openQuiz(path)
   else pendingOpen = path
 })
 
@@ -116,6 +122,9 @@ app.whenReady().then(async () => {
   ipcMain.on(IPC.quitConfirmed, () => {
     quitConfirmed = true
     operator.close()
+  })
+  operator.webContents.once('did-finish-load', async () => {
+    for (const path of pendingRounds.splice(0)) await ctl.openRoundFile(path)
   })
   operator.on('closed', () => {
     ctl.operator = null
@@ -217,6 +226,7 @@ function registerIpc(ctl: AppController): void {
   ipcMain.handle(IPC.importRounds, (_e, quiz: unknown, at: number, path?: string) =>
     ctl.importRounds(quiz, at, path)
   )
+  ipcMain.handle(IPC.takeRoundFiles, () => ctl.takeRoundFiles())
   ipcMain.on(IPC.updateQuiz, (e, quiz: Quiz) => ctl.updateQuiz(quiz, e.sender.id))
 
   ipcMain.on(IPC.command, (_e, command: ShowCommand) => ctl.show.handle(command))
