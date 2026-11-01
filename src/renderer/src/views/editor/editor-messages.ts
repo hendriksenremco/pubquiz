@@ -16,7 +16,7 @@ export const PRINT_MESSAGES = defineMessages(
     cardsTitle: 'Vragenkaarten',
     cardsHint:
       'Voor jou: per ronde de vragen met antwoord, vier ansichtkaarten per A4 om te knippen',
-    save: 'Opslaan',
+    save: 'Opslaan…',
     saveDoc: '{title} opslaan',
     busy: 'Bezig…'
   },
@@ -34,7 +34,7 @@ export const PRINT_MESSAGES = defineMessages(
       keyHint: 'The same layout with the answers filled in: lay it next to a team’s sheet',
       cardsTitle: 'Question cards',
       cardsHint: 'For you: the questions and answers per round, four postcards per A4 to cut out',
-      save: 'Save',
+      save: 'Save…',
       saveDoc: 'Save {title}',
       busy: 'Saving…'
     }
