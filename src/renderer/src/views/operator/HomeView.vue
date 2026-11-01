@@ -104,7 +104,7 @@ function reveal(q: RecentQuiz) {
         </p>
         <div class="actions">
           <button class="btn btn-primary btn-lg" @click="emit('create')">
-            <Icon name="plus" /> {{ t('newQuiz') }}
+            <Icon name="plus" /> {{ t('newQuizDialog') }}
           </button>
           <button class="btn btn-lg" @click="emit('ai')">
             <Icon name="spark" /> {{ t('withAi') }}
