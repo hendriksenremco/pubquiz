@@ -142,7 +142,7 @@ export async function snap(
   options: { fullPage?: boolean } = {}
 ) {
   const page = 'page' in target ? target.page() : target
-  await page.evaluate(freezeVideos)
+  await page.evaluate(freezeVideos, MEDIA_EVENTS)
   try {
     await target.screenshot({
       path,
@@ -153,39 +153,54 @@ export async function snap(
       maskColor: '#3a4150'
     })
   } finally {
-    await page.evaluate(resumeVideos).catch(() => {})
+    await page.evaluate(resumeVideos, MEDIA_EVENTS).catch(() => {})
   }
 }
 
-type FrozenWindow = Window & { __pubquizFrozen?: HTMLVideoElement[] }
+type FrozenWindow = Window & {
+  __pubquizFrozen?: { playing: HTMLVideoElement[]; block: (e: Event) => void }
+}
 
-/** Draait in de pagina: zet elke video op het eerste beeld en onthoudt welke speelden. */
-async function freezeVideos() {
-  const wait = (video: HTMLVideoElement, event: string) =>
-    new Promise<void>((done) => {
-      const timer = setTimeout(done, 2000)
-      video.addEventListener(event, () => (clearTimeout(timer), done()), { once: true })
-    })
+/** Media-events die de app niet mag zien terwijl een video voor de screenshot stilstaat. */
+const MEDIA_EVENTS = ['pause', 'play', 'playing', 'seeking', 'seeked', 'timeupdate', 'waiting']
+
+/**
+ * Draait in de pagina: zet elke video op het eerste beeld en onthoudt welke speelden. De app
+ * merkt er niets van: de media-events worden op `window` afgevangen (capture), anders stopt
+ * bijvoorbeeld een voorbeeld dat op `pause` reageert.
+ */
+async function freezeVideos(events: string[]) {
+  const block = (e: Event) => {
+    if (e.target instanceof HTMLVideoElement) e.stopImmediatePropagation()
+  }
+  for (const name of events) window.addEventListener(name, block, true)
+  const until = async (ready: () => boolean) => {
+    for (let i = 0; i < 100 && !ready(); i++) await new Promise((r) => setTimeout(r, 20))
+  }
   const videos = Array.from(document.querySelectorAll('video'))
-  ;(window as FrozenWindow).__pubquizFrozen = videos.filter((v) => !v.paused)
+  ;(window as FrozenWindow).__pubquizFrozen = {
+    playing: videos.filter((v) => !v.paused),
+    block
+  }
   await Promise.all(
     videos.map(async (video) => {
       video.pause()
       if (!video.currentSrc) return
-      if (video.readyState < 2) await wait(video, 'loadeddata')
-      if (video.currentTime === 0) return
-      const seeked = wait(video, 'seeked')
-      video.currentTime = 0
-      await seeked
+      await until(() => video.readyState >= 2)
+      if (video.currentTime !== 0) video.currentTime = 0
+      await until(() => !video.seeking && video.readyState >= 2)
     })
   )
   // Twee frames, zodat het stilgezette beeld echt getekend is.
   await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)))
 }
 
-/** Draait in de pagina: laat de video's die speelden weer lopen. */
-function resumeVideos() {
+/** Draait in de pagina: laat de video's die speelden weer lopen en geeft de events weer door. */
+async function resumeVideos(events: string[]) {
   const w = window as FrozenWindow
-  for (const video of w.__pubquizFrozen ?? []) void video.play().catch(() => {})
+  const frozen = w.__pubquizFrozen
+  if (!frozen) return
   delete w.__pubquizFrozen
+  await Promise.all(frozen.playing.map((video) => video.play().catch(() => {})))
+  for (const name of events) window.removeEventListener(name, frozen.block, true)
 }
