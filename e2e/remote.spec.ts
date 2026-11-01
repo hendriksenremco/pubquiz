@@ -179,6 +179,13 @@ test('de show bedienen met een telefoon via de QR-code', async () => {
     await expect(toolbar.getByRole('button', { name: /Geluid uit/ })).toBeVisible()
     await phone.screenshot({ path: 'test-results/remote-phone.png' })
 
+    // Aftellen: dezelfde knop als op de Mac.
+    await phone.getByRole('button', { name: 'Aftellen', exact: true }).click()
+    await expect(toolbar.getByRole('button', { name: /Stop aftellen/ })).toBeVisible()
+    await expect(phone.getByRole('button', { name: 'Stop aftellen' })).toBeVisible()
+    await phone.getByRole('button', { name: 'Stop aftellen' }).click()
+    await expect(toolbar.getByRole('button', { name: /^Aftellen/ })).toBeVisible()
+
     // Het licht, via de plug-in MagicHome-licht; de demo-quiz stuurt het zelf niet aan.
     const light = phone.getByRole('region', { name: 'Licht' })
     await expect(light.getByText('De show stuurt het licht nu niet aan')).toBeVisible()

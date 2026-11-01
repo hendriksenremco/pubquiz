@@ -29,7 +29,7 @@ const READY_TIMEOUT_MS = 2500
 
 const counting = computed(() => {
   const ap = props.state.autoplay
-  return ap.status === 'gap' || ap.status === 'paused'
+  return ap.status === 'gap' || ap.status === 'paused' || props.state.timer !== null
 })
 const now = useNow(200, () => counting.value)
 const resolved = computed(() => resolveScreen(props.quiz, props.state, props.screenId, now.value))
@@ -298,6 +298,14 @@ onBeforeUnmount(() => {
               }}
             </div>
             <div class="ov-answer">{{ resolved.overlay.answer }}</div>
+          </template>
+          <!-- Aftellen na een vraag (T): de seconden groot, de balk loopt leeg. -->
+          <template v-else-if="resolved.overlay.kind === 'timer'">
+            <div class="ov-label">{{ t('timeLeft') }}</div>
+            <div class="ov-number">{{ resolved.overlay.seconds }}</div>
+            <div class="ov-bar">
+              <span :style="{ transform: `scaleX(${resolved.overlay.remaining})` }" />
+            </div>
           </template>
           <template v-else>
             <div class="ov-label">{{ t('next') }}</div>

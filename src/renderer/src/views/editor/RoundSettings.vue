@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { answerScreens, hasAnswers } from '@shared/factory'
 import { itemSummary } from '@shared/forms'
-import { answerItems, loopIndices } from '@shared/resolve'
+import { answerItems, loopIndices, timerSeconds } from '@shared/resolve'
 import type { Round, RoundBackground, ScreenContent } from '@shared/types'
 import ContentChip from '../../components/ContentChip.vue'
 import Icon from '../../components/Icon.vue'
@@ -83,6 +83,14 @@ const loopable = computed(() => loopIndices(props.round).length > 1)
 
 function setLoop(on: boolean) {
   props.round.slideLoopSeconds = on ? DEFAULT_LOOP_SECONDS : null
+}
+
+/** Eigen tijd voor het aftellen (T); leeg = die van de quiz. */
+function setTimer(event: Event) {
+  const raw = (event.target as HTMLInputElement).value.trim()
+  const value = Math.round(Number(raw))
+  if (raw === '') delete props.round.timerSeconds
+  else if (Number.isFinite(value) && value >= 1) props.round.timerSeconds = Math.min(value, 3600)
 }
 
 function setLoopSeconds(event: Event) {
@@ -210,6 +218,27 @@ function setAnswersFor(roundId: string, on: boolean) {
       <button class="btn btn-ghost btn-sm renumber" @click="renumber">
         {{ t('renumber') }}
       </button>
+    </div>
+
+    <div v-if="!round.answersFor.length" class="inspector-group">
+      <span class="label">{{ t('timer') }}</span>
+      <span class="inline">
+        <input
+          :value="round.timerSeconds ?? ''"
+          type="number"
+          min="1"
+          max="3600"
+          step="1"
+          class="input input-sm short"
+          :placeholder="String(timerSeconds(quiz, null))"
+          :aria-label="t('timerLabel')"
+          @change="setTimer"
+        />
+        <span class="muted">{{ t('seconds') }}</span>
+      </span>
+      <span v-if="round.timerSeconds === undefined" class="muted small">
+        {{ t('timerQuiz', { seconds: timerSeconds(quiz, null) }) }}
+      </span>
     </div>
 
     <div v-if="loopable" class="inspector-group">

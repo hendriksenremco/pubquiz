@@ -81,6 +81,7 @@ export const SCREEN_MESSAGES = defineMessages(
     fragment: 'Fragment',
     next: 'Volgende',
     inSeconds: 'over {seconds} s',
+    timeLeft: 'Nog',
     contextQuestion: '{round}, vraag {number}',
     contextImage: '{round}, afbeelding {number}',
     contextFragment: '{round}, fragment {number}'
@@ -91,6 +92,7 @@ export const SCREEN_MESSAGES = defineMessages(
       fragment: 'Clip',
       next: 'Next',
       inSeconds: 'in {seconds} s',
+      timeLeft: 'Time left',
       contextQuestion: '{round}, question {number}',
       contextImage: '{round}, picture {number}',
       contextFragment: '{round}, clip {number}'

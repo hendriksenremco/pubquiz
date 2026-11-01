@@ -36,7 +36,8 @@ const {
   toggleBlackout,
   toggleSound,
   toggleAutoplay,
-  toggleLoop
+  toggleLoop,
+  toggleTimer
 } = useLiveControls()
 
 // Slide-loop: de timer loopt in main; hier alleen tonen en pauzeren.
@@ -73,7 +74,8 @@ const KEYS: Record<string, () => void> = {
   s: () => send({ type: 'autoplay', action: 'skip' }),
   b: () => toggleBlackout(),
   m: toggleSound,
-  l: toggleLoop
+  l: toggleLoop,
+  t: toggleTimer
 }
 
 function onKey(event: KeyboardEvent) {

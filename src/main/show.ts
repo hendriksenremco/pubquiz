@@ -9,13 +9,17 @@ import {
   findRound,
   loopActive,
   nextLoopSlide,
-  restartRound
+  restartRound,
+  timerChannel,
+  timerSeconds
 } from '@shared/resolve'
 import type { Fragment, Quiz, Round, ShowState } from '@shared/types'
 
 export interface ShowHost {
   quiz(): Quiz | null
   publish(state: ShowState): void
+  /** Het aftellen (T) is vanzelf afgelopen: een zacht signaal op dit kanaal. */
+  timerEnded(channelId: string): void
 }
 
 /** Velden die na een crash hersteld worden; spelende audio en autoplay niet. */
@@ -78,6 +82,7 @@ export class ShowController {
         this.stopPlayback()
         s.answer = null
         s.loopPaused = false
+        s.timer = null
         s.activeRoundId = null
         s.slideIndex = -1
         break
@@ -110,6 +115,13 @@ export class ShowController {
       case 'prevSlide':
         if (round && s.slideIndex > -1) s.slideIndex--
         s.loopUntil = null
+        break
+      case 'timer':
+        if (s.timer) s.timer = null
+        else if (round) {
+          const seconds = timerSeconds(quiz, round)
+          s.timer = { roundId: round.id, seconds, until: this.clock() + seconds * 1000 }
+        }
         break
       case 'slideLoop':
         s.loopPaused = command.paused
@@ -206,6 +218,7 @@ export class ShowController {
         )
         if (!exists) s.fragment = null
       }
+      if (s.timer && s.timer.roundId !== s.activeRoundId) s.timer = null
       if (s.autoplay.status !== 'idle' && s.autoplay.roundId !== s.activeRoundId) {
         s.autoplay = AUTOPLAY_IDLE
       }
@@ -239,6 +252,7 @@ export class ShowController {
     this.state.answer = null
     this.state.loopPaused = false
     this.state.loopUntil = null
+    this.state.timer = null
     this.state.activeRoundId = round.id
     this.state.lastRoundId = round.id
     this.state.slideIndex = round.slides.length > 0 ? 0 : -1
@@ -348,6 +362,12 @@ export class ShowController {
     }
 
     const round = findRound(quiz, s.activeRoundId)
+    if (s.timer && now >= s.timer.until) {
+      s.timer = null
+      const channelId = timerChannel(quiz, round)
+      if (channelId) this.host.timerEnded(channelId)
+      changed = true
+    }
     if (round && s.loopUntil !== null && now >= s.loopUntil) {
       s.slideIndex = nextLoopSlide(round, s.slideIndex)
       s.loopUntil = null
@@ -370,7 +390,10 @@ export class ShowController {
 
   private publish(): void {
     this.syncLoop()
-    const needsTicker = this.state.autoplay.status === 'gap' || this.state.loopUntil !== null
+    const needsTicker =
+      this.state.autoplay.status === 'gap' ||
+      this.state.loopUntil !== null ||
+      this.state.timer !== null
     if (needsTicker && !this.ticker) this.ticker = setInterval(() => this.tick(), TICK_MS)
     if (!needsTicker && this.ticker) this.dispose()
     this.host.publish(this.state)

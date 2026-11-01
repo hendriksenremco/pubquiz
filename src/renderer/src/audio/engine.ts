@@ -221,6 +221,28 @@ export class AudioEngine {
     osc.onended = () => env.disconnect()
   }
 
+  /** Het aftellen (T) is voorbij: twee zachte, dalende tonen die uitklinken als een bel. */
+  timerEnd(channelId: string): void {
+    const out = this.outputs.get(channelId)
+    if (!out) return
+    void out.ctx.resume()
+    const start = out.ctx.currentTime + 0.05
+    for (const [i, frequency] of [880, 660].entries()) {
+      const t = start + i * 0.28
+      const osc = out.ctx.createOscillator()
+      const env = out.ctx.createGain()
+      osc.type = 'sine'
+      osc.frequency.value = frequency
+      env.gain.setValueAtTime(0, t)
+      env.gain.linearRampToValueAtTime(0.22, t + 0.015)
+      env.gain.exponentialRampToValueAtTime(0.001, t + 1.2)
+      osc.connect(env).connect(out.bus)
+      osc.start(t)
+      osc.stop(t + 1.25)
+      osc.onended = () => env.disconnect()
+    }
+  }
+
   private fail = (err: unknown) => {
     this.report({ type: 'error', message: err instanceof Error ? err.message : String(err) })
   }

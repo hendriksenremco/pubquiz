@@ -42,6 +42,8 @@ describe('teksten van de show', () => {
       'blackoutOff',
       'muteOn',
       'muteOff',
+      'timerOn',
+      'timerOff',
       'betweenRounds'
     ] as const
     for (const locale of LOCALES) {

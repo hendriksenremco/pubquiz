@@ -8,7 +8,8 @@ import {
   restartRound,
   stepCommand,
   stepNames as namesOf,
-  stepTarget
+  stepTarget,
+  timerSeconds
 } from '@shared/resolve'
 import { LIVE_MESSAGES } from '../views/show/live-messages'
 import { useSession } from '../stores/session'
@@ -63,6 +64,13 @@ export function useLiveControls() {
     else send({ type: 'autoplay', action: 'pause' })
   }
 
+  /** Aftellen (T) loopt; kan alleen in een ronde. */
+  const timing = computed(() => state.value.timer !== null)
+  const timerLength = computed(() => timerSeconds(quiz.value, round.value))
+  function toggleTimer() {
+    if (round.value || timing.value) send({ type: 'timer' })
+  }
+
   function toggleLoop() {
     if (round.value?.slideLoopSeconds) send({ type: 'slideLoop', paused: !state.value.loopPaused })
   }
@@ -94,7 +102,8 @@ export function useLiveControls() {
     ['S', t('keySkip')],
     ['B', t('keyBlackout')],
     ['M', t('keyMute')],
-    ['L', t('keyLoop')]
+    ['L', t('keyLoop')],
+    ['T', t('keyTimer')]
   ])
 
   return {
@@ -114,6 +123,9 @@ export function useLiveControls() {
     toggleSound,
     toggleAutoplay,
     toggleLoop,
+    timing,
+    timerLength,
+    toggleTimer,
     stopShow,
     shortcuts
   }

@@ -292,6 +292,26 @@ test('bladert met de pijltjes door de fragmenten', async () => {
   await expect(operator.locator('.frag.on')).toHaveCount(0)
 })
 
+test('telt af met T op de schermen met het fragmentnummer, en stopt met nog een keer T', async () => {
+  // Ronde 2 (muziek) loopt nog; het fragmentnummer staat alleen op de beamer.
+  const beamer = await windowFor('screen/beamer')
+  const tv = await windowFor('screen/tv')
+  await operator.keyboard.press('t')
+  await expect(beamer.locator('.overlay.timer')).toBeVisible()
+  await expect(beamer.locator('.overlay .ov-label')).toHaveText('Nog')
+  await expect(beamer.locator('.overlay .ov-number')).toHaveText(/^(30|29|28)$/)
+  await expect(tv.locator('.overlay')).toHaveCount(0)
+  const button = operator.getByRole('button', { name: /Stop aftellen/ })
+  await expect(button).toBeVisible()
+  await beamer.waitForTimeout(700) // infaden afwachten voor de screenshot
+  await beamer.screenshot({ path: 'test-results/screen-timer.png' })
+  await operator.locator('.topbar').screenshot({ path: 'test-results/show-bar-timer.png' })
+
+  await operator.keyboard.press('t')
+  await expect(beamer.locator('.overlay')).toHaveCount(0)
+  await expect(operator.getByRole('button', { name: /^Aftellen/ })).toBeVisible()
+})
+
 test('stoppen en afsluiten vragen het eerst, in een venster van de app', async () => {
   const round = await operator.locator('.now-title').textContent()
   await operator.getByRole('button', { name: 'Stop show' }).click()

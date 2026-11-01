@@ -56,6 +56,7 @@ describe('remoteView', () => {
       screens: true,
       blackout: false,
       muted: false,
+      timer: false,
       plugins: []
     })
   })
@@ -220,6 +221,22 @@ describe('remoteCommand', () => {
       type: 'toggleBackground'
     })
     expect(remoteCommand(quiz, on, { type: 'mute', on: false })).toBeNull()
+  })
+
+  it('aftellen aan of uit is een stand, en kan alleen in een ronde', () => {
+    const { quiz, first, live } = setup()
+    const between = live()
+    const inRound = live({ activeRoundId: first.id })
+    const timing = live({
+      activeRoundId: first.id,
+      timer: { roundId: first.id, seconds: 30, until: 31_000 }
+    })
+    expect(remoteCommand(quiz, inRound, { type: 'timer', on: true })).toEqual({ type: 'timer' })
+    expect(remoteCommand(quiz, between, { type: 'timer', on: true })).toBeNull()
+    expect(remoteCommand(quiz, inRound, { type: 'timer', on: false })).toBeNull()
+    expect(remoteCommand(quiz, timing, { type: 'timer', on: false })).toEqual({ type: 'timer' })
+    expect(remoteCommand(quiz, timing, { type: 'timer', on: true })).toBeNull()
+    expect(remoteView(quiz, timing).timer).toBe(true)
   })
 
   it('weigert onbekende acties', () => {
