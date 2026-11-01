@@ -218,6 +218,16 @@ describe('RemotePlugin', () => {
     off.plugin.update(off.quiz, off.live())
     const result = await off.act(choose)
     expect(await result.json()).toEqual({ ok: false, error: 'MagicHome-licht staat uit op de Mac' })
+    off.plugin.stop()
+
+    // In het Engels ook de naam van de plug-in.
+    const en = await setup(null, 'en')
+    en.host.remoteAct.mockResolvedValue(null)
+    en.plugin.update(en.quiz, en.live())
+    expect(await (await en.act(choose)).json()).toEqual({
+      ok: false,
+      error: 'MagicHome lights is off on the Mac'
+    })
   })
 
   it('weigert een actie die de telefoon niet mag', async () => {

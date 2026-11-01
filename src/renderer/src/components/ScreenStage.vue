@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { activeRound, answerItems, findAsset, resolveScreen } from '@shared/resolve'
+import { ANSWER_CONTEXT, SCREEN_MESSAGES } from '@shared/show-messages'
 import type { Quiz, ScreenContent, ShowState } from '@shared/types'
+import { locale } from '../lib/locale'
 import { assetUrl } from '../lib/media'
 import { slideBackdrop } from '../lib/slide-backdrop'
 import { useNow } from '../lib/use-now'
@@ -31,6 +33,7 @@ const counting = computed(() => {
 })
 const now = useNow(200, () => counting.value)
 const resolved = computed(() => resolveScreen(props.quiz, props.state, props.screenId, now.value))
+const t = SCREEN_MESSAGES.in(locale)
 
 // ── Waveform bij het fragmentnummer ─────────────────────────────────────────
 
@@ -280,19 +283,28 @@ onBeforeUnmount(() => {
             <div v-if="resolved.overlay.context" class="ov-context">
               {{ resolved.overlay.context }}
             </div>
-            <div class="ov-label">Fragment</div>
+            <div class="ov-label">{{ t('fragment') }}</div>
             <div class="ov-number">{{ resolved.overlay.number }}</div>
             <Waveform v-if="waveBars" class="ov-wave" :bars="waveBars" :playing="waveTiming" />
           </template>
           <!-- Antwoordenronde: het moment van de avond, dus groot en in het midden. -->
           <template v-else-if="resolved.overlay.kind === 'answer'">
-            <div class="ov-context">{{ resolved.overlay.context }}</div>
+            <div class="ov-context">
+              {{
+                t(ANSWER_CONTEXT[resolved.overlay.noun], {
+                  round: resolved.overlay.round,
+                  number: resolved.overlay.number
+                })
+              }}
+            </div>
             <div class="ov-answer">{{ resolved.overlay.answer }}</div>
           </template>
           <template v-else>
-            <div class="ov-label">Volgende</div>
+            <div class="ov-label">{{ t('next') }}</div>
             <div class="ov-number">{{ resolved.overlay.nextNumber }}</div>
-            <div class="ov-count">over {{ resolved.overlay.seconds }} s</div>
+            <div class="ov-count">
+              {{ t('inSeconds', { seconds: resolved.overlay.seconds }) }}
+            </div>
             <div class="ov-bar">
               <span :style="{ transform: `scaleX(${resolved.overlay.remaining})` }" />
             </div>

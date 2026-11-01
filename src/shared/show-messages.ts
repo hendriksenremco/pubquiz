@@ -1,4 +1,5 @@
 import { defineMessages } from './i18n'
+import type { AnswerNoun } from './resolve'
 
 /**
  * Teksten over de show die main en shared maken, voor de Mac en de telefoon: hoe vorige en
@@ -72,3 +73,32 @@ export const REMOTE_ERRORS = defineMessages(
     }
   }
 )
+
+/** Wat er over de slide heen op een scherm staat (ScreenStage.vue): voor het publiek. */
+export const SCREEN_MESSAGES = defineMessages(
+  {
+    fragment: 'Fragment',
+    next: 'Volgende',
+    inSeconds: 'over {seconds} s',
+    contextQuestion: '{round}, vraag {number}',
+    contextImage: '{round}, afbeelding {number}',
+    contextFragment: '{round}, fragment {number}'
+  },
+  {
+    en: {
+      fragment: 'Clip',
+      next: 'Next',
+      inSeconds: 'in {seconds} s',
+      contextQuestion: '{round}, question {number}',
+      contextImage: '{round}, picture {number}',
+      contextFragment: '{round}, clip {number}'
+    }
+  }
+)
+
+/** Bij een antwoord op het scherm: waar het bij hoort, bv. "Muziek, fragment 2". */
+export const ANSWER_CONTEXT = {
+  vraag: 'contextQuestion',
+  afbeelding: 'contextImage',
+  fragment: 'contextFragment'
+} as const satisfies Record<AnswerNoun, string>

@@ -46,9 +46,18 @@ export interface LightStatus {
 
 export const MAGICHOME = definePlugin({
   id: 'magichome',
-  name: 'MagicHome-licht',
-  description:
-    'Ledstrips met een MagicHome-controller een kleur of effect geven, per ronde en per slide.',
+  text: {
+    nl: {
+      name: 'MagicHome-licht',
+      description:
+        'Ledstrips met een MagicHome-controller een kleur of effect geven, per ronde en per slide.'
+    },
+    en: {
+      name: 'MagicHome lights',
+      description:
+        'Give LED strips with a MagicHome controller a colour or effect, per round and per slide.'
+    }
+  },
   /** Het adres van de controller, per Mac; leeg = nog niet ingesteld. */
   config: z.object({ host: z.string().catch('').default('') }).catch({ host: '' }),
   data: z.object({ light: LightSchema }),

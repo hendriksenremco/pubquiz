@@ -3,6 +3,7 @@
  * de quiz, allebei met een zod-schema. De lijst van plug-ins staat in plugins.ts.
  */
 import { z } from 'zod'
+import type { Locale } from './i18n'
 import { activeRound } from './resolve'
 import type { Quiz, ShowState } from './types'
 
@@ -41,6 +42,8 @@ export function action<Result>() {
 
 export type PluginActions = Record<string, PluginAction>
 
+export type PluginText = { readonly [L in Locale]: { name: string; description: string } }
+
 export interface PluginDefinition<
   Id extends string = string,
   Config extends z.ZodType<object> = z.ZodType<object>,
@@ -49,8 +52,8 @@ export interface PluginDefinition<
   Actions extends PluginActions = PluginActions
 > {
   id: Id
-  name: string
-  description: string
+  /** Naam en uitleg bij Instellingen, in elke taal; de naam ook in meldingen op de telefoon. */
+  text: PluginText
   /** Instellingen per Mac. Wat ongeldig is, wordt de standaard: geef elk veld een `.catch`. */
   config: Config
   /** Gegevens op de quiz, een ronde of een slide (slide ⊕ ronde ⊕ quiz); ongeldig telt als niets. */

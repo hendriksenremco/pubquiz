@@ -1,5 +1,6 @@
 import { app, BrowserWindow, shell, type BrowserWindowConstructorOptions } from 'electron'
 import { join } from 'path'
+import { appLocale } from './locale'
 
 const preload = join(__dirname, '../preload/index.js')
 
@@ -23,12 +24,19 @@ export function webPreferences(): BrowserWindowConstructorOptions['webPreference
   }
 }
 
-/** Laadt de renderer met een hash-route, bv. `/screen/abc`. */
+/**
+ * Laadt de renderer met een hash-route, bv. `/screen/abc`. De taal van de app gaat mee als
+ * `?locale=`, zodat elk venster hem meteen kent (src/renderer/src/lib/locale.ts).
+ */
 export function loadRoute(win: BrowserWindow, route: string): Promise<void> {
+  const locale = appLocale()
   if (!app.isPackaged && process.env['ELECTRON_RENDERER_URL']) {
-    return win.loadURL(`${process.env['ELECTRON_RENDERER_URL']}#${route}`)
+    return win.loadURL(`${process.env['ELECTRON_RENDERER_URL']}?locale=${locale}#${route}`)
   }
-  return win.loadFile(join(__dirname, '../renderer/index.html'), { hash: route })
+  return win.loadFile(join(__dirname, '../renderer/index.html'), {
+    query: { locale },
+    hash: route
+  })
 }
 
 function openLinksExternally(win: BrowserWindow): void {

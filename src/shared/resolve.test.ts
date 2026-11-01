@@ -250,7 +250,8 @@ describe('resolveScreen', () => {
       kind: 'answer',
       number: 2,
       answer: 'Queen – Bohemian Rhapsody',
-      context: 'Muziek, fragment 2',
+      round: 'Muziek',
+      noun: 'fragment',
       placement: 'center'
     })
     // Zonder antwoord valt hij terug op de naam van het fragment.
@@ -292,7 +293,8 @@ describe('resolveScreen', () => {
       kind: 'answer',
       number: 1,
       answer: 'Canberra',
-      context: 'Algemeen, vraag 1',
+      round: 'Algemeen',
+      noun: 'vraag',
       placement: 'bottom'
     })
     // Met een eigen afbeelding bij het antwoord vervangt die de vraag, het antwoord staat eronder.

@@ -5,6 +5,7 @@ import IdentifyApp from './views/screen/IdentifyApp.vue'
 import ScreenApp from './views/screen/ScreenApp.vue'
 import OperatorApp from './views/operator/OperatorApp.vue'
 import PrintApp from './views/print/PrintApp.vue'
+import { locale } from './lib/locale'
 import '@fontsource-variable/bricolage-grotesque/opsz.css'
 import './styles/base.css'
 
@@ -19,6 +20,7 @@ const roots: Record<string, Component> = {
 }
 
 document.body.dataset.route = route
+document.documentElement.lang = locale
 
 // Onverwerkte fouten naar main; die stuurt ze alleen door met toestemming (issue #40).
 function report(error: unknown): void {

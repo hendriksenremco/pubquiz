@@ -246,7 +246,8 @@ export class RemotePlugin implements MainPlugin<'remote'> {
     if (action.type === 'plugin') {
       const result = await this.host.remoteAct(action.id as PluginId, action.action, action.input)
       if (result === null) {
-        const name = PLUGINS.find((p) => p.id === action.id)?.name ?? this.say('unknownPlugin')
+        const text = PLUGINS.find((p) => p.id === action.id)?.text[this.options.locale ?? 'nl']
+        const name = text?.name ?? this.say('unknownPlugin')
         return { ok: false, error: this.say('pluginOff', { name }) }
       }
       return pluginResult(result, this.say)
