@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { adjacentFragment, autoplayCountdown } from '@shared/autoplay'
 import type { AutoplayAction, ShowCommand } from '@shared/ipc'
 import type { Round } from '@shared/types'
+import Icon from '../../components/Icon.vue'
 import { formatTime } from '../../lib/format'
 import { locale } from '../../lib/locale'
 import { useNow } from '../../lib/use-now'
@@ -63,7 +64,7 @@ function click(id: string) {
       <span v-if="status" class="pill pill-accent">{{ status }}</span>
       <template v-if="ap.status === 'idle'">
         <button class="btn btn-primary btn-sm" @click="autoplay('start')">
-          ▶ {{ t('playSequence') }} <span class="kbd">A</span>
+          <Icon name="play" :size="14" /> {{ t('playSequence') }} <span class="kbd">A</span>
         </button>
       </template>
       <template v-else>
@@ -72,16 +73,16 @@ function click(id: string) {
           class="btn btn-sm"
           @click="autoplay('resume')"
         >
-          {{ t('resume') }} <span class="kbd">A</span>
+          <Icon name="play" :size="14" /> {{ t('resume') }} <span class="kbd">A</span>
         </button>
         <button v-else class="btn btn-sm" @click="autoplay('pause')">
-          {{ t('pause') }} <span class="kbd">A</span>
+          <Icon name="pause" :size="14" /> {{ t('pause') }} <span class="kbd">A</span>
         </button>
         <button class="btn btn-sm" @click="autoplay('skip')">
-          {{ t('next') }} <span class="kbd">S</span>
+          <Icon name="next" :size="14" /> {{ t('next') }} <span class="kbd">S</span>
         </button>
-        <button class="btn btn-sm btn-danger" @click="autoplay('stop')">
-          {{ t('stopSequence') }}
+        <button class="btn btn-sm" @click="autoplay('stop')">
+          <Icon name="stop" :size="14" /> {{ t('stopSequence') }}
         </button>
       </template>
       <button
@@ -89,7 +90,7 @@ function click(id: string) {
         :title="t('resetHint')"
         @click="send({ type: 'resetPlayed' })"
       >
-        {{ t('reset') }}
+        <Icon name="restart" :size="14" /> {{ t('reset') }}
       </button>
     </header>
 

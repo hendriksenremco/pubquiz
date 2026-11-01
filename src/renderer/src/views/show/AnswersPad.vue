@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import type { ShowCommand } from '@shared/ipc'
 import { answerItems, findAsset, type AnswerItem } from '@shared/resolve'
 import type { Round } from '@shared/types'
+import Icon from '../../components/Icon.vue'
 import MediaThumb from '../../components/MediaThumb.vue'
 import { locale } from '../../lib/locale'
 import { useSession } from '../../stores/session'
@@ -95,14 +96,14 @@ const imageOf = (item: Item) => findAsset(session.quiz!, item.slide?.imageAssetI
         :disabled="!answer"
         @click="send({ type: 'answers', action: 'prev' })"
       >
-        {{ t('prev') }} <span class="kbd">←</span>
+        <Icon name="left" :size="14" /> {{ t('prev') }} <span class="kbd">←</span>
       </button>
       <button
         class="btn btn-primary btn-sm"
         :disabled="atEnd"
         @click="send({ type: 'answers', action: 'next' })"
       >
-        {{ nextLabel }} <span class="kbd">→</span>
+        <Icon name="right" :size="14" /> {{ nextLabel }} <span class="kbd">→</span>
       </button>
       <button
         v-if="answer"
@@ -110,7 +111,7 @@ const imageOf = (item: Item) => findAsset(session.quiz!, item.slide?.imageAssetI
         :title="t('stopHint')"
         @click="send({ type: 'answers', action: 'stop' })"
       >
-        {{ t('stop') }}
+        <Icon name="stop" :size="14" /> {{ t('stop') }}
       </button>
     </header>
 

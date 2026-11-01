@@ -137,7 +137,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
               :class="{ active: state.blackout.includes(slot.id) }"
               @click="toggleBlackout(slot.id)"
             >
-              {{ t('black') }}
+              <Icon name="screen-off" :size="14" /> {{ t('black') }}
             </button>
           </figcaption>
         </figure>
@@ -149,6 +149,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
           <template v-if="loopText">
             <span class="muted loop">{{ loopText }}</span>
             <button class="btn btn-ghost btn-sm" @click="toggleLoop">
+              <Icon :name="state.loopPaused ? 'play' : 'pause'" :size="14" />
               {{ state.loopPaused ? t('loopResume') : t('loopPause') }} <span class="kbd">L</span>
             </button>
           </template>
