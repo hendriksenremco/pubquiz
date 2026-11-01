@@ -209,14 +209,20 @@ test('serveert media met Range-requests (nodig voor loopen en seeken)', async ()
 
 test('beeld- en geluidknoppen zijn terug te draaien', async () => {
   const beamer = await windowFor('screen/beamer')
-  await operator.getByRole('button', { name: /Beeld op zwart/ }).click()
+  await operator
+    .locator('.live-controls')
+    .getByRole('button', { name: /Beeld op zwart/ })
+    .click()
   await expect.poll(() => beamer.locator('.layer.on video').count()).toBe(0)
   await operator.getByRole('button', { name: /Geluid uit/ }).click()
   await expect.poll(async () => (await audio()).background?.playing).toBe(false)
   await operator.waitForTimeout(300)
   await operator.locator('.topbar').screenshot({ path: 'test-results/show-bar-alert.png' })
 
-  await operator.getByRole('button', { name: /Beeld terug/ }).click()
+  await operator
+    .locator('.live-controls')
+    .getByRole('button', { name: /Beeld terug/ })
+    .click()
   await expect.poll(() => activeVideo(beamer)).toContain('default-loop.mp4')
   await operator.getByRole('button', { name: /Geluid aan/ }).click()
   await expect.poll(async () => (await audio()).background?.playing).toBe(true)
