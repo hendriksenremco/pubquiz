@@ -37,6 +37,7 @@ import {
 import { locateMedia } from './media-path'
 import { renderFormPdf } from './pdf'
 import { Plugins } from './plugins'
+import { SaveQueue } from './save-queue'
 import { Settings, type RecoveryData } from './settings'
 import { ShowController } from './show'
 import { headless } from './windows'
@@ -53,7 +54,7 @@ export class AppController {
   private quiz: Quiz | null = null
   private quizDir: string | null = null
   private hardware: HardwareMapping = { screens: {}, audio: {}, screenSound: {} }
-  private dirty = false
+  private readonly saves = new SaveQueue()
   private saveTimer: ReturnType<typeof setTimeout> | null = null
   private recoveryTimer: ReturnType<typeof setTimeout> | null = null
   private recovery: RecoveryData | null = null
@@ -134,7 +135,7 @@ export class AppController {
       plugins: this.settings.plugins,
       pluginStatus: this.plugins.statuses(),
       analytics: this.analytics ? this.settings.analyticsConsent : false,
-      dirty: this.dirty
+      dirty: this.saves.dirty
     }
   }
 
@@ -159,7 +160,7 @@ export class AppController {
 
     this.quiz = quiz
     this.quizDir = dir
-    this.dirty = false
+    this.saves.clean()
     this.hardware = this.settings.mappingFor(quiz, listDisplays())
     this.settings.addRecent(dir)
     if (this.recovery && this.recovery.quizDir !== dir) this.recovery = null
@@ -287,7 +288,7 @@ export class AppController {
     await this.flushSave()
     this.quiz = null
     this.quizDir = null
-    this.dirty = false
+    this.saves.clean()
     this.hardware = { screens: {}, audio: {}, screenSound: {} }
     this.broadcast(IPC.quiz, [null, null])
     this.broadcast(IPC.hardware, [this.hardware])
@@ -384,7 +385,7 @@ export class AppController {
     }
     const previous = this.quiz
     this.quiz = parsed.data
-    this.dirty = true
+    this.saves.changed()
     this.scheduleSave()
     this.broadcast(IPC.quiz, [this.quiz, this.quizDir], senderId)
     if (previous.title !== this.quiz.title) this.operator?.setTitle(this.windowTitle)
@@ -399,11 +400,14 @@ export class AppController {
   async flushSave(): Promise<void> {
     if (this.saveTimer) clearTimeout(this.saveTimer)
     this.saveTimer = null
-    if (!this.dirty || !this.quiz || !this.quizDir) return
+    if (!this.quiz || !this.quizDir) return
     try {
-      await writeQuiz(this.quizDir, this.quiz)
-      this.dirty = false
-      this.broadcast(IPC.saved, [false])
+      // Pas lezen als deze opslag aan de beurt is: dan gaat altijd de nieuwste versie naar schijf.
+      // Een wijziging die binnenkomt terwijl er geschreven wordt, blijft staan voor de volgende.
+      const saved = await this.saves.flush(() =>
+        this.quiz && this.quizDir ? writeQuiz(this.quizDir, this.quiz) : Promise.resolve()
+      )
+      if (saved) this.broadcast(IPC.saved, [false])
     } catch (err) {
       this.notify('error', `Opslaan mislukt: ${(err as Error).message}`)
     }
