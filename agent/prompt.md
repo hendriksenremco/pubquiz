@@ -12,8 +12,8 @@ Doe per run **één** ding, in deze volgorde:
    - Faalt de CI, of heeft Remco commentaar gegeven? Los dat op, op dezelfde branch, en push. Klaar voor deze run.
    - De CI draait op macOS. De logs haal je met `gh run view <id> --log-failed`.
 2. **Staan er al drie pull requests met het label `agent` open** die op Remco wachten? Stop dan.
-3. **Issues met het label `doen`** (`gh issue list --label doen --state open`): Remco wil dat je dat bouwt. Oudste eerst.
-4. **Anders het volgende open issue met het label `claude`**: eerst `prio-1`, dan `prio-2`, dan `prio-3`, binnen een prioriteit het oudste eerst (`gh issue list --label claude --state open --json number,title,labels`). Sla over wat:
+3. **Issues met het label `doen`** (`gh issue list --label doen --state open --search "sort:created-asc" --json number,title,labels,createdAt`): Remco wil dat je dat bouwt. De lijst staat al met het oudste bovenaan; neem het eerste issue dat je niet overslaat (zie stap 4).
+4. **Anders het volgende open issue met het label `claude`**: eerst `prio-1`, dan `prio-2`, dan `prio-3`, binnen een prioriteit het oudste eerst (`gh issue list --label claude --state open --search "sort:created-asc" --json number,title,labels,createdAt`). De lijst staat al met het oudste bovenaan: neem binnen de hoogste prioriteit het eerste issue dat je niet overslaat. Sla over wat:
    - het label `vraag`, `eerst-vragen` of `later` heeft;
    - op een beslissing van Remco wacht (een open issue met `beslissing` waar het naar verwijst);
    - echte apparatuur, signeren of macOS nodig heeft om af te ronden;
