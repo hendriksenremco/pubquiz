@@ -147,6 +147,7 @@ fixtures/      demo.pubquiz (werk van Remco!) en rondleiding.pubquiz (gemaakt do
 - Vensters op de Mac kennen de taal via `?locale=` in hun adres (`loadRoute`); in de renderer lees je hem uit `src/renderer/src/lib/locale.ts`. Al vertaald: wat er over de slide heen op een scherm staat (`SCREEN_MESSAGES`), en naam en uitleg van plug-ins (`text` in de definitie).
 - Het licht: de namen van kleuren en effecten staan in `src/shared/light-messages.ts` (`lightLabel`, `effectLabel` en `groupName` krijgen de `Locale` mee); het paneel om het licht met de hand te kiezen in `plugins/magichome/messages.ts`. Een onderdeel op de telefoon krijgt de taal als `locale` in `PhoneProps`.
 - De pdf's: de teksten op de formulieren en vragenkaarten, hun bestandsnamen en de samenvatting per ronde ("2 vragen") staan in `src/shared/form-messages.ts` (`formFileName` en `itemSummary` krijgen de `Locale` mee).
+- De werkbalk van de app en de dialogen Nieuwe quiz, Met je AI… en Instellingen: `src/renderer/src/views/operator/operator-messages.ts`; Annuleer en Sluiten van de algemene onderdelen in `src/renderer/src/components/messages.ts`.
 - Wat main zelf zegt: het menu, de dialogen om te openen en op te slaan, de meldingen en de fouten van de MagicHome-controller staan in `src/main/messages.ts`. Een fout die de gebruiker te zien krijgt, gooi je als `NoticeError`; `errorText` vertaalt hem.
 
 **Rondesoorten**

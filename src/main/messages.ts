@@ -175,3 +175,19 @@ export const MAGICHOME_ERRORS = defineMessages(
     }
   }
 )
+
+/** Fouten bij het koppelen van Claude Desktop (`connectClaude`), voor het venster Met je AI. */
+export const AI_ERRORS = defineMessages(
+  {
+    claudeMissing: 'Claude Desktop is niet gevonden op deze Mac.',
+    configUnreadable:
+      'De instellingen van Claude Desktop zijn niet te lezen. Voeg QuizNote daar zelf toe met de instellingen hieronder.'
+  },
+  {
+    en: {
+      claudeMissing: 'Claude Desktop was not found on this Mac.',
+      configUnreadable:
+        "Claude Desktop's settings cannot be read. Add QuizNote there yourself with the settings below."
+    }
+  }
+)

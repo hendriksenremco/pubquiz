@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref } from 'vue'
 import Dialog from '../../components/Dialog.vue'
+import { locale } from '../../lib/locale'
 import { useSession } from '../../stores/session'
+import { NEW_QUIZ_MESSAGES } from './operator-messages'
 
 /**
  * Nieuwe quiz: alleen een naam. De app maakt zelf de map aan in de bibliotheek.
@@ -11,8 +13,9 @@ const props = defineProps<{ source: { path: string; title: string } | null }>()
 const emit = defineEmits<{ close: [] }>()
 const api = window.pubquiz
 const session = useSession()
+const t = NEW_QUIZ_MESSAGES.in(locale)
 
-const name = ref(props.source ? `${props.source.title} (nieuw)` : '')
+const name = ref(props.source ? t('copyName', { title: props.source.title }) : '')
 const rounds = ref(true)
 const fragments = ref(false)
 const error = ref<string | null>(null)
@@ -20,7 +23,7 @@ const busy = ref(false)
 const input = ref<HTMLInputElement | null>(null)
 
 const title = computed(() =>
-  props.source ? `Nieuwe quiz op basis van “${props.source.title}”` : 'Nieuwe quiz'
+  props.source ? t('titleFrom', { title: props.source.title }) : t('title')
 )
 const where = computed(() => session.libraryDir.replace(/^\/Users\/[^/]+/, '~'))
 
@@ -51,43 +54,41 @@ async function create() {
   <Dialog :title="title" @close="emit('close')">
     <form class="form" @submit.prevent="create">
       <label class="field">
-        <span class="label">Naam</span>
+        <span class="label">{{ t('name') }}</span>
         <input
           ref="input"
           v-model="name"
           class="input name"
-          placeholder="Bijvoorbeeld: Pubquiz november"
+          :placeholder="t('namePlaceholder')"
           @input="error = null"
         />
       </label>
       <p v-if="error" class="error" role="alert">{{ error }}</p>
-      <p v-else class="where faint">Wordt bewaard in {{ where }}</p>
+      <p v-else class="where faint">{{ t('savedIn', { folder: where }) }}</p>
 
       <template v-if="source">
-        <p class="muted intro">
-          Schermen, audiokanalen, achtergrondmuziek en alle video's en afbeeldingen gaan altijd mee.
-        </p>
+        <p class="muted intro">{{ t('alwaysCopied') }}</p>
         <label class="option">
           <input v-model="rounds" type="checkbox" />
           <span>
-            <span class="option-title">Rondes</span>
-            <span class="option-hint">Titels, slides, en per ronde het beeld en de muziek</span>
+            <span class="option-title">{{ t('rounds') }}</span>
+            <span class="option-hint">{{ t('roundsHint') }}</span>
           </span>
         </label>
         <label class="option" :class="{ disabled: !rounds }">
           <input v-model="fragments" type="checkbox" :disabled="!rounds" />
           <span>
-            <span class="option-title">Geluidsfragmenten</span>
-            <span class="option-hint">De liedjes in die rondes; meestal kies je die opnieuw</span>
+            <span class="option-title">{{ t('fragments') }}</span>
+            <span class="option-hint">{{ t('fragmentsHint') }}</span>
           </span>
         </label>
       </template>
     </form>
 
     <template #actions>
-      <button class="btn btn-ghost" @click="emit('close')">Annuleer</button>
+      <button class="btn btn-ghost" @click="emit('close')">{{ t('cancel') }}</button>
       <button class="btn btn-primary" :disabled="busy || !name.trim()" @click="create">
-        Maak quiz
+        {{ t('create') }}
       </button>
     </template>
   </Dialog>

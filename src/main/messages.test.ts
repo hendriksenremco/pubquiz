@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { placeholders, type MessageBook } from '@shared/i18n'
 import {
+  AI_ERRORS,
   DIALOG_MESSAGES,
   errorText,
   MAGICHOME_ERRORS,
@@ -24,6 +25,7 @@ describe('teksten van main', () => {
     samePlaceholders(DIALOG_MESSAGES)
     samePlaceholders(NOTICE_MESSAGES)
     samePlaceholders(MAGICHOME_ERRORS)
+    samePlaceholders(AI_ERRORS)
   })
 })
 
