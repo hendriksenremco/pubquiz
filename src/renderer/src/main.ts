@@ -19,6 +19,18 @@ const roots: Record<string, Component> = {
 }
 
 document.body.dataset.route = route
-createApp(roots[route] ?? OperatorApp, { param: decodeURIComponent(param) })
-  .use(createPinia())
-  .mount('#app')
+
+// Onverwerkte fouten naar main; die stuurt ze alleen door met toestemming (issue #40).
+function report(error: unknown): void {
+  const err = error instanceof Error ? error : new Error(String(error))
+  window.pubquiz?.reportError({ name: err.name, message: err.message, stack: err.stack })
+}
+window.addEventListener('error', (event) => report(event.error ?? event.message))
+window.addEventListener('unhandledrejection', (event) => report(event.reason))
+
+const app = createApp(roots[route] ?? OperatorApp, { param: decodeURIComponent(param) })
+app.config.errorHandler = (err, _instance, info) => {
+  console.error(`Fout in ${info}`, err)
+  report(err)
+}
+app.use(createPinia()).mount('#app')

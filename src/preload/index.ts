@@ -38,6 +38,9 @@ const api: PubquizApi = {
   setPlugin: (id, setting) => ipcRenderer.invoke(IPC.setPlugin, id, setting),
   pluginAct: (id, name, input) => ipcRenderer.invoke(IPC.pluginAct, id, name, input),
 
+  setAnalytics: (consent) => ipcRenderer.invoke(IPC.setAnalytics, consent),
+  reportError: (report) => ipcRenderer.send(IPC.reportError, report),
+
   audioEvent: (event) => ipcRenderer.send(IPC.audioEvent, event),
   onAudioCommand: (cb) => subscribe(IPC.audioCommand, cb),
 

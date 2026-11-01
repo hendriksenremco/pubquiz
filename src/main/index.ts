@@ -1,5 +1,6 @@
 import { app, BrowserWindow, clipboard, ipcMain, session } from 'electron'
 import { join } from 'path'
+import type { ErrorReport } from '@shared/analytics'
 import { IPC, type AudioEngineEvent, type ShowCommand } from '@shared/ipc'
 import type { TemplateOptions } from '@shared/template'
 import type { FormOptions } from '@shared/forms'
@@ -7,6 +8,7 @@ import type { PluginId, PluginSetting } from '@shared/plugins'
 import type { HardwareMapping, Quiz } from '@shared/types'
 import { aboutPanelOptions } from './about'
 import { AgentBridge, aiSetup, connectClaude, handleAgent } from './agent'
+import { Analytics } from './analytics'
 import { AppController } from './controller'
 import { handleMediaProtocol, registerMediaScheme } from './media-protocol'
 import { buildMenu } from './menu'
@@ -69,7 +71,8 @@ app.whenReady().then(async () => {
   // Niet "Pubquiz": macOS negeert hoofdletters, dus dat zou dezelfde map zijn als de broncode in
   // Documenten/pubquiz, en nieuwe quizzen zouden dan in de repo (en in de build) belanden.
   const library = process.env['PUBQUIZ_LIBRARY'] ?? join(app.getPath('documents'), 'Pubquizzen')
-  const ctl = new AppController(settings, library)
+  const analytics = measuring() ? createAnalytics(settings) : null
+  const ctl = new AppController(settings, library, analytics)
   controller = ctl
   handleMediaProtocol({ current: () => ctl.mediaRoot, isRecent: (dir) => ctl.isRecent(dir) })
   registerIpc(ctl)
@@ -126,11 +129,66 @@ app.on('before-quit', (event) => {
   ctl.screens.closeAll()
   ctl.airplay.stop()
   ctl.plugins.stop()
+  ctl.analytics?.stop()
   bridge?.stop()
-  void ctl.flushSave().finally(() => app.quit())
+  void Promise.all([ctl.flushSave(), ctl.analytics?.whenSaved()]).finally(() => app.quit())
 })
 
 app.on('window-all-closed', () => app.quit())
+
+/**
+ * Anoniem meten (issue #40) alleen in de gebouwde app: niet tijdens het ontwikkelen en nooit in
+ * tests (die zetten PUBQUIZ_USER_DATA). PUBQUIZ_NO_ANALYTICS zet het ook uit.
+ */
+function measuring(): boolean {
+  return (
+    app.isPackaged &&
+    !headless &&
+    !process.env['PUBQUIZ_USER_DATA'] &&
+    !process.env['PUBQUIZ_NO_ANALYTICS']
+  )
+}
+
+function createAnalytics(settings: Settings): Analytics {
+  const analytics = new Analytics({
+    dir: app.getPath('userData'),
+    identity: () => settings.analyticsId,
+    base: {
+      app_version: app.getVersion(),
+      os_version: process.getSystemVersion(),
+      // arm64 = Apple Silicon, x64 = Intel.
+      arch: process.arch,
+      $lib: 'quiznote'
+    }
+  })
+  // Alleen meekijken: het gedrag bij een fout (melding van Electron) blijft hetzelfde.
+  process.on('uncaughtExceptionMonitor', (err) => analytics.captureError(asReport(err), 'main'))
+  process.on('unhandledRejection', (reason) => {
+    console.error('Onverwerkte fout', reason)
+    analytics.captureError(asReport(reason), 'main')
+  })
+  analytics.capture('app_started')
+  void analytics.flush()
+  return analytics
+}
+
+function asReport(value: unknown): ErrorReport {
+  if (value instanceof Error)
+    return { name: value.name, message: value.message, stack: value.stack }
+  return { name: 'Error', message: String(value) }
+}
+
+/** Een foutrapport uit een venster: alleen tekst, en niet te lang. */
+function reportFrom(input: unknown): ErrorReport | null {
+  if (typeof input !== 'object' || input === null) return null
+  const { name, message, stack } = input as Record<string, unknown>
+  if (typeof message !== 'string') return null
+  return {
+    name: typeof name === 'string' ? name.slice(0, 200) : 'Error',
+    message: message.slice(0, 1000),
+    ...(typeof stack === 'string' ? { stack: stack.slice(0, 8000) } : {})
+  }
+}
 
 function registerIpc(ctl: AppController): void {
   ipcMain.handle(IPC.snapshot, () => ctl.snapshot())
@@ -171,6 +229,13 @@ function registerIpc(ctl: AppController): void {
   ipcMain.handle(IPC.pluginAct, (_e, id: PluginId, name: string, input: unknown) =>
     ctl.plugins.act(id, name, input)
   )
+  ipcMain.handle(IPC.setAnalytics, (_e, consent: unknown) => {
+    if (typeof consent === 'boolean') ctl.setAnalytics(consent)
+  })
+  ipcMain.on(IPC.reportError, (_e, input: unknown) => {
+    const report = reportFrom(input)
+    if (report) ctl.analytics?.captureError(report, 'renderer')
+  })
   ipcMain.on(IPC.audioEvent, (_e, event: AudioEngineEvent) => ctl.audioEvent(event))
 }
 

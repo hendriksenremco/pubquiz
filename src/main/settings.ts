@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto'
 import { join } from 'path'
 import { promises as fs } from 'fs'
 import { sameDisplayName } from '@shared/airplay'
@@ -27,6 +28,11 @@ interface SettingsData {
   tourDir: string | null
   /** Plug-ins die aan of uit staan, met hun instellingen; ontbreekt = uit. */
   plugins: PluginSettings
+  /**
+   * Anoniem meten (issue #40): null = nog niet gevraagd. `id` is willekeurig en verdwijnt als de
+   * toestemming wordt ingetrokken, zodat een nieuwe toestemming niet aan de oude vastzit.
+   */
+  analytics: { consent: boolean; id: string | null } | null
 }
 
 export interface RecoveryData {
@@ -55,7 +61,8 @@ export class Settings {
       audio: stored?.audio ?? {},
       screenSound: stored?.screenSound ?? {},
       tourDir: stored?.tourDir ?? null,
-      plugins: stored?.plugins ?? {}
+      plugins: stored?.plugins ?? {},
+      analytics: stored?.analytics ?? null
     })
   }
 
@@ -79,6 +86,22 @@ export class Settings {
 
   setPlugin(id: PluginId, setting: PluginSetting): void {
     this.data.plugins = { ...this.data.plugins, [id]: setting }
+    void this.save()
+  }
+
+  /** true of false als het gevraagd is; null = nog niet. */
+  get analyticsConsent(): boolean | null {
+    return this.data.analytics?.consent ?? null
+  }
+
+  /** Het anonieme id, alleen met toestemming. */
+  get analyticsId(): string | null {
+    return this.data.analytics?.consent ? this.data.analytics.id : null
+  }
+
+  setAnalytics(consent: boolean): void {
+    const id = consent ? (this.data.analytics?.id ?? randomUUID()) : null
+    this.data.analytics = { consent, id }
     void this.save()
   }
 

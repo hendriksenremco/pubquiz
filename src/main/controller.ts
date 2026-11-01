@@ -1,6 +1,7 @@
 import { app, BrowserWindow, dialog, shell, type Display } from 'electron'
 import { promises as fs } from 'fs'
 import { basename, dirname, join } from 'path'
+import { quizShape } from '@shared/analytics'
 import { newId } from '@shared/factory'
 import { formFileName, type FormOptions } from '@shared/forms'
 import {
@@ -17,6 +18,7 @@ import { findRound } from '@shared/resolve'
 import type { TemplateOptions } from '@shared/template'
 import type { HardwareMapping, Notice, Quiz, ShowState } from '@shared/types'
 import { AirPlayBrowser } from './airplay'
+import type { Analytics } from './analytics'
 import { listDisplays, ScreenWindows, type DisplayChange } from './displays'
 import {
   QUIZ_EXT,
@@ -80,7 +82,9 @@ export class AppController {
   constructor(
     private readonly settings: Settings,
     /** Waar nieuwe en geïmporteerde quizzen komen (standaard Documenten/Pubquizzen). */
-    readonly libraryDir: string
+    readonly libraryDir: string,
+    /** Anoniem meten; null = uit voor deze build (ontwikkelen en tests). */
+    readonly analytics: Analytics | null = null
   ) {
     this.screens.watch((change, display) => this.onDisplayChange(change, display))
     this.plugins.apply(settings.plugins, null, this.show.current)
@@ -129,6 +133,7 @@ export class AppController {
       airplay: this.airplay.list,
       plugins: this.settings.plugins,
       pluginStatus: this.plugins.statuses(),
+      analytics: this.analytics ? this.settings.analyticsConsent : false,
       dirty: this.dirty
     }
   }
@@ -413,6 +418,11 @@ export class AppController {
     this.recovery = null
     this.show.start(restore)
     this.syncScreens(true)
+    this.analytics?.capture('show_started', {
+      resumed: Boolean(restore),
+      ...quizShape(this.quiz),
+      plugins: PLUGINS.filter((p) => this.settings.plugins[p.id]?.enabled).map((p) => p.id)
+    })
   }
 
   async stopShow(): Promise<void> {
@@ -429,6 +439,13 @@ export class AppController {
     this.settings.saveMapping(this.quiz, mapping)
     this.broadcast(IPC.hardware, [mapping])
     if (this.live) this.syncScreens(true)
+  }
+
+  /** Toestemming voor anoniem meten, gegeven of ingetrokken. */
+  setAnalytics(consent: boolean): void {
+    if (!this.analytics) return
+    this.settings.setAnalytics(consent)
+    if (!consent) this.analytics.clear()
   }
 
   setPlugin(id: PluginId, setting: PluginSetting): void {
