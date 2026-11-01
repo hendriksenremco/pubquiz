@@ -52,6 +52,11 @@ Wat er nog moet gebeuren, staat als **issues** op GitHub (`gh issue list`). Hoe 
 - Raad bij diensten (hosting, mail, analytics) de beste oplossing aan, wel een die goedkoop begint. Een lage prijs is geen reden om een mindere oplossing aan te raden.
 - Een productie-deploy van de site, of iets anders dat openbaar wordt, doet Remco zelf. Of hij geeft er eerst toestemming voor.
 
+**Statusdashboard bijwerken**
+
+- Werk het statusdashboard bij als laatste stap na elke afgeronde taak: een samengevoegde pull request, een gesloten issue, een release of een deploy.
+- Het stappenplan staat in `docs/dashboard-bijwerken.md`. Je hebt er de Artifact-tools van claude.ai voor nodig.
+
 ## Niet doen
 
 - **Start nooit `pnpm dev` of `pnpm start` om iets te bekijken.** Remco heeft de app vaak zelf open, met `fixtures/demo.pubquiz`. Bekijk wijzigingen onzichtbaar, met de e2e-helpers en screenshots.
@@ -237,6 +242,7 @@ Nieuwe optionele koppelingen, zoals Spotify of YouTube, volgen hetzelfde patroon
 - `TODO.md`: hoe de issues en hun labels werken.
 - `MAGICHOME.md`: de controller, het protocol en wat we over het netwerk hebben geleerd.
 - `PLUGINS.md`: plan om plug-ins generieker te maken (goedgekeurd op 1 november 2026, issue #31).
+- `docs/dashboard-bijwerken.md`: hoe je het statusdashboard bijwerkt (issue #94).
 - `README.md`: in het Engels, voor ontwikkelaars. De screenshots staan in `docs/`.
 - `~/Documents/pubquiz-site`: de site. Nuxt 4, branches `master` en `develop`. Pushen naar `develop` mag; een push naar `master` zet de site live (zie de CLAUDE.md van de site).
 - Het geheugen van Claude voor dit project, op de Mac van Remco: `~/.claude/projects/-Users-remcohendriksen-Documents-pubquiz/memory/`.
