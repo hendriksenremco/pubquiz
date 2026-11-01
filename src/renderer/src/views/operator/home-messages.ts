@@ -25,7 +25,7 @@ export const HOME_MESSAGES = defineMessages(
     emptyQuiz: 'Lege quiz',
     basedOnLabel: 'Op basis van',
     basedOn: 'Op basis van',
-    finder: 'Finder',
+    finder: 'Toon in Finder',
     notFound: 'Niet gevonden in {folder}',
     forgetHint: 'Verwijder uit deze lijst',
     forget: 'Uit lijst'
@@ -53,7 +53,7 @@ export const HOME_MESSAGES = defineMessages(
       emptyQuiz: 'Empty quiz',
       basedOnLabel: 'Based on',
       basedOn: 'Based on this',
-      finder: 'Finder',
+      finder: 'Show in Finder',
       notFound: 'Not found in {folder}',
       forgetHint: 'Remove from this list',
       forget: 'Remove'

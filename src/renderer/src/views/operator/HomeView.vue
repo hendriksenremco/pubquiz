@@ -113,7 +113,7 @@ function reveal(q: RecentQuiz) {
             <Icon name="folder" /> {{ t('openQuiz') }}
           </button>
           <button class="btn btn-ghost btn-lg" @click="api.importZip()">
-            <Icon name="upload" /> {{ t('importZip') }}
+            <Icon name="download" /> {{ t('importZip') }}
           </button>
         </div>
       </div>
@@ -127,7 +127,7 @@ function reveal(q: RecentQuiz) {
           <Icon name="folder" :size="14" /> {{ t('openQuiz') }}
         </button>
         <button class="btn btn-ghost btn-sm" @click="api.importZip()">
-          <Icon name="upload" :size="14" /> {{ t('importZip') }}
+          <Icon name="download" :size="14" /> {{ t('importZip') }}
         </button>
       </div>
 
