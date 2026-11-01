@@ -1,18 +1,21 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { createRound, newId, ROUND_PRESETS, type RoundPreset } from '@shared/factory'
+import { createRound, newId, type RoundPreset } from '@shared/factory'
 import Icon from '../../components/Icon.vue'
 import Popover from '../../components/Popover.vue'
 import { ask } from '../../lib/confirm'
+import { locale } from '../../lib/locale'
 import { useMediaImport } from '../../lib/use-media-import'
 import { useSession } from '../../stores/session'
 import MediaLibrary from './MediaLibrary.vue'
 import PrintPanel from './PrintPanel.vue'
 import RoundEditor from './RoundEditor.vue'
 import SetupPanel from './SetupPanel.vue'
+import { EDITOR_MESSAGES } from './editor-messages'
 
 const session = useSession()
 const quiz = computed(() => session.quiz!)
+const t = EDITOR_MESSAGES.in(locale)
 const emit = defineEmits<{ createFromCurrent: [] }>()
 /** Gekozen pagina: een ronde (id), 'setup', 'media' of 'print'. Afdrukken zit in de werkbalk. */
 const page = defineModel<string>('page', { required: true })
@@ -27,13 +30,13 @@ const selected = computed(() =>
 )
 const round = computed(() => quiz.value.rounds.find((r) => r.id === selected.value) ?? null)
 
-const PRESET_HINTS: Record<RoundPreset, string> = {
-  normal: 'Vragen met slides',
-  music: 'Fragmenten, achtergrond pauzeert',
-  pictures: 'Een reeks afbeeldingen, genummerd in beeld',
-  break: 'Eigen sfeer op de schermen',
-  answers: 'Vragen, afbeeldingen en fragmenten met hun antwoord'
-}
+const PRESETS: { preset: RoundPreset; label: string; hint: string }[] = [
+  { preset: 'normal', label: t('presetNormal'), hint: t('presetNormalHint') },
+  { preset: 'music', label: t('presetMusic'), hint: t('presetMusicHint') },
+  { preset: 'pictures', label: t('presetPictures'), hint: t('presetPicturesHint') },
+  { preset: 'break', label: t('presetBreak'), hint: t('presetBreakHint') },
+  { preset: 'answers', label: t('presetAnswers'), hint: t('presetAnswersHint') }
+]
 
 function addRound(preset: RoundPreset, close: () => void) {
   const r = createRound(preset, quiz.value.rounds.length + 1, quiz.value)
@@ -48,7 +51,7 @@ function duplicate(id: string) {
   if (!source) return
   const copy = JSON.parse(JSON.stringify(source))
   copy.id = newId()
-  copy.title = `${source.title} (kopie)`
+  copy.title = t('copyTitle', { title: source.title })
   for (const s of copy.slides) s.id = newId()
   for (const f of copy.fragments) f.id = newId()
   quiz.value.rounds.splice(index + 1, 0, copy)
@@ -59,8 +62,8 @@ async function remove(id: string) {
   const r = quiz.value.rounds.find((x) => x.id === id)
   if (!r) return
   const ok = await ask({
-    title: `Ronde “${r.title}” verwijderen?`,
-    confirm: 'Verwijder',
+    title: t('removeRound', { title: r.title }),
+    confirm: t('remove'),
     danger: true
   })
   if (!ok) return
@@ -111,7 +114,7 @@ async function onDrop(event: DragEvent) {
   if (added.length) {
     session.notify({
       level: 'info',
-      message: `${added.length} bestand${added.length > 1 ? 'en' : ''} toegevoegd aan Media`
+      message: added.length === 1 ? t('addedOne') : t('addedMany', { count: added.length })
     })
   }
 }
@@ -131,7 +134,7 @@ function onDropCapture() {
     @drop.capture="onDropCapture"
   >
     <aside class="sidebar">
-      <div class="rounds-head label">Rondes</div>
+      <div class="rounds-head label">{{ t('rounds') }}</div>
       <div class="rounds scroll">
         <div
           v-for="(r, i) in quiz.rounds"
@@ -146,30 +149,30 @@ function onDropCapture() {
           @drop.prevent.stop="dragging && onRoundDrop(r.id)"
         >
           <span class="num mono">{{ i + 1 }}</span>
-          <span class="round-title grow">{{ r.title || 'Naamloze ronde' }}</span>
+          <span class="round-title grow">{{ r.title || t('untitled') }}</span>
         </div>
         <Popover :width="250">
           <template #trigger="{ open, toggle }">
             <button
               class="nav-item add-round"
               :class="{ active: open }"
-              aria-label="Ronde toevoegen"
+              :aria-label="t('addRound')"
               @click="toggle"
             >
               <Icon name="plus" :size="14" />
-              <span>Ronde</span>
+              <span>{{ t('round') }}</span>
             </button>
           </template>
           <template #default="{ close }">
             <button
-              v-for="(label, preset) in ROUND_PRESETS"
-              :key="preset"
+              v-for="p in PRESETS"
+              :key="p.preset"
               class="menu-item"
-              @click="addRound(preset, close)"
+              @click="addRound(p.preset, close)"
             >
               <span>
-                {{ label }}
-                <span class="menu-hint">{{ PRESET_HINTS[preset] }}</span>
+                {{ p.label }}
+                <span class="menu-hint">{{ p.hint }}</span>
               </span>
             </button>
           </template>
@@ -179,12 +182,12 @@ function onDropCapture() {
       <nav class="nav">
         <button class="nav-item" :class="{ on: selected === 'media' }" @click="page = 'media'">
           <Icon name="images" />
-          <span class="grow">Media</span>
+          <span class="grow">{{ t('media') }}</span>
           <span class="badge">{{ quiz.assets.length }}</span>
         </button>
         <button class="nav-item" :class="{ on: selected === 'setup' }" @click="page = 'setup'">
           <Icon name="sliders" />
-          <span class="grow">Quiz-instellingen</span>
+          <span class="grow">{{ t('setup') }}</span>
         </button>
       </nav>
     </aside>
@@ -205,7 +208,7 @@ function onDropCapture() {
     <Transition name="fade">
       <div v-if="fileDrag" class="drop-overlay">
         <Icon name="upload" :size="28" />
-        <span>Laat los om toe te voegen</span>
+        <span>{{ t('dropHere') }}</span>
       </div>
     </Transition>
   </div>
