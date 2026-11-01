@@ -116,6 +116,21 @@ describe('remoteView', () => {
     })
   })
 
+  it('zegt waar je staat in de taal van de Mac', () => {
+    const { quiz, first, music, answers, live } = setup()
+    const step = (patch: Partial<ShowState>) => remoteView(quiz, live(patch), [], 'en').step
+    expect(step({ activeRoundId: first.id, slideIndex: 1 })?.label).toBe('Slide 2 of 2')
+    expect(step({ activeRoundId: music.id, lastFragmentId: music.fragments[1].id })?.label).toBe(
+      'Clip 2 of 3'
+    )
+    expect(
+      step({
+        activeRoundId: answers.id,
+        answer: { roundId: answers.id, index: 0, revealed: false }
+      })?.label
+    ).toBe('Question 1, Ronde 1')
+  })
+
   it('de preview toont de slide ook als het beeld op zwart staat', () => {
     const { quiz, first, live } = setup()
     const beamer = quiz.screens[0].id

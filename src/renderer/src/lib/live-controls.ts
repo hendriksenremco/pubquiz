@@ -6,8 +6,8 @@ import {
   adjacentRound,
   allBlack as isAllBlack,
   restartRound,
-  STEP_NAMES,
   stepCommand,
+  stepNames as namesOf,
   stepTarget
 } from '@shared/resolve'
 import { useSession } from '../stores/session'
@@ -33,7 +33,7 @@ export function useLiveControls() {
   const stepView = computed(() =>
     round.value ? remoteStep(quiz.value, round.value, state.value) : null
   )
-  const stepNames = computed(() => STEP_NAMES[arrows.value])
+  const stepNames = computed(() => namesOf(arrows.value))
 
   const prevRound = computed(() => adjacentRound(quiz.value, state.value, 'prev'))
   const nextRound = computed(() => adjacentRound(quiz.value, state.value, 'next'))
