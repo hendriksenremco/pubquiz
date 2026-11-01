@@ -74,7 +74,10 @@ export const REMOTE_ERRORS = defineMessages(
   }
 )
 
-/** Wat er over de slide heen op een scherm staat (ScreenStage.vue): voor het publiek. */
+/**
+ * Wat er over de slide heen op een scherm staat (ScreenStage.vue): voor het publiek. En wat een
+ * display laat zien als je hem aanwijst (IdentifyApp.vue).
+ */
 export const SCREEN_MESSAGES = defineMessages(
   {
     question: 'Vraag',
@@ -84,7 +87,8 @@ export const SCREEN_MESSAGES = defineMessages(
     timeLeft: 'Nog',
     contextQuestion: '{round}, vraag {number}',
     contextImage: '{round}, afbeelding {number}',
-    contextFragment: '{round}, fragment {number}'
+    contextFragment: '{round}, fragment {number}',
+    thisDisplay: 'Dit display is'
   },
   {
     en: {
@@ -95,7 +99,8 @@ export const SCREEN_MESSAGES = defineMessages(
       timeLeft: 'Time left',
       contextQuestion: '{round}, question {number}',
       contextImage: '{round}, picture {number}',
-      contextFragment: '{round}, clip {number}'
+      contextFragment: '{round}, clip {number}',
+      thisDisplay: 'This display is'
     }
   }
 )

@@ -2,7 +2,9 @@ import { computed, ref } from 'vue'
 import type { Light } from '@shared/light'
 import type { MagicHomeResult } from '@shared/magichome'
 import { configOf, PLUGIN_OFF } from '@shared/plugins'
+import { locale } from '../../lib/locale'
 import { useSession } from '../../stores/session'
+import { LIGHT_PICKER_MESSAGES } from './messages'
 
 const api = window.pubquiz
 
@@ -30,5 +32,5 @@ export const previewOn = ref(false)
 /** Laat een licht zien; null = klaar, de controller gaat terug naar hoe hij was. */
 export async function preview(light: Light | null): Promise<MagicHomeResult> {
   const result = await api.pluginAct('magichome', 'preview', light ? { ...light } : null)
-  return result ?? { ok: false, error: 'De plug-in staat uit' }
+  return result ?? { ok: false, error: LIGHT_PICKER_MESSAGES.in(locale)('pluginOff') }
 }
