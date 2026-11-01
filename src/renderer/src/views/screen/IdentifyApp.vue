@@ -1,10 +1,15 @@
 <script setup lang="ts">
+import { SCREEN_MESSAGES } from '@shared/show-messages'
+import { locale } from '../../lib/locale'
+
 defineProps<{ param: string }>()
+
+const t = SCREEN_MESSAGES.in(locale)
 </script>
 
 <template>
   <div class="identify">
-    <div class="eyebrow">Dit display is</div>
+    <div class="eyebrow">{{ t('thisDisplay') }}</div>
     <div class="label">{{ param }}</div>
   </div>
 </template>

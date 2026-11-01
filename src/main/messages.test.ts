@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { placeholders, type MessageBook } from '@shared/i18n'
+import { migrateQuiz } from '@shared/migrate'
 import {
   AI_ERRORS,
   DIALOG_MESSAGES,
@@ -35,6 +36,21 @@ describe('errorText', () => {
     expect(err.message).toBe('Er bestaat al een quiz met de naam "Kroegquiz"')
     expect(errorText(err, 'nl')).toBe(err.message)
     expect(errorText(err, 'en')).toBe('There is already a quiz called "Kroegquiz"')
+  })
+
+  it('vertaalt een kapotte quiz.json', () => {
+    let err: unknown
+    try {
+      migrateQuiz({ schemaVersion: 99 })
+    } catch (e) {
+      err = e
+    }
+    expect(errorText(err, 'nl')).toBe(
+      'Deze quiz is gemaakt met een nieuwere versie van de app (schema 99).'
+    )
+    expect(errorText(err, 'en')).toBe(
+      'This quiz was made with a newer version of the app (schema 99).'
+    )
   })
 
   it('laat andere fouten zoals ze zijn', () => {

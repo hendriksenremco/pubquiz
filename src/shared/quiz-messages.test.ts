@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { createFragment, createQuiz, createRound, fragmentChannel } from './factory'
 import { placeholders, type MessageBook } from './i18n'
-import { NAME_MESSAGES, USAGE_MESSAGES } from './quiz-messages'
+import { FORMAT_MESSAGES, NAME_MESSAGES, USAGE_MESSAGES } from './quiz-messages'
 
 function samePlaceholders<Key extends string>(book: MessageBook<Key>) {
   const { nl, ...others } = book.messages
@@ -16,6 +16,7 @@ describe('namen in een nieuwe quiz', () => {
   it('hebben in elke taal dezelfde waarden als in het Nederlands', () => {
     samePlaceholders(NAME_MESSAGES)
     samePlaceholders(USAGE_MESSAGES)
+    samePlaceholders(FORMAT_MESSAGES)
   })
 
   it('zijn standaard Nederlands', () => {

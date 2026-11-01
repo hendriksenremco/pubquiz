@@ -460,7 +460,7 @@ export class AppController {
       if (result.canceled) return { assets: [], skipped: [], folders: [] }
       sources = result.filePaths
     }
-    const result = await importMediaFiles(this.quizDir, sources)
+    const result = await importMediaFiles(this.quizDir, sources, appLocale())
     if (result.skipped.length > 0) {
       this.notify('warning', this.t('notImported', { files: result.skipped.join(', ') }))
     }

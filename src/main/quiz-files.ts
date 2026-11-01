@@ -11,7 +11,7 @@ import { migrateQuiz } from '@shared/migrate'
 import { quizFromTemplate, type TemplateOptions } from '@shared/template'
 import type { MediaAsset, Quiz } from '@shared/types'
 import { readJson, writeJson } from './json-store'
-import { NoticeError } from './messages'
+import { NoticeError, NOTICE_MESSAGES } from './messages'
 
 const run = promisify(execFile)
 
@@ -210,9 +210,14 @@ async function listMediaFiles(root: string): Promise<string[]> {
  * Kopieert bestanden naar `media/` onder een content-hash-naam (ASCII, dedupliceert,
  * geen NFC/NFD- of hoofdletterproblemen op USB-sticks). De oorspronkelijke naam blijft in `name`.
  * Een map wordt in z'n geheel geïmporteerd (niet-media erin wordt stil overgeslagen) en komt
- * in `folders` terug, zodat de renderer er een quizmap van kan maken.
+ * in `folders` terug, zodat de renderer er een quizmap van kan maken. `locale` is de taal van wat
+ * er in `skipped` staat.
  */
-export async function importMediaFiles(dir: string, paths: string[]): Promise<ImportResult> {
+export async function importMediaFiles(
+  dir: string,
+  paths: string[],
+  locale: Locale = 'nl'
+): Promise<ImportResult> {
   const result: ImportResult = { assets: [], skipped: [], folders: [] }
   await fs.mkdir(join(dir, MEDIA_DIR), { recursive: true })
 
@@ -227,7 +232,10 @@ export async function importMediaFiles(dir: string, paths: string[]): Promise<Im
         assetIds.push(asset.id)
       }
       if (assetIds.length) result.folders.push({ name: basename(source), assetIds })
-      else result.skipped.push(`${basename(source)} (geen media)`)
+      else
+        result.skipped.push(
+          NOTICE_MESSAGES.in(locale)('folderWithoutMedia', { name: basename(source) })
+        )
       continue
     }
     const asset = stat?.isFile() ? await importOne(dir, source) : null

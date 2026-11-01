@@ -161,6 +161,7 @@ fixtures/      demo.pubquiz (werk van Remco!), rondleiding.pubquiz en tour.pubqu
 - De show op de Mac (ShowLive, de werkbalk, de sneltoetsen, antwoorden, fragmenten en geluid): `src/renderer/src/views/show/live-messages.ts`. De knoppen heten hetzelfde als op de telefoon; een test bewaakt dat.
 - Namen die de app zelf geeft (Beamer, Zaal, Fragmenten, Ronde 1, Pauze, Vraag 2) en de plekken waar een bestand gebruikt wordt (`findAssetUsages`) staan in `src/shared/quiz-messages.ts`. Ze komen in het quizbestand, in de taal van de Mac waarop de quiz gemaakt is; `fragmentChannel` vindt het kanaal voor fragmenten in beide talen.
 - Wat main zelf zegt: het menu, de dialogen om te openen en op te slaan, de meldingen en de fouten van de MagicHome-controller staan in `src/main/messages.ts`. Een fout die de gebruiker te zien krijgt, gooi je als `NoticeError`; `errorText` vertaalt hem.
+- Waarom een quiz.json niet opent (`QuizFormatError`) staat in `FORMAT_MESSAGES` in `src/shared/quiz-messages.ts`; `errorText` vertaalt ook die. De meldingen van de audio-engine staan in `src/renderer/src/audio/messages.ts`.
 
 **Rondesoorten**
 

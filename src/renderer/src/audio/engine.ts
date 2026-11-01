@@ -9,7 +9,9 @@ import {
 } from '@shared/resolve'
 import type { HardwareMapping, MediaAsset, Quiz, ShowState } from '@shared/types'
 import { resolveSinkId, type AudioOutput } from '../lib/audio-devices'
+import { locale } from '../lib/locale'
 import { urlFor } from '../lib/media'
+import { AUDIO_MESSAGES } from './messages'
 
 /** Achtergrondloops tot deze lengte worden gedecodeerd en sample-nauwkeurig (gapless) geloopt. */
 const BUFFER_LOOP_MAX_S = 240
@@ -20,6 +22,8 @@ const BG_PAUSE_FADE_S = 0.5
 const RESUME_THRESHOLD_S = 3
 
 type Report = (event: AudioEngineEvent) => void
+
+const t = AUDIO_MESSAGES.in(locale)
 
 /** Eén AudioContext per kanaal; via setSinkId naar het gekoppelde apparaat. */
 class Output {
@@ -265,14 +269,14 @@ export class AudioEngine {
         this.reportedMissing.add(missingKey)
         this.report({
           type: 'error',
-          message: `Uitgang "${target?.label}" voor kanaal "${channel.name}" niet gevonden; systeemstandaard gebruikt`
+          message: t('outputMissing', { output: target?.label ?? '', channel: channel.name })
         })
       }
       void out.setSink(sinkId ?? '').then((ok) => {
         if (!ok)
           this.report({
             type: 'error',
-            message: `Kan kanaal "${channel.name}" niet naar deze uitgang sturen`
+            message: t('cannotRoute', { channel: channel.name })
           })
       })
     }
@@ -383,7 +387,7 @@ export class AudioEngine {
       this.report({
         type: 'error',
         key: want.key,
-        message: `Geen kanaal voor ${want.fragment.label}`
+        message: t('noChannel', { fragment: want.fragment.label })
       })
       return
     }
@@ -394,7 +398,7 @@ export class AudioEngine {
       this.report({
         type: 'error',
         key: want.key,
-        message: `${want.fragment.label} kan niet worden afgespeeld (${(err as Error).message})`
+        message: t('cannotPlay', { fragment: want.fragment.label, error: (err as Error).message })
       })
       return
     }
@@ -456,7 +460,7 @@ export class AudioEngine {
     if (!pending) {
       pending = fetch(urlFor(asset))
         .then((res) => {
-          if (!res.ok) throw new Error(`bestand niet gevonden (${res.status})`)
+          if (!res.ok) throw new Error(t('fileMissing', { status: res.status }))
           return res.arrayBuffer()
         })
         .then((data) => this.decoder.decodeAudioData(data))

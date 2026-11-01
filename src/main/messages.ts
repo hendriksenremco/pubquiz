@@ -1,4 +1,6 @@
 import { defineMessages, type Locale, type Params } from '@shared/i18n'
+import { QuizFormatError } from '@shared/migrate'
+import { FORMAT_MESSAGES } from '@shared/quiz-messages'
 
 /**
  * Teksten die main zelf maakt (issue #53): het menu, de dialogen om te openen en op te slaan, en
@@ -114,7 +116,9 @@ export const NOTICE_MESSAGES = defineMessages(
       'Deze quiz heeft geen audiokanaal voor de liedjes. Voeg er een toe bij Quiz-instellingen.',
     roundFileTooBig: 'Dit rondebestand is groter dan 1 GB',
     badRoundLink: 'QuizNote opent alleen rondes van quiznote.app',
-    roundDownloadFailed: 'Het rondebestand ophalen is mislukt: {error}'
+    roundDownloadFailed: 'Het rondebestand ophalen is mislukt: {error}',
+    folderWithoutMedia: '{name} (geen media)',
+    formNotLoading: 'het formulier laadt niet'
   },
   {
     en: {
@@ -153,7 +157,9 @@ export const NOTICE_MESSAGES = defineMessages(
       noAudioChannel: 'This quiz has no audio channel for the songs. Add one in Quiz settings.',
       roundFileTooBig: 'This round file is larger than 1 GB',
       badRoundLink: 'QuizNote only opens rounds from quiznote.app',
-      roundDownloadFailed: 'Could not download the round file: {error}'
+      roundDownloadFailed: 'Could not download the round file: {error}',
+      folderWithoutMedia: '{name} (no media)',
+      formNotLoading: 'the form does not load'
     }
   }
 )
@@ -173,9 +179,10 @@ export class NoticeError extends Error {
   }
 }
 
-/** De tekst van een fout, vertaald als het een `NoticeError` is. */
+/** De tekst van een fout, vertaald als het een `NoticeError` of `QuizFormatError` is. */
 export function errorText(err: unknown, locale: Locale): string {
   if (err instanceof NoticeError) return NOTICE_MESSAGES.in(locale)(err.key, err.params)
+  if (err instanceof QuizFormatError) return FORMAT_MESSAGES.in(locale)(err.key, err.params)
   return err instanceof Error ? err.message : String(err)
 }
 

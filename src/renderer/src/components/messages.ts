@@ -22,6 +22,7 @@ export const COMPONENT_MESSAGES = defineMessages(
     sound: 'Geluid',
     none: 'Geen',
     noneLower: 'geen',
+    noImage: 'Geen afbeelding',
     labelValue: '{label}: {value}',
     // ContentChip
     standard: 'Standaard',
@@ -80,6 +81,7 @@ export const COMPONENT_MESSAGES = defineMessages(
       sound: 'Sound',
       none: 'None',
       noneLower: 'none',
+      noImage: 'No picture',
       labelValue: '{label}: {value}',
       standard: 'Default',
       black: 'Black',
