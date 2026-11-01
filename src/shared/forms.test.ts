@@ -5,11 +5,14 @@ import {
   formFileName,
   formRounds,
   formSections,
+  itemSummary,
   itemText,
   sheetPages,
   type CardFit,
   type FormSection
 } from './forms'
+import { FORM_MESSAGES } from './form-messages'
+import { placeholders } from './i18n'
 import { migrateQuiz } from './migrate'
 
 const demo = migrateQuiz(freshDemoQuiz())
@@ -37,6 +40,30 @@ describe('formulieren', () => {
     )
     expect(formFileName({ ...demo, title: ' ' }, 'key')).toBe('Pubquiz – nakijkformulier.pdf')
     expect(formFileName(demo, 'cards')).toBe('Demo-pubquiz – vragenkaarten.pdf')
+  })
+
+  it('noemt de pdf in de taal van de app', () => {
+    expect(formFileName(demo, 'sheet', 'en')).toBe('Demo-pubquiz – answer sheet.pdf')
+    expect(formFileName({ ...demo, title: '' }, 'cards', 'en')).toBe(
+      'Pub quiz – question cards.pdf'
+    )
+  })
+
+  it('vat een ronde samen, met enkelvoud en meervoud', () => {
+    const [algemeen, muziek] = formSections(demo, ['r1', 'r2']).map((s) => s.round)
+    expect(itemSummary(algemeen)).toBe('2 vragen')
+    expect(itemSummary(muziek)).toBe('8 fragmenten')
+    expect(itemSummary(algemeen, 'en')).toBe('2 questions')
+    const one = { ...muziek, fragments: muziek.fragments.slice(0, 1) }
+    expect(itemSummary(one)).toBe('1 fragment')
+    expect(itemSummary(one, 'en')).toBe('1 clip')
+  })
+
+  it('heeft in elke taal dezelfde waarden in de teksten', () => {
+    const { nl, en } = FORM_MESSAGES.messages
+    for (const [key, text] of Object.entries(nl)) {
+      expect(placeholders(en[key as keyof typeof nl]), key).toEqual(placeholders(text))
+    }
   })
 
   it('zet maximaal vier rondes op een A4, een grote ronde over een hele rij', () => {

@@ -34,6 +34,7 @@ import {
   summarizeQuiz,
   writeQuiz
 } from './quiz-files'
+import { appLocale } from './locale'
 import { locateMedia } from './media-path'
 import { renderFormPdf } from './pdf'
 import { Plugins } from './plugins'
@@ -247,7 +248,7 @@ export class AppController {
   /** Antwoordformulier of antwoorden als pdf; standaard in Downloads, daarna open in Voorvertoning. */
   async exportForm(options: FormOptions): Promise<void> {
     if (!this.quiz) return
-    const name = formFileName(this.quiz, options.doc)
+    const name = formFileName(this.quiz, options.doc, appLocale())
     // Voor tests: zonder dialoog in een vaste map.
     const fixedDir = process.env['PUBQUIZ_SAVE_DIR']
     let target = fixedDir ? join(fixedDir, name) : null

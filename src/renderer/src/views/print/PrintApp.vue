@@ -9,7 +9,9 @@ import {
   type FormOptions,
   type SheetBlock
 } from '@shared/forms'
+import { FORM_MESSAGES, FORM_NOUNS } from '@shared/form-messages'
 import type { AnswerItem } from '@shared/resolve'
+import { locale } from '../../lib/locale'
 import { assetUrl } from '../../lib/media'
 import { useSession } from '../../stores/session'
 
@@ -24,6 +26,7 @@ const session = useSession()
 const sections = computed(() => (session.quiz ? formSections(session.quiz, options.roundIds) : []))
 const pages = computed(() => sheetPages(sections.value))
 const key = options.doc === 'key'
+const t = FORM_MESSAGES.in(locale)
 
 /** Eerst elke ronde op één kaart om te meten; daarna verdeeld over zoveel kaarten als nodig. */
 const fits = ref<CardFit[] | null>(null)
@@ -68,7 +71,8 @@ onMounted(async () => {
   markReady()
 })
 
-const capital = (word: string) => word[0].toUpperCase() + word.slice(1)
+/** "Vraag", "Afbeelding" of "Fragment": wat een nummer is. */
+const nounOf = (item: AnswerItem) => t(FORM_NOUNS[item.noun])
 
 const imageOf = (item: AnswerItem) =>
   item.slide?.layout === 'image' ? assetUrl(session.quiz, item.slide.imageAssetId) : null
@@ -94,9 +98,9 @@ function placement(block: SheetBlock) {
           <span class="quiz-name">{{ session.quiz.title }}</span>
           <!-- Teamnaam één keer per blad; het nakijkformulier heeft op die plek zijn titel. -->
           <div class="team">
-            <template v-if="key">Nakijkformulier</template>
+            <template v-if="key">{{ t('answerKey') }}</template>
             <template v-else>
-              <span>Team</span>
+              <span>{{ t('team') }}</span>
               <span class="team-line" />
             </template>
           </div>
@@ -120,7 +124,7 @@ function placement(block: SheetBlock) {
               <li v-for="item in b.section.items" :key="item.id">
                 <span class="entry">
                   <span class="num">{{ item.number }}</span>
-                  <span v-if="b.section.mixed" class="noun">{{ capital(item.noun) }}</span>
+                  <span v-if="b.section.mixed" class="noun">{{ nounOf(item) }}</span>
                   <span class="write" :class="{ missing: !item.answer }">
                     <span :class="{ blank: !key }">{{ item.answer || '—' }}</span>
                   </span>
@@ -153,9 +157,9 @@ function placement(block: SheetBlock) {
                   <td class="num">{{ item.number }}</td>
                   <td class="question">
                     <img v-if="imageOf(item)" :src="imageOf(item)!" alt="" />
-                    <span v-if="card.section.mixed" class="noun">{{ capital(item.noun) }} </span>
+                    <span v-if="card.section.mixed" class="noun">{{ nounOf(item) }} </span>
                     <span v-if="itemText(item)">{{ itemText(item) }}</span>
-                    <span v-else class="missing">{{ capital(item.noun) }} {{ item.number }}</span>
+                    <span v-else class="missing">{{ nounOf(item) }} {{ item.number }}</span>
                   </td>
                   <td class="qcard-answer" :class="{ missing: !item.answer }">
                     {{ item.answer || '—' }}

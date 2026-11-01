@@ -8,6 +8,7 @@ import ContentChip from '../../components/ContentChip.vue'
 import Icon from '../../components/Icon.vue'
 import MediaPicker from '../../components/MediaPicker.vue'
 import PluginSlot from '../../plugins/PluginSlot.vue'
+import { locale } from '../../lib/locale'
 import { useSession } from '../../stores/session'
 
 /** Paneel rechts voor de ronde zelf: schermen, muziek, fragmenten, loop en antwoorden. */
@@ -258,7 +259,7 @@ function setAnswersFor(roundId: string, on: boolean) {
         />
         <span class="grow">
           {{ r.title }}
-          <span class="hint">{{ itemSummary(r) }}</span>
+          <span class="hint">{{ itemSummary(r, locale) }}</span>
         </span>
       </label>
       <p v-if="answersOn && missingAnswers" class="warn small">
