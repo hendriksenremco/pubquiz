@@ -1,20 +1,24 @@
 import { SCHEMA_VERSION } from './version'
 import type { AudioChannel, Fragment, Quiz, Round, ScreenSlot, ShowState, Slide } from './types'
 import { AUTOPLAY_IDLE } from './autoplay'
+import type { Locale } from './i18n'
+import { NAME_MESSAGES } from './quiz-messages'
 
 export function newId(): string {
   return crypto.randomUUID().replaceAll('-', '').slice(0, 12)
 }
 
-export function createQuiz(title: string): Quiz {
+/** Een lege quiz, met één scherm en twee kanalen die heten in de taal van de app. */
+export function createQuiz(title: string, locale: Locale = 'nl'): Quiz {
+  const t = NAME_MESSAGES.in(locale)
   return {
     schemaVersion: SCHEMA_VERSION,
     id: newId(),
     title,
     folders: [],
     assets: [],
-    screens: [createScreenSlot('Beamer')],
-    channels: [createChannel('Zaal'), createChannel('Fragmenten')],
+    screens: [createScreenSlot(t('screen'))],
+    channels: [createChannel(t('roomChannel')), createChannel(t('fragmentChannel'))],
     background: null,
     rounds: []
   }
@@ -31,38 +35,44 @@ export function createChannel(name: string): AudioChannel {
 export type RoundPreset = 'normal' | 'music' | 'pictures' | 'break' | 'answers'
 
 /** `quiz` is nodig voor een antwoordenronde: die neemt de muziekrondes van de quiz over. */
-export function createRound(preset: RoundPreset, number: number, quiz?: Quiz): Round {
+export function createRound(
+  preset: RoundPreset,
+  number: number,
+  quiz?: Quiz,
+  locale: Locale = 'nl'
+): Round {
+  const t = NAME_MESSAGES.in(locale)
   const base: Round = {
     id: newId(),
-    title: `Ronde ${number}`,
+    title: t('round', { number }),
     screens: {},
     mutedScreens: [],
     fragmentScreens: [],
     answersFor: [],
     slideLoopSeconds: null,
-    slides: [createSlide('title', `Ronde ${number}`)],
+    slides: [createSlide('title', t('round', { number }))],
     background: 'continue',
     fragments: [],
     autoplay: { gapSeconds: 5, countdownOnScreen: true }
   }
   if (preset === 'music') {
-    return { ...base, title: `Ronde ${number}: muziek`, background: 'pause' }
+    return { ...base, title: t('musicRound', { number }), background: 'pause' }
   }
   if (preset === 'pictures') {
-    return { ...base, title: `Ronde ${number}: afbeeldingen` }
+    return { ...base, title: t('picturesRound', { number }) }
   }
   if (preset === 'answers') {
     const sources = quiz?.rounds.filter((r) => hasAnswers(r)) ?? []
     return {
       ...base,
-      title: 'Antwoorden',
-      slides: [createSlide('title', 'Antwoorden')],
+      title: t('answers'),
+      slides: [createSlide('title', t('answers'))],
       answersFor: sources.map((r) => r.id),
       fragmentScreens: answerScreens(quiz, sources)
     }
   }
   if (preset === 'break') {
-    return { ...base, title: 'Pauze', slides: [createSlide('title', 'Pauze')] }
+    return { ...base, title: t('break'), slides: [createSlide('title', t('break'))] }
   }
   return base
 }
@@ -101,9 +111,14 @@ export function createFragment(
   assetId: string,
   channelId: string,
   number: number,
-  label = `Fragment ${number}`
+  label = NAME_MESSAGES.in('nl')('fragment', { number })
 ): Fragment {
   return { id: newId(), label, assetId, channelId, fadeIn: 0, fadeOut: 0.5 }
+}
+
+/** Het kanaal voor fragmenten: dat met "Fragmenten" of "Clips" in de naam, anders het laatste. */
+export function fragmentChannel(quiz: Quiz): AudioChannel | undefined {
+  return quiz.channels.find((c) => /fragment|clip/i.test(c.name)) ?? quiz.channels.at(-1)
 }
 
 export function createShowState(): ShowState {

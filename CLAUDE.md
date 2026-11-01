@@ -150,6 +150,7 @@ fixtures/      demo.pubquiz (werk van Remco!) en rondleiding.pubquiz (gemaakt do
 - De werkbalk van de app en de dialogen Nieuwe quiz, Met je AI… en Instellingen: `src/renderer/src/views/operator/operator-messages.ts`; de algemene onderdelen (keuzelijsten, media kiezen en bekijken, achtergrond van een slide) in `src/renderer/src/components/messages.ts`. "Vraag" op een slide met alleen het nummer staat in `SCREEN_MESSAGES`; `SlideView` krijgt op de telefoon de taal als `locale` mee.
 - De editor: de lijst met rondes (EditorView), Media, Quiz-instellingen, Afdrukken, de fragmenten, de slides (lijst en inspector) en de ronde zelf (RoundEditor, RoundSettings) in `src/renderer/src/views/editor/editor-messages.ts`.
 - De show op de Mac (ShowLive, de werkbalk, de sneltoetsen, antwoorden, fragmenten en geluid): `src/renderer/src/views/show/live-messages.ts`. De knoppen heten hetzelfde als op de telefoon; een test bewaakt dat.
+- Namen die de app zelf geeft (Beamer, Zaal, Fragmenten, Ronde 1, Pauze, Vraag 2) en de plekken waar een bestand gebruikt wordt (`findAssetUsages`) staan in `src/shared/quiz-messages.ts`. Ze komen in het quizbestand, in de taal van de Mac waarop de quiz gemaakt is; `fragmentChannel` vindt het kanaal voor fragmenten in beide talen.
 - Wat main zelf zegt: het menu, de dialogen om te openen en op te slaan, de meldingen en de fouten van de MagicHome-controller staan in `src/main/messages.ts`. Een fout die de gebruiker te zien krijgt, gooi je als `NoticeError`; `errorText` vertaalt hem.
 
 **Rondesoorten**

@@ -120,7 +120,7 @@ async function removeFolder() {
 }
 
 function remove(asset: MediaAsset) {
-  const used = findAssetUsages(quiz.value, asset.id)
+  const used = findAssetUsages(quiz.value, asset.id, locale)
   if (used.length) {
     session.notify({
       level: 'warning',

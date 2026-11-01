@@ -4,6 +4,7 @@ import { constants, createReadStream, promises as fs } from 'fs'
 import { basename, extname, join, relative, sep } from 'path'
 import { promisify } from 'util'
 import { createQuiz, mediaKindForFile, newId } from '@shared/factory'
+import type { Locale } from '@shared/i18n'
 import type { ImportResult, RecentQuiz } from '@shared/ipc'
 import { naturalCompare } from '@shared/media-folders'
 import { migrateQuiz } from '@shared/migrate'
@@ -64,10 +65,11 @@ async function makeQuizDir(path: string): Promise<string> {
 
 export async function createQuizDir(
   path: string,
-  title?: string
+  title?: string,
+  locale: Locale = 'nl'
 ): Promise<{ dir: string; quiz: Quiz }> {
   const dir = await makeQuizDir(path)
-  const quiz = createQuiz(title ?? basename(dir, QUIZ_EXT))
+  const quiz = createQuiz(title ?? basename(dir, QUIZ_EXT), locale)
   await writeQuiz(dir, quiz)
   return { dir, quiz }
 }

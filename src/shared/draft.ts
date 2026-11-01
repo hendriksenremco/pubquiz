@@ -5,8 +5,11 @@ import {
   createImageSlide,
   createRound,
   createSlide,
+  fragmentChannel,
   hasAnswers
 } from './factory'
+import type { Locale } from './i18n'
+import { NAME_MESSAGES } from './quiz-messages'
 import type { Quiz, Round, Slide } from './types'
 
 /**
@@ -144,8 +147,10 @@ export function draftFiles(draft: RoundDraft): { path: string; kind: 'image' | '
 export function buildRound(
   quiz: Quiz,
   draft: RoundDraft,
-  assetFor: (path: string) => string
+  assetFor: (path: string) => string,
+  locale: Locale = 'nl'
 ): Round {
+  const t = NAME_MESSAGES.in(locale)
   const number = quiz.rounds.length + 1
   const titleSlide = (title: string): Slide => ({
     ...createSlide('title', title),
@@ -155,7 +160,7 @@ export function buildRound(
 
   switch (draft.type) {
     case 'questions': {
-      const round = createRound('normal', number)
+      const round = createRound('normal', number, undefined, locale)
       return {
         ...round,
         ...notes,
@@ -163,7 +168,7 @@ export function buildRound(
         slides: [
           titleSlide(draft.title),
           ...draft.questions.map((q, i) => ({
-            ...createSlide('question', `Vraag ${i + 1}`),
+            ...createSlide('question', t('question', { number: i + 1 })),
             body: q.question,
             answer: q.answer,
             ...(q.readAloud ? { numberOnly: true } : {}),
@@ -174,7 +179,7 @@ export function buildRound(
       }
     }
     case 'pictures': {
-      const round = createRound('pictures', number)
+      const round = createRound('pictures', number, undefined, locale)
       return {
         ...round,
         ...notes,
@@ -192,8 +197,8 @@ export function buildRound(
       }
     }
     case 'music': {
-      const round = createRound('music', number)
-      const channel = quiz.channels.find((c) => c.name === 'Fragmenten') ?? quiz.channels.at(-1)
+      const round = createRound('music', number, undefined, locale)
+      const channel = fragmentChannel(quiz)
       if (!channel) throw new DraftError('This quiz has no audio channel for the songs')
       return {
         ...round,
@@ -203,7 +208,7 @@ export function buildRound(
         // Het nummer van het liedje op het eerste scherm, niet op alle.
         fragmentScreens: quiz.screens.slice(0, 1).map((s) => s.id),
         fragments: draft.songs.map((s, i) => ({
-          ...createFragment(assetFor(s.audio), channel.id, i + 1),
+          ...createFragment(assetFor(s.audio), channel.id, i + 1, t('fragment', { number: i + 1 })),
           answer: s.answer,
           ...(s.start !== undefined ? { start: s.start } : {}),
           ...(s.end !== undefined ? { end: s.end } : {})
@@ -211,11 +216,16 @@ export function buildRound(
       }
     }
     case 'break': {
-      const title = draft.title?.trim() || 'Pauze'
-      return { ...createRound('break', number), ...notes, title, slides: [titleSlide(title)] }
+      const title = draft.title?.trim() || t('break')
+      return {
+        ...createRound('break', number, undefined, locale),
+        ...notes,
+        title,
+        slides: [titleSlide(title)]
+      }
     }
     case 'answers': {
-      const title = draft.title?.trim() || 'Antwoorden'
+      const title = draft.title?.trim() || t('answers')
       const sources = draft.rounds
         ? draft.rounds.map((name) => {
             const found = quiz.rounds.find((r) => r.title.toLowerCase() === name.toLowerCase())
@@ -224,7 +234,7 @@ export function buildRound(
           })
         : quiz.rounds.filter(hasAnswers)
       return {
-        ...createRound('answers', number, quiz),
+        ...createRound('answers', number, quiz, locale),
         ...notes,
         title,
         slides: [titleSlide(title)],
