@@ -252,7 +252,7 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
         <Icon name="folder-plus" /> {{ t('newFolder') }}
       </button>
       <button class="btn" @click="importFiles(undefined, openFolderId)">
-        <Icon name="upload" /> {{ t('import') }}
+        <Icon name="download" /> {{ t('import') }}
       </button>
     </header>
 

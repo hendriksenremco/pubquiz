@@ -231,7 +231,7 @@ defineExpose({ importRounds })
 
     <Transition name="fade">
       <div v-if="fileDrag" class="drop-overlay">
-        <Icon name="upload" :size="28" />
+        <Icon name="download" :size="28" />
         <span>{{ t('dropHere') }}</span>
       </div>
     </Transition>
