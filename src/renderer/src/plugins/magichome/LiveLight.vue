@@ -2,9 +2,11 @@
 import { computed } from 'vue'
 import type { Light } from '@shared/light'
 import Popover from '../../components/Popover.vue'
+import { locale } from '../../lib/locale'
 import { useSession } from '../../stores/session'
 import LightDot from './LightDot.vue'
 import LightPanel from './LightPanel.vue'
+import { LIGHT_PANEL_MESSAGES } from './messages'
 
 /**
  * In de werkbalk van de show: het licht met de hand kiezen, zoals op de afstandsbediening. Het
@@ -13,6 +15,7 @@ import LightPanel from './LightPanel.vue'
 const api = window.pubquiz
 const session = useSession()
 
+const t = LIGHT_PANEL_MESSAGES.in(locale)
 const status = computed(() => session.statusOf('magichome'))
 
 async function choose(choice: Light | null) {
@@ -26,13 +29,20 @@ async function choose(choice: Light | null) {
       <button
         class="btn btn-ghost"
         :class="{ active: open }"
-        title="Het licht met de hand kiezen"
+        :title="t('chooseByHand')"
         @click="toggle"
       >
-        <LightDot :light="status?.light" class="light-mark" /> Licht
+        <LightDot :light="status?.light" class="light-mark" /> {{ t('light') }}
       </button>
     </template>
-    <LightPanel v-if="status" class="panel" :light="status" :disabled="false" @choose="choose" />
+    <LightPanel
+      v-if="status"
+      class="panel"
+      :light="status"
+      :disabled="false"
+      :locale="locale"
+      @choose="choose"
+    />
   </Popover>
 </template>
 

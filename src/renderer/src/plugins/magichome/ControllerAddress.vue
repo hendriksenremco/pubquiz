@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { effectName, lightLabel } from '@shared/light'
 import type { MagicHomeProbe } from '@shared/magichome'
+import { locale } from '../../lib/locale'
 import { useControllerHost } from './controller'
 
 /**
@@ -40,8 +41,8 @@ const statusText = computed(() => {
   if (!s.state.on) return 'Verbonden. Het licht staat uit.'
   const now =
     s.state.effect !== null
-      ? effectName(s.state.effect)
-      : lightLabel({ type: 'color', color: s.state.color })
+      ? effectName(s.state.effect, locale)
+      : lightLabel({ type: 'color', color: s.state.color }, locale)
   return `Verbonden. Nu: ${now}.`
 })
 

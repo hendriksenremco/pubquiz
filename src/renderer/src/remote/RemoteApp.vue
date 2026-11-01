@@ -188,6 +188,7 @@ onMounted(connect)
       class="plugin"
       :status="p.status"
       :disabled="!live"
+      :locale="locale"
       :act="p.act"
     />
 

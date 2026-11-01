@@ -3,33 +3,51 @@ import { computed, ref } from 'vue'
 import {
   DEFAULT_SPEED,
   LIGHT_COLORS,
+  lightColorName,
   lightLabel,
   sameLight,
   type Light,
   type LightStatus
 } from '@shared/light'
-import { EFFECT_COLORS, EFFECT_GROUPS, effectInfo, gridRows } from '@shared/light-effects'
+import type { Locale } from '@shared/i18n'
+import {
+  directionName,
+  EFFECT_COLORS,
+  EFFECT_GROUPS,
+  effectInfo,
+  effectLabel,
+  gridLabel,
+  gridRows,
+  groupName,
+  type EffectGroupId
+} from '@shared/light-effects'
+import { LIGHT_MESSAGES } from '@shared/light-messages'
 import Icon from '../../components/Icon.vue'
 import LightDot from './LightDot.vue'
+import { LIGHT_PANEL_MESSAGES } from './messages'
 
 /**
  * Het licht met de hand kiezen: een licht uit de quiz, een kleur, uit of een effect. Het geldt
  * tot de show zelf een ander licht kiest; "Volg de show" gaat er meteen naar terug. Op de
- * telefoon en in de werkbalk van de show.
+ * telefoon en in de werkbalk van de show; `locale` is de taal van de Mac.
  */
-const props = defineProps<{ light: LightStatus; disabled: boolean }>()
+const props = defineProps<{ light: LightStatus; disabled: boolean; locale: Locale }>()
 const emit = defineEmits<{ choose: [light: Light | null] }>()
+
+const t = computed(() => LIGHT_PANEL_MESSAGES.in(props.locale))
+const off = computed(() => LIGHT_MESSAGES.in(props.locale)('off'))
+const label = (light: Light) => lightLabel(light, props.locale)
 
 const current = computed(() => props.light.light)
 const is = (light: Light) => sameLight(light, current.value)
 const color = (hex: string): Light => ({ type: 'color', color: hex })
 
 const note = computed(() => {
-  if (props.light.manual) return 'Met de hand gekozen, tot de show een ander licht kiest'
-  return current.value ? 'Volgt de show' : 'De show stuurt het licht nu niet aan'
+  if (props.light.manual) return t.value('manual')
+  return current.value ? t.value('following') : t.value('notDriven')
 })
 
-const openGroup = ref<string | null>(null)
+const openGroup = ref<EffectGroupId | null>(null)
 const currentGroup = computed(() =>
   current.value?.type === 'effect' ? effectInfo(current.value.effect)?.group : null
 )
@@ -40,24 +58,24 @@ function effect(id: number) {
 </script>
 
 <template>
-  <section class="light-panel" aria-label="Licht">
+  <section class="light-panel" :aria-label="t('light')">
     <div class="head">
-      <h2>Licht</h2>
+      <h2>{{ t('light') }}</h2>
       <button v-if="light.manual" class="chip" :disabled="disabled" @click="emit('choose', null)">
-        Volg de show
+        {{ t('followShow') }}
       </button>
     </div>
 
     <div class="current">
       <LightDot :light="current" class="current-dot" />
       <span class="grow">
-        <span class="current-label">{{ current ? lightLabel(current) : 'Niet aangestuurd' }}</span>
+        <span class="current-label">{{ current ? label(current) : t('notDrivenShort') }}</span>
         <span class="muted current-note">{{ note }}</span>
       </span>
     </div>
 
     <template v-if="light.quiz.length">
-      <span class="eyebrow">In deze quiz</span>
+      <span class="eyebrow">{{ t('inThisQuiz') }}</span>
       <div class="chips">
         <button
           v-for="l in light.quiz"
@@ -67,20 +85,20 @@ function effect(id: number) {
           :disabled="disabled"
           @click="emit('choose', l)"
         >
-          <LightDot :light="l" />{{ lightLabel(l) }}
+          <LightDot :light="l" />{{ label(l) }}
         </button>
       </div>
     </template>
 
-    <span class="eyebrow">Kleur</span>
-    <div class="swatches" role="group" aria-label="Kleur">
+    <span class="eyebrow">{{ t('color') }}</span>
+    <div class="swatches" role="group" :aria-label="t('color')">
       <button
         v-for="c in LIGHT_COLORS"
         :key="c.color"
         class="swatch"
         :class="{ on: is(color(c.color)) }"
         :style="{ background: c.color }"
-        :aria-label="c.name"
+        :aria-label="lightColorName(c, locale)"
         :disabled="disabled"
         @click="emit('choose', color(c.color))"
       />
@@ -90,48 +108,48 @@ function effect(id: number) {
         :disabled="disabled"
         @click="emit('choose', { type: 'off' })"
       >
-        Uit
+        {{ off }}
       </button>
     </div>
 
-    <span class="eyebrow">Effect</span>
+    <span class="eyebrow">{{ t('effect') }}</span>
     <div class="groups">
-      <section v-for="g in EFFECT_GROUPS" :key="g.name">
+      <section v-for="g in EFFECT_GROUPS" :key="g.id">
         <button
           class="group-head"
-          :aria-expanded="openGroup === g.name"
-          @click="openGroup = openGroup === g.name ? null : g.name"
+          :aria-expanded="openGroup === g.id"
+          @click="openGroup = openGroup === g.id ? null : g.id"
         >
-          <Icon name="right" :size="14" class="chev" :class="{ turned: openGroup === g.name }" />
-          <span class="grow">{{ g.name }}</span>
-          <span v-if="currentGroup === g.name" class="here" />
+          <Icon name="right" :size="14" class="chev" :class="{ turned: openGroup === g.id }" />
+          <span class="grow">{{ groupName(g.id, locale) }}</span>
+          <span v-if="currentGroup === g.id" class="here" />
           <span class="count">{{ g.effects.length }}</span>
         </button>
 
-        <template v-if="openGroup === g.name">
+        <template v-if="openGroup === g.id">
           <div
             v-if="g.grid"
             class="grid"
             role="group"
-            :aria-label="g.name"
+            :aria-label="groupName(g.id, locale)"
             :style="{ '--columns': g.grid.colors.length }"
           >
-            <span class="col-label">{{ g.grid.colorLabel }}</span>
+            <span class="col-label">{{ gridLabel(g, locale) }}</span>
             <template v-for="row in gridRows(g)" :key="row.direction">
-              <span class="direction">{{ row.direction }}</span>
+              <span class="direction">{{ directionName(row.direction, locale) }}</span>
               <button
                 v-for="info in row.cells"
                 :key="info.effect"
                 class="cell"
                 :class="{ on: current?.type === 'effect' && current.effect === info.effect }"
                 :style="{ background: EFFECT_COLORS[info.color!].swatch }"
-                :aria-label="info.name"
+                :aria-label="effectLabel(info, locale)"
                 :disabled="disabled"
                 @click="effect(info.effect)"
               />
             </template>
           </div>
-          <div v-else class="list" role="group" :aria-label="g.name">
+          <div v-else class="list" role="group" :aria-label="groupName(g.id, locale)">
             <button
               v-for="e in g.effects"
               :key="e.effect"
@@ -140,7 +158,7 @@ function effect(id: number) {
               :disabled="disabled"
               @click="effect(e.effect)"
             >
-              <span class="grow">{{ e.name }}</span>
+              <span class="grow">{{ effectLabel(e, locale) }}</span>
               <Icon
                 v-if="current?.type === 'effect' && current.effect === e.effect"
                 name="check"

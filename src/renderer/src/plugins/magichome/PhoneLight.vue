@@ -7,5 +7,10 @@ defineProps<PhoneProps<'magichome'>>()
 </script>
 
 <template>
-  <LightPanel :light="status" :disabled="disabled" @choose="act('choose', $event)" />
+  <LightPanel
+    :light="status"
+    :disabled="disabled"
+    :locale="locale"
+    @choose="act('choose', $event)"
+  />
 </template>

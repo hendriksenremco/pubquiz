@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { createQuiz, createRound, createShowState, createSlide } from './factory'
 import {
+  effectName,
   lightLabel,
   lightOf,
   quizLights,
@@ -80,13 +81,21 @@ describe('setLight', () => {
 
 describe('lightLabel', () => {
   it('noemt bekende kleuren en effecten bij naam', () => {
-    expect(lightLabel(RED)).toBe('Rood')
-    expect(lightLabel({ type: 'color', color: '#123456' })).toBe('#123456')
-    expect(lightLabel(PARTY)).toBe('Looplicht + snel wisselen + flitsen')
-    expect(lightLabel({ type: 'effect', effect: 39, speed: 50 })).toBe(
+    expect(lightLabel(RED, 'nl')).toBe('Rood')
+    expect(lightLabel({ type: 'color', color: '#123456' }, 'nl')).toBe('#123456')
+    expect(lightLabel(PARTY, 'nl')).toBe('Looplicht + snel wisselen + flitsen')
+    expect(lightLabel({ type: 'effect', effect: 39, speed: 50 }, 'nl')).toBe(
       'Rennend punt, rood, naar buiten'
     )
-    expect(lightLabel({ type: 'off' })).toBe('Uit')
+    expect(lightLabel({ type: 'off' }, 'nl')).toBe('Uit')
+  })
+
+  it('in het Engels', () => {
+    expect(lightLabel(RED, 'en')).toBe('Red')
+    expect(lightLabel({ type: 'color', color: '#FFA040' }, 'en')).toBe('Warm white')
+    expect(lightLabel(PARTY, 'en')).toBe('Chase + quick change + flash')
+    expect(lightLabel({ type: 'off' }, 'en')).toBe('Off')
+    expect(effectName(999, 'en')).toBe('Effect 999')
   })
 })
 

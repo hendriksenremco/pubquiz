@@ -145,6 +145,7 @@ fixtures/      demo.pubquiz (werk van Remco!) en rondleiding.pubquiz (gemaakt do
 - Al vertaald: de telefoon (`src/renderer/src/remote/messages.ts`); hij neemt de taal van de Mac over via `RemoteView.locale`.
 - Teksten die main en shared maken (vorige/volgende, "Slide 2 van 5", foutmeldingen voor de telefoon) staan in `src/shared/show-messages.ts`; geef de `Locale` mee.
 - Vensters op de Mac kennen de taal via `?locale=` in hun adres (`loadRoute`); in de renderer lees je hem uit `src/renderer/src/lib/locale.ts`. Al vertaald: wat er over de slide heen op een scherm staat (`SCREEN_MESSAGES`), en naam en uitleg van plug-ins (`text` in de definitie).
+- Het licht: de namen van kleuren en effecten staan in `src/shared/light-messages.ts` (`lightLabel`, `effectLabel` en `groupName` krijgen de `Locale` mee); het paneel om het licht met de hand te kiezen in `plugins/magichome/messages.ts`. Een onderdeel op de telefoon krijgt de taal als `locale` in `PhoneProps`.
 
 **Rondesoorten**
 
