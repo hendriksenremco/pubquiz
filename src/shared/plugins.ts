@@ -1,6 +1,6 @@
 import type { z } from 'zod'
 import { MAGICHOME } from './light'
-import { pluginConfig } from './plugin'
+import { pluginConfig, type PluginAction, type TypeOnly } from './plugin'
 import { REMOTE } from './remote'
 
 /**
@@ -15,6 +15,30 @@ type DefinitionOf<Id extends PluginId> = Extract<(typeof PLUGINS)[number], { id:
 
 /** De instellingen per Mac van plug-in `Id`, zoals zijn definitie ze beschrijft. */
 export type PluginConfig<Id extends PluginId> = z.output<DefinitionOf<Id>['config']>
+
+/** Wat plug-in `Id` naar de vensters duwt; zie `PluginHost.publish`. */
+export type PluginStatus<Id extends PluginId> =
+  DefinitionOf<Id>['status'] extends TypeOnly<infer Status> ? Status : never
+
+/** De laatste status van elke plug-in die aan staat. */
+export type PluginStatuses = { [Id in PluginId]?: PluginStatus<Id> }
+
+type ActionsOf<Id extends PluginId> = DefinitionOf<Id>['actions']
+
+/** De acties van plug-in `Id`. */
+export type PluginActionName<Id extends PluginId> = keyof ActionsOf<Id> & string
+
+/** Wat je een actie meegeeft. */
+export type ActionInput<Id extends PluginId, Name extends PluginActionName<Id>> =
+  ActionsOf<Id>[Name] extends PluginAction<infer Input> ? z.input<Input> : never
+
+/** Wat de plug-in van een actie krijgt, na de controle. */
+export type ActionValue<Id extends PluginId, Name extends PluginActionName<Id>> =
+  ActionsOf<Id>[Name] extends PluginAction<infer Input> ? z.output<Input> : never
+
+/** Wat een actie teruggeeft. */
+export type ActionResult<Id extends PluginId, Name extends PluginActionName<Id>> =
+  ActionsOf<Id>[Name] extends PluginAction<z.ZodType, infer Result> ? Result : never
 
 export function pluginDefinition<Id extends PluginId>(id: Id): DefinitionOf<Id> {
   return PLUGINS.find((p) => p.id === id) as DefinitionOf<Id>

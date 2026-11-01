@@ -29,6 +29,6 @@ export const previewOn = ref(false)
 
 /** Laat een licht zien; null = klaar, de controller gaat terug naar hoe hij was. */
 export async function preview(light: Light | null): Promise<MagicHomeResult> {
-  const result = await api.pluginInvoke('magichome', 'preview', light ? { ...light } : null)
-  return (result as MagicHomeResult | null) ?? { ok: false, error: 'De plug-in staat uit' }
+  const result = await api.pluginAct('magichome', 'preview', light ? { ...light } : null)
+  return result ?? { ok: false, error: 'De plug-in staat uit' }
 }

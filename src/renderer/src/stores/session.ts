@@ -7,7 +7,9 @@ import {
   pluginEnabled,
   type PluginId,
   type PluginSetting,
-  type PluginSettings
+  type PluginSettings,
+  type PluginStatus,
+  type PluginStatuses
 } from '@shared/plugins'
 import type { DisplayInfo, HardwareMapping, Notice, Quiz, ShowState } from '@shared/types'
 import { probeDuration } from '../lib/media'
@@ -32,6 +34,8 @@ export const useSession = defineStore('session', () => {
   const libraryDir = ref('')
   const airplay = shallowRef<AirPlayDevice[]>([])
   const plugins = shallowRef<PluginSettings>({})
+  /** Wat main van elke plug-in duwt die aan staat; zie PluginHost.publish. */
+  const pluginStatus = shallowRef<PluginStatuses>({})
   const notices = ref<Notice[]>([])
   const ready = ref(false)
 
@@ -150,6 +154,16 @@ export const useSession = defineStore('session', () => {
   // ── Plug-ins ────────────────────────────────────────────────────────────────
   const pluginOn = (id: PluginId) => pluginEnabled(plugins.value, id)
 
+  /** De laatste status van een plug-in; null als hij uit staat of nog niets meldde. */
+  function statusOf<Id extends PluginId>(id: Id): PluginStatus<Id> | null {
+    return (pluginStatus.value[id] as PluginStatus<Id> | undefined) ?? null
+  }
+
+  function setPluginStatus(id: PluginId, status: unknown) {
+    const { [id]: _, ...rest } = pluginStatus.value
+    pluginStatus.value = (status === null ? rest : { ...rest, [id]: status }) as PluginStatuses
+  }
+
   function setPlugin(id: PluginId, setting: PluginSetting) {
     plugins.value = { ...plugins.value, [id]: setting }
     void api.setPlugin(id, JSON.parse(JSON.stringify(setting)))
@@ -169,6 +183,7 @@ export const useSession = defineStore('session', () => {
     libraryDir.value = snap.libraryDir
     airplay.value = snap.airplay
     plugins.value = snap.plugins
+    pluginStatus.value = snap.pluginStatus
 
     api.onQuiz((q, dir) => {
       applyRemoteQuiz(q, dir)
@@ -180,6 +195,7 @@ export const useSession = defineStore('session', () => {
     api.onDisplays((d) => (displays.value = d))
     api.onAirPlay((d) => (airplay.value = d))
     api.onPlugins((p) => (plugins.value = p))
+    api.onPluginStatus(setPluginStatus)
     api.onSaved((d) => (dirty.value = d))
     api.onNotice((n) => notify(n))
     ready.value = true
@@ -197,6 +213,7 @@ export const useSession = defineStore('session', () => {
     libraryDir,
     airplay,
     plugins,
+    pluginStatus,
     notices,
     ready,
     live,
@@ -209,6 +226,7 @@ export const useSession = defineStore('session', () => {
     notify,
     dismiss,
     pluginOn,
+    statusOf,
     setPlugin
   }
 })

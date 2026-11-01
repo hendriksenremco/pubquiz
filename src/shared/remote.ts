@@ -7,7 +7,7 @@ import { z } from 'zod'
 import type { ShowCommand } from './ipc'
 import { LightSchema, quizLights, type Light, type LightStatus } from './light'
 import { adjacentFragment } from './autoplay'
-import { definePlugin } from './plugin'
+import { action, definePlugin, typeOnly } from './plugin'
 import {
   activeRound,
   adjacentRound,
@@ -28,7 +28,12 @@ export const REMOTE = definePlugin({
   description:
     'De show bedienen met een telefoon of tablet op hetzelfde wifi-netwerk, via een QR-code.',
   /** De geheime sleutel uit de QR-code; te kort of ontbreekt = main maakt een nieuwe. */
-  config: z.object({ key: z.string().min(20).optional().catch(undefined) }).catch({})
+  config: z.object({ key: z.string().min(20).optional().catch(undefined) }).catch({}),
+  status: typeOnly<RemoteLink>(),
+  actions: {
+    /** Een nieuwe sleutel: telefoons met de oude code kunnen dan niets meer. */
+    renew: action<RemoteResult>()(z.undefined())
+  }
 })
 
 /** Wat de telefoon toont. */

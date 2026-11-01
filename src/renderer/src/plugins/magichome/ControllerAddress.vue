@@ -19,7 +19,7 @@ async function test() {
   status.value = null
   testing.value = !!tested
   if (!tested) return
-  const result = (await api.pluginInvoke('magichome', 'probe', tested)) as MagicHomeProbe | null
+  const result = await api.pluginAct('magichome', 'probe', tested)
   // Intussen een ander adres ingevuld: de test daarvan telt.
   if (tested !== host.value) return
   status.value = result

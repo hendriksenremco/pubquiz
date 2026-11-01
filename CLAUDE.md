@@ -150,7 +150,8 @@ Plug-ins zijn optionele extra's. Je zet ze per Mac aan of uit bij Instellingen (
 **Waar ze staan**
 
 - `src/shared/plugin.ts`: `definePlugin` en de hulpjes voor quizgegevens (`pluginData`, `setPluginData`, `resolvePluginData`: slide ⊕ ronde ⊕ quiz).
-- Elke plug-in heeft één definitie met zod-schema's voor zijn instellingen (`config`) en quizgegevens (`data`): `MAGICHOME` in `src/shared/light.ts`, `REMOTE` in `src/shared/remote.ts`.
+- Elke plug-in heeft één definitie met zod-schema's voor zijn instellingen (`config`) en quizgegevens (`data`), het type van zijn status (`status`) en zijn acties (`actions`): `MAGICHOME` in `src/shared/light.ts`, `REMOTE` in `src/shared/remote.ts`.
+- Status wordt geduwd, niet gevraagd: een plug-in roept `host.publish(status)` aan, main stuurt alleen een echte verandering, hooguit eens per 250 ms (`src/main/plugin-status.ts`). Vensters lezen `session.statusOf(id)` en vragen acties met `pluginAct(id, naam, invoer)`; main controleert de invoer met de definitie.
 - `src/shared/plugins.ts`: de lijst met plug-ins, en `configOf` voor gecontroleerde instellingen.
 - `src/main/plugins.ts`: het deel in main. `FACTORIES` maakt elke plug-in, met een `PluginHost`.
 - `src/renderer/src/plugins/index.ts`: koppelt componenten aan `PluginSlot`-plekken in de app.

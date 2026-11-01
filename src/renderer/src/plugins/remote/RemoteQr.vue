@@ -1,22 +1,20 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed } from 'vue'
 import { encode } from 'uqr'
-import type { RemoteLink } from '@shared/remote'
+import { useSession } from '../../stores/session'
 
 /**
  * De QR-code die een telefoon of tablet naar de afstandsbediening brengt, met het adres en wie er
- * verbonden is. "Nieuwe code" sluit alle telefoons met de oude code buiten.
+ * verbonden is. "Nieuwe code" sluit alle telefoons met de oude code buiten. Main duwt een nieuw
+ * adres (ander netwerk) en elk apparaat dat verbindt.
  */
 const api = window.pubquiz
-/** Wie er verbonden is, en een ander netwerk (andere locatie), zien zonder het paneel te sluiten. */
-const REFRESH_MS = 2000
+const session = useSession()
 
-const link = ref<RemoteLink | null>(null)
-const loaded = ref(false)
+const link = computed(() => session.statusOf('remote'))
 
-async function load(action: 'link' | 'renew' = 'link') {
-  link.value = (await api.pluginInvoke('remote', action)) as RemoteLink | null
-  loaded.value = true
+function renew() {
+  void api.pluginAct('remote', 'renew', undefined)
 }
 
 const qr = computed(() =>
@@ -33,15 +31,6 @@ const devices = computed(() => {
   const n = link.value?.devices ?? 0
   if (n === 0) return 'Nog niets verbonden'
   return n === 1 ? '1 apparaat verbonden' : `${n} apparaten verbonden`
-})
-
-let timer: ReturnType<typeof setInterval> | null = null
-onMounted(() => {
-  void load()
-  timer = setInterval(() => void load(), REFRESH_MS)
-})
-onBeforeUnmount(() => {
-  if (timer) clearInterval(timer)
 })
 </script>
 
@@ -69,13 +58,13 @@ onBeforeUnmount(() => {
         <button
           class="btn btn-ghost btn-sm"
           title="Telefoons met de oude code kunnen dan niets meer"
-          @click="load('renew')"
+          @click="renew"
         >
           Nieuwe code
         </button>
       </div>
     </template>
-    <p v-else-if="loaded" class="muted tip">
+    <p v-else-if="link" class="muted tip">
       Geen netwerk gevonden. Verbind deze Mac met het wifi-netwerk waar je telefoon op zit.
     </p>
   </div>
