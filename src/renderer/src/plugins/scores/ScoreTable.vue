@@ -108,7 +108,7 @@ async function clear() {
                   :title="t('removeTeam')"
                   @click="remove(team.id, team.name)"
                 >
-                  <Icon name="x" :size="14" />
+                  <Icon name="trash" :size="14" />
                 </button>
               </td>
             </tr>
