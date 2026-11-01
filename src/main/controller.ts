@@ -16,6 +16,7 @@ import { PLUGIN_OFF, PLUGINS, type PluginId, type PluginSetting } from '@shared/
 import { QuizSchema } from '@shared/quiz-schema'
 import { findRound } from '@shared/resolve'
 import { ROUND_FILE_EXT, type RoundImport } from '@shared/round-file'
+import { ROUND_LINK_ORIGIN, roundLinkSource } from '@shared/round-link'
 import type { TemplateOptions } from '@shared/template'
 import type { HardwareMapping, Notice, Quiz, ShowState } from '@shared/types'
 import { AirPlayBrowser } from './airplay'
@@ -37,12 +38,13 @@ import {
 } from './quiz-files'
 import { appLocale } from './locale'
 import { locateMedia } from './media-path'
-import { DIALOG_MESSAGES, errorText, NOTICE_MESSAGES, TOUR_MESSAGES } from './messages'
+import { DIALOG_MESSAGES, errorText, NoticeError, NOTICE_MESSAGES, TOUR_MESSAGES } from './messages'
 import { renderFormPdf } from './pdf'
 import { Plugins } from './plugins'
 import { SaveQueue } from './save-queue'
 import { Settings, type RecoveryData } from './settings'
 import { readRoundFile } from './round-file'
+import { downloadRoundFile } from './round-link'
 import { ShowController } from './show'
 import { headless } from './windows'
 
@@ -394,6 +396,21 @@ export class AppController {
     }
     this.roundFiles.push(path)
     this.operator?.webContents.send(IPC.roundFiles)
+  }
+
+  /**
+   * De link vanaf de site: `quiznote://ronde?url=https://quiznote.app/…`. Haalt het rondebestand
+   * op en importeert het daarna net als een bestand uit Finder. Andere adressen weigert hij.
+   */
+  async openRoundLink(link: string): Promise<void> {
+    try {
+      const origin = process.env['PUBQUIZ_ROUND_LINK_ORIGIN'] || ROUND_LINK_ORIGIN
+      const source = roundLinkSource(link, origin)
+      if (!source) throw new NoticeError('badRoundLink')
+      await this.openRoundFile(await downloadRoundFile(source, origin))
+    } catch (err) {
+      this.notify('error', this.failed(err))
+    }
   }
 
   takeRoundFiles(): string[] {

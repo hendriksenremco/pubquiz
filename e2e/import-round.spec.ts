@@ -1,5 +1,7 @@
 import { expect, test, type ElectronApplication, type Page } from '@playwright/test'
 import { readFileSync, rmSync, writeFileSync } from 'fs'
+import { createServer, type Server } from 'http'
+import type { AddressInfo } from 'net'
 import { dirname, join } from 'path'
 import { writeZip } from '../src/main/zip'
 import { copyFixture, launch, tempDir } from './helpers'
@@ -9,6 +11,9 @@ let operator: Page
 let userData: string
 let quizDir: string
 let files: string
+/** Speelt quiznote.app na voor de link `quiznote://ronde?url=…`. */
+let site: Server
+let siteOrigin: string
 
 /** 60 × 80 pixels, oranje. */
 const PNG =
@@ -18,11 +23,25 @@ test.beforeAll(async () => {
   userData = tempDir('userdata')
   files = tempDir('rondes')
   quizDir = copyFixture()
-  ;({ app, operator } = await launch(userData, quizDir))
+  site = createServer((req, res) => {
+    const name = decodeURIComponent((req.url ?? '').slice(1))
+    try {
+      res.end(readFileSync(join(files, name)))
+    } catch {
+      res.statusCode = 404
+      res.end()
+    }
+  })
+  await new Promise<void>((done) => site.listen(0, '127.0.0.1', done))
+  siteOrigin = `http://127.0.0.1:${(site.address() as AddressInfo).port}`
+  ;({ app, operator } = await launch(userData, quizDir, {
+    PUBQUIZ_ROUND_LINK_ORIGIN: siteOrigin
+  }))
 })
 
 test.afterAll(async () => {
   await app?.close()
+  site?.close()
   for (const dir of [userData, files]) rmSync(dir, { recursive: true, force: true })
   rmSync(dirname(quizDir), { recursive: true, force: true })
 })
@@ -52,6 +71,16 @@ async function openInFinder(path: string) {
   await app.evaluate(({ app }, file) => {
     app.emit('open-file', { preventDefault() {} }, file)
   }, path)
+}
+
+/** Zoals een klik op "Openen in QuizNote" op de site: macOS geeft de app een `open-url`. */
+async function openLink(url: string) {
+  await app.evaluate(
+    ({ app }, link) => {
+      app.emit('open-url', { preventDefault() {} }, link)
+    },
+    `quiznote://ronde?url=${encodeURIComponent(url)}`
+  )
 }
 
 const savedQuiz = () => JSON.parse(readFileSync(join(quizDir, 'quiz.json'), 'utf8'))
@@ -152,4 +181,25 @@ test('vraagt in welke quiz als er geen quiz open is', async () => {
   await expect
     .poll(() => savedQuiz().rounds.some((r: { title: string }) => r.title === 'Film en tv'))
     .toBe(true)
+})
+
+test('importeert een ronde via een link vanaf de site', async () => {
+  roundFile('Muziekkennis', 'Muziekkennis')
+  await openLink(`${siteOrigin}/Muziekkennis.quiznoteronde`)
+  await expect(
+    operator.locator('.notice', { hasText: 'Ronde “Muziekkennis” geïmporteerd' })
+  ).toBeVisible()
+  await expect(operator.locator('.sidebar .round.on .round-title')).toHaveText('Muziekkennis')
+  await expect
+    .poll(() => savedQuiz().rounds.some((r: { title: string }) => r.title === 'Muziekkennis'))
+    .toBe(true)
+})
+
+test('weigert een link naar een andere site', async () => {
+  const rounds = savedQuiz().rounds.length
+  await openLink('https://example.com/Muziekkennis.quiznoteronde')
+  await expect(
+    operator.locator('.notice', { hasText: 'QuizNote opent alleen rondes van quiznote.app' })
+  ).toBeVisible()
+  expect(savedQuiz().rounds).toHaveLength(rounds)
 })

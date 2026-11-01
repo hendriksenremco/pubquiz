@@ -6,6 +6,7 @@ import type { TemplateOptions } from '@shared/template'
 import type { FormOptions } from '@shared/forms'
 import type { PluginId, PluginSetting } from '@shared/plugins'
 import { isRoundFile } from '@shared/round-file'
+import { isRoundLink, ROUND_LINK_SCHEME } from '@shared/round-link'
 import type { HardwareMapping, Quiz } from '@shared/types'
 import { aboutPanelOptions } from './about'
 import { AgentBridge, aiSetup, connectClaude, handleAgent } from './agent'
@@ -29,7 +30,7 @@ if (process.env['PUBQUIZ_MUTE']) app.commandLine.appendSwitch('mute-audio')
 // macOS kan een .pubquiz openen vóór `ready`; bewaar het pad tot de controller er is.
 let pendingOpen: string | null =
   process.argv.find((arg) => arg.endsWith(QUIZ_EXT) || arg.endsWith(`${QUIZ_EXT}/`)) ?? null
-// Net zo voor rondebestanden (issue #99); die wachten ook tot het venster er is.
+// Net zo voor rondebestanden en links vanaf de site (issue #99); die wachten tot het venster er is.
 const pendingRounds: string[] = process.argv.filter(isRoundFile)
 let controller: AppController | null = null
 let bridge: AgentBridge | null = null
@@ -42,6 +43,14 @@ app.on('open-file', (event, path) => {
     else pendingRounds.push(path)
   } else if (controller) void controller.openQuiz(path)
   else pendingOpen = path
+})
+
+// Een link `quiznote://ronde?url=…` vanaf de site (issue #99).
+app.on('open-url', (event, url) => {
+  event.preventDefault()
+  if (!isRoundLink(url)) return
+  if (controller?.operator) void controller.openRoundLink(url)
+  else pendingRounds.push(url)
 })
 
 if (!app.requestSingleInstanceLock()) app.quit()
@@ -66,6 +75,8 @@ app.whenReady().then(async () => {
   // haalt het icoon uit build/icon.icns.
   else if (!app.isPackaged) app.dock?.setIcon(join(__dirname, '../../resources/icon.png'))
   configurePermissions(session.defaultSession, process.env['ELECTRON_RENDERER_URL'])
+  // Links vanaf de site. Alleen de gebouwde app: anders registreert macOS de kale Electron-binary.
+  if (app.isPackaged && !headless) app.setAsDefaultProtocolClient(ROUND_LINK_SCHEME)
 
   // De app heette eerst Pubquiz en daarna even Quizmeister; zijn instellingen verhuizen één keer mee.
   if (!process.env['PUBQUIZ_USER_DATA']) {
@@ -124,7 +135,9 @@ app.whenReady().then(async () => {
     operator.close()
   })
   operator.webContents.once('did-finish-load', async () => {
-    for (const path of pendingRounds.splice(0)) await ctl.openRoundFile(path)
+    for (const item of pendingRounds.splice(0)) {
+      await (isRoundLink(item) ? ctl.openRoundLink(item) : ctl.openRoundFile(item))
+    }
   })
   operator.on('closed', () => {
     ctl.operator = null
