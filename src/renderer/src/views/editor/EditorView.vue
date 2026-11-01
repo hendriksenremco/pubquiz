@@ -179,14 +179,9 @@ defineExpose({ importRounds })
         </div>
         <Popover :width="250">
           <template #trigger="{ open, toggle }">
-            <button
-              class="nav-item add-round"
-              :class="{ active: open }"
-              :aria-label="t('addRound')"
-              @click="toggle"
-            >
+            <button class="nav-item add-round" :class="{ active: open }" @click="toggle">
               <Icon name="plus" :size="14" />
-              <span>{{ t('round') }}</span>
+              <span>{{ t('addRound') }}</span>
             </button>
           </template>
           <template #default="{ close }">
@@ -213,7 +208,6 @@ defineExpose({ importRounds })
         <button class="nav-item" :class="{ on: selected === 'media' }" @click="page = 'media'">
           <Icon name="images" />
           <span class="grow">{{ t('media') }}</span>
-          <span class="badge">{{ quiz.assets.length }}</span>
         </button>
         <button class="nav-item" :class="{ on: selected === 'setup' }" @click="page = 'setup'">
           <Icon name="sliders" />
@@ -299,12 +293,6 @@ defineExpose({ importRounds })
 
 .nav-item.on .icon {
   color: var(--accent);
-}
-
-.badge {
-  color: var(--faint);
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
 }
 
 .rounds-head {
