@@ -28,6 +28,7 @@ import { parseAction } from '@shared/plugin'
 import { PLUGINS, type PluginConfig, type PluginId } from '@shared/plugins'
 import { REMOTE_ERRORS } from '@shared/show-messages'
 import type { ActionHandlers, MainPlugin, PluginHost } from './plugins'
+import { NOTICE_MESSAGES } from './messages'
 import { mimeType } from './range'
 
 /** "QUIZ" op een telefoontoetsenbord. Vast, zodat een bladwijzer op de telefoon blijft werken. */
@@ -172,7 +173,12 @@ export class RemotePlugin implements MainPlugin<'remote'> {
         error = err
       }
     }
-    this.host.notify('error', `De afstandsbediening kon niet starten: ${(error as Error).message}`)
+    this.host.notify(
+      'error',
+      NOTICE_MESSAGES.in(this.options.locale ?? 'nl')('remoteFailed', {
+        error: (error as Error).message
+      })
+    )
     return null
   }
 

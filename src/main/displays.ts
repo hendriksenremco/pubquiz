@@ -1,5 +1,7 @@
 import { BrowserWindow, powerSaveBlocker, screen, type Display } from 'electron'
 import type { DisplayInfo, HardwareMapping, Quiz, ScreenSlot } from '@shared/types'
+import { appLocale } from './locale'
+import { NOTICE_MESSAGES } from './messages'
 import { findDisplay } from './settings'
 import { loadRoute, reveal, webPreferences } from './windows'
 
@@ -168,7 +170,7 @@ export class ScreenWindows {
     const win = new BrowserWindow({
       width: 960,
       height: 540,
-      title: `${slot.name} (venster)`,
+      title: NOTICE_MESSAGES.in(appLocale())('windowed', { name: slot.name }),
       backgroundColor: '#000000',
       show: false,
       webPreferences: webPreferences()

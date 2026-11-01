@@ -1,17 +1,20 @@
 import { app, Menu, type MenuItemConstructorOptions } from 'electron'
 import { IPC, type MenuAction } from '@shared/ipc'
 import type { AppController } from './controller'
+import { appLocale } from './locale'
+import { MENU_MESSAGES } from './messages'
 
 export function buildMenu(controller: AppController): void {
   const send = (action: MenuAction) => controller.operator?.webContents.send(IPC.menu, action)
+  const t = MENU_MESSAGES.in(appLocale())
 
   const template: MenuItemConstructorOptions[] = [
     {
       role: 'appMenu',
       submenu: [
-        { role: 'about', label: `Over ${app.name}` },
+        { role: 'about', label: t('about', { app: app.name }) },
         { type: 'separator' },
-        { label: 'Instellingen…', accelerator: 'CmdOrCtrl+,', click: () => send('settings') },
+        { label: t('settings'), accelerator: 'CmdOrCtrl+,', click: () => send('settings') },
         { type: 'separator' },
         { role: 'services' },
         { type: 'separator' },
@@ -23,23 +26,23 @@ export function buildMenu(controller: AppController): void {
       ]
     },
     {
-      label: 'Archief',
+      label: t('file'),
       submenu: [
-        { label: 'Nieuwe quiz…', accelerator: 'CmdOrCtrl+N', click: () => send('new') },
-        { label: 'Open quiz…', accelerator: 'CmdOrCtrl+O', click: () => send('open') },
+        { label: t('newQuiz'), accelerator: 'CmdOrCtrl+N', click: () => send('new') },
+        { label: t('openQuiz'), accelerator: 'CmdOrCtrl+O', click: () => send('open') },
         { type: 'separator' },
-        { label: 'Importeer uit zip…', click: () => send('importZip') },
-        { label: 'Exporteer als zip…', click: () => send('exportZip') },
+        { label: t('importZip'), click: () => send('importZip') },
+        { label: t('exportZip'), click: () => send('exportZip') },
         { type: 'separator' },
-        { label: 'Toon in Finder', click: () => send('reveal') }
+        { label: t('reveal'), click: () => send('reveal') }
       ]
     },
     {
-      label: 'Wijzig',
+      label: t('edit'),
       submenu: [
         // Ongedaan maken van quiz-wijzigingen loopt via de renderer; in tekstvelden doet die het native.
-        { label: 'Herstel', accelerator: 'CmdOrCtrl+Z', click: () => send('undo') },
-        { label: 'Opnieuw', accelerator: 'Shift+CmdOrCtrl+Z', click: () => send('redo') },
+        { label: t('undo'), accelerator: 'CmdOrCtrl+Z', click: () => send('undo') },
+        { label: t('redo'), accelerator: 'Shift+CmdOrCtrl+Z', click: () => send('redo') },
         { type: 'separator' },
         { role: 'cut' },
         { role: 'copy' },
@@ -48,7 +51,7 @@ export function buildMenu(controller: AppController): void {
       ]
     },
     {
-      label: 'Weergave',
+      label: t('view'),
       submenu: [
         { role: 'reload' },
         ...(app.isPackaged ? [] : [{ role: 'toggleDevTools' } as const]),
