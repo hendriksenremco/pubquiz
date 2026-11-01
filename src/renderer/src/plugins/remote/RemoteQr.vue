@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { encode } from 'uqr'
+import Icon from '../../components/Icon.vue'
 import { locale } from '../../lib/locale'
 import { useSession } from '../../stores/session'
 import { REMOTE_QR_MESSAGES } from './messages'
@@ -59,7 +60,7 @@ const devices = computed(() => {
           <span class="dot" />{{ devices }}
         </span>
         <button class="btn btn-ghost btn-sm" :title="t('newCodeTitle')" @click="renew">
-          {{ t('newCode') }}
+          <Icon name="restart" :size="14" /> {{ t('newCode') }}
         </button>
       </div>
     </template>
