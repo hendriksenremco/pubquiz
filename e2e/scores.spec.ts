@@ -127,13 +127,15 @@ test('een slide Tussenstand toont de stand op het scherm', async () => {
     await operator.getByRole('button', { name: 'Bewerken' }).click()
     await operator.locator('.sidebar .round').first().click()
 
-    // Achteraan toegevoegd, als titelslide met de markering van de plug-in.
+    // Een titelslide met de markering van de plug-in (na de gekozen slide, of achteraan).
     await addSlide.click()
     await operator.locator('.menu-item', { hasText: 'Tussenstand' }).click()
     await expect
-      .poll(() => savedSlides().at(-1))
-      .toEqual(['title', 'Tussenstand', { scores: { standings: true } }])
-    const thumb = operator.locator('.slide-list .item').last()
+      .poll(() => savedSlides().filter((s: unknown[]) => s[2]))
+      .toEqual([['title', 'Tussenstand', { scores: { standings: true } }]])
+    const thumb = operator
+      .locator('.slide-list .item')
+      .filter({ has: operator.locator('.standing') })
     await expect(thumb).toContainText('Tussenstand')
     await expect(thumb.locator('.standing')).toHaveCount(4)
     await operator.waitForTimeout(300)
