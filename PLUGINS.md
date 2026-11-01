@@ -1,6 +1,6 @@
 # Plug-ins generieker maken: voorstel
 
-Stand op 1 november 2026. Dit is een voorstel; er is nog niets van gebouwd. De vraag aan Remco staat in een issue met het label `vraag`.
+Stand op 1 november 2026. Goedgekeurd (issue #31), met keuze B voor de knoppen. Stap 1 is gebouwd; de rest volgt in eigen pull requests.
 
 ## Hoe het nu zit
 
@@ -102,7 +102,7 @@ Daarmee wordt de afstandsbediening een gewone plug-in die van de andere niets we
 
 Elke stap is een eigen pull request, zonder verschil in beeld (behalve stap 3 op de telefoon, waar de knoppen op dezelfde plek blijven):
 
-1. `definePlugin` en de generieke hulpjes voor quizgegevens; `light.ts` en de config van beide plug-ins erop overzetten.
+1. `definePlugin` en de generieke hulpjes voor quizgegevens; `light.ts` en de config van beide plug-ins erop overzetten. **Klaar.** De acties (`actions`, met `remoteActions` voor wat de telefoon en de AI mogen) komen in stap 2 en 3.
 2. Status duwen (`publish`, `IPC.pluginStatus`, de store); de timers in `LiveLight.vue` en `RemoteQr.vue` weg.
 3. De afstandsbediening los van MagicHome: `plugins` in `RemoteView`, de actie `plugin`, `PluginSlot` op de telefoon.
 4. Pas bij Spotify of YouTube: geheimen, en eventueel een eigen venster.

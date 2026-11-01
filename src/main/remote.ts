@@ -24,6 +24,7 @@ import {
   type RemoteView
 } from '@shared/remote'
 import type { Quiz, ShowState } from '@shared/types'
+import type { PluginConfig } from '@shared/plugins'
 import type { MainPlugin, PluginHost } from './plugins'
 import { mimeType } from './range'
 
@@ -45,14 +46,16 @@ export interface RemoteOptions {
   port?: number
 }
 
+type RemoteConfig = PluginConfig<'remote'>
+
 /**
  * Plug-in Afstandsbediening: een webserver op het lokale netwerk met de pagina voor de telefoon
  * (src/renderer/remote.html), de toestand van de show als server-sent events en een adres voor
  * de knoppen. Alleen wie de sleutel uit de QR-code heeft, mag iets; een nieuwe code sluit alle
  * telefoons buiten. Het licht loopt via de plug-in MagicHome-licht, als die aan staat.
  */
-export class RemotePlugin implements MainPlugin {
-  private config: Record<string, unknown> = {}
+export class RemotePlugin implements MainPlugin<RemoteConfig> {
+  private config: RemoteConfig = {}
   private key = ''
   private server: Server | null = null
   /** De poort waarop de server luistert, zodra hij luistert; null = hij kon niet starten. */
@@ -68,13 +71,13 @@ export class RemotePlugin implements MainPlugin {
   private ping: ReturnType<typeof setInterval> | null = null
 
   constructor(
-    private readonly host: PluginHost,
+    private readonly host: PluginHost<RemoteConfig>,
     private readonly options: RemoteOptions
   ) {}
 
-  configure(config: Record<string, unknown>): void {
+  configure(config: RemoteConfig): void {
     this.config = config
-    const key = typeof config.key === 'string' && config.key.length >= 20 ? config.key : null
+    const key = config.key ?? null
     if (!key) {
       this.key = newKey()
       this.host.saveConfig({ ...config, key: this.key })
