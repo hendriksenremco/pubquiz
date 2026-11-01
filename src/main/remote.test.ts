@@ -3,10 +3,12 @@ import { createServer } from 'http'
 import type { AddressInfo } from 'net'
 import { tmpdir } from 'os'
 import { join } from 'path'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi, type Mock } from 'vitest'
 import { createQuiz, createRound, createShowState, createSlide } from '@shared/factory'
-import type { RemoteView } from '@shared/remote'
+import type { Locale } from '@shared/i18n'
+import type { RemoteLink, RemoteView } from '@shared/remote'
 import type { ShowState } from '@shared/types'
+import type { PluginConfig } from '@shared/plugins'
 import type { PluginHost } from './plugins'
 import { lanAddress, RemotePlugin } from './remote'
 
@@ -26,22 +28,21 @@ function fakeBuild(): string {
 let plugin: RemotePlugin | null = null
 afterEach(() => plugin?.stop())
 
-async function setup(light: unknown = null) {
+async function setup(light: unknown = null, locale?: Locale) {
   const dir = fakeBuild()
   const host = {
     mediaFile: (file: string) => join(dir, 'quiz', file),
     notify: vi.fn(),
     command: vi.fn(),
-    saveConfig: vi.fn((config: Record<string, unknown>) => plugin!.configure(config)),
-    invoke: vi.fn(async (_id: string, action: string) =>
-      action === 'status' ? light : { ok: true }
-    ),
-    changed: vi.fn()
-  } satisfies PluginHost
-  plugin = new RemotePlugin(host, { page: { dir }, host: '127.0.0.1', port: 0 })
+    saveConfig: vi.fn((config: PluginConfig<'remote'>) => plugin!.configure(config)),
+    publish: vi.fn(),
+    status: vi.fn((): any => light),
+    act: vi.fn(async (): Promise<any> => ({ ok: true })),
+    remoteAct: vi.fn(async (): Promise<unknown> => ({ ok: true }))
+  } satisfies PluginHost<'remote'>
+  plugin = new RemotePlugin(host, { page: { dir }, host: '127.0.0.1', port: 0, locale })
   plugin.configure({})
-  const link = (await plugin.invoke('link'))!
-  const url = new URL(link.url!)
+  const url = new URL((await published(host)).url!)
   const key = url.searchParams.get('key')!
   const quiz = createQuiz('Kroegquiz')
   const round = createRound('normal', 1)
@@ -62,6 +63,19 @@ async function setup(light: unknown = null) {
   const act = (body: unknown, k = key) =>
     fetch(api('/api/action', k), { method: 'POST', body: JSON.stringify(body) })
   return { host, plugin, url, key, quiz, live, api, act }
+}
+
+/** Wat de plug-in het laatst publiceerde (adres en apparaten), zodra er iets is. */
+async function published(
+  host: { publish: Mock },
+  check: (link: RemoteLink) => boolean = () => true
+) {
+  let link: RemoteLink | undefined
+  await vi.waitFor(() => {
+    link = host.publish.mock.lastCall?.[0]
+    expect(link && check(link)).toBe(true)
+  })
+  return link!
 }
 
 /** Leest de server-sent events: elke `next()` is de volgende toestand. */
@@ -104,6 +118,8 @@ describe('RemotePlugin', () => {
     const { url } = await setup()
     const page = await fetch(`${url.origin}/`)
     expect(page.headers.get('content-type')).toContain('text/html')
+    expect(page.headers.get('x-frame-options')).toBe('DENY')
+    expect(page.headers.get('referrer-policy')).toBe('no-referrer')
     expect(await page.text()).toContain('Afstandsbediening')
     const script = await fetch(`${url.origin}/assets/remote.js`)
     expect(script.headers.get('content-encoding')).toBe('gzip')
@@ -132,7 +148,7 @@ describe('RemotePlugin', () => {
   })
 
   it('stuurt de toestand en elke wijziging', async () => {
-    const { plugin, quiz, live, api } = await setup()
+    const { host, plugin, quiz, live, api } = await setup()
     const events = await subscribe(api('/api/events'))
     expect(events.res.headers.get('content-type')).toBe('text/event-stream')
     expect(await events.next()).toMatchObject({ quiz: null, live: false })
@@ -145,8 +161,20 @@ describe('RemotePlugin', () => {
       step: { target: 'slides', label: 'Slide 1 van 2', next: true },
       screen: { slide: { layout: 'title', title: 'Ronde 1' } }
     })
-    expect(await plugin.invoke('link')).toMatchObject({ devices: 1 })
+    expect(await published(host, (link) => link.devices === 1)).toMatchObject({ devices: 1 })
     await events.cancel()
+  })
+
+  it('meldt fouten in de taal van de app', async () => {
+    const { act } = await setup(null, 'en')
+    expect(await (await act({ type: 'step', direction: 'next' })).json()).toEqual({
+      ok: false,
+      error: 'Start the show on the Mac first'
+    })
+    expect(await (await act({ type: 'step', direction: 'next' }, 'fout')).json()).toEqual({
+      ok: false,
+      error: 'Scan the QR code again'
+    })
   })
 
   it('geeft knoppen door aan de show, alleen als die loopt', async () => {
@@ -174,50 +202,99 @@ describe('RemotePlugin', () => {
     expect((await act('geen json')).status).toBe(400)
   })
 
-  it('kiest het licht via MagicHome, en meldt als die uit staat', async () => {
+  it('geeft een actie van een plug-in door aan main, en meldt als die uit staat', async () => {
     const red = { type: 'color', color: '#ff0000' }
-    const on = await setup({ light: null, manual: false })
+    const choose = { type: 'plugin', id: 'magichome', action: 'choose', input: red }
+    const on = await setup({ light: null, manual: false, quiz: [] })
     on.plugin.update(on.quiz, on.live())
-    expect((await on.act({ type: 'light', light: red })).status).toBe(200)
-    expect(on.host.invoke).toHaveBeenCalledWith('magichome', 'choose', red)
+    expect((await on.act(choose)).status).toBe(200)
+    expect(on.host.remoteAct).toHaveBeenCalledWith('magichome', 'choose', red)
+    on.host.remoteAct.mockResolvedValueOnce({ ok: false, error: 'Geen controller' })
+    expect(await (await on.act(choose)).json()).toEqual({ ok: false, error: 'Geen controller' })
     on.plugin.stop()
 
     const off = await setup()
-    off.host.invoke.mockResolvedValue(null)
+    off.host.remoteAct.mockResolvedValue(null)
     off.plugin.update(off.quiz, off.live())
-    const result = await off.act({ type: 'light', light: red })
-    expect(await result.json()).toEqual({ ok: false, error: 'Het licht staat uit op de Mac' })
+    const result = await off.act(choose)
+    expect(await result.json()).toEqual({ ok: false, error: 'MagicHome-licht staat uit op de Mac' })
+    off.plugin.stop()
+
+    // In het Engels ook de naam van de plug-in.
+    const en = await setup(null, 'en')
+    en.host.remoteAct.mockResolvedValue(null)
+    en.plugin.update(en.quiz, en.live())
+    expect(await (await en.act(choose)).json()).toEqual({
+      ok: false,
+      error: 'MagicHome lights is off on the Mac'
+    })
+  })
+
+  it('weigert een actie die de telefoon niet mag', async () => {
+    const { host, plugin, quiz, live, act } = await setup({ light: null, manual: false, quiz: [] })
+    plugin.update(quiz, live())
+    const red = { type: 'color', color: '#ff0000' }
+    for (const body of [
+      { type: 'plugin', id: 'magichome', action: 'probe', input: '192.168.1.10' },
+      { type: 'plugin', id: 'magichome', action: 'preview', input: red },
+      {
+        type: 'plugin',
+        id: 'magichome',
+        action: 'choose',
+        input: { type: 'color', color: 'rood' }
+      },
+      { type: 'plugin', id: 'remote', action: 'renew', input: undefined },
+      { type: 'plugin', id: 'onbekend', action: 'choose', input: red }
+    ]) {
+      const refused = await act(body)
+      expect(refused.status).toBe(403)
+      expect(await refused.json()).toEqual({ ok: false, error: 'Dat kan niet vanaf de telefoon' })
+    }
+    expect(host.remoteAct).not.toHaveBeenCalled()
   })
 
   it('toont meteen een licht dat op de Mac met de hand gekozen is', async () => {
     const red = { type: 'color', color: '#ff0000' }
-    const status: { light: unknown; manual: boolean } = { light: null, manual: false }
+    const status = { light: null as unknown, manual: false, quiz: [] }
     const { plugin, quiz, live, api } = await setup(status)
     plugin.update(quiz, live())
     const events = await subscribe(api('/api/events'))
-    expect(await events.next()).toMatchObject({ light: { light: null, manual: false } })
+    expect(await events.next()).toMatchObject({
+      plugins: [{ id: 'magichome', status: { light: null, manual: false } }]
+    })
     Object.assign(status, { light: red, manual: true })
-    plugin.changed()
-    expect(await events.next()).toMatchObject({ light: { light: red, manual: true } })
+    plugin.statusChanged()
+    expect(await events.next()).toMatchObject({
+      plugins: [{ id: 'magichome', status: { light: red, manual: true } }]
+    })
+    await events.cancel()
+  })
+
+  it('zonder plug-ins met knoppen voor de telefoon is de lijst leeg', async () => {
+    const { plugin, quiz, live, api } = await setup()
+    plugin.update(quiz, live())
+    const events = await subscribe(api('/api/events'))
+    expect(await events.next()).toMatchObject({ plugins: [] })
     await events.cancel()
   })
 
   it('een nieuwe code sluit verbonden telefoons buiten', async () => {
-    const { plugin, api, key } = await setup()
+    const { host, plugin, api, key } = await setup()
     const events = await subscribe(api('/api/events'))
     await events.next()
-    const renewed = await plugin.invoke('renew')
-    expect(renewed?.url).not.toContain(key)
+    expect(await plugin.actions.renew(undefined)).toEqual({ ok: true })
+    const renewed = await published(host, (link) => !link.url?.includes(key))
+    expect(renewed.url).toContain('?key=')
     expect(await events.closed()).toBe(true)
     expect((await fetch(api('/api/events'))).status).toBe(401)
   })
 })
 
 describe('RemotePlugin tijdens het ontwikkelen', () => {
-  it('haalt de pagina bij de Vite-server, met diens eigen hostnaam', async () => {
-    const seen: { url?: string; host?: string }[] = []
+  async function devSetup() {
+    const seen: { url?: string; host?: string; cookie?: string }[] = []
     const vite = createServer((req, res) => {
-      seen.push({ url: req.url, host: req.headers.host })
+      seen.push({ url: req.url, host: req.headers.host, cookie: req.headers.cookie })
       res.writeHead(200, { 'Content-Type': 'text/html' })
       res.end('van vite')
     })
@@ -227,20 +304,52 @@ describe('RemotePlugin tijdens het ontwikkelen', () => {
       notify: vi.fn(),
       command: vi.fn(),
       saveConfig: vi.fn(),
-      invoke: vi.fn(),
       mediaFile: vi.fn(),
-      changed: vi.fn()
+      publish: vi.fn(),
+      status: vi.fn(() => null),
+      act: vi.fn(async () => null),
+      remoteAct: vi.fn(async () => null)
     }
     plugin = new RemotePlugin(host, { page: { devServer }, host: '127.0.0.1', port: 0 })
+    const key = 'k'.repeat(22)
+    plugin.configure({ key })
+    const { origin } = new URL((await published(host)).url!)
+    return { seen, vite, devServer, origin, key }
+  }
+
+  it('haalt de pagina bij de Vite-server, met diens eigen hostnaam', async () => {
+    const { seen, vite, devServer, origin, key } = await devSetup()
     try {
-      plugin.configure({ key: 'k'.repeat(22) })
-      const { origin } = new URL((await plugin.invoke('link'))!.url!)
-      expect(await (await fetch(`${origin}/?key=${'k'.repeat(22)}`)).text()).toBe('van vite')
-      await fetch(`${origin}/src/remote/main.ts?t=1`)
+      const page = await fetch(`${origin}/?key=${key}`)
+      expect(await page.text()).toBe('van vite')
+      const cookie = page.headers.get('set-cookie')!
+      expect(cookie).toContain('HttpOnly')
+      expect(cookie).toContain('SameSite=Strict')
+      await fetch(`${origin}/src/remote/main.ts?t=1`, {
+        headers: { cookie: cookie.split(';')[0] }
+      })
       expect(seen).toEqual([
-        { url: '/remote.html', host: new URL(devServer).host },
-        { url: '/src/remote/main.ts?t=1', host: new URL(devServer).host }
+        { url: '/remote.html', host: new URL(devServer).host, cookie: undefined },
+        { url: '/src/remote/main.ts?t=1', host: new URL(devServer).host, cookie: undefined }
       ])
+    } finally {
+      vite.close()
+    }
+  })
+
+  it('geeft Vite niet vrij zonder sleutel', async () => {
+    const { seen, vite, origin, key } = await devSetup()
+    try {
+      expect((await fetch(`${origin}/`)).status).toBe(401)
+      expect((await fetch(`${origin}/?key=fout`)).status).toBe(401)
+      expect((await fetch(`${origin}/@fs/etc/passwd`)).status).toBe(401)
+      const wrong = { headers: { cookie: 'quiznote-remote=fout' } }
+      expect((await fetch(`${origin}/src/remote/main.ts`, wrong)).status).toBe(401)
+      const right = { headers: { cookie: `quiznote-remote=${key}` } }
+      expect(
+        (await fetch(`${origin}/src/remote/main.ts`, { ...right, method: 'POST' })).status
+      ).toBe(405)
+      expect(seen).toEqual([])
     } finally {
       vite.close()
     }

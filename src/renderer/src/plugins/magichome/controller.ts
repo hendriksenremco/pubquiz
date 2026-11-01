@@ -1,7 +1,7 @@
 import { computed, ref } from 'vue'
 import type { Light } from '@shared/light'
 import type { MagicHomeResult } from '@shared/magichome'
-import { PLUGIN_OFF } from '@shared/plugins'
+import { configOf, PLUGIN_OFF } from '@shared/plugins'
 import { useSession } from '../../stores/session'
 
 const api = window.pubquiz
@@ -10,9 +10,7 @@ const api = window.pubquiz
 export function useControllerHost() {
   const session = useSession()
   const setting = computed(() => session.plugins.magichome ?? PLUGIN_OFF)
-  const host = computed(() =>
-    typeof setting.value.config.host === 'string' ? setting.value.config.host : ''
-  )
+  const host = computed(() => configOf(session.plugins, 'magichome').host)
   function setHost(value: string) {
     if (value === host.value) return
     session.setPlugin('magichome', {
@@ -31,6 +29,6 @@ export const previewOn = ref(false)
 
 /** Laat een licht zien; null = klaar, de controller gaat terug naar hoe hij was. */
 export async function preview(light: Light | null): Promise<MagicHomeResult> {
-  const result = await api.pluginInvoke('magichome', 'preview', light ? { ...light } : null)
-  return (result as MagicHomeResult | null) ?? { ok: false, error: 'De plug-in staat uit' }
+  const result = await api.pluginAct('magichome', 'preview', light ? { ...light } : null)
+  return result ?? { ok: false, error: 'De plug-in staat uit' }
 }

@@ -1,6 +1,6 @@
 # Plug-ins generieker maken: voorstel
 
-Stand op 1 november 2026. Dit is een voorstel; er is nog niets van gebouwd. De vraag aan Remco staat in een issue met het label `vraag`.
+Stand op 1 november 2026. Goedgekeurd (issue #31), met keuze B voor de knoppen. Stap 1, 2 en 3 zijn gebouwd; stap 4 volgt pas bij Spotify of YouTube.
 
 ## Hoe het nu zit
 
@@ -53,16 +53,18 @@ export const magichome = definePlugin({
   config: z.object({ host: z.string().default('') }),
   /** Quizgegevens op de quiz, een ronde of een slide; ongeldig telt als niets. */
   data: z.object({ light: LightSchema }),
-  /** Wat de vensters en de telefoon te zien krijgen. */
-  status: LightStatusSchema,
-  /** Wat een knop, de telefoon of de AI kan vragen. */
-  actions: z.discriminatedUnion('type', [
-    z.object({ type: z.literal('choose'), light: LightSchema.nullable() }),
-    z.object({ type: z.literal('preview'), light: LightSchema.nullable() }),
-    z.object({ type: z.literal('probe'), host: z.string() })
-  ])
+  /** Wat de vensters en de telefoon te zien krijgen (alleen een type, main maakt het zelf). */
+  status: typeOnly<LightStatus>(),
+  /** Wat een knop, de telefoon of de AI kan vragen: per actie de invoer en wat hij teruggeeft. */
+  actions: {
+    choose: action<MagicHomeResult>()(LightSchema.nullable()),
+    preview: action<MagicHomeResult>()(LightSchema.nullable()),
+    probe: action<MagicHomeProbe>()(z.string())
+  }
 })
 ```
+
+Gebouwd zijn de acties een object met per naam een schema, geen `discriminatedUnion`: zo heeft elke actie zijn eigen type voor wat hij teruggeeft, en kan stap 3 de acties voor de telefoon bij naam noemen (`remoteActions: ['choose']`).
 
 - `PLUGINS` wordt de lijst van deze definities. `PluginId`, de config, de status en de acties volgen eruit, getypeerd.
 - Generieke hulpjes voor quizgegevens: `pluginData(def, holder)`, `setPluginData(def, holder, value)` en `resolvePluginData(def, quiz, state)` (slide ⊕ ronde ⊕ quiz, zoals `resolve.ts`). `light.ts` gebruikt die; het gedrag blijft hetzelfde.
@@ -72,6 +74,8 @@ export const magichome = definePlugin({
 - `PluginHost` krijgt `publish(status)`. Main bewaart de laatste status per plug-in en stuurt hem naar alle vensters (`IPC.pluginStatus`) en naar de telefoons.
 - De session-store houdt `pluginStatus[id]` bij. `LiveLight.vue` en `RemoteQr.vue` lezen dat; de timers van 2 seconden gaan weg.
 - `pluginInvoke` blijft bestaan voor acties, maar dan getypeerd: `act(id, action)`, gecontroleerd met het `actions`-schema van de plug-in.
+
+Gebouwd als: `PluginHost.publish`, `status` en `act`; `StatusBoard` in `src/main/plugin-status.ts` stuurt alleen een echte verandering, hooguit eens per 250 ms. De vensters krijgen `IPC.pluginStatus` en `session.statusOf(id)`, en vragen acties met `pluginAct`. Een plug-in in main heeft `actions` (per actie een functie) in plaats van `invoke`, en `statusChanged` in plaats van `changed`. De status is alleen wat de plug-in al weet: publiceren maakt nooit een verbinding met de controller.
 
 ### 3. Knoppen in de show op de Mac én de telefoon
 
@@ -85,6 +89,8 @@ Daarmee wordt de afstandsbediening een gewone plug-in die van de andere niets we
 - `RemoteView` krijgt `plugins: { id, status }[]` in plaats van `light`.
 - `RemoteAction` krijgt `{ type: 'plugin', id, action }` in plaats van `light`; main controleert de actie met het schema van die plug-in.
 - `RemoteApp.vue` toont een `PluginSlot name="liveControls"` in plaats van `LightPanel`.
+
+Gebouwd als: `RemoteView.plugins` en de actie `{ type: 'plugin', id, action, input }`. Een definitie noemt in `remoteActions` wat de telefoon mag (MagicHome: alleen `choose`); de afstandsbediening en main weigeren de rest (`parseAction(…, 'remote')`, `PluginHost.remoteAct`). De MCP-koppeling roept geen acties van plug-ins aan. De telefoon heeft een eigen lijst, `PHONE_PLUGINS` in `src/renderer/src/plugins/phone.ts`, zodat hij niet alle onderdelen van de app laadt. Het onderdeel krijgt `status`, `disabled` en `act`. Bij MagicHome is dat `PhoneLight`, met hetzelfde `LightPanel` als onder Licht in de werkbalk; de lichten van de quiz zitten nu in de status zelf.
 
 ### 4. Geheimen (pas bij Spotify)
 
@@ -102,9 +108,9 @@ Daarmee wordt de afstandsbediening een gewone plug-in die van de andere niets we
 
 Elke stap is een eigen pull request, zonder verschil in beeld (behalve stap 3 op de telefoon, waar de knoppen op dezelfde plek blijven):
 
-1. `definePlugin` en de generieke hulpjes voor quizgegevens; `light.ts` en de config van beide plug-ins erop overzetten.
-2. Status duwen (`publish`, `IPC.pluginStatus`, de store); de timers in `LiveLight.vue` en `RemoteQr.vue` weg.
-3. De afstandsbediening los van MagicHome: `plugins` in `RemoteView`, de actie `plugin`, `PluginSlot` op de telefoon.
+1. `definePlugin` en de generieke hulpjes voor quizgegevens; `light.ts` en de config van beide plug-ins erop overzetten. **Klaar.** De acties (`actions`, met `remoteActions` voor wat de telefoon en de AI mogen) komen in stap 2 en 3.
+2. Status duwen (`publish`, `IPC.pluginStatus`, de store); de timers in `LiveLight.vue` en `RemoteQr.vue` weg. **Klaar.** Het adres in de QR-code (ander netwerk) controleert main nu zelf elke 3 seconden.
+3. De afstandsbediening los van MagicHome: `plugins` in `RemoteView`, de actie `plugin`, `remoteActions`, een eigen onderdeel per plug-in op de telefoon. **Klaar.**
 4. Pas bij Spotify of YouTube: geheimen, en eventueel een eigen venster.
 
 Wat **niet** verandert: de plug-ins doen voor de gebruiker hetzelfde, `settings.json` en `quiz.json` houden hetzelfde formaat (dus geen migratie), en de e2e-tests voor MagicHome en de afstandsbediening blijven ongewijzigd slagen.

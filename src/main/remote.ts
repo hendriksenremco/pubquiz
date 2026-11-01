@@ -13,18 +13,21 @@ import { networkInterfaces, type NetworkInterfaceInfo } from 'os'
 import { extname, relative, resolve, sep } from 'path'
 import { createGzip } from 'zlib'
 import { createShowState } from '@shared/factory'
-import type { LightStatus } from '@shared/light'
 import {
   RemoteActionSchema,
   remoteCommand,
   remoteView,
   type RemoteAction,
-  type RemoteLink,
+  type RemotePlugin as RemotePluginView,
   type RemoteResult,
   type RemoteView
 } from '@shared/remote'
+import type { Locale, Translate } from '@shared/i18n'
 import type { Quiz, ShowState } from '@shared/types'
-import type { MainPlugin, PluginHost } from './plugins'
+import { parseAction } from '@shared/plugin'
+import { PLUGINS, type PluginConfig, type PluginId } from '@shared/plugins'
+import { REMOTE_ERRORS } from '@shared/show-messages'
+import type { ActionHandlers, MainPlugin, PluginHost } from './plugins'
 import { mimeType } from './range'
 
 /** "QUIZ" op een telefoontoetsenbord. Vast, zodat een bladwijzer op de telefoon blijft werken. */
@@ -33,6 +36,8 @@ const MAX_CLIENTS = 16
 const MAX_BODY = 4096
 /** Houdt de verbinding open via wifi en routers die stille verbindingen sluiten. */
 const PING_MS = 20_000
+/** Een ander netwerk (andere locatie) geeft een ander adres in de QR-code. */
+const NETWORK_MS = 3000
 
 /** Waar de pagina voor de telefoon vandaan komt: de build, of tijdens het ontwikkelen Vite. */
 export type RemotePage = { dir: string } | { devServer: string }
@@ -43,16 +48,27 @@ export interface RemoteOptions {
   host?: string
   /** Standaard REMOTE_PORT, en is die bezet een willekeurige; 0 = meteen een willekeurige. */
   port?: number
+  /** De taal van de app; de telefoon neemt hem over. Standaard Nederlands. */
+  locale?: Locale
 }
+
+type RemoteConfig = PluginConfig<'remote'>
+type RemoteErrorKey = Parameters<ReturnType<typeof REMOTE_ERRORS.in>>[0]
+
+/** Plug-ins met knoppen op de telefoon: die iets in `remoteActions` hebben staan. */
+const PHONE_PLUGINS = (
+  PLUGINS as readonly { id: PluginId; remoteActions?: readonly string[] }[]
+).filter((p) => p.remoteActions?.length)
 
 /**
  * Plug-in Afstandsbediening: een webserver op het lokale netwerk met de pagina voor de telefoon
  * (src/renderer/remote.html), de toestand van de show als server-sent events en een adres voor
  * de knoppen. Alleen wie de sleutel uit de QR-code heeft, mag iets; een nieuwe code sluit alle
- * telefoons buiten. Het licht loopt via de plug-in MagicHome-licht, als die aan staat.
+ * telefoons buiten. Andere plug-ins kunnen knoppen op de telefoon hebben (`remoteActions`); deze
+ * plug-in kent ze niet bij naam.
  */
-export class RemotePlugin implements MainPlugin {
-  private config: Record<string, unknown> = {}
+export class RemotePlugin implements MainPlugin<'remote'> {
+  private config: RemoteConfig = {}
   private key = ''
   private server: Server | null = null
   /** De poort waarop de server luistert, zodra hij luistert; null = hij kon niet starten. */
@@ -66,15 +82,30 @@ export class RemotePlugin implements MainPlugin {
   private sent = ''
   private pushing: ReturnType<typeof setTimeout> | null = null
   private ping: ReturnType<typeof setInterval> | null = null
+  private network: ReturnType<typeof setInterval> | null = null
 
   constructor(
-    private readonly host: PluginHost,
+    private readonly host: PluginHost<'remote'>,
     private readonly options: RemoteOptions
   ) {}
 
-  configure(config: Record<string, unknown>): void {
+  /** Foutmeldingen voor de telefoon, in de taal van de app. */
+  private readonly say: Translate<RemoteErrorKey> = (key, params) =>
+    REMOTE_ERRORS.in(this.options.locale ?? 'nl')(key, params)
+
+  readonly actions: ActionHandlers<'remote'> = {
+    renew: () => {
+      this.disconnect()
+      this.key = newKey()
+      this.host.saveConfig({ ...this.config, key: this.key })
+      void this.publishLink()
+      return { ok: true }
+    }
+  }
+
+  configure(config: RemoteConfig): void {
     this.config = config
-    const key = typeof config.key === 'string' && config.key.length >= 20 ? config.key : null
+    const key = config.key ?? null
     if (!key) {
       this.key = newKey()
       this.host.saveConfig({ ...config, key: this.key })
@@ -84,6 +115,8 @@ export class RemotePlugin implements MainPlugin {
       this.key = key
     }
     this.port ??= this.listen()
+    this.network ??= setInterval(() => void this.publishLink(), NETWORK_MS)
+    void this.publishLink()
   }
 
   update(quiz: Quiz | null, state: ShowState): void {
@@ -92,25 +125,21 @@ export class RemotePlugin implements MainPlugin {
     this.schedule()
   }
 
-  /** Bv. het licht met de hand gekozen op de Mac. */
-  changed(): void {
+  /** Een andere plug-in heeft een nieuwe status, bv. het licht met de hand gekozen op de Mac. */
+  statusChanged(): void {
     this.schedule()
   }
 
-  async invoke(action: string): Promise<RemoteLink | null> {
-    if (action === 'renew') {
-      this.disconnect()
-      this.key = newKey()
-      this.host.saveConfig({ ...this.config, key: this.key })
-    } else if (action !== 'link') {
-      return null
-    }
+  /** Het adres voor de QR-code en wie er verbonden is; main stuurt alleen een verandering. */
+  private async publishLink(): Promise<void> {
+    const generation = this.generation
     const port = await this.port
+    if (generation !== this.generation) return
     const address = this.options.host ?? lanAddress()
-    return {
+    this.host.publish({
       url: port && address ? `http://${address}:${port}/?key=${this.key}` : null,
       devices: this.clients.size
-    }
+    })
   }
 
   stop(): void {
@@ -118,6 +147,8 @@ export class RemotePlugin implements MainPlugin {
     this.disconnect()
     if (this.pushing) clearTimeout(this.pushing)
     this.pushing = null
+    if (this.network) clearInterval(this.network)
+    this.network = null
     this.server?.close()
     this.server?.closeAllConnections()
     this.server = null
@@ -152,19 +183,20 @@ export class RemotePlugin implements MainPlugin {
       else if (url.pathname === '/api/check') this.check(url, res)
       else if (url.pathname === '/api/action') await this.action(url, req, res)
       else if (url.pathname.startsWith('/media/')) await this.media(url, req, res)
-      else await servePage(this.options.page, url, req, res)
+      else if ('devServer' in this.options.page)
+        this.dev(this.options.page.devServer, url, req, res)
+      else await servePage(this.options.page.dir, url, req, res, this.say)
     } catch {
       if (res.headersSent) res.destroy()
-      else reply(res, 500, { ok: false, error: 'Er ging iets mis op de Mac' })
+      else reply(res, 500, { ok: false, error: this.say('failed') })
     }
   }
 
   /** De toestand van de show, nu en bij elke wijziging. */
   private events(url: URL, res: ServerResponse): void {
-    if (!this.authorized(url))
-      return reply(res, 401, { ok: false, error: 'Scan de QR-code opnieuw' })
+    if (!this.authorized(url)) return reply(res, 401, { ok: false, error: this.say('scanAgain') })
     if (this.clients.size >= MAX_CLIENTS) {
-      return reply(res, 503, { ok: false, error: 'Te veel apparaten verbonden' })
+      return reply(res, 503, { ok: false, error: this.say('tooMany') })
     }
     res.writeHead(200, { ...HEADERS, 'Content-Type': 'text/event-stream' })
     res.write('retry: 2000\n\n')
@@ -172,8 +204,10 @@ export class RemotePlugin implements MainPlugin {
     res.on('close', () => {
       this.clients.delete(res)
       this.keepAlive()
+      void this.publishLink()
     })
     this.keepAlive()
+    void this.publishLink()
     // Iedereen opnieuw: wie al verbonden was, kan iets gemist hebben dat de nieuwe wel krijgt.
     this.sent = ''
     this.schedule()
@@ -181,15 +215,13 @@ export class RemotePlugin implements MainPlugin {
 
   /** Klopt de sleutel nog? Voor de telefoon als zijn verbinding gesloten werd. */
   private check(url: URL, res: ServerResponse): void {
-    if (!this.authorized(url))
-      return reply(res, 401, { ok: false, error: 'Scan de QR-code opnieuw' })
+    if (!this.authorized(url)) return reply(res, 401, { ok: false, error: this.say('scanAgain') })
     reply(res, 200, { ok: true })
   }
 
   /** Een afbeelding uit de quiz voor de preview: alleen op id, en alleen afbeeldingen. */
   private async media(url: URL, req: IncomingMessage, res: ServerResponse): Promise<void> {
-    if (!this.authorized(url))
-      return reply(res, 401, { ok: false, error: 'Scan de QR-code opnieuw' })
+    if (!this.authorized(url)) return reply(res, 401, { ok: false, error: this.say('scanAgain') })
     const id = decodeURIComponent(url.pathname.slice('/media/'.length))
     const asset = this.quiz?.assets.find((a) => a.id === id && a.kind === 'image')
     const file = asset ? this.host.mediaFile(asset.file) : null
@@ -197,48 +229,82 @@ export class RemotePlugin implements MainPlugin {
   }
 
   private async action(url: URL, req: IncomingMessage, res: ServerResponse): Promise<void> {
-    if (req.method !== 'POST') return reply(res, 405, { ok: false, error: 'Alleen POST' })
-    if (!this.authorized(url))
-      return reply(res, 401, { ok: false, error: 'Scan de QR-code opnieuw' })
+    if (req.method !== 'POST')
+      return reply(res, 405, { ok: false, error: this.say('onlyMethod', { method: 'POST' }) })
+    if (!this.authorized(url)) return reply(res, 401, { ok: false, error: this.say('scanAgain') })
     const parsed = RemoteActionSchema.safeParse(parseJson(await readBody(req)))
-    if (!parsed.success) return reply(res, 400, { ok: false, error: 'Onbekende opdracht' })
+    if (!parsed.success) return reply(res, 400, { ok: false, error: this.say('unknownCommand') })
+    if (parsed.data.type === 'plugin' && !phoneAction(parsed.data)) {
+      return reply(res, 403, { ok: false, error: this.say('notFromPhone') })
+    }
     const result = await this.perform(parsed.data)
     reply(res, result.ok ? 200 : 409, result)
   }
 
   private async perform(action: RemoteAction): Promise<RemoteResult> {
-    if (!this.state.live) return { ok: false, error: 'Start eerst de show op de Mac' }
-    if (action.type === 'light') {
-      const result = await this.host.invoke('magichome', 'choose', action.light)
-      return (
-        (result as RemoteResult | null) ?? { ok: false, error: 'Het licht staat uit op de Mac' }
-      )
+    if (!this.state.live) return { ok: false, error: this.say('startShow') }
+    if (action.type === 'plugin') {
+      const result = await this.host.remoteAct(action.id as PluginId, action.action, action.input)
+      if (result === null) {
+        const text = PLUGINS.find((p) => p.id === action.id)?.text[this.options.locale ?? 'nl']
+        const name = text?.name ?? this.say('unknownPlugin')
+        return { ok: false, error: this.say('pluginOff', { name }) }
+      }
+      return pluginResult(result, this.say)
     }
     const command = this.quiz && remoteCommand(this.quiz, this.state, action)
     if (command) this.host.command(command)
     return { ok: true }
   }
 
+  /**
+   * Tijdens het ontwikkelen (pnpm dev): de pagina komt van de Vite-server. Die serveert ook de
+   * broncode en bestanden via /@fs/, dus alleen voor wie de sleutel heeft. De pagina zelf krijgt
+   * hem in de URL en zet hem in een cookie, voor de scripts en stijlen die de browser daarna haalt.
+   */
+  private dev(devServer: string, url: URL, req: IncomingMessage, res: ServerResponse): void {
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+      return reply(res, 405, { ok: false, error: this.say('onlyMethod', { method: 'GET' }) })
+    }
+    const page = url.pathname === '/'
+    if (!this.matches(page ? url.searchParams.get('key') : cookie(req, DEV_COOKIE))) {
+      return reply(res, 401, { ok: false, error: this.say('scanAgain') })
+    }
+    // De sleutel hoeft Vite niet te zien; zijn eigen query's (?v=, ?vue&type=) wel.
+    const target = new URL(page ? '/remote.html' : url.pathname + url.search, devServer)
+    const extra: OutgoingHttpHeaders = page
+      ? { 'Set-Cookie': `${DEV_COOKIE}=${this.key}; Path=/; HttpOnly; SameSite=Strict` }
+      : {}
+    proxy(target, req, res, extra)
+  }
+
   private authorized(url: URL): boolean {
-    const given = Buffer.from(url.searchParams.get('key') ?? '')
+    return this.matches(url.searchParams.get('key'))
+  }
+
+  private matches(value: string | null | undefined): boolean {
+    const given = Buffer.from(value ?? '')
     const key = Buffer.from(this.key)
     return key.length > 0 && given.length === key.length && timingSafeEqual(given, key)
   }
 
-  private async view(): Promise<RemoteView> {
-    const light = await this.host.invoke('magichome', 'status')
-    return remoteView(this.quiz, this.state, light as LightStatus | null)
+  private view(): RemoteView {
+    const plugins = PHONE_PLUGINS.flatMap(({ id }) => {
+      const status = this.host.status(id)
+      return status === null ? [] : [{ id, status } as RemotePluginView]
+    })
+    return remoteView(this.quiz, this.state, plugins, this.options.locale)
   }
 
   /** De telefoons bijwerken; één keer voor alles wat tegelijk verandert. */
   private schedule(): void {
     if (this.pushing || this.clients.size === 0) return
-    this.pushing = setTimeout(() => void this.push(), 0)
+    this.pushing = setTimeout(() => this.push(), 0)
   }
 
-  private async push(): Promise<void> {
+  private push(): void {
     this.pushing = null
-    const json = JSON.stringify(await this.view())
+    const json = JSON.stringify(this.view())
     if (json === this.sent) return
     this.sent = json
     for (const res of this.clients) res.write(`data: ${json}\n\n`)
@@ -281,15 +347,43 @@ export function lanAddress(
   return candidates[0]?.address ?? null
 }
 
+/** Bestaat de plug-in, mag de telefoon deze actie en klopt de invoer? Main controleert het nog eens. */
+function phoneAction(action: Extract<RemoteAction, { type: 'plugin' }>): boolean {
+  const definition = PLUGINS.find((p) => p.id === action.id)
+  return !!definition && parseAction(definition, action.action, action.input, 'remote') !== null
+}
+
+/** Wat een plug-in teruggeeft, voor de telefoon: alleen een fout met uitleg telt als fout. */
+function pluginResult(result: unknown, say: Translate<RemoteErrorKey>): RemoteResult {
+  if (typeof result === 'object' && result && 'ok' in result && result.ok === false) {
+    const error = 'error' in result && typeof result.error === 'string' ? result.error : null
+    return { ok: false, error: error ?? say('didNotWork') }
+  }
+  return { ok: true }
+}
+
 const isPrivate = (ip: string) => /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(ip)
 
 const newKey = () => randomBytes(16).toString('base64url')
+
+/** Het cookie met de sleutel, alleen tijdens het ontwikkelen. */
+const DEV_COOKIE = 'quiznote-remote'
+
+function cookie(req: IncomingMessage, name: string): string | null {
+  for (const part of (req.headers.cookie ?? '').split(';')) {
+    const [k, ...v] = part.trim().split('=')
+    if (k === name) return v.join('=')
+  }
+  return null
+}
 
 /** De sleutel staat in de URL; die hoort niet in een Referer naar buiten. */
 const HEADERS: OutgoingHttpHeaders = {
   'Cache-Control': 'no-store',
   'Referrer-Policy': 'no-referrer',
-  'X-Content-Type-Options': 'nosniff'
+  'X-Content-Type-Options': 'nosniff',
+  // Een andere site mag de pagina niet in een frame zetten en de knoppen laten indrukken.
+  'X-Frame-Options': 'DENY'
 }
 
 function reply(res: ServerResponse, status: number, body: RemoteResult): void {
@@ -345,23 +439,18 @@ const TYPES: Record<string, string> = {
 
 /** De pagina zelf op `/`, en wat Vite ervoor bouwde in assets/; verder niets. */
 async function servePage(
-  page: RemotePage,
+  dir: string,
   url: URL,
   req: IncomingMessage,
-  res: ServerResponse
+  res: ServerResponse,
+  say: Translate<RemoteErrorKey>
 ): Promise<void> {
   if (req.method !== 'GET' && req.method !== 'HEAD') {
-    return reply(res, 405, { ok: false, error: 'Alleen GET' })
+    return reply(res, 405, { ok: false, error: say('onlyMethod', { method: 'GET' }) })
   }
   const path = url.pathname === '/' ? '/remote.html' : url.pathname
-  if ('devServer' in page) {
-    // De sleutel hoeft Vite niet te zien; zijn eigen query's (?v=, ?vue&type=) wel.
-    const search = url.pathname === '/' ? '' : url.search
-    return proxy(new URL(path + search, page.devServer), req, res)
-  }
-
-  const file = resolve(page.dir, `.${decodeURIComponent(path)}`)
-  const inside = relative(page.dir, file)
+  const file = resolve(dir, `.${decodeURIComponent(path)}`)
+  const inside = relative(dir, file)
   const allowed = inside === 'remote.html' || inside.startsWith(`assets${sep}`)
   await sendFile(
     allowed ? file : null,
@@ -401,13 +490,19 @@ async function sendFile(
   else stream.pipe(res)
 }
 
-/** Tijdens het ontwikkelen (pnpm dev): de pagina komt van de Vite-server, die alleen op localhost luistert. */
-function proxy(target: URL, req: IncomingMessage, res: ServerResponse): void {
+/** Een verzoek doorgeven aan de Vite-server, die alleen op localhost luistert; zonder ons cookie. */
+function proxy(
+  target: URL,
+  req: IncomingMessage,
+  res: ServerResponse,
+  extra: OutgoingHttpHeaders
+): void {
+  const { cookie: _, ...headers } = req.headers
   const upstream = request(
     target,
-    { method: req.method, headers: { ...req.headers, host: target.host } },
+    { method: req.method, headers: { ...headers, host: target.host } },
     (answer) => {
-      res.writeHead(answer.statusCode ?? 502, answer.headers)
+      res.writeHead(answer.statusCode ?? 502, { ...answer.headers, ...extra })
       answer.pipe(res)
     }
   )

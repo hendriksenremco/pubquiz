@@ -117,3 +117,28 @@ describe('adoptSettings', () => {
     }
   })
 })
+
+describe('Settings.analytics', () => {
+  it('is eerst niet gevraagd, en krijgt pas met toestemming een id', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'pubquiz-settings-'))
+    try {
+      const settings = await Settings.load(dir)
+      expect(settings.analyticsConsent).toBeNull()
+      expect(settings.analyticsId).toBeNull()
+
+      settings.setAnalytics(true)
+      const id = settings.analyticsId
+      expect(id).toMatch(/^[0-9a-f-]{36}$/)
+      await settings.whenSaved()
+      expect((await Settings.load(dir)).analyticsId).toBe(id)
+
+      settings.setAnalytics(false)
+      expect(settings.analyticsConsent).toBe(false)
+      expect(settings.analyticsId).toBeNull()
+      settings.setAnalytics(true)
+      expect(settings.analyticsId).not.toBe(id)
+    } finally {
+      rmSync(dir, { recursive: true, force: true })
+    }
+  })
+})

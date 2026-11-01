@@ -4,14 +4,17 @@
  * een geheime sleutel. De telefoon krijgt alleen wat hij toont, niet de hele quiz.
  */
 import { z } from 'zod'
+import type { Locale } from './i18n'
 import type { ShowCommand } from './ipc'
-import { LightSchema, quizLights, type Light, type LightStatus } from './light'
 import { adjacentFragment } from './autoplay'
+import { action, definePlugin, typeOnly } from './plugin'
+import type { PluginId, PluginStatus } from './plugins'
 import {
   activeRound,
   adjacentRound,
   allBlack,
   answerItems,
+  type AnswerItem,
   loopActive,
   resolveScreen,
   restartRound,
@@ -19,10 +22,35 @@ import {
   stepTarget,
   type StepTarget
 } from './resolve'
+import { STEP_MESSAGES } from './show-messages'
 import type { Quiz, Round, ShowState, Slide } from './types'
+
+export const REMOTE = definePlugin({
+  id: 'remote',
+  text: {
+    nl: {
+      name: 'Afstandsbediening',
+      description:
+        'De show bedienen met een telefoon of tablet op hetzelfde wifi-netwerk, via een QR-code.'
+    },
+    en: {
+      name: 'Remote control',
+      description: 'Run the show from a phone or tablet on the same Wi-Fi network, with a QR code.'
+    }
+  },
+  /** De geheime sleutel uit de QR-code; te kort of ontbreekt = main maakt een nieuwe. */
+  config: z.object({ key: z.string().min(20).optional().catch(undefined) }).catch({}),
+  status: typeOnly<RemoteLink>(),
+  actions: {
+    /** Een nieuwe sleutel: telefoons met de oude code kunnen dan niets meer. */
+    renew: action<RemoteResult>()(z.undefined())
+  }
+})
 
 /** Wat de telefoon toont. */
 export interface RemoteView {
+  /** De taal van de app op de Mac; de telefoon gebruikt dezelfde, met dezelfde namen. */
+  locale: Locale
   /** Titel van de geopende quiz; null = er is geen quiz open. */
   quiz: string | null
   live: boolean
@@ -40,9 +68,12 @@ export interface RemoteView {
   screens: boolean
   blackout: boolean
   muted: boolean
-  /** null = de plug-in MagicHome-licht staat uit. */
-  light: RemoteLight | null
+  /** Plug-ins die aan staan en knoppen op de telefoon hebben (`remoteActions`), met hun status. */
+  plugins: RemotePlugin[]
 }
+
+/** Eén plug-in op de telefoon; het onderdeel ervoor staat in src/renderer/src/plugins/phone.ts. */
+export type RemotePlugin = { [Id in PluginId]: { id: Id; status: PluginStatus<Id> } }[PluginId]
 
 /** Vorige en volgende werken zoals ← → op de Mac: slides, fragmenten of antwoorden. */
 export interface RemoteStep {
@@ -59,11 +90,6 @@ export interface RemoteStep {
   next: boolean
 }
 
-export interface RemoteLight extends LightStatus {
-  /** De lichten die de quiz zelf gebruikt. */
-  quiz: Light[]
-}
-
 export const RemoteActionSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('round'), direction: z.enum(['next', 'prev']) }),
   z.object({ type: z.literal('restartRound') }),
@@ -72,8 +98,17 @@ export const RemoteActionSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('step'), direction: z.enum(['next', 'prev']) }),
   z.object({ type: z.literal('blackout'), on: z.boolean() }),
   z.object({ type: z.literal('mute'), on: z.boolean() }),
-  /** null = het licht volgt de show weer. */
-  z.object({ type: z.literal('light'), light: LightSchema.nullable() })
+  /**
+   * Een actie van een plug-in, bv. het licht kiezen. Main controleert hem met de definitie van die
+   * plug-in, en alleen wat in zijn `remoteActions` staat, mag.
+   */
+  z.object({
+    type: z.literal('plugin'),
+    id: z.string().max(64),
+    action: z.string().max(64),
+    /** Ontbreekt als de actie geen invoer heeft (JSON kent geen undefined). */
+    input: z.unknown().optional()
+  })
 ])
 
 /** Wat de telefoon vraagt. Aan/uit is de gewenste stand, geen wissel: twee keer tikken mag. */
@@ -90,13 +125,16 @@ export interface RemoteLink {
 /** Antwoord van de Mac op een actie. */
 export type RemoteResult = { ok: true } | { ok: false; error: string }
 
+/** `plugins`: de plug-ins voor de telefoon; zonder quiz toont hij ze niet. */
 export function remoteView(
   quiz: Quiz | null,
   state: ShowState,
-  light: LightStatus | null
+  plugins: RemotePlugin[] = [],
+  locale: Locale = 'nl'
 ): RemoteView {
   const round = quiz ? activeRound(quiz, state) : null
   return {
+    locale,
     quiz: quiz?.title ?? null,
     live: state.live,
     round: round && quiz ? { title: round.title, number: quiz.rounds.indexOf(round) + 1 } : null,
@@ -104,18 +142,18 @@ export function remoteView(
     prevRound: (quiz && adjacentRound(quiz, state, 'prev')?.title) ?? null,
     nextRound: (quiz && adjacentRound(quiz, state, 'next')?.title) ?? null,
     restartRound: (quiz && restartRound(quiz, state)?.title) ?? null,
-    step: quiz && round ? remoteStep(quiz, round, state) : null,
+    step: quiz && round ? remoteStep(quiz, round, state, locale) : null,
     screen: quiz ? onScreen(quiz, state) : null,
     screens: !!quiz?.screens.length,
     blackout: !!quiz && allBlack(quiz, state),
     muted: !state.backgroundEnabled,
-    light: light && quiz ? { ...light, quiz: quizLights(quiz) } : null
+    plugins: quiz ? plugins : []
   }
 }
 
 /**
- * De opdracht voor de show, zoals de knoppen op de Mac hem geven; null = niets te doen (het
- * licht gaat via de plug-in). Geluid uit = fragment stopt én achtergrond uit; weer aan zet de
+ * De opdracht voor de show, zoals de knoppen op de Mac hem geven; null = niets te doen (een
+ * actie van een plug-in gaat via die plug-in). Geluid uit = fragment stopt én achtergrond uit; weer aan zet de
  * achtergrond terug.
  */
 export function remoteCommand(
@@ -136,13 +174,19 @@ export function remoteCommand(
     case 'mute':
       if (action.on) return { type: 'stopAll' }
       return state.backgroundEnabled ? null : { type: 'toggleBackground' }
-    case 'light':
+    case 'plugin':
       return null
   }
 }
 
 /** Ook voor de knoppen op de Mac, zodat die hetzelfde tonen en kunnen. */
-export function remoteStep(quiz: Quiz, round: Round, state: ShowState): RemoteStep {
+export function remoteStep(
+  quiz: Quiz,
+  round: Round,
+  state: ShowState,
+  locale: Locale = 'nl'
+): RemoteStep {
+  const t = STEP_MESSAGES.in(locale)
   const target = stepTarget(quiz, round)
   const base = { target, text: null, answer: null, playing: false }
   const playing = (id: string | undefined) => !!id && state.fragment?.fragmentId === id
@@ -152,12 +196,11 @@ export function remoteStep(quiz: Quiz, round: Round, state: ShowState): RemoteSt
     const current = state.answer?.roundId === round.id ? state.answer : null
     const item = current ? items[current.index] : undefined
     if (!current || !item) {
-      return { ...base, label: `${items.length} om na te lopen`, prev: false, next: true }
+      return { ...base, label: t('answersToGo', { count: items.length }), prev: false, next: true }
     }
-    const noun = item.noun[0].toUpperCase() + item.noun.slice(1)
     return {
       ...base,
-      label: `${noun} ${item.number}, ${item.round.title}`,
+      label: t(ANSWER_LABELS[item.noun], { number: item.number, round: item.round.title }),
       text: item.slide ? questionText(item.slide) : (item.fragment?.label ?? null),
       answer: current.revealed ? item.answer || item.fragment?.label || '—' : null,
       playing: playing(item.fragment?.id),
@@ -172,8 +215,8 @@ export function remoteStep(quiz: Quiz, round: Round, state: ShowState): RemoteSt
     return {
       ...base,
       label: fragment
-        ? `Fragment ${ids.indexOf(fragment.id) + 1} van ${ids.length}`
-        : `${ids.length} fragmenten`,
+        ? t('fragmentOf', { number: ids.indexOf(fragment.id) + 1, total: ids.length })
+        : t('fragments', { count: ids.length }),
       text: fragment?.label ?? null,
       playing: playing(fragment?.id),
       prev: adjacentFragment(ids, state.lastFragmentId, 'prev') !== null,
@@ -186,15 +229,21 @@ export function remoteStep(quiz: Quiz, round: Round, state: ShowState): RemoteSt
   return {
     ...base,
     label: !count
-      ? 'Geen slides in deze ronde'
+      ? t('noSlides')
       : slide
-        ? `Slide ${state.slideIndex + 1} van ${count}`
-        : `Geen slide, ${count} in deze ronde`,
+        ? t('slideOf', { number: state.slideIndex + 1, total: count })
+        : t('noSlideOf', { count }),
     text: slide ? questionText(slide) : null,
     prev: state.slideIndex > -1,
     next: state.slideIndex < count - 1 || loopActive(round, state.slideIndex)
   }
 }
+
+const ANSWER_LABELS = {
+  vraag: 'answerQuestion',
+  afbeelding: 'answerImage',
+  fragment: 'answerFragment'
+} as const satisfies Record<AnswerItem['noun'], string>
 
 /** De vraag om voor te lezen, ook als er alleen het nummer in beeld staat. */
 function questionText(slide: Slide): string | null {

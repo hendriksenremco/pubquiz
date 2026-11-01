@@ -1,6 +1,7 @@
 import { app, BrowserWindow, dialog, shell, type Display } from 'electron'
 import { promises as fs } from 'fs'
 import { basename, dirname, join } from 'path'
+import { quizShape } from '@shared/analytics'
 import { newId } from '@shared/factory'
 import { formFileName, type FormOptions } from '@shared/forms'
 import {
@@ -17,6 +18,7 @@ import { findRound } from '@shared/resolve'
 import type { TemplateOptions } from '@shared/template'
 import type { HardwareMapping, Notice, Quiz, ShowState } from '@shared/types'
 import { AirPlayBrowser } from './airplay'
+import type { Analytics } from './analytics'
 import { listDisplays, ScreenWindows, type DisplayChange } from './displays'
 import {
   QUIZ_EXT,
@@ -35,6 +37,7 @@ import {
 import { locateMedia } from './media-path'
 import { renderFormPdf } from './pdf'
 import { Plugins } from './plugins'
+import { SaveQueue } from './save-queue'
 import { Settings, type RecoveryData } from './settings'
 import { ShowController } from './show'
 import { headless } from './windows'
@@ -51,7 +54,7 @@ export class AppController {
   private quiz: Quiz | null = null
   private quizDir: string | null = null
   private hardware: HardwareMapping = { screens: {}, audio: {}, screenSound: {} }
-  private dirty = false
+  private readonly saves = new SaveQueue()
   private saveTimer: ReturnType<typeof setTimeout> | null = null
   private recoveryTimer: ReturnType<typeof setTimeout> | null = null
   private recovery: RecoveryData | null = null
@@ -67,6 +70,7 @@ export class AppController {
     saveConfig: (id, config) =>
       this.setPlugin(id, { ...(this.settings.plugins[id] ?? PLUGIN_OFF), config }),
     command: (command) => this.show.handle(command),
+    publishStatus: (id, status) => this.broadcast(IPC.pluginStatus, [id, status]),
     mediaFile: (file) => {
       const location = locateMedia(mediaUrl(file), {
         current: () => this.quizDir,
@@ -79,7 +83,9 @@ export class AppController {
   constructor(
     private readonly settings: Settings,
     /** Waar nieuwe en geïmporteerde quizzen komen (standaard Documenten/Pubquizzen). */
-    readonly libraryDir: string
+    readonly libraryDir: string,
+    /** Anoniem meten; null = uit voor deze build (ontwikkelen en tests). */
+    readonly analytics: Analytics | null = null
   ) {
     this.screens.watch((change, display) => this.onDisplayChange(change, display))
     this.plugins.apply(settings.plugins, null, this.show.current)
@@ -127,7 +133,9 @@ export class AppController {
       libraryDir: this.libraryDir,
       airplay: this.airplay.list,
       plugins: this.settings.plugins,
-      dirty: this.dirty
+      pluginStatus: this.plugins.statuses(),
+      analytics: this.analytics ? this.settings.analyticsConsent : false,
+      dirty: this.saves.dirty
     }
   }
 
@@ -152,7 +160,7 @@ export class AppController {
 
     this.quiz = quiz
     this.quizDir = dir
-    this.dirty = false
+    this.saves.clean()
     this.hardware = this.settings.mappingFor(quiz, listDisplays())
     this.settings.addRecent(dir)
     if (this.recovery && this.recovery.quizDir !== dir) this.recovery = null
@@ -280,7 +288,7 @@ export class AppController {
     await this.flushSave()
     this.quiz = null
     this.quizDir = null
-    this.dirty = false
+    this.saves.clean()
     this.hardware = { screens: {}, audio: {}, screenSound: {} }
     this.broadcast(IPC.quiz, [null, null])
     this.broadcast(IPC.hardware, [this.hardware])
@@ -377,7 +385,7 @@ export class AppController {
     }
     const previous = this.quiz
     this.quiz = parsed.data
-    this.dirty = true
+    this.saves.changed()
     this.scheduleSave()
     this.broadcast(IPC.quiz, [this.quiz, this.quizDir], senderId)
     if (previous.title !== this.quiz.title) this.operator?.setTitle(this.windowTitle)
@@ -392,11 +400,14 @@ export class AppController {
   async flushSave(): Promise<void> {
     if (this.saveTimer) clearTimeout(this.saveTimer)
     this.saveTimer = null
-    if (!this.dirty || !this.quiz || !this.quizDir) return
+    if (!this.quiz || !this.quizDir) return
     try {
-      await writeQuiz(this.quizDir, this.quiz)
-      this.dirty = false
-      this.broadcast(IPC.saved, [false])
+      // Pas lezen als deze opslag aan de beurt is: dan gaat altijd de nieuwste versie naar schijf.
+      // Een wijziging die binnenkomt terwijl er geschreven wordt, blijft staan voor de volgende.
+      const saved = await this.saves.flush(() =>
+        this.quiz && this.quizDir ? writeQuiz(this.quizDir, this.quiz) : Promise.resolve()
+      )
+      if (saved) this.broadcast(IPC.saved, [false])
     } catch (err) {
       this.notify('error', `Opslaan mislukt: ${(err as Error).message}`)
     }
@@ -411,6 +422,11 @@ export class AppController {
     this.recovery = null
     this.show.start(restore)
     this.syncScreens(true)
+    this.analytics?.capture('show_started', {
+      resumed: Boolean(restore),
+      ...quizShape(this.quiz),
+      plugins: PLUGINS.filter((p) => this.settings.plugins[p.id]?.enabled).map((p) => p.id)
+    })
   }
 
   async stopShow(): Promise<void> {
@@ -427,6 +443,13 @@ export class AppController {
     this.settings.saveMapping(this.quiz, mapping)
     this.broadcast(IPC.hardware, [mapping])
     if (this.live) this.syncScreens(true)
+  }
+
+  /** Toestemming voor anoniem meten, gegeven of ingetrokken. */
+  setAnalytics(consent: boolean): void {
+    if (!this.analytics) return
+    this.settings.setAnalytics(consent)
+    if (!consent) this.analytics.clear()
   }
 
   setPlugin(id: PluginId, setting: PluginSetting): void {

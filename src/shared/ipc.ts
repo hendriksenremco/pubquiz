@@ -1,6 +1,15 @@
 import type { AirPlayDevice } from './airplay'
+import type { ErrorReport } from './analytics'
 import type { FormOptions } from './forms'
-import type { PluginId, PluginSetting, PluginSettings } from './plugins'
+import type {
+  ActionInput,
+  ActionResult,
+  PluginActionName,
+  PluginId,
+  PluginSetting,
+  PluginSettings,
+  PluginStatuses
+} from './plugins'
 import type { TemplateOptions } from './template'
 import type { DisplayInfo, HardwareMapping, MediaAsset, Notice, Quiz, ShowState } from './types'
 
@@ -58,6 +67,9 @@ export interface Snapshot {
   libraryDir: string
   airplay: AirPlayDevice[]
   plugins: PluginSettings
+  pluginStatus: PluginStatuses
+  /** Anoniem meten: true of false als het gevraagd is, null = nog vragen (zie issue #40). */
+  analytics: boolean | null
 }
 
 export interface RecoveryInfo {
@@ -141,8 +153,17 @@ export interface PubquizApi {
   dismissRecovery(): void
   /** Plug-in aan- of uitzetten, of zijn instellingen wijzigen (voor deze Mac). */
   setPlugin(id: PluginId, setting: PluginSetting): Promise<void>
-  /** Vraag aan een plug-in die aan staat; null als hij uit staat. */
-  pluginInvoke(id: PluginId, action: string, payload?: unknown): Promise<unknown>
+  /** Een actie van een plug-in die aan staat; null als hij uit staat of de actie niet klopt. */
+  pluginAct<Id extends PluginId, Name extends PluginActionName<Id>>(
+    id: Id,
+    name: Name,
+    input: ActionInput<Id, Name>
+  ): Promise<ActionResult<Id, Name> | null>
+
+  /** Toestemming voor anoniem meten geven of intrekken (voor deze Mac). */
+  setAnalytics(consent: boolean): Promise<void>
+  /** Een onverwerkte fout in een venster; gaat alleen weg met toestemming. */
+  reportError(report: ErrorReport): void
 
   audioEvent(event: AudioEngineEvent): void
   onAudioCommand(cb: (command: AudioEngineCommand) => void): () => void
@@ -153,6 +174,8 @@ export interface PubquizApi {
   onDisplays(cb: (displays: DisplayInfo[]) => void): () => void
   onAirPlay(cb: (devices: AirPlayDevice[]) => void): () => void
   onPlugins(cb: (plugins: PluginSettings) => void): () => void
+  /** Een plug-in heeft een nieuwe status; null = hij staat uit. */
+  onPluginStatus(cb: (id: PluginId, status: unknown) => void): () => void
   onNotice(cb: (notice: Notice) => void): () => void
   onSaved(cb: (dirty: boolean) => void): () => void
   onMenu(cb: (action: MenuAction) => void): () => void
@@ -186,8 +209,11 @@ export const IPC = {
   testTone: 'pq:test-tone',
   dismissRecovery: 'pq:dismiss-recovery',
   setPlugin: 'pq:set-plugin',
-  pluginInvoke: 'pq:plugin-invoke',
+  pluginAct: 'pq:plugin-act',
   plugins: 'pq:plugins',
+  pluginStatus: 'pq:plugin-status',
+  setAnalytics: 'pq:set-analytics',
+  reportError: 'pq:report-error',
   audioEvent: 'pq:audio-event',
   audioCommand: 'pq:audio-command',
   quiz: 'pq:quiz',

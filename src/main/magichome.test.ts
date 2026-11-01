@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { createQuiz, createRound, createShowState, createSlide } from '@shared/factory'
-import { setLight } from '@shared/light'
+import { quizLights, setLight } from '@shared/light'
 import type { ShowState } from '@shared/types'
 import { command, fakeController } from '../../e2e/fake-magichome'
 import { MagicHomePlugin } from './magichome'
@@ -76,12 +76,12 @@ describe('MagicHomePlugin', () => {
     const device = await fakeController()
     const plugin = new MagicHomePlugin(vi.fn())
     try {
-      expect(await plugin.invoke('probe', device.host)).toEqual({
+      expect(await plugin.actions.probe(device.host)).toEqual({
         ok: true,
         state: { model: 0xa1, on: true, effect: null, speed: 100, color: '#00ff00', firmware: 3 }
       })
       expect(device.log).toEqual([])
-      expect(await plugin.invoke('probe', 'geen adres')).toMatchObject({ ok: false })
+      expect(await plugin.actions.probe('geen adres')).toMatchObject({ ok: false })
     } finally {
       await device.close()
     }
@@ -93,21 +93,21 @@ describe('MagicHomePlugin', () => {
     const { quiz, state } = setup()
     try {
       plugin.configure({ host: device.host })
-      expect(await plugin.invoke('preview', { type: 'color', color: '#ff0000' })).toEqual({
+      expect(await plugin.actions.preview({ type: 'color', color: '#ff0000' })).toEqual({
         ok: true
       })
       await vi.waitFor(() => expect(device.log).toEqual([ON, RED]))
-      await plugin.invoke('preview', { type: 'effect', effect: 1, speed: 50 })
+      await plugin.actions.preview({ type: 'effect', effect: 1, speed: 50 })
       await vi.waitFor(() => expect(device.log).toEqual([ON, RED, ON, FLASH]))
 
       // Voor het voorbeeld stond hij aan, in vast groen.
-      await plugin.invoke('preview', null)
+      await plugin.actions.preview(null)
       expect(device.log.slice(-2)).toEqual([ON, GREEN])
       expect(device.stats.connections).toBe(1)
 
       // Tijdens de show bepaalt de show het licht.
       plugin.update(quiz, state())
-      expect(await plugin.invoke('preview', { type: 'off' })).toMatchObject({ ok: false })
+      expect(await plugin.actions.preview({ type: 'off' })).toMatchObject({ ok: false })
     } finally {
       plugin.stop()
       await device.close()
@@ -116,37 +116,39 @@ describe('MagicHomePlugin', () => {
 
   it('houdt een met de hand gekozen licht tot de show zelf een ander licht kiest', async () => {
     const device = await fakeController()
-    const changed = vi.fn()
-    const plugin = new MagicHomePlugin(vi.fn(), changed)
+    const publish = vi.fn()
+    const plugin = new MagicHomePlugin(vi.fn(), publish)
+    const status = () => publish.mock.lastCall?.[0]
     const { quiz, state } = setup()
     const blue = { type: 'color', color: '#0000ff' } as const
     try {
       plugin.configure({ host: device.host })
-      expect(await plugin.invoke('choose', blue)).toMatchObject({ ok: false })
+      expect(await plugin.actions.choose(blue)).toMatchObject({ ok: false })
 
       plugin.update(quiz, state())
       await vi.waitFor(() => expect(device.log).toEqual([ON, RED]))
-      expect(await plugin.invoke('choose', blue)).toEqual({ ok: true })
-      expect(changed).toHaveBeenCalledOnce()
+      expect(await plugin.actions.choose(blue)).toEqual({ ok: true })
+      expect(status()).toMatchObject({ light: blue, manual: true })
       await vi.waitFor(() => expect(device.log.at(-1)).toBe(command.color(0, 0, 0xff)))
-      expect(await plugin.invoke('status', null)).toEqual({ light: blue, manual: true })
+      expect(status()).toMatchObject({ light: blue, manual: true })
 
       // Zelfde licht van de show (bv. de muziek gaat uit): blauw blijft.
       plugin.update(quiz, state({ backgroundEnabled: false }))
-      expect(await plugin.invoke('status', null)).toEqual({ light: blue, manual: true })
+      expect(status()).toMatchObject({ light: blue, manual: true })
 
       // De volgende slide heeft een eigen effect: de show neemt het weer over.
       plugin.update(quiz, state({ slideIndex: 1 }))
       await vi.waitFor(() => expect(device.log.at(-1)).toBe(FLASH))
-      expect(await plugin.invoke('status', null)).toEqual({
+      expect(status()).toEqual({
         light: { type: 'effect', effect: 1, speed: 50 },
-        manual: false
+        manual: false,
+        quiz: quizLights(quiz)
       })
 
       // Terug naar de show: het licht van de slide.
-      await plugin.invoke('choose', { type: 'off' })
+      await plugin.actions.choose({ type: 'off' })
       await vi.waitFor(() => expect(device.log.at(-1)).toBe(command.off))
-      await plugin.invoke('choose', null)
+      await plugin.actions.choose(null)
       await vi.waitFor(() => expect(device.log.at(-1)).toBe(FLASH))
     } finally {
       plugin.stop()
@@ -168,10 +170,10 @@ describe('MagicHomePlugin', () => {
     await new Promise((resolve) => setTimeout(resolve, 200))
     expect(notify).toHaveBeenCalledTimes(1)
     expect(notify.mock.calls[0][1]).toContain('weigert de verbinding')
-    expect(await plugin.invoke('probe', host)).toMatchObject({ ok: false })
+    expect(await plugin.actions.probe(host)).toMatchObject({ ok: false })
 
     plugin.update(quiz, { ...state(), live: false })
-    expect(await plugin.invoke('preview', { type: 'off' })).toMatchObject({
+    expect(await plugin.actions.preview({ type: 'off' })).toMatchObject({
       ok: false,
       error: expect.stringContaining('weigert de verbinding')
     })

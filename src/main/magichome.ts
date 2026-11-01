@@ -1,6 +1,6 @@
 import { connect, type Socket } from 'net'
 import {
-  LightSchema,
+  quizLights,
   resolveLight,
   sameLight,
   stateLight,
@@ -18,7 +18,8 @@ import {
   type MagicHomeState
 } from '@shared/magichome'
 import type { Quiz, ShowState } from '@shared/types'
-import type { MainPlugin, Notify } from './plugins'
+import type { PluginConfig } from '@shared/plugins'
+import type { ActionHandlers, MainPlugin, Notify } from './plugins'
 
 const TIMEOUT_MS = 2000
 /** Zo lang blijft de verbinding open na de laatste opdracht. */
@@ -35,7 +36,7 @@ const GAP_MS = 50
  * Buiten de show kan de editor een licht als voorbeeld laten zien; daarna gaat de controller terug
  * naar hoe hij was. Tijdens de show kan de afstandsbediening met de hand een licht kiezen.
  */
-export class MagicHomePlugin implements MainPlugin {
+export class MagicHomePlugin implements MainPlugin<'magichome'> {
   private address: MagicHomeAddress | null = null
   private link: Link | null = null
   /** Het licht van de show zelf (slide ⊕ ronde ⊕ quiz); null = de show stuurt het niet aan. */
@@ -53,18 +54,26 @@ export class MagicHomePlugin implements MainPlugin {
   private idle: Promise<void> = Promise.resolve()
   private failing = false
   private live = false
+  /** De lichten van de geopende quiz, voor de status. */
+  private quizLights: Light[] = []
   /** Hoe het licht was voor het voorbeeld begon; null = geen voorbeeld bezig. */
   private before: Promise<Light> | null = null
   private restoring: Promise<void> = Promise.resolve()
 
   constructor(
     private readonly notify: Notify,
-    /** Met de hand een ander licht: de afstandsbediening toont het meteen. */
-    private readonly onChange: () => void = () => {}
+    /** Wat er nu brandt: de werkbalk en de afstandsbediening tonen het meteen. */
+    private readonly publish: (status: LightStatus) => void = () => {}
   ) {}
 
-  configure(config: Record<string, unknown>): void {
-    const address = parseAddress(typeof config.host === 'string' ? config.host : '')
+  readonly actions: ActionHandlers<'magichome'> = {
+    choose: (light) => this.choose(light),
+    preview: (light) => this.preview(light),
+    probe: (host) => this.probe(host)
+  }
+
+  configure(config: PluginConfig<'magichome'>): void {
+    const address = parseAddress(config.host)
     if (JSON.stringify(address) === JSON.stringify(this.address)) return
     this.address = address
     this.link?.close()
@@ -88,22 +97,14 @@ export class MagicHomePlugin implements MainPlugin {
       this.manual = null
     }
     this.showLight = light
+    this.quizLights = quiz ? quizLights(quiz) : []
     this.want(this.manual?.light ?? light)
+    this.publishStatus()
   }
 
-  async invoke(
-    action: string,
-    payload: unknown
-  ): Promise<MagicHomeProbe | MagicHomeResult | LightStatus | null> {
-    if (action === 'preview' || action === 'choose') {
-      const light = LightSchema.nullable().safeParse(payload)
-      if (!light.success) return null
-      return action === 'preview' ? this.preview(light.data) : this.choose(light.data)
-    }
-    if (action === 'status')
-      return { light: this.manual?.light ?? this.showLight, manual: !!this.manual }
-    if (action !== 'probe') return null
-    const address = parseAddress(typeof payload === 'string' ? payload : '')
+  /** Alleen de toestand opvragen; het licht verandert niet. */
+  private async probe(host: string): Promise<MagicHomeProbe> {
+    const address = parseAddress(host)
     if (!address) return { ok: false, error: 'Vul het IP-adres van de controller in' }
     // Dezelfde controller: over de verbinding die er al is, niet nog een erbij.
     const same = this.link && JSON.stringify(address) === JSON.stringify(this.address)
@@ -132,8 +133,17 @@ export class MagicHomePlugin implements MainPlugin {
     if (!this.link) return { ok: false, error: 'Vul eerst het adres van de controller in' }
     this.manual = light ? { light, showLight: this.showLight } : null
     this.want(light ?? this.showLight)
-    this.onChange()
+    this.publishStatus()
     return { ok: true }
+  }
+
+  /** Alleen wat de plug-in weet; dit vraagt de controller niets. */
+  private publishStatus(): void {
+    this.publish({
+      light: this.manual?.light ?? this.showLight,
+      manual: !!this.manual,
+      quiz: this.quizLights
+    })
   }
 
   /** Stuurt dit licht, of laat het licht zoals het is (null). */

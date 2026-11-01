@@ -1,8 +1,14 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { DEFAULT_SPEED, LIGHT_COLORS, lightLabel, sameLight, type Light } from '@shared/light'
+import {
+  DEFAULT_SPEED,
+  LIGHT_COLORS,
+  lightLabel,
+  sameLight,
+  type Light,
+  type LightStatus
+} from '@shared/light'
 import { EFFECT_COLORS, EFFECT_GROUPS, effectInfo, gridRows } from '@shared/light-effects'
-import type { RemoteLight } from '@shared/remote'
 import Icon from '../../components/Icon.vue'
 import LightDot from './LightDot.vue'
 
@@ -11,7 +17,7 @@ import LightDot from './LightDot.vue'
  * tot de show zelf een ander licht kiest; "Volg de show" gaat er meteen naar terug. Op de
  * telefoon en in de werkbalk van de show.
  */
-const props = defineProps<{ light: RemoteLight; disabled: boolean }>()
+const props = defineProps<{ light: LightStatus; disabled: boolean }>()
 const emit = defineEmits<{ choose: [light: Light | null] }>()
 
 const current = computed(() => props.light.light)

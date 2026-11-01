@@ -4,9 +4,22 @@
  */
 import { z } from 'zod'
 import { effectInfo } from './light-effects'
-import { EFFECT_MAX, EFFECT_MIN, type MagicHomeState } from './magichome'
-import type { PluginData } from './plugins'
-import { activeRound } from './resolve'
+import {
+  EFFECT_MAX,
+  EFFECT_MIN,
+  type MagicHomeProbe,
+  type MagicHomeResult,
+  type MagicHomeState
+} from './magichome'
+import {
+  action,
+  definePlugin,
+  pluginData,
+  resolvePluginData,
+  setPluginData,
+  typeOnly,
+  type HasPlugins
+} from './plugin'
 import type { Quiz, ShowState } from './types'
 
 export const LightSchema = z.discriminatedUnion('type', [
@@ -27,34 +40,53 @@ export interface LightStatus {
   light: Light | null
   /** Met de hand gekozen (afstandsbediening), tot de show zelf een ander licht kiest. */
   manual: boolean
+  /** De lichten die de geopende quiz gebruikt, om snel uit te kiezen (zie quizLights). */
+  quiz: Light[]
 }
 
-const PLUGIN = 'magichome'
-
-interface HasPlugins {
-  plugins?: PluginData
-}
+export const MAGICHOME = definePlugin({
+  id: 'magichome',
+  text: {
+    nl: {
+      name: 'MagicHome-licht',
+      description:
+        'Ledstrips met een MagicHome-controller een kleur of effect geven, per ronde en per slide.'
+    },
+    en: {
+      name: 'MagicHome lights',
+      description:
+        'Give LED strips with a MagicHome controller a colour or effect, per round and per slide.'
+    }
+  },
+  /** Het adres van de controller, per Mac; leeg = nog niet ingesteld. */
+  config: z.object({ host: z.string().catch('').default('') }).catch({ host: '' }),
+  data: z.object({ light: LightSchema }),
+  status: typeOnly<LightStatus>(),
+  actions: {
+    /** Tijdens de show met de hand een licht kiezen; null = weer het licht van de show. */
+    choose: action<MagicHomeResult>()(LightSchema.nullable()),
+    /** Buiten de show een licht laten zien; null = klaar, terug naar hoe het was. */
+    preview: action<MagicHomeResult>()(LightSchema.nullable()),
+    /** Vraagt alleen de toestand op van de controller op dit adres; het licht verandert niet. */
+    probe: action<MagicHomeProbe>()(z.string())
+  },
+  /** Een telefoon mag alleen het licht kiezen; geen voorbeeld en geen ander adres proberen. */
+  remoteActions: ['choose']
+})
 
 /** Het licht van een slide, ronde of quiz; iets ongeldigs telt als niets. */
 export function lightOf(holder: HasPlugins | null | undefined): Light | undefined {
-  const data = holder?.plugins?.[PLUGIN] as { light?: unknown } | undefined
-  const parsed = LightSchema.safeParse(data?.light)
-  return parsed.success ? parsed.data : undefined
+  return pluginData(MAGICHOME, holder)?.light
 }
 
 export function setLight(holder: HasPlugins, light: Light | undefined): void {
-  const { [PLUGIN]: _, ...rest } = holder.plugins ?? {}
-  const plugins = light ? { ...rest, [PLUGIN]: { light } } : rest
-  if (Object.keys(plugins).length) holder.plugins = plugins
-  else delete holder.plugins
+  setPluginData(MAGICHOME, holder, light ? { light } : undefined)
 }
 
 /** Welk licht er nu hoort; null = niets aan veranderen. Alleen tijdens de show. */
 export function resolveLight(quiz: Quiz, state: ShowState): Light | null {
   if (!state.live) return null
-  const round = activeRound(quiz, state)
-  const slide = round && state.slideIndex >= 0 ? round.slides[state.slideIndex] : undefined
-  return lightOf(slide) ?? lightOf(round) ?? lightOf(quiz) ?? null
+  return resolvePluginData(MAGICHOME, quiz, state)?.light ?? null
 }
 
 /** De lichten die de quiz gebruikt, elk één keer: eerst de standaard, dan per ronde en slide. */

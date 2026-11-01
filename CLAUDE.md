@@ -138,6 +138,14 @@ fixtures/      demo.pubquiz (werk van Remco!) en rondleiding.pubquiz (gemaakt do
 - `src/renderer/src/lib/live-controls.ts` deelt de bediening tussen de werkbalk, de sneltoetsen en `ShowLive.vue`.
 - `stepTarget` bepaalt waar ← → doorheen gaan: de antwoorden, de fragmenten of de slides.
 
+**Talen** (issue #53)
+
+- `src/shared/i18n.ts`: een klein eigen woordenboek. Elk onderdeel heeft zijn teksten in `defineMessages`: Nederlands is de bron, Engels moet dezelfde sleutels hebben (typecheck).
+- De app kiest de taal van macOS (`appLocale()` in `src/main/locale.ts`), maar alleen uit `ACTIVE_LOCALES`. Engels gaat pas aan als alles vertaald is. `PUBQUIZ_LOCALE=en` dwingt Engels af.
+- Al vertaald: de telefoon (`src/renderer/src/remote/messages.ts`); hij neemt de taal van de Mac over via `RemoteView.locale`.
+- Teksten die main en shared maken (vorige/volgende, "Slide 2 van 5", foutmeldingen voor de telefoon) staan in `src/shared/show-messages.ts`; geef de `Locale` mee.
+- Vensters op de Mac kennen de taal via `?locale=` in hun adres (`loadRoute`); in de renderer lees je hem uit `src/renderer/src/lib/locale.ts`. Al vertaald: wat er over de slide heen op een scherm staat (`SCREEN_MESSAGES`), en naam en uitleg van plug-ins (`text` in de definitie).
+
 **Rondesoorten**
 
 - Het zijn presets in `createRound` in `src/shared/factory.ts`: normal, music, pictures, break en answers.
@@ -149,9 +157,13 @@ Plug-ins zijn optionele extra's. Je zet ze per Mac aan of uit bij Instellingen (
 
 **Waar ze staan**
 
-- `src/shared/plugins.ts`: de lijst met plug-ins.
+- `src/shared/plugin.ts`: `definePlugin` en de hulpjes voor quizgegevens (`pluginData`, `setPluginData`, `resolvePluginData`: slide ⊕ ronde ⊕ quiz).
+- Elke plug-in heeft één definitie met zod-schema's voor zijn instellingen (`config`) en quizgegevens (`data`), het type van zijn status (`status`) en zijn acties (`actions`): `MAGICHOME` in `src/shared/light.ts`, `REMOTE` in `src/shared/remote.ts`.
+- Status wordt geduwd, niet gevraagd: een plug-in roept `host.publish(status)` aan, main stuurt alleen een echte verandering, hooguit eens per 250 ms (`src/main/plugin-status.ts`). Vensters lezen `session.statusOf(id)` en vragen acties met `pluginAct(id, naam, invoer)`; main controleert de invoer met de definitie.
+- `src/shared/plugins.ts`: de lijst met plug-ins, en `configOf` voor gecontroleerde instellingen.
 - `src/main/plugins.ts`: het deel in main. `FACTORIES` maakt elke plug-in, met een `PluginHost`.
 - `src/renderer/src/plugins/index.ts`: koppelt componenten aan `PluginSlot`-plekken in de app.
+- `remoteActions` in de definitie: wat de telefoon mag vragen; main weigert de rest. Zo'n plug-in krijgt een onderdeel op de telefoon in `src/renderer/src/plugins/phone.ts` (`PHONE_PLUGINS`), met `status`, `disabled` en `act`. De afstandsbediening kent geen andere plug-in bij naam.
 - Quizgegevens van een plug-in staan onder `plugins.<id>` op de quiz, een ronde of een slide. Ze blijven staan als de plug-in uit gaat.
 
 **MagicHome-licht** (`magichome`)

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { PLUGIN_OFF, PLUGINS, type PluginId } from '@shared/plugins'
 import Dialog from '../../components/Dialog.vue'
+import { locale } from '../../lib/locale'
 import { RENDERER_PLUGINS } from '../../plugins'
 import { useSession } from '../../stores/session'
 
@@ -27,8 +28,8 @@ function toggle(id: PluginId, enabled: boolean) {
             @change="toggle(p.id, ($event.target as HTMLInputElement).checked)"
           />
           <span class="grow">
-            <span class="name">{{ p.name }}</span>
-            <span class="muted description">{{ p.description }}</span>
+            <span class="name">{{ p.text[locale].name }}</span>
+            <span class="muted description">{{ p.text[locale].description }}</span>
           </span>
         </label>
         <component
