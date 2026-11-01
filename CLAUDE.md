@@ -155,6 +155,7 @@ Plug-ins zijn optionele extra's. Je zet ze per Mac aan of uit bij Instellingen (
 - `src/shared/plugins.ts`: de lijst met plug-ins, en `configOf` voor gecontroleerde instellingen.
 - `src/main/plugins.ts`: het deel in main. `FACTORIES` maakt elke plug-in, met een `PluginHost`.
 - `src/renderer/src/plugins/index.ts`: koppelt componenten aan `PluginSlot`-plekken in de app.
+- `remoteActions` in de definitie: wat de telefoon mag vragen; main weigert de rest. Zo'n plug-in krijgt een onderdeel op de telefoon in `src/renderer/src/plugins/phone.ts` (`PHONE_PLUGINS`), met `status`, `disabled` en `act`. De afstandsbediening kent geen andere plug-in bij naam.
 - Quizgegevens van een plug-in staan onder `plugins.<id>` op de quiz, een ronde of een slide. Ze blijven staan als de plug-in uit gaat.
 
 **MagicHome-licht** (`magichome`)

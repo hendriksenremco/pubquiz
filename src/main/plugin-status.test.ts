@@ -8,10 +8,10 @@ describe('StatusBoard', () => {
   it('stuurt een nieuwe status meteen, en dezelfde niet nog eens', () => {
     const send = vi.fn()
     const board = new StatusBoard(send)
-    board.publish('magichome', { light: null, manual: false })
-    board.publish('magichome', { light: null, manual: false })
-    expect(send.mock.calls).toEqual([['magichome', { light: null, manual: false }]])
-    expect(board.get('magichome')).toEqual({ light: null, manual: false })
+    board.publish('magichome', { light: null, manual: false, quiz: [] })
+    board.publish('magichome', { light: null, manual: false, quiz: [] })
+    expect(send.mock.calls).toEqual([['magichome', { light: null, manual: false, quiz: [] }]])
+    expect(board.get('magichome')).toEqual({ light: null, manual: false, quiz: [] })
     expect(board.get('remote')).toBeNull()
   })
 

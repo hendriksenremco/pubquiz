@@ -1,7 +1,7 @@
 import { app } from 'electron'
 import { join } from 'path'
 import type { ShowCommand } from '@shared/ipc'
-import { parseAction } from '@shared/plugin'
+import { parseAction, type ActionSource } from '@shared/plugin'
 import {
   configOf,
   pluginDefinition,
@@ -44,6 +44,11 @@ export interface PluginHost<Id extends PluginId> {
     name: Name,
     input: ActionInput<Other, Name>
   ): Promise<ActionResult<Other, Name> | null>
+  /**
+   * Een actie namens een telefoon: alleen wat de andere plug-in in `remoteActions` toestaat, met
+   * ongecontroleerde invoer. null = die plug-in staat uit, de actie mag niet of de invoer klopt niet.
+   */
+  remoteAct(id: PluginId, name: string, input: unknown): Promise<unknown>
 }
 
 /** Per actie van plug-in `Id`: wat hij doet met de gecontroleerde invoer. */
@@ -131,11 +136,19 @@ export class Plugins {
     for (const plugin of this.running.values()) plugin.update(quiz, state)
   }
 
-  /** Een actie, gecontroleerd met de definitie; null = de plug-in staat uit of de actie klopt niet. */
-  async act(id: PluginId, name: string, input: unknown): Promise<unknown> {
+  /**
+   * Een actie, gecontroleerd met de definitie; null = de plug-in staat uit of de actie klopt niet.
+   * Vraagt een telefoon hem (`remote`), dan alleen wat in `remoteActions` staat.
+   */
+  async act(
+    id: PluginId,
+    name: string,
+    input: unknown,
+    source: ActionSource = 'app'
+  ): Promise<unknown> {
     const plugin = this.running.get(id)
     if (!plugin) return null
-    const parsed = parseAction(pluginDefinition(id), name, input)
+    const parsed = parseAction(pluginDefinition(id), name, input, source)
     if (!parsed) return null
     const handlers = plugin.actions as Record<string, (input: unknown) => unknown>
     return (await handlers[name](parsed.input)) ?? null
@@ -175,7 +188,8 @@ export class Plugins {
         other: Other,
         name: Name,
         input: ActionInput<Other, Name>
-      ) => this.act(other, name, input) as Promise<ActionResult<Other, Name> | null>
+      ) => this.act(other, name, input) as Promise<ActionResult<Other, Name> | null>,
+      remoteAct: (other, name, input) => this.act(other, name, input, 'remote')
     }
   }
 }

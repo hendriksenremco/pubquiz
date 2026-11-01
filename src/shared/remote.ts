@@ -5,9 +5,9 @@
  */
 import { z } from 'zod'
 import type { ShowCommand } from './ipc'
-import { LightSchema, quizLights, type Light, type LightStatus } from './light'
 import { adjacentFragment } from './autoplay'
 import { action, definePlugin, typeOnly } from './plugin'
+import type { PluginId, PluginStatus } from './plugins'
 import {
   activeRound,
   adjacentRound,
@@ -55,9 +55,12 @@ export interface RemoteView {
   screens: boolean
   blackout: boolean
   muted: boolean
-  /** null = de plug-in MagicHome-licht staat uit. */
-  light: RemoteLight | null
+  /** Plug-ins die aan staan en knoppen op de telefoon hebben (`remoteActions`), met hun status. */
+  plugins: RemotePlugin[]
 }
+
+/** Eén plug-in op de telefoon; het onderdeel ervoor staat in src/renderer/src/plugins/phone.ts. */
+export type RemotePlugin = { [Id in PluginId]: { id: Id; status: PluginStatus<Id> } }[PluginId]
 
 /** Vorige en volgende werken zoals ← → op de Mac: slides, fragmenten of antwoorden. */
 export interface RemoteStep {
@@ -74,11 +77,6 @@ export interface RemoteStep {
   next: boolean
 }
 
-export interface RemoteLight extends LightStatus {
-  /** De lichten die de quiz zelf gebruikt. */
-  quiz: Light[]
-}
-
 export const RemoteActionSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('round'), direction: z.enum(['next', 'prev']) }),
   z.object({ type: z.literal('restartRound') }),
@@ -87,8 +85,17 @@ export const RemoteActionSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('step'), direction: z.enum(['next', 'prev']) }),
   z.object({ type: z.literal('blackout'), on: z.boolean() }),
   z.object({ type: z.literal('mute'), on: z.boolean() }),
-  /** null = het licht volgt de show weer. */
-  z.object({ type: z.literal('light'), light: LightSchema.nullable() })
+  /**
+   * Een actie van een plug-in, bv. het licht kiezen. Main controleert hem met de definitie van die
+   * plug-in, en alleen wat in zijn `remoteActions` staat, mag.
+   */
+  z.object({
+    type: z.literal('plugin'),
+    id: z.string().max(64),
+    action: z.string().max(64),
+    /** Ontbreekt als de actie geen invoer heeft (JSON kent geen undefined). */
+    input: z.unknown().optional()
+  })
 ])
 
 /** Wat de telefoon vraagt. Aan/uit is de gewenste stand, geen wissel: twee keer tikken mag. */
@@ -105,10 +112,11 @@ export interface RemoteLink {
 /** Antwoord van de Mac op een actie. */
 export type RemoteResult = { ok: true } | { ok: false; error: string }
 
+/** `plugins`: de plug-ins voor de telefoon; zonder quiz toont hij ze niet. */
 export function remoteView(
   quiz: Quiz | null,
   state: ShowState,
-  light: LightStatus | null
+  plugins: RemotePlugin[] = []
 ): RemoteView {
   const round = quiz ? activeRound(quiz, state) : null
   return {
@@ -124,13 +132,13 @@ export function remoteView(
     screens: !!quiz?.screens.length,
     blackout: !!quiz && allBlack(quiz, state),
     muted: !state.backgroundEnabled,
-    light: light && quiz ? { ...light, quiz: quizLights(quiz) } : null
+    plugins: quiz ? plugins : []
   }
 }
 
 /**
- * De opdracht voor de show, zoals de knoppen op de Mac hem geven; null = niets te doen (het
- * licht gaat via de plug-in). Geluid uit = fragment stopt én achtergrond uit; weer aan zet de
+ * De opdracht voor de show, zoals de knoppen op de Mac hem geven; null = niets te doen (een
+ * actie van een plug-in gaat via die plug-in). Geluid uit = fragment stopt én achtergrond uit; weer aan zet de
  * achtergrond terug.
  */
 export function remoteCommand(
@@ -151,7 +159,7 @@ export function remoteCommand(
     case 'mute':
       if (action.on) return { type: 'stopAll' }
       return state.backgroundEnabled ? null : { type: 'toggleBackground' }
-    case 'light':
+    case 'plugin':
       return null
   }
 }
