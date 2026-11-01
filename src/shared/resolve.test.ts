@@ -393,5 +393,10 @@ describe('referenties', () => {
       'Ronde "Muziek", Fragment 2: media ontbreekt',
       'Ronde "Muziek", Fragment 2: kanaal ontbreekt'
     ])
+    expect(findBrokenReferences(quiz, 'en')).toEqual([
+      'Round "Muziek", Fragment 1: channel missing',
+      'Round "Muziek", Fragment 2: media missing',
+      'Round "Muziek", Fragment 2: channel missing'
+    ])
   })
 })

@@ -6,14 +6,18 @@ import {
   ANSWERS_MESSAGES,
   FRAGMENT_PAD_MESSAGES,
   LIVE_MESSAGES,
-  MIXER_MESSAGES
+  MIXER_MESSAGES,
+  START_MESSAGES
 } from './live-messages'
+import { AUDIO_DEVICE_MESSAGES } from '../../lib/audio-devices'
 
 const BOOKS: Record<string, MessageBook<string>> = {
   LIVE_MESSAGES,
   ANSWERS_MESSAGES,
   FRAGMENT_PAD_MESSAGES,
-  MIXER_MESSAGES
+  MIXER_MESSAGES,
+  START_MESSAGES,
+  AUDIO_DEVICE_MESSAGES
 }
 
 describe('teksten van de show', () => {
