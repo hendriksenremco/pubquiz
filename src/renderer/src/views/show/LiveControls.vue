@@ -9,11 +9,33 @@ import { LIVE_MESSAGES } from './live-messages'
 /** Werkbalk tijdens de show: noodknoppen, sneltoetsen, terug naar bewerken en stoppen. */
 const emit = defineEmits<{ edit: [] }>()
 const t = LIVE_MESSAGES.in(locale)
-const { allBlack, toggleBlackout, muted, toggleSound, stopShow, shortcuts } = useLiveControls()
+const {
+  round,
+  timing,
+  timerLength,
+  toggleTimer,
+  allBlack,
+  toggleBlackout,
+  muted,
+  toggleSound,
+  stopShow,
+  shortcuts
+} = useLiveControls()
 </script>
 
 <template>
   <div class="live-controls">
+    <button
+      class="btn"
+      :class="{ active: timing }"
+      :disabled="!round && !timing"
+      :title="timing ? t('timerOffHint') : t('timerOnHint', { seconds: timerLength })"
+      @click="toggleTimer"
+    >
+      <Icon :name="timing ? 'stop' : 'timer'" :size="15" />
+      {{ timing ? t('timerOff') : t('timerOn') }}
+      <span class="kbd">T</span>
+    </button>
     <button
       class="btn"
       :class="{ alert: allBlack }"

@@ -135,6 +135,7 @@ export function createShowState(): ShowState {
     answered: [],
     loopUntil: null,
     loopPaused: false,
+    timer: null,
     blackout: [],
     backgroundEnabled: true,
     volumes: {}

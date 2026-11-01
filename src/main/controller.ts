@@ -71,7 +71,9 @@ export class AppController {
   readonly airplay = new AirPlayBrowser((devices) => this.broadcast(IPC.airplay, [devices]))
   readonly show = new ShowController({
     quiz: () => this.quiz,
-    publish: (state) => this.onState(state)
+    publish: (state) => this.onState(state),
+    timerEnded: (channelId) =>
+      this.audio?.webContents.send(IPC.audioCommand, { type: 'timerEnd', channelId })
   })
   readonly plugins = new Plugins({
     notify: (level, message) => this.notify(level, message),

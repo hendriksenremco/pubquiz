@@ -21,6 +21,7 @@ onMounted(async () => {
   navigator.mediaDevices.addEventListener('devicechange', refreshDevices)
   api.onAudioCommand((command) => {
     if (command.type === 'testTone') engine.testTone(command.channelId)
+    if (command.type === 'timerEnd') engine.timerEnd(command.channelId)
   })
   watch(
     () => [session.quiz, session.state, session.hardware] as const,

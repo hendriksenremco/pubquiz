@@ -38,6 +38,8 @@ export type ShowCommand =
   /** Antwoordenronde: volgende/vorige stap, of stoppen. */
   | { type: 'answers'; action: 'next' | 'prev' | 'stop' }
   | { type: 'answerAt'; index: number }
+  /** Aftellen over de slide heen (T); loopt het al, dan stopt het. */
+  | { type: 'timer' }
   /** Slide-loop van de ronde pauzeren of laten doorgaan. */
   | { type: 'slideLoop'; paused: boolean }
   /** `id`: een audiokanaal of een scherm (videogeluid). */
@@ -54,7 +56,10 @@ export type AudioEngineEvent =
   | { type: 'error'; message: string; key?: string }
 
 /** Opdrachten van main aan de audio-engine die niet uit de show-state volgen. */
-export type AudioEngineCommand = { type: 'testTone'; channelId: string }
+export type AudioEngineCommand =
+  | { type: 'testTone'; channelId: string }
+  /** Zacht signaal: het aftellen (T) is voorbij. */
+  | { type: 'timerEnd'; channelId: string }
 
 export interface Snapshot {
   quiz: Quiz | null

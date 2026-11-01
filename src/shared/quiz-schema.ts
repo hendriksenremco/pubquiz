@@ -124,6 +124,8 @@ export const RoundSchema = z.object({
   background: RoundBackgroundSchema,
   fragments: z.array(FragmentSchema),
   autoplay: AutoplaySettingsSchema,
+  /** Aftellen met T in deze ronde; ontbreekt = de tijd van de quiz. */
+  timerSeconds: z.number().int().min(1).max(3600).optional(),
   plugins: PluginDataSchema.optional()
 })
 
@@ -138,5 +140,7 @@ export const QuizSchema = z.object({
   channels: z.array(AudioChannelSchema),
   background: BackgroundSchema.nullable(),
   rounds: z.array(RoundSchema),
+  /** Aftellen met T (seconden); ontbreekt = `DEFAULT_TIMER_SECONDS`. Een ronde kan afwijken. */
+  timerSeconds: z.number().int().min(1).max(3600).optional(),
   plugins: PluginDataSchema.optional()
 })

@@ -40,6 +40,11 @@ export const LIVE_MESSAGES = defineMessages(
     muteOff: 'Geluid aan',
     muteOnHint: 'Fragment stopt en achtergrondmuziek gaat uit',
     muteOffHint: 'Achtergrondmuziek weer aan',
+    timerOn: 'Aftellen',
+    timerOff: 'Stop aftellen',
+    timerOnHint:
+      '{seconds} seconden aftellen op de schermen, met een zacht signaal aan het eind (T)',
+    timerOffHint: 'Het aftellen stoppen (T)',
     shortcuts: 'Sneltoetsen',
     edit: 'Bewerken',
     stopShow: 'Stop show',
@@ -59,7 +64,8 @@ export const LIVE_MESSAGES = defineMessages(
     keySkip: 'Volgende in de reeks',
     keyBlackout: 'Beeld op zwart of terug',
     keyMute: 'Geluid uit of aan',
-    keyLoop: 'Loop van de slides pauzeren of verder'
+    keyLoop: 'Loop van de slides pauzeren of verder',
+    keyTimer: 'Aftellen of stoppen'
   },
   {
     en: {
@@ -95,6 +101,10 @@ export const LIVE_MESSAGES = defineMessages(
       muteOff: 'Unmute',
       muteOnHint: 'The clip stops and the background music turns off',
       muteOffHint: 'Background music back on',
+      timerOn: 'Countdown',
+      timerOff: 'Stop countdown',
+      timerOnHint: 'Count down {seconds} seconds on the screens, with a soft chime at the end (T)',
+      timerOffHint: 'Stop the countdown (T)',
       shortcuts: 'Shortcuts',
       edit: 'Edit',
       stopShow: 'Stop show',
@@ -114,7 +124,8 @@ export const LIVE_MESSAGES = defineMessages(
       keySkip: 'Next in the sequence',
       keyBlackout: 'Black out or back',
       keyMute: 'Mute or unmute',
-      keyLoop: 'Pause or resume the slide loop'
+      keyLoop: 'Pause or resume the slide loop',
+      keyTimer: 'Start or stop the countdown'
     }
   }
 )
