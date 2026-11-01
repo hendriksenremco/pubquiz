@@ -316,7 +316,7 @@ function setAnswersFor(roundId: string, on: boolean) {
         <Icon name="copy" :size="14" /> {{ t('duplicate') }}
       </button>
       <span class="grow" />
-      <button class="btn btn-ghost btn-sm btn-danger" @click="emit('remove')">
+      <button class="btn btn-ghost btn-sm" @click="emit('remove')">
         <Icon name="trash" :size="14" /> {{ t('remove') }}
       </button>
     </footer>
