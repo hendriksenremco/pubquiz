@@ -1,5 +1,7 @@
-import { ref, shallowRef } from 'vue'
+import { computed, ref, shallowRef } from 'vue'
+import { pickLocale } from '@shared/i18n'
 import type { RemoteAction, RemoteResult, RemoteView } from '@shared/remote'
+import { REMOTE_MESSAGES } from './messages'
 
 /** `denied`: de sleutel klopt niet (meer), bv. na "Nieuwe code" op de Mac. */
 export type LinkState = 'connecting' | 'open' | 'lost' | 'denied'
@@ -18,6 +20,10 @@ export const imageUrl = (assetId: string | undefined): string | null =>
 export const view = shallowRef<RemoteView | null>(null)
 export const link = ref<LinkState>(key ? 'connecting' : 'denied')
 export const toast = ref('')
+
+/** De taal van de Mac; vóór de eerste verbinding die van de telefoon. */
+export const locale = computed(() => view.value?.locale ?? pickLocale(navigator.languages))
+export const t = computed(() => REMOTE_MESSAGES.in(locale.value))
 
 let source: EventSource | null = null
 let retry: ReturnType<typeof setTimeout> | null = null
@@ -74,7 +80,7 @@ export async function send(action: RemoteAction): Promise<void> {
     if (res.status === 401) link.value = 'denied'
     result = await res.json()
   } catch {
-    result = { ok: false, error: 'De Mac is niet bereikbaar' }
+    result = { ok: false, error: t.value('unreachable') }
   }
   if (!result.ok) showToast(result.error)
 }

@@ -81,7 +81,7 @@ The old working name "Pubquiz" still appears in the code: the repo, `.pubquiz` f
 
 1. **Open an issue first** for anything bigger than a small fix, so we can agree on the approach.
 2. **Branch from `master`.** The branches are `master` and `develop`; there is no `main`.
-3. **Commit messages in English.** Text in the app and code comments are in Dutch.
+3. **Commit messages in English.** Text in the app and code comments are in Dutch. Text in the app is moving to per-part dictionaries (`defineMessages` in `src/shared/i18n.ts`); English stays off until everything is translated (issue #53).
 4. **Before a pull request:** `pnpm typecheck`, `pnpm test`, the e2e tests if you can (macOS), and `npx prettier --check` on the files you changed.
 5. **Open a pull request to `master`.** The CI (`.github/workflows/ci.yml`) runs on macOS: typecheck, unit tests, e2e tests and an unsigned dmg. The e2e screenshots are uploaded as the `test-results` artifact. A job that compares them with `master` and posts the differences as a comment is on its way (#28).
 6. **Remco reviews and merges.**

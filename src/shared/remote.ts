@@ -4,6 +4,7 @@
  * een geheime sleutel. De telefoon krijgt alleen wat hij toont, niet de hele quiz.
  */
 import { z } from 'zod'
+import type { Locale } from './i18n'
 import type { ShowCommand } from './ipc'
 import { adjacentFragment } from './autoplay'
 import { action, definePlugin, typeOnly } from './plugin'
@@ -38,6 +39,8 @@ export const REMOTE = definePlugin({
 
 /** Wat de telefoon toont. */
 export interface RemoteView {
+  /** De taal van de app op de Mac; de telefoon gebruikt dezelfde, met dezelfde namen. */
+  locale: Locale
   /** Titel van de geopende quiz; null = er is geen quiz open. */
   quiz: string | null
   live: boolean
@@ -116,10 +119,12 @@ export type RemoteResult = { ok: true } | { ok: false; error: string }
 export function remoteView(
   quiz: Quiz | null,
   state: ShowState,
-  plugins: RemotePlugin[] = []
+  plugins: RemotePlugin[] = [],
+  locale: Locale = 'nl'
 ): RemoteView {
   const round = quiz ? activeRound(quiz, state) : null
   return {
+    locale,
     quiz: quiz?.title ?? null,
     live: state.live,
     round: round && quiz ? { title: round.title, number: quiz.rounds.indexOf(round) + 1 } : null,

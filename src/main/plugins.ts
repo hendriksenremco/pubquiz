@@ -18,6 +18,7 @@ import {
 import type { Notice, Quiz, ShowState } from '@shared/types'
 import { MagicHomePlugin } from './magichome'
 import { StatusBoard } from './plugin-status'
+import { appLocale } from './locale'
 import { RemotePlugin, type RemoteOptions } from './remote'
 
 export type Notify = (level: Notice['level'], message: string) => void
@@ -91,7 +92,8 @@ function remoteOptions(): RemoteOptions {
   return {
     page: devServer ? { devServer } : { dir: join(__dirname, '../renderer') },
     host: process.env['PUBQUIZ_REMOTE_HOST'],
-    port: port ? Number(port) : undefined
+    port: port ? Number(port) : undefined,
+    locale: appLocale()
   }
 }
 

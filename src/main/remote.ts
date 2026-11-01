@@ -22,6 +22,7 @@ import {
   type RemoteResult,
   type RemoteView
 } from '@shared/remote'
+import type { Locale } from '@shared/i18n'
 import type { Quiz, ShowState } from '@shared/types'
 import { parseAction } from '@shared/plugin'
 import { PLUGINS, type PluginConfig, type PluginId } from '@shared/plugins'
@@ -46,6 +47,8 @@ export interface RemoteOptions {
   host?: string
   /** Standaard REMOTE_PORT, en is die bezet een willekeurige; 0 = meteen een willekeurige. */
   port?: number
+  /** De taal van de app; de telefoon neemt hem over. Standaard Nederlands. */
+  locale?: Locale
 }
 
 type RemoteConfig = PluginConfig<'remote'>
@@ -286,7 +289,7 @@ export class RemotePlugin implements MainPlugin<'remote'> {
       const status = this.host.status(id)
       return status === null ? [] : [{ id, status } as RemotePluginView]
     })
-    return remoteView(this.quiz, this.state, plugins)
+    return remoteView(this.quiz, this.state, plugins, this.options.locale)
   }
 
   /** De telefoons bijwerken; één keer voor alles wat tegelijk verandert. */
