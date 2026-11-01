@@ -231,6 +231,9 @@ export const ROUND_MESSAGES = defineMessages(
     every: 'Elke',
     loopLabel: 'Seconden per slide',
     seconds: 'seconden',
+    timer: 'Aftellen (T)',
+    timerLabel: 'Seconden aftellen met T in deze ronde',
+    timerQuiz: 'Leeg: {seconds} s, zoals de quiz',
     answers: 'Antwoorden',
     answersOn: 'Antwoorden van andere rondes langslopen',
     missingAnswers:
@@ -291,6 +294,9 @@ export const ROUND_MESSAGES = defineMessages(
       every: 'Every',
       loopLabel: 'Seconds per slide',
       seconds: 'seconds',
+      timer: 'Countdown (T)',
+      timerLabel: 'Seconds to count down with T in this round',
+      timerQuiz: 'Empty: {seconds} s, like the quiz',
       answers: 'Answers',
       answersOn: 'Go through the answers of other rounds',
       missingAnswers:
@@ -458,6 +464,11 @@ export const SETUP_MESSAGES = defineMessages(
     channelInUse:
       'Dit kanaal wordt nog {count}× gebruikt. Zet de achtergrond en fragmenten eerst op een ander kanaal.',
     noChannel: 'Voeg eerst een audiokanaal toe.',
+    show: 'Tijdens de show',
+    timer: 'Aftellen',
+    timerLabel: 'Seconden aftellen met T',
+    timerUnit: 'seconden, met T in de show',
+    timerHint: 'Na een vraag. Een ronde kan een eigen tijd hebben.',
     file: 'Bestand',
     createFromCurrent: 'Nieuwe quiz op basis van deze',
     exportZip: 'Exporteer als zip',
@@ -493,6 +504,11 @@ export const SETUP_MESSAGES = defineMessages(
       channelInUse:
         'This channel is still used {count}×. Move the background music and clips to another channel first.',
       noChannel: 'Add an audio channel first.',
+      show: 'During the show',
+      timer: 'Countdown',
+      timerLabel: 'Seconds to count down with T',
+      timerUnit: 'seconds, with T in the show',
+      timerHint: 'After a question. A round can have its own time.',
       file: 'File',
       createFromCurrent: 'New quiz based on this one',
       exportZip: 'Export as zip',

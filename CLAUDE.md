@@ -143,6 +143,7 @@ fixtures/      demo.pubquiz (werk van Remco!), rondleiding.pubquiz en tour.pubqu
 
 - `src/renderer/src/lib/live-controls.ts` deelt de bediening tussen de werkbalk, de sneltoetsen en `ShowLive.vue`.
 - `stepTarget` bepaalt waar ← → doorheen gaan: de antwoorden, de fragmenten of de slides.
+- Aftellen (T, knop "Aftellen" op de Mac en de telefoon, issue #105): `state.timer` in main, over de slide heen op de schermen met het fragmentnummer (of alle schermen, `timerScreens`), met een zacht signaal op het fragmentenkanaal aan het eind. De tijd is ronde ⊕ quiz ⊕ 30 s (`timerSeconds` in `resolve.ts`).
 
 **Talen** (issue #53)
 
