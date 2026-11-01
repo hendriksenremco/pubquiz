@@ -8,4 +8,5 @@ test-results
 playwright-report
 fixtures/demo.pubquiz/media
 fixtures/rondleiding.pubquiz
+fixtures/tour.pubquiz
 *.tsbuildinfo

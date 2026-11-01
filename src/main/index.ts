@@ -13,7 +13,7 @@ import { AppController } from './controller'
 import { handleMediaProtocol, registerMediaScheme } from './media-protocol'
 import { appLocale } from './locale'
 import { buildMenu } from './menu'
-import { NOTICE_MESSAGES } from './messages'
+import { NOTICE_MESSAGES, TOUR_MESSAGES } from './messages'
 import { configurePermissions } from './permissions'
 import { QUIZ_EXT } from './quiz-files'
 import { adoptSettings, Settings } from './settings'
@@ -41,15 +41,16 @@ app.on('open-file', (event, path) => {
 if (!app.requestSingleInstanceLock()) app.quit()
 
 /**
- * De meegeleverde rondleiding: in de app (electron-builder extraResources), of tijdens het
- * ontwikkelen die uit `pnpm tour`. PUBQUIZ_TOUR: voor tests; leeg = geen rondleiding.
+ * De meegeleverde rondleiding in de taal van de app: in de app (electron-builder extraResources),
+ * of tijdens het ontwikkelen die uit `pnpm tour`. PUBQUIZ_TOUR: voor tests; leeg = geen rondleiding.
  */
 function tourSource(): string | null {
   const override = process.env['PUBQUIZ_TOUR']
   if (override !== undefined) return override || null
+  const folder = TOUR_MESSAGES.in(appLocale())('folder')
   return app.isPackaged
-    ? join(process.resourcesPath, 'Rondleiding.pubquiz')
-    : join(__dirname, '../../fixtures/rondleiding.pubquiz')
+    ? join(process.resourcesPath, `${folder}${QUIZ_EXT}`)
+    : join(__dirname, `../../fixtures/${folder.toLowerCase()}${QUIZ_EXT}`)
 }
 
 app.whenReady().then(async () => {

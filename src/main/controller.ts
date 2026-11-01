@@ -36,7 +36,7 @@ import {
 } from './quiz-files'
 import { appLocale } from './locale'
 import { locateMedia } from './media-path'
-import { DIALOG_MESSAGES, errorText, NOTICE_MESSAGES } from './messages'
+import { DIALOG_MESSAGES, errorText, NOTICE_MESSAGES, TOUR_MESSAGES } from './messages'
 import { renderFormPdf } from './pdf'
 import { Plugins } from './plugins'
 import { SaveQueue } from './save-queue'
@@ -320,12 +320,12 @@ export class AppController {
   }
 
   /**
-   * Eerste start: de meegeleverde rondleiding naar de bibliotheek kopiëren en op het dashboard
-   * zetten. Eén keer: wie hem uit de lijst haalt, krijgt hem niet terug.
+   * Eerste start: de meegeleverde rondleiding (in de taal van de app) naar de bibliotheek kopiëren
+   * en op het dashboard zetten. Eén keer: wie hem uit de lijst haalt, krijgt hem niet terug.
    */
   async installTour(source: string | null): Promise<void> {
     if (!source || this.settings.tourDir !== null || !(await isQuizDir(source))) return
-    const target = join(this.libraryDir, `Rondleiding${QUIZ_EXT}`)
+    const target = join(this.libraryDir, `${TOUR_MESSAGES.in(appLocale())('folder')}${QUIZ_EXT}`)
     try {
       if (!(await isQuizDir(target))) {
         await fs.mkdir(this.libraryDir, { recursive: true })

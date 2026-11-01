@@ -16,10 +16,13 @@ files:
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
 asarUnpack:
   - 'resources/**'
-# De rondleiding (pnpm tour:build); de app zet hem bij de eerste start op het dashboard.
+# De rondleiding (pnpm tour:build), in het Nederlands en het Engels; de app zet hem bij de eerste
+# start in zijn eigen taal op het dashboard.
 extraResources:
   - from: dist/tour/Rondleiding.pubquiz
     to: Rondleiding.pubquiz
+  - from: dist/tour/Tour.pubquiz
+    to: Tour.pubquiz
 fileAssociations:
   - ext: pubquiz
     name: QuizNote-quiz
