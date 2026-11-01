@@ -49,7 +49,6 @@ export const SCORE_PAD_MESSAGES = defineMessages(
     team: 'Team',
     total: 'Totaal',
     noTeams: 'Nog geen teams. Voeg ze toe bij Quiz-instellingen.',
-    noRounds: 'Deze antwoordenronde kijkt geen ronde na.',
     points: 'Punten van {team} in {round}'
   },
   {
@@ -58,7 +57,6 @@ export const SCORE_PAD_MESSAGES = defineMessages(
       team: 'Team',
       total: 'Total',
       noTeams: 'No teams yet. Add them in Quiz settings.',
-      noRounds: 'This answers round does not check any round.',
       points: 'Points for {team} in {round}'
     }
   }

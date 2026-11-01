@@ -19,6 +19,8 @@ function setup() {
   const quiz = createQuiz('Test')
   const one = createRound('normal', 1)
   const two = createRound('normal', 2)
+  one.slides.push(createSlide('question', 'Vraag 1'))
+  two.slides.push(createSlide('question', 'Vraag 1'))
   const answers = createRound('answers', 3)
   answers.answersFor = [one.id]
   quiz.rounds = [one, two, answers]
@@ -80,6 +82,19 @@ describe('tussenstand', () => {
   it('antwoordenrondes krijgen geen punten', () => {
     const { quiz, one, two } = setup()
     expect(scoredRounds(quiz)).toEqual([one, two])
+  })
+
+  it('een ronde zonder vragen of fragmenten (pauze) krijgt geen punten, tenzij er al punten staan', () => {
+    const { quiz, one, two, answers } = setup()
+    const pause = createRound('break', 4)
+    quiz.rounds = [one, two, pause, answers]
+    expect(scoredRounds(quiz)).toEqual([one, two])
+    expect(roundsToScore(quiz, pause)).toEqual([])
+    const team = addTeam(quiz, 'A')
+    setPoints(quiz, pause.id, team.id, 2)
+    expect(scoredRounds(quiz)).toEqual([one, two, pause])
+    expect(roundsToScore(quiz, pause)).toEqual([pause])
+    expect(standings(quiz)[0].total).toBe(2)
   })
 
   it('de stand: meeste punten bovenaan, gelijk deelt een plaats', () => {
