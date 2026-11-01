@@ -1,10 +1,28 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
-import { DEFAULT_EFFECT, DEFAULT_SPEED, LIGHT_COLORS, lightLabel, type Light } from '@shared/light'
-import { EFFECT_COLORS, EFFECT_GROUPS, effectInfo, gridRows } from '@shared/light-effects'
+import {
+  DEFAULT_EFFECT,
+  DEFAULT_SPEED,
+  LIGHT_COLORS,
+  lightColorName,
+  lightLabel,
+  type Light
+} from '@shared/light'
+import {
+  directionName,
+  EFFECT_COLORS,
+  EFFECT_GROUPS,
+  effectInfo,
+  effectLabel,
+  gridLabel,
+  gridRows,
+  groupName,
+  type EffectGroupId
+} from '@shared/light-effects'
 import Icon from '../../components/Icon.vue'
 import Popover from '../../components/Popover.vue'
 import { vFill } from '../../lib/fill'
+import { locale } from '../../lib/locale'
 import { useSession } from '../../stores/session'
 import { preview, previewOn, useControllerHost } from './controller'
 import LightDot from './LightDot.vue'
@@ -58,7 +76,7 @@ function setColor(input: HTMLInputElement) {
 
 // ── Effect: alle 300, in groepen; de groep van het gekozen effect staat open ─────────────
 const effect = computed(() => (model.value?.type === 'effect' ? model.value : null))
-const openGroup = ref<string | null>(null)
+const openGroup = ref<EffectGroupId | null>(null)
 watch(
   () => effect.value?.effect,
   (id) => {
@@ -68,8 +86,8 @@ watch(
   { immediate: true }
 )
 
-function toggleGroup(name: string) {
-  openGroup.value = openGroup.value === name ? null : name
+function toggleGroup(id: EffectGroupId) {
+  openGroup.value = openGroup.value === id ? null : id
 }
 
 function setEffect(id: number) {
@@ -82,11 +100,13 @@ function setSpeed(input: HTMLInputElement) {
 
 // ── Veld ─────────────────────────────────────────────────────────────────────
 const shown = computed(() => model.value ?? props.fallback)
-const valueText = computed(() => (model.value ? lightLabel(model.value) : props.inheritText))
+const valueText = computed(() =>
+  model.value ? lightLabel(model.value, locale) : props.inheritText
+)
 const title = computed(() =>
   model.value || !props.fallback
     ? `${props.label}: ${valueText.value}`
-    : `${props.label}: ${props.inheritText} (${lightLabel(props.fallback)})`
+    : `${props.label}: ${props.inheritText} (${lightLabel(props.fallback, locale)})`
 )
 
 // ── Voorbeeld op de lamp ─────────────────────────────────────────────────────
@@ -159,8 +179,8 @@ onBeforeUnmount(() => {
             class="swatch"
             :class="{ on: color === c.color }"
             :style="{ background: c.color }"
-            :aria-label="c.name"
-            :title="c.name"
+            :aria-label="lightColorName(c, locale)"
+            :title="lightColorName(c, locale)"
             :aria-pressed="color === c.color"
             @click="model = { type: 'color', color: c.color }"
           />
@@ -187,29 +207,24 @@ onBeforeUnmount(() => {
 
       <template v-else-if="effect">
         <div class="groups">
-          <section v-for="g in EFFECT_GROUPS" :key="g.name" class="effect-group">
+          <section v-for="g in EFFECT_GROUPS" :key="g.id" class="effect-group">
             <button
               type="button"
               class="group-head"
-              :aria-expanded="openGroup === g.name"
-              @click="toggleGroup(g.name)"
+              :aria-expanded="openGroup === g.id"
+              @click="toggleGroup(g.id)"
             >
-              <Icon
-                name="right"
-                :size="13"
-                class="chev"
-                :class="{ turned: openGroup === g.name }"
-              />
-              <span class="grow">{{ g.name }}</span>
-              <span v-if="effectInfo(effect.effect)?.group === g.name" class="here" />
+              <Icon name="right" :size="13" class="chev" :class="{ turned: openGroup === g.id }" />
+              <span class="grow">{{ groupName(g.id, locale) }}</span>
+              <span v-if="effectInfo(effect.effect)?.group === g.id" class="here" />
               <span class="count">{{ g.effects.length }}</span>
             </button>
 
-            <template v-if="openGroup === g.name">
-              <div v-if="g.grid" class="grid" role="group" :aria-label="g.name">
-                <span class="col-label">{{ g.grid.colorLabel }}</span>
+            <template v-if="openGroup === g.id">
+              <div v-if="g.grid" class="grid" role="group" :aria-label="groupName(g.id, locale)">
+                <span class="col-label">{{ gridLabel(g, locale) }}</span>
                 <div v-for="row in gridRows(g)" :key="row.direction" class="grid-row">
-                  <span class="direction">{{ row.direction }}</span>
+                  <span class="direction">{{ directionName(row.direction, locale) }}</span>
                   <button
                     v-for="info in row.cells"
                     :key="info.effect"
@@ -217,14 +232,14 @@ onBeforeUnmount(() => {
                     class="cell"
                     :class="{ on: effect.effect === info.effect }"
                     :style="{ background: EFFECT_COLORS[info.color!].swatch }"
-                    :aria-label="info.name"
-                    :title="info.name"
+                    :aria-label="effectLabel(info, locale)"
+                    :title="effectLabel(info, locale)"
                     :aria-pressed="effect.effect === info.effect"
                     @click="setEffect(info.effect)"
                   />
                 </div>
               </div>
-              <div v-else class="list" role="listbox" :aria-label="g.name">
+              <div v-else class="list" role="listbox" :aria-label="groupName(g.id, locale)">
                 <button
                   v-for="e in g.effects"
                   :key="e.effect"
@@ -235,7 +250,7 @@ onBeforeUnmount(() => {
                   :aria-selected="effect.effect === e.effect"
                   @click="setEffect(e.effect)"
                 >
-                  <span class="grow">{{ e.name }}</span>
+                  <span class="grow">{{ effectLabel(e, locale) }}</span>
                   <Icon v-if="effect.effect === e.effect" name="check" :size="14" />
                 </button>
               </div>
