@@ -113,8 +113,9 @@ async function create() {
   font-size: 12px;
 }
 
+/* Rood is alleen voor live: een fout is geel. */
 .error {
-  color: var(--live);
+  color: var(--warn);
 }
 
 .intro {
