@@ -1,15 +1,18 @@
 <script setup lang="ts">
 import type { Slide } from '@shared/types'
+import { locale } from '../lib/locale'
 import Icon from './Icon.vue'
+import { COMPONENT_MESSAGES } from './messages'
 import Popover from './Popover.vue'
 
 /** Waar een slide op staat: over de video, gedimd, of een effen kleur. */
 const props = defineProps<{ slide: Slide }>()
+const t = COMPONENT_MESSAGES.in(locale)
 
 const BACKDROPS = [
-  { value: 'dim', label: 'Video, gedimd' },
-  { value: 'over-video', label: 'Over de video' },
-  { value: 'color', label: 'Effen kleur' }
+  { value: 'dim', label: t('backdropDim') },
+  { value: 'over-video', label: t('backdropOverVideo') },
+  { value: 'color', label: t('backdropColor') }
 ] as const
 type BackdropKind = (typeof BACKDROPS)[number]['value']
 
@@ -45,7 +48,7 @@ function setColor(input: HTMLInputElement) {
 <template>
   <Popover :width="240" block>
     <template #trigger="{ open, toggle }">
-      <button type="button" class="picker" :class="{ open }" aria-label="Achtergrond" @click="toggle">
+      <button type="button" class="picker" :class="{ open }" :aria-label="t('backdrop')" @click="toggle">
         <span
           v-if="typeof slide.backdrop === 'object'"
           class="swatch-dot"
@@ -66,7 +69,7 @@ function setColor(input: HTMLInputElement) {
       <Icon v-if="kind() === b.value" name="check" />
     </button>
     <div v-if="typeof slide.backdrop === 'object'" class="colors">
-      <div class="swatches" role="group" aria-label="Kleur">
+      <div class="swatches" role="group" :aria-label="t('color')">
         <button
           v-for="c in SWATCHES"
           :key="c"
@@ -74,7 +77,7 @@ function setColor(input: HTMLInputElement) {
           class="swatch"
           :class="{ on: slide.backdrop.color.toLowerCase() === c }"
           :style="{ background: c }"
-          :aria-label="`Kleur ${c}`"
+          :aria-label="t('colorCode', { code: c })"
           :aria-pressed="slide.backdrop.color.toLowerCase() === c"
           @click="slide.backdrop = { color: c }"
         />
@@ -82,7 +85,7 @@ function setColor(input: HTMLInputElement) {
       <input
         class="input input-sm mono hex"
         :value="slide.backdrop.color"
-        aria-label="Eigen kleurcode"
+        :aria-label="t('customColor')"
         maxlength="7"
         spellcheck="false"
         @change="setColor($event.target as HTMLInputElement)"

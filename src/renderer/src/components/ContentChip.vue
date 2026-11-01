@@ -4,10 +4,12 @@ import { findAsset } from '@shared/resolve'
 import type { ScreenContent } from '@shared/types'
 import { vFill } from '../lib/fill'
 import { percent } from '../lib/format'
+import { locale } from '../lib/locale'
 import { useSession } from '../stores/session'
 import AssetGrid from './AssetGrid.vue'
 import Icon from './Icon.vue'
 import MediaThumb from './MediaThumb.vue'
+import { COMPONENT_MESSAGES } from './messages'
 import Popover from './Popover.vue'
 
 type Choice = 'default' | 'video' | 'image' | 'black'
@@ -32,6 +34,7 @@ const muted = defineModel<boolean>('muted', { default: false })
 const emit = defineEmits<{ opened: [] }>()
 
 const session = useSession()
+const t = COMPONENT_MESSAGES.in(locale)
 const current = (): Choice => model.value?.type ?? (props.allowDefault ? 'default' : 'black')
 const choice = ref<Choice>(current())
 watch(model, () => {
@@ -41,10 +44,10 @@ watch(model, () => {
 })
 
 const OPTIONS: { value: Choice; label: string }[] = [
-  { value: 'default', label: 'Standaard' },
-  { value: 'video', label: 'Video' },
-  { value: 'image', label: 'Afbeelding' },
-  { value: 'black', label: 'Zwart' }
+  { value: 'default', label: t('standard') },
+  { value: 'video', label: t('video') },
+  { value: 'image', label: t('image') },
+  { value: 'black', label: t('black') }
 ]
 const options = computed(() => (props.allowDefault ? OPTIONS : OPTIONS.slice(1)))
 
@@ -54,9 +57,9 @@ const shownAsset = computed(() =>
   shown.value.type === 'black' ? null : findAsset(session.quiz!, shown.value.assetId)
 )
 const valueText = computed(() => {
-  if (!model.value) return 'Standaard'
-  if (model.value.type === 'black') return 'Zwart'
-  return shownAsset.value?.name.replace(/\.[^.]+$/, '') ?? 'Ontbrekend bestand'
+  if (!model.value) return t('standard')
+  if (model.value.type === 'black') return t('black')
+  return shownAsset.value?.name.replace(/\.[^.]+$/, '') ?? t('missingFile')
 })
 
 function choose(value: Choice) {
@@ -109,7 +112,14 @@ const defaultSound = computed({
   set: (on: boolean) => (muted.value = !on)
 })
 const soundNote = computed(() =>
-  shownMuted.value ? ', zonder geluid' : shownHasSound.value ? ', met geluid' : ''
+  shownMuted.value ? t('withoutSound') : shownHasSound.value ? t('withSound') : ''
+)
+const title = computed(
+  () =>
+    t('labelValue', {
+      label: props.label,
+      value: model.value ? (shownAsset.value?.name ?? valueText.value) : t('standard')
+    }) + soundNote.value
 )
 </script>
 
@@ -122,7 +132,7 @@ const soundNote = computed(() =>
         class="picker"
         :class="{ open }"
         :aria-label="label"
-        :title="`${label}: ${model ? (shownAsset?.name ?? valueText) : 'Standaard'}${soundNote}`"
+        :title="title"
         @click="(toggle(), emit('opened'))"
       >
         <MediaThumb :asset="shownAsset" :black="shown.type === 'black'" class="chip-thumb" />
@@ -140,7 +150,7 @@ const soundNote = computed(() =>
         type="button"
         class="chip"
         :class="{ open, dimmed: allowDefault && !model && !shownMuted }"
-        :title="`${label}: ${model ? (shownAsset?.name ?? valueText) : 'Standaard'}${soundNote}`"
+        :title="title"
         @click="(toggle(), emit('opened'))"
       >
         <MediaThumb :asset="shownAsset" :black="shown.type === 'black'" class="chip-thumb" />
@@ -171,22 +181,22 @@ const soundNote = computed(() =>
       </div>
 
       <AssetGrid v-if="choice === 'video' || choice === 'image'" v-model="assetId" :kind="choice" />
-      <p v-else-if="choice === 'default'" class="muted note">Toont wat bij de quiz is ingesteld.</p>
+      <p v-else-if="choice === 'default'" class="muted note">{{ t('showsQuizDefault') }}</p>
 
       <div v-if="choice === 'default' && defaultHasSound" class="sound">
         <label class="row">
           <input v-model="defaultSound" type="checkbox" />
-          <span>Geluid van de video</span>
+          <span>{{ t('videoSound') }}</span>
         </label>
         <p class="muted hint">
-          {{ muted ? 'Stil tijdens deze ronde, daarna klinkt hij weer.' : 'Zoals bij de quiz.' }}
+          {{ muted ? t('mutedThisRound') : t('asQuiz') }}
         </p>
       </div>
 
       <div v-if="model?.type === 'video'" class="sound">
         <label class="row">
           <input v-model="soundOn" type="checkbox" />
-          <span>Geluid van de video</span>
+          <span>{{ t('videoSound') }}</span>
         </label>
         <template v-if="soundOn">
           <label class="row volume">
@@ -198,12 +208,12 @@ const soundNote = computed(() =>
               max="1"
               step="0.01"
               class="grow"
-              aria-label="Volume van de video"
+              :aria-label="t('videoVolume')"
             />
             <span class="mono pct">{{ percent(soundVolume) }}</span>
           </label>
           <p class="muted hint">
-            Via de speakers van het scherm, of de uitgang die je bij Start show kiest.
+            {{ t('videoSoundHint') }}
           </p>
         </template>
       </div>

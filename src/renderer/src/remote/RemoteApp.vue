@@ -98,6 +98,7 @@ onMounted(connect)
             :key="screen.slide.id"
             :slide="screen.slide"
             :number="screen.number"
+            :locale="locale"
           />
           <span v-else class="empty">{{ t('noSlide') }}</span>
         </div>

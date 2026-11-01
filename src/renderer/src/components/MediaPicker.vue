@@ -3,21 +3,31 @@ import { computed } from 'vue'
 import { groupByFolder } from '@shared/media-folders'
 import type { MediaKind } from '@shared/types'
 import { formatTime } from '../lib/format'
+import { locale } from '../lib/locale'
 import { useMediaImport } from '../lib/use-media-import'
 import { useSession } from '../stores/session'
+import { COMPONENT_MESSAGES } from './messages'
 import Select, { type SelectOption } from './Select.vue'
 
 const props = withDefaults(
   defineProps<{ kinds: MediaKind[]; placeholder?: string; size?: 'sm' | 'md' }>(),
-  { placeholder: 'Kies media…', size: 'md' }
+  { placeholder: undefined, size: 'md' }
 )
 const model = defineModel<string | undefined>()
 
+const t = COMPONENT_MESSAGES.in(locale)
 const IMPORT = '__import__'
 const KIND_LABEL: Record<MediaKind, string> = {
-  video: "Video's",
-  audio: 'Audio',
-  image: 'Afbeeldingen'
+  video: t('kindVideos'),
+  audio: t('kindAudio'),
+  image: t('kindImages')
+}
+
+/** "Video's en Afbeeldingen": de soorten, de laatste twee met "en". */
+function kindsLabel(kinds: MediaKind[]): string {
+  const labels = kinds.map((k) => KIND_LABEL[k])
+  const last = labels.pop() ?? ''
+  return labels.length ? t('kindsJoin', { first: labels.join(', '), second: last }) : last
 }
 
 const session = useSession()
@@ -27,7 +37,7 @@ const { importFiles } = useMediaImport()
 const groups = computed(() =>
   (session.quiz ? groupByFolder(session.quiz, props.kinds) : []).map((g) => ({
     key: g.folder?.id ?? 'root',
-    label: g.folder?.name ?? props.kinds.map((k) => KIND_LABEL[k]).join(' en '),
+    label: g.folder?.name ?? kindsLabel(props.kinds),
     assets: g.assets
   }))
 )
@@ -41,7 +51,7 @@ const options = computed((): SelectOption[] => [
       group: g.label
     }))
   ),
-  { value: IMPORT, label: 'Importeer bestand…' }
+  { value: IMPORT, label: t('importFile') }
 ])
 
 async function onChange(value: string | undefined) {
@@ -59,7 +69,7 @@ async function onChange(value: string | undefined) {
   <Select
     :model-value="model ?? ''"
     :options="options"
-    :placeholder="placeholder"
+    :placeholder="placeholder ?? t('chooseMedia')"
     :size="size"
     @update:model-value="onChange"
   />

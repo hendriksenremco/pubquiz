@@ -4,10 +4,12 @@ import { findAssetUsages } from '@shared/resolve'
 import type { MediaAsset } from '@shared/types'
 import { vFill } from '../lib/fill'
 import { formatTime } from '../lib/format'
+import { locale } from '../lib/locale'
 import { urlFor } from '../lib/media'
 import { usePreviewPlayer } from '../lib/use-preview-player'
 import { useSession } from '../stores/session'
 import Icon from './Icon.vue'
+import { COMPONENT_MESSAGES } from './messages'
 
 /**
  * Groot voorbeeld van een bestand uit Media, zoals Quick Look: video en geluid spelen met geluid,
@@ -31,7 +33,8 @@ const asset = computed(() => props.items[index.value] ?? null)
 const usages = computed(() => (asset.value ? findAssetUsages(session.quiz!, asset.value.id) : []))
 const folder = computed(() => session.quiz?.folders.find((f) => f.id === asset.value?.folderId))
 
-const KIND = { video: 'Video', image: 'Afbeelding', audio: 'Geluid' } as const
+const t = COMPONENT_MESSAGES.in(locale)
+const KIND = { video: t('video'), image: t('image'), audio: t('sound') }
 
 // Eigen id bij de voorluisterspeler: andere voorbeelden stoppen, maar de tegel van dit bestand
 // gaat niet zelf ook spelen.
@@ -138,7 +141,7 @@ onBeforeUnmount(() => {
         class="preview"
         role="dialog"
         aria-modal="true"
-        :aria-label="`Voorbeeld: ${asset.name}`"
+        :aria-label="t('previewOf', { name: asset.name })"
         tabindex="-1"
       >
         <div class="stage" :class="asset.kind">
@@ -184,7 +187,7 @@ onBeforeUnmount(() => {
         <div class="transport" :class="{ idle: asset.kind === 'image' }">
           <button
             class="btn btn-icon toggle"
-            :aria-label="paused ? 'Speel af' : 'Pauzeer'"
+            :aria-label="paused ? t('play') : t('pause')"
             :disabled="asset.kind === 'image'"
             @click="togglePlay"
           >
@@ -200,7 +203,7 @@ onBeforeUnmount(() => {
             step="0.01"
             :value="current"
             :disabled="!length"
-            aria-label="Positie"
+            :aria-label="t('position')"
             @input="seek"
           />
           <span class="time mono">{{ formatTime(length) }}</span>
@@ -217,22 +220,24 @@ onBeforeUnmount(() => {
                 <Icon name="folder" :size="12" /> {{ folder.name }}
               </span>
             </p>
-            <ul v-if="usages.length" class="usages" aria-label="In gebruik">
+            <ul v-if="usages.length" class="usages" :aria-label="t('inUseLabel')">
               <li v-for="u in usages" :key="u">{{ u }}</li>
             </ul>
-            <p v-else class="unused faint">Nog nergens in gebruik</p>
+            <p v-else class="unused faint">{{ t('unused') }}</p>
           </div>
 
           <div v-if="items.length > 1" class="nav">
-            <button class="btn btn-ghost btn-icon" aria-label="Vorige" @click="step(-1)">
+            <button class="btn btn-ghost btn-icon" :aria-label="t('previous')" @click="step(-1)">
               <Icon name="left" />
             </button>
-            <span class="count mono">{{ index + 1 }} van {{ items.length }}</span>
-            <button class="btn btn-ghost btn-icon" aria-label="Volgende" @click="step(1)">
+            <span class="count mono">{{
+              t('countOf', { index: index + 1, total: items.length })
+            }}</span>
+            <button class="btn btn-ghost btn-icon" :aria-label="t('next')" @click="step(1)">
               <Icon name="right" />
             </button>
           </div>
-          <button class="btn" @click="close">Sluiten <span class="kbd">esc</span></button>
+          <button class="btn" @click="close">{{ t('close') }} <span class="kbd">esc</span></button>
         </footer>
       </div>
     </div>
