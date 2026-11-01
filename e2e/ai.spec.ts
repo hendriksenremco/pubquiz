@@ -122,7 +122,7 @@ test('een AI maakt een quiz met vragen, muziek, plaatjes, een pauze en antwoorde
   // De app opent hem meteen, met de bestanden in een map per ronde.
   await expect(operator.locator('.topbar .name')).toHaveText('Pubquiz Italië')
   await expect(operator.locator('.sidebar .round')).toHaveCount(5)
-  const dir = join(userData, 'Pubquiz', 'Pubquiz Italië.pubquiz')
+  const dir = join(userData, 'Pubquiz', 'Pubquiz Italië.quiznote')
   const saved = JSON.parse(readFileSync(join(dir, 'quiz.json'), 'utf8'))
   expect(saved.folders.map((f: { name: string }) => f.name)).toEqual([
     'Ronde 2: muziek',

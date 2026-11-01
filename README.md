@@ -71,11 +71,11 @@ The key ideas:
 - **Main owns the show.** `ShowController` in `src/main/show.ts` handles every `ShowCommand` and sends the show state to all windows.
 - **Everything live is computed.** `src/shared/resolve.ts` works out what each screen shows and each channel plays, from the quiz and the show state: quiz ⊕ round ⊕ slide.
 - **One renderer, several roles.** The hash picks the role: `operator` (the app), `screen` (one per display), `audio` (hidden, one `AudioContext` per channel with `setSinkId`), `identify` and `print`.
-- **A quiz is a folder** `<name>.pubquiz` with `quiz.json` and `media/`. The format is in `src/shared/quiz-schema.ts`; changes need a migration in `src/shared/migrate.ts`.
+- **A quiz is a folder** `<name>.quiznote` with `quiz.json` and `media/`, in `Documents/QuizNote`. Older quizzes (`.pubquiz`, `Documents/Pubquizzen`) still open. The format is in `src/shared/quiz-schema.ts`; changes need a migration in `src/shared/migrate.ts`.
 
 [CLAUDE.md](CLAUDE.md) has the details (in Dutch), including plug-ins, the remote control and the MCP server. [PLUGINS.md](PLUGINS.md) and [MAGICHOME.md](MAGICHOME.md) cover those parts in depth.
 
-The old working name "Pubquiz" still appears in the code: the repo, `.pubquiz` files, `window.pubquiz` and the `PUBQUIZ_*` variables.
+The old working name "Pubquiz" still appears in the code: the repo, the fixtures (`fixtures/demo.pubquiz`), `window.pubquiz` and the `PUBQUIZ_*` variables.
 
 ## Contributing
 

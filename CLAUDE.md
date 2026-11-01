@@ -108,7 +108,8 @@ fixtures/      demo.pubquiz (werk van Remco!), rondleiding.pubquiz en tour.pubqu
 
 **Quizbestanden**
 
-- Een quiz is een map `<naam>.pubquiz` met `quiz.json` en `media/`. Nieuwe quizzen komen in `Documenten/Pubquizzen`.
+- Een quiz is een map `<naam>.quiznote` met `quiz.json` en `media/`. Nieuwe quizzen komen in `Documenten/QuizNote`.
+- Tot issue #43 was dat `<naam>.pubquiz` in `Documenten/Pubquizzen`. De app blijft die openen (`hasQuizExtension` en `quizBaseName` in `src/main/quiz-files.ts`) en de AI-koppeling ziet ook de oude map. De fixtures in `fixtures/` heten nog `.pubquiz`; de rondleiding in de app (`pnpm tour:build`) heet `.quiznote`.
 - Het formaat staat in `src/shared/quiz-schema.ts`, met `SCHEMA_VERSION` in `version.ts`. Hoog je die op, schrijf dan een migratie in `migrate.ts`.
 - Een rondebestand (`.quiznoteronde`, issue #99) is een zip met `ronde.json` en `media/`, om rondes in een quiz te importeren: Importeren… in de editor, slepen op de editor, of dubbelklikken in Finder (`openRoundFile` in de controller; zonder open quiz vraagt de app in welke), of de link `quiznote://ronde?url=…` vanaf de site (`openRoundLink`; alleen bestanden van `https://quiznote.app`, tests zetten `PUBQUIZ_ROUND_LINK_ORIGIN`). Het formaat staat in `docs/rondebestand.md`; de zip leest `src/main/zip.ts`, zonder `ditto`.
 
@@ -153,7 +154,7 @@ fixtures/      demo.pubquiz (werk van Remco!), rondleiding.pubquiz en tour.pubqu
 - Teksten die main en shared maken (vorige/volgende, "Slide 2 van 5", foutmeldingen voor de telefoon) staan in `src/shared/show-messages.ts`; geef de `Locale` mee.
 - Vensters op de Mac kennen de taal via `?locale=` in hun adres (`loadRoute`); in de renderer lees je hem uit `src/renderer/src/lib/locale.ts`. Al vertaald: wat er over de slide heen op een scherm staat (`SCREEN_MESSAGES`), en naam en uitleg van plug-ins (`text` in de definitie).
 - Het licht: de namen van kleuren en effecten staan in `src/shared/light-messages.ts` (`lightLabel`, `effectLabel` en `groupName` krijgen de `Locale` mee); het paneel om het licht met de hand te kiezen in `plugins/magichome/messages.ts`. Een onderdeel op de telefoon krijgt de taal als `locale` in `PhoneProps`.
-- De rondleiding: `scripts/make-tour.mjs --locale en` maakt de Engelse (`Tour.pubquiz`), met eigen teksten en bestandsnamen maar dezelfde id's. De app neemt hem mee en zet bij de eerste start die in de taal van de Mac klaar (`TOUR_MESSAGES` in `src/main/messages.ts`).
+- De rondleiding: `scripts/make-tour.mjs --locale en` maakt de Engelse (`Tour.quiznote` in de app), met eigen teksten en bestandsnamen maar dezelfde id's. De app neemt hem mee en zet bij de eerste start die in de taal van de Mac klaar (`TOUR_MESSAGES` in `src/main/messages.ts`).
 - De pdf's: de teksten op de formulieren en vragenkaarten, hun bestandsnamen en de samenvatting per ronde ("2 vragen") staan in `src/shared/form-messages.ts` (`formFileName` en `itemSummary` krijgen de `Locale` mee).
 - De werkbalk van de app en de dialogen Nieuwe quiz, Met je AI… en Instellingen: `src/renderer/src/views/operator/operator-messages.ts`; de algemene onderdelen (keuzelijsten, media kiezen en bekijken, achtergrond van een slide) in `src/renderer/src/components/messages.ts`. "Vraag" op een slide met alleen het nummer staat in `SCREEN_MESSAGES`; `SlideView` krijgt op de telefoon de taal als `locale` mee.
 - De editor: de lijst met rondes (EditorView), Media, Quiz-instellingen, Afdrukken, de fragmenten, de slides (lijst en inspector) en de ronde zelf (RoundEditor, RoundSettings) in `src/renderer/src/views/editor/editor-messages.ts`.
@@ -223,11 +224,11 @@ Nieuwe optionele koppelingen, zoals Spotify of YouTube, volgen hetzelfde patroon
 - **Vorige naam:** Quizmeister. Die viel af omdat quizmeister.nl een Nederlands pubquizbedrijf is.
 - **Oude werknaam:** "Pubquiz". Die staat nog in de code:
   - de repo en `name` in `package.json`;
-  - de extensie `.pubquiz` en de map `Documenten/Pubquizzen`;
   - `window.pubquiz` en `PubquizApi`;
-  - de omgevingsvariabelen `PUBQUIZ_*`.
+  - de omgevingsvariabelen `PUBQUIZ_*`;
+  - de fixtures (`fixtures/demo.pubquiz`).
 
-  Of dat vóór de release verandert, is een open vraag (issue #43). "pubquiz" blijft gewoon het woord voor een quiz.
+  Quizbestanden heten sinds issue #43 `.quiznote`; de interne namen blijven zo. "pubquiz" blijft gewoon het woord voor een quiz.
 
 - **Huisstijl:** nachtblauw met één amber accent (`#ffa53d`), koppen in Bricolage Grotesque. De tokens staan in `src/renderer/src/styles/base.css`.
 - **Logo en icoon:** het icoon is de Q uit het woordmerk, in amber op nachtblauw. De bestanden worden gemaakt in de site-repo met `brand/quiznote/bron/maak.py`. De app-iconen staan in `build/` en `resources/`.

@@ -22,7 +22,7 @@
     "test:e2e": "node scripts/make-demo.mjs && node scripts/make-tour.mjs && electron-vite build && playwright test",
     "demo": "node scripts/make-demo.mjs",
     "tour": "node scripts/make-tour.mjs && node scripts/make-tour.mjs --locale en",
-    "tour:build": "node scripts/make-tour.mjs --into dist/tour/Rondleiding.pubquiz && node scripts/make-tour.mjs --locale en --into dist/tour/Tour.pubquiz",
+    "tour:build": "node scripts/make-tour.mjs --into dist/tour/Rondleiding.quiznote && node scripts/make-tour.mjs --locale en --into dist/tour/Tour.quiznote",
     "format": "prettier --write .",
     "postinstall": "install-electron && electron-builder install-app-deps"
   },

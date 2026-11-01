@@ -58,7 +58,7 @@ test('dashboard: de rondleiding staat de eerste keer klaar, en komt niet terug a
     let { app, operator } = await launch(userData, undefined, env)
     await expect(operator.locator('.hero .kicker')).toHaveText('Begin hier')
     await expect(operator.locator('.hero-title')).toHaveText('Rondleiding')
-    expect(existsSync(join(library, 'Rondleiding.pubquiz', 'quiz.json'))).toBe(true)
+    expect(existsSync(join(library, 'Rondleiding.quiznote', 'quiz.json'))).toBe(true)
     await operator.waitForTimeout(800) // cover en gloed laten laden voor de screenshot
     await operator.screenshot({ path: 'test-results/home-tour.png' })
     await operator.locator('.hero-text').getByRole('button', { name: 'Bewerken' }).click()
@@ -139,7 +139,7 @@ test('nieuwe quiz: alleen een naam, de app maakt zelf de map aan', async () => {
     await operator.screenshot({ path: 'test-results/new-quiz-dialog.png' })
     await dialog.getByLabel('Naam').press('Enter')
     await expect(operator.locator('.topbar .name')).toHaveText('Pubquiz november')
-    expect(existsSync(join(library, 'Pubquiz november.pubquiz', 'quiz.json'))).toBe(true)
+    expect(existsSync(join(library, 'Pubquiz november.quiznote', 'quiz.json'))).toBe(true)
 
     // Dezelfde naam nog eens: een duidelijke melding in het venster.
     await newQuizMenu()
@@ -160,7 +160,7 @@ test('nieuwe quiz: alleen een naam, de app maakt zelf de map aan', async () => {
     await expect(operator.locator('.topbar .name')).toHaveText('Pubquiz december')
     await expect(operator.locator('.sidebar .round')).toHaveCount(4)
 
-    const dir = join(library, 'Pubquiz december.pubquiz')
+    const dir = join(library, 'Pubquiz december.quiznote')
     const saved = JSON.parse(readFileSync(join(dir, 'quiz.json'), 'utf8'))
     expect(saved.rounds[1].fragments).toEqual([])
     expect(readdirSync(join(dir, 'media'))).toHaveLength(saved.assets.length)
