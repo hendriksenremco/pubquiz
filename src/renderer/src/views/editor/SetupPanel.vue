@@ -205,7 +205,7 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
                   />
                   <span class="grow" />
                   <button class="btn btn-ghost btn-sm" @click="quiz.background = null">
-                    <Icon name="trash" :size="14" /> {{ t('remove') }}
+                    <Icon name="trash" :size="14" /> {{ t('removeBackground') }}
                   </button>
                 </div>
               </template>

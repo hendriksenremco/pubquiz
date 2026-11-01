@@ -80,7 +80,8 @@ export function useLiveControls() {
       title: t('stopTitle'),
       message: t('stopMessage'),
       confirm: t('stopShow'),
-      danger: true
+      danger: true,
+      live: true
     })
     if (ok) await api.stopShow()
   }
