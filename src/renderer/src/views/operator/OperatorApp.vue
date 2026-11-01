@@ -5,6 +5,7 @@ import ConfirmHost from '../../components/ConfirmHost.vue'
 import Icon from '../../components/Icon.vue'
 import NoticeStack from '../../components/NoticeStack.vue'
 import { ask } from '../../lib/confirm'
+import { locale } from '../../lib/locale'
 import { useSession } from '../../stores/session'
 import EditorView from '../editor/EditorView.vue'
 import LiveControls from '../show/LiveControls.vue'
@@ -14,16 +15,18 @@ import HomeView from './HomeView.vue'
 import AiDialog from './AiDialog.vue'
 import NewQuizDialog from './NewQuizDialog.vue'
 import SettingsDialog from './SettingsDialog.vue'
+import { OPERATOR_MESSAGES } from './operator-messages'
 
 const api = window.pubquiz
 const session = useSession()
+const t = OPERATOR_MESSAGES.in(locale)
 /** Tijdens de show wissel je tussen de show en bewerken; daarbuiten is er alleen bewerken. */
 const mode = ref<'edit' | 'show'>('edit')
 /** Wat de editor toont: een ronde (id), 'setup', 'media' of 'print'; leeg = de eerste ronde. */
 const page = ref('')
 const starting = ref(false)
 
-const title = computed(() => session.quiz?.title || 'Naamloze quiz')
+const title = computed(() => session.quiz?.title || t('untitled'))
 
 const home = ref<InstanceType<typeof HomeView> | null>(null)
 
@@ -93,9 +96,9 @@ onMounted(async () => {
   // Afsluiten (⌘Q of het venster dicht) terwijl de show loopt.
   api.onConfirmQuit(async () => {
     const ok = await ask({
-      title: 'De show loopt nog',
-      message: 'Wil je echt afsluiten? De schermen gaan uit en de muziek stopt.',
-      confirm: 'Afsluiten',
+      title: t('quitTitle'),
+      message: t('quitMessage'),
+      confirm: t('quit'),
       danger: true
     })
     if (ok) api.quitConfirmed()
@@ -135,21 +138,21 @@ watch(
         <button
           class="btn btn-ghost back"
           :disabled="session.live"
-          :title="session.live ? 'Stop eerst de show' : undefined"
+          :title="session.live ? t('stopShowFirst') : undefined"
           @click="goHome"
         >
-          <Icon name="left" :size="15" /> Quizzen
+          <Icon name="left" :size="15" /> {{ t('quizzes') }}
         </button>
         <span class="name">{{ title }}</span>
         <span v-if="session.live && mode === 'edit'" class="pill pill-live">
-          <span class="dot" />Live
+          <span class="dot" />{{ t('live') }}
         </span>
         <div class="spacer" />
 
         <LiveControls v-if="session.live && mode === 'show'" @edit="mode = 'edit'" />
         <div v-else class="actions">
           <button v-if="session.live" class="btn btn-primary" @click="mode = 'show'">
-            Naar de show
+            {{ t('toShow') }}
           </button>
           <template v-else>
             <button
@@ -158,10 +161,10 @@ watch(
               :aria-pressed="page === 'print'"
               @click="togglePrint"
             >
-              <Icon name="printer" :size="15" /> Afdrukken
+              <Icon name="printer" :size="15" /> {{ t('print') }}
             </button>
             <button class="btn btn-primary" @click="starting = true">
-              <Icon name="play" :size="13" /> Start show
+              <Icon name="play" :size="13" /> {{ t('startShow') }}
             </button>
           </template>
         </div>
@@ -169,7 +172,7 @@ watch(
       <template v-else>
         <div class="spacer" />
         <button class="btn btn-ghost" @click="settingsOpen = true">
-          <Icon name="sliders" :size="15" /> Instellingen
+          <Icon name="sliders" :size="15" /> {{ t('settings') }}
         </button>
       </template>
     </header>

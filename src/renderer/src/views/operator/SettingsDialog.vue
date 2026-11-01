@@ -4,10 +4,12 @@ import Dialog from '../../components/Dialog.vue'
 import { locale } from '../../lib/locale'
 import { RENDERER_PLUGINS } from '../../plugins'
 import { useSession } from '../../stores/session'
+import { SETTINGS_MESSAGES } from './operator-messages'
 
 /** Instellingen van de app op deze Mac: welke plug-ins aan staan, met hun eigen instellingen. */
 const emit = defineEmits<{ close: [] }>()
 const session = useSession()
+const t = SETTINGS_MESSAGES.in(locale)
 
 const settingsOf = (id: PluginId) => RENDERER_PLUGINS.find((p) => p.id === id)?.slots.settings
 
@@ -17,9 +19,9 @@ function toggle(id: PluginId, enabled: boolean) {
 </script>
 
 <template>
-  <Dialog title="Instellingen" @close="emit('close')">
+  <Dialog :title="t('title')" @close="emit('close')">
     <div class="group">
-      <span class="label">Plug-ins</span>
+      <span class="label">{{ t('plugins') }}</span>
       <div v-for="p in PLUGINS" :key="p.id" class="plugin">
         <label class="plugin-head">
           <input
@@ -40,7 +42,7 @@ function toggle(id: PluginId, enabled: boolean) {
       </div>
     </div>
     <template #actions>
-      <button class="btn btn-primary" @click="emit('close')">Klaar</button>
+      <button class="btn btn-primary" @click="emit('close')">{{ t('done') }}</button>
     </template>
   </Dialog>
 </template>

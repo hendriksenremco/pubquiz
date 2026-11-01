@@ -20,7 +20,7 @@ import type { Quiz } from '@shared/types'
 import type { AppController } from './controller'
 import { readJson, writeJson } from './json-store'
 import { appLocale } from './locale'
-import { NOTICE_MESSAGES } from './messages'
+import { AI_ERRORS, NOTICE_MESSAGES } from './messages'
 import {
   QUIZ_EXT,
   createQuizDir,
@@ -330,14 +330,15 @@ export async function aiSetup(): Promise<AiSetup> {
 
 /** Voegt QuizNote toe aan de MCP-servers van Claude Desktop; de rest blijft staan. */
 export async function connectClaude(): Promise<string | null> {
+  const t = AI_ERRORS.in(appLocale())
   const path = claudeConfig()
-  if (!(await exists(dirname(path)))) return 'Claude Desktop is niet gevonden op deze Mac.'
+  if (!(await exists(dirname(path)))) return t('claudeMissing')
   let config: Record<string, unknown> = {}
   if (await exists(path)) {
     try {
       config = JSON.parse(await fs.readFile(path, 'utf8')) as Record<string, unknown>
     } catch {
-      return 'De instellingen van Claude Desktop zijn niet te lezen. Voeg QuizNote daar zelf toe met de instellingen hieronder.'
+      return t('configUnreadable')
     }
   }
   const servers = (config['mcpServers'] ?? {}) as Record<string, unknown>

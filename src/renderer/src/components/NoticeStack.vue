@@ -1,7 +1,10 @@
 <script setup lang="ts">
+import { locale } from '../lib/locale'
 import { useSession } from '../stores/session'
+import { COMPONENT_MESSAGES } from './messages'
 
 const session = useSession()
+const t = COMPONENT_MESSAGES.in(locale)
 </script>
 
 <template>
@@ -10,7 +13,7 @@ const session = useSession()
       <span class="msg">{{ n.message }}</span>
       <button
         class="btn btn-ghost btn-sm btn-icon"
-        aria-label="Sluiten"
+        :aria-label="t('close')"
         @click="session.dismiss(n.id)"
       >
         ×
