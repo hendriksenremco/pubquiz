@@ -1,6 +1,6 @@
 # Rondebestand (`.quiznoteronde`)
 
-Een rondebestand bevat een of meer rondes om in een quiz te importeren, bijvoorbeeld uit de bibliotheek op quiznote.app (issue #100). In de app: **Importeren…** onder de lijst met rondes in de editor. De rondes komen na de gekozen ronde.
+Een rondebestand bevat een of meer rondes om in een quiz te importeren, bijvoorbeeld uit de bibliotheek op quiznote.app (issue #100). In de app: **Importeer ronde…** onder de lijst met rondes in de editor. De rondes komen na de gekozen ronde.
 
 De code staat in `src/shared/round-file.ts` (formaat en controle) en `src/main/round-file.ts` (de zip lezen en de media kopiëren).
 
@@ -71,7 +71,7 @@ Meer rondes:
 
 ## Bij het importeren
 
-- Er zijn vier manieren: **Importeren…** onder de lijst met rondes, het bestand op de editor slepen, dubbelklikken in Finder, of een link vanaf de site (zie hieronder). Is er dan geen quiz open, dan vraagt de app eerst in welke quiz. De rondes komen na de gekozen ronde.
+- Er zijn vier manieren: **Importeer ronde…** onder de lijst met rondes, het bestand op de editor slepen, dubbelklikken in Finder, of een link vanaf de site (zie hieronder). Is er dan geen quiz open, dan vraagt de app eerst in welke quiz. De rondes komen na de gekozen ronde.
 - De app controleert eerst alles: het formaat (zod), de paden, of elk bestand bestaat en van de goede soort is, en of de rondes in de quiz passen (een muziekronde heeft een audiokanaal nodig). Bij een fout komt er een melding en verandert er niets.
 - De media gaan naar `media/` van de quiz, onder een hash-naam, zoals altijd. Een bestand dat de quiz al heeft, komt er niet dubbel in.
 - Elke ronde krijgt in Media een map met zijn titel.

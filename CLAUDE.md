@@ -111,7 +111,7 @@ fixtures/      demo.pubquiz (werk van Remco!), rondleiding.pubquiz en tour.pubqu
 - Een quiz is een map `<naam>.quiznote` met `quiz.json` en `media/`. Nieuwe quizzen komen in `Documenten/QuizNote`.
 - Tot issue #43 was dat `<naam>.pubquiz` in `Documenten/Pubquizzen`. De app blijft die openen (`hasQuizExtension` en `quizBaseName` in `src/main/quiz-files.ts`) en de AI-koppeling ziet ook de oude map. De fixtures in `fixtures/` heten nog `.pubquiz`; de rondleiding in de app (`pnpm tour:build`) heet `.quiznote`.
 - Het formaat staat in `src/shared/quiz-schema.ts`, met `SCHEMA_VERSION` in `version.ts`. Hoog je die op, schrijf dan een migratie in `migrate.ts`.
-- Een rondebestand (`.quiznoteronde`, issue #99) is een zip met `ronde.json` en `media/`, om rondes in een quiz te importeren: Importeren… in de editor, slepen op de editor, of dubbelklikken in Finder (`openRoundFile` in de controller; zonder open quiz vraagt de app in welke), of de link `quiznote://ronde?url=…` vanaf de site (`openRoundLink`; alleen bestanden van `https://quiznote.app`, tests zetten `PUBQUIZ_ROUND_LINK_ORIGIN`). Het formaat staat in `docs/rondebestand.md`; de zip leest `src/main/zip.ts`, zonder `ditto`.
+- Een rondebestand (`.quiznoteronde`, issue #99) is een zip met `ronde.json` en `media/`, om rondes in een quiz te importeren: Importeer ronde… in de editor, slepen op de editor, of dubbelklikken in Finder (`openRoundFile` in de controller; zonder open quiz vraagt de app in welke), of de link `quiznote://ronde?url=…` vanaf de site (`openRoundLink`; alleen bestanden van `https://quiznote.app`, tests zetten `PUBQUIZ_ROUND_LINK_ORIGIN`). Het formaat staat in `docs/rondebestand.md`; de zip leest `src/main/zip.ts`, zonder `ditto`.
 
 **Standaard ⊕ ronde ⊕ slide**
 

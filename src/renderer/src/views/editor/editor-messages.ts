@@ -342,7 +342,7 @@ export const EDITOR_MESSAGES = defineMessages(
     dropHere: 'Laat los om toe te voegen',
     addedOne: '1 bestand toegevoegd aan Media',
     addedMany: '{count} bestanden toegevoegd aan Media',
-    importRounds: 'Importeren…',
+    importRounds: 'Importeer ronde…',
     importRoundsHint: 'Ronde importeren uit een rondebestand',
     importedOne: 'Ronde “{title}” geïmporteerd uit {file}',
     importedMany: '{count} rondes geïmporteerd uit {file}'
@@ -371,7 +371,7 @@ export const EDITOR_MESSAGES = defineMessages(
       dropHere: 'Drop to add',
       addedOne: '1 file added to Media',
       addedMany: '{count} files added to Media',
-      importRounds: 'Import…',
+      importRounds: 'Import round…',
       importRoundsHint: 'Import a round from a round file',
       importedOne: 'Round “{title}” imported from {file}',
       importedMany: '{count} rounds imported from {file}'

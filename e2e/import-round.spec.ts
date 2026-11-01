@@ -115,7 +115,7 @@ test('importeert een rondebestand na de gekozen ronde', async () => {
   const before = savedQuiz()
   await operator.locator('.sidebar .round').first().click()
   await chooseFile(path)
-  await operator.getByRole('button', { name: 'Importeren…' }).click()
+  await operator.getByRole('button', { name: 'Importeer ronde…' }).click()
 
   await expect(
     operator.locator('.notice', { hasText: 'Ronde “Aardrijkskunde” geïmporteerd' })
@@ -153,7 +153,7 @@ test('meldt een fout rondebestand en verandert niets', async () => {
   writeFileSync(path, 'geen zip')
   const rounds = savedQuiz().rounds.length
   await chooseFile(path)
-  await operator.getByRole('button', { name: 'Importeren…' }).click()
+  await operator.getByRole('button', { name: 'Importeer ronde…' }).click()
   await expect(
     operator.locator('.notice', { hasText: 'Dit is geen rondebestand van QuizNote' })
   ).toBeVisible()
