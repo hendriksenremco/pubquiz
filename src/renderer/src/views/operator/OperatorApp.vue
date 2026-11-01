@@ -111,7 +111,8 @@ onMounted(async () => {
       title: t('quitTitle'),
       message: t('quitMessage'),
       confirm: t('quit'),
-      danger: true
+      danger: true,
+      live: true
     })
     if (ok) api.quitConfirmed()
   })
