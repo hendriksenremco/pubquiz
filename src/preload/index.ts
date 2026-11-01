@@ -25,6 +25,7 @@ const api: PubquizApi = {
   removeRecent: (path) => ipcRenderer.invoke(IPC.removeRecent, path),
   updateQuiz: (quiz) => ipcRenderer.send(IPC.updateQuiz, quiz),
   importMedia: (paths) => ipcRenderer.invoke(IPC.importMedia, paths),
+  importRounds: (quiz, at, path) => ipcRenderer.invoke(IPC.importRounds, quiz, at, path),
   pathForFile: (file) => webUtils.getPathForFile(file),
 
   command: (command) => ipcRenderer.send(IPC.command, command),

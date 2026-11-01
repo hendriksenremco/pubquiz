@@ -110,6 +110,7 @@ fixtures/      demo.pubquiz (werk van Remco!), rondleiding.pubquiz en tour.pubqu
 
 - Een quiz is een map `<naam>.pubquiz` met `quiz.json` en `media/`. Nieuwe quizzen komen in `Documenten/Pubquizzen`.
 - Het formaat staat in `src/shared/quiz-schema.ts`, met `SCHEMA_VERSION` in `version.ts`. Hoog je die op, schrijf dan een migratie in `migrate.ts`.
+- Een rondebestand (`.quiznoteronde`, issue #99) is een zip met `ronde.json` en `media/`, om rondes in een quiz te importeren: Importeren… in de editor. Het formaat staat in `docs/rondebestand.md`; de zip leest `src/main/zip.ts`, zonder `ditto`.
 
 **Standaard ⊕ ronde ⊕ slide**
 
@@ -243,6 +244,7 @@ Nieuwe optionele koppelingen, zoals Spotify of YouTube, volgen hetzelfde patroon
 - `MAGICHOME.md`: de controller, het protocol en wat we over het netwerk hebben geleerd.
 - `PLUGINS.md`: plan om plug-ins generieker te maken (goedgekeurd op 1 november 2026, issue #31).
 - `docs/dashboard-bijwerken.md`: hoe je het statusdashboard bijwerkt (issue #94).
+- `docs/rondebestand.md`: het formaat van een rondebestand (issue #99).
 - `README.md`: in het Engels, voor ontwikkelaars. De screenshots staan in `docs/`.
 - `~/Documents/pubquiz-site`: de site. Nuxt 4, branches `master` en `develop`. Pushen naar `develop` mag; een push naar `master` zet de site live (zie de CLAUDE.md van de site).
 - Het geheugen van Claude voor dit project, op de Mac van Remco: `~/.claude/projects/-Users-remcohendriksen-Documents-pubquiz/memory/`.
