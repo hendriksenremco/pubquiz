@@ -197,6 +197,12 @@ Plug-ins zijn optionele extra's. Je zet ze per Mac aan of uit bij Instellingen (
 - De telefoon krijgt alleen een `RemoteView` uit `src/shared/remote.ts`, via server-sent events. Hij stuurt `RemoteAction`s terug.
 - Tests gebruiken `PUBQUIZ_REMOTE_HOST=127.0.0.1` en `PUBQUIZ_REMOTE_PORT=0`.
 
+**Tussenstand** (`scores`, issue #107)
+
+- Teams en hun punten per ronde, met de hand ingevuld in een tabel bij Quiz-instellingen (`ScoreTable.vue`). Antwoordenrondes krijgen geen kolom.
+- De gegevens staan op de quiz onder `plugins.scores`; de hulpjes en `standings` staan in `src/shared/scores.ts`. Main doet er niets mee.
+- Nog niet gebouwd: de stand op een slide, en punten invullen tijdens de show.
+
 Nieuwe optionele koppelingen, zoals Spotify of YouTube, volgen hetzelfde patroon.
 
 ## AI-koppeling (MCP)
