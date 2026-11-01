@@ -26,6 +26,7 @@ import { locale } from '../../lib/locale'
 import { useSession } from '../../stores/session'
 import { preview, previewOn, useControllerHost } from './controller'
 import LightDot from './LightDot.vue'
+import { LIGHT_PICKER_MESSAGES } from './messages'
 
 /**
  * Veld dat openklapt tot een keuze voor het licht: een kleur, een effect, uit, of niets eigens
@@ -46,14 +47,15 @@ const props = withDefaults(
 )
 const model = defineModel<Light | undefined>()
 const session = useSession()
+const t = LIGHT_PICKER_MESSAGES.in(locale)
 
 type Choice = 'inherit' | Light['type']
 const choice = computed<Choice>(() => model.value?.type ?? 'inherit')
 const options = computed<{ value: Choice; label: string }[]>(() => [
   { value: 'inherit', label: props.inherit },
-  { value: 'color', label: 'Kleur' },
-  { value: 'effect', label: 'Effect' },
-  { value: 'off', label: 'Uit' }
+  { value: 'color', label: t('color') },
+  { value: 'effect', label: t('effect') },
+  { value: 'off', label: t('off') }
 ])
 
 function choose(value: Choice) {
@@ -105,16 +107,20 @@ const valueText = computed(() =>
 )
 const title = computed(() =>
   model.value || !props.fallback
-    ? `${props.label}: ${valueText.value}`
-    : `${props.label}: ${props.inheritText} (${lightLabel(props.fallback, locale)})`
+    ? t('title', { label: props.label, value: valueText.value })
+    : t('titleInherited', {
+        label: props.label,
+        value: props.inheritText,
+        fallback: lightLabel(props.fallback, locale)
+      })
 )
 
 // ── Voorbeeld op de lamp ─────────────────────────────────────────────────────
 const { host } = useControllerHost()
 const isOpen = ref(false)
 const previewNote = computed(() => {
-  if (session.live) return 'Tijdens de show volgt de lamp de show.'
-  if (!host.value) return 'Vul eerst het adres van de controller in bij Instellingen.'
+  if (session.live) return t('liveFollowsShow')
+  if (!host.value) return t('noAddress')
   return previewError.value
 })
 const canPreview = computed(() => !session.live && !!host.value)
@@ -171,7 +177,7 @@ onBeforeUnmount(() => {
       </div>
 
       <template v-if="color">
-        <div class="swatches" role="group" aria-label="Kleur">
+        <div class="swatches" role="group" :aria-label="t('color')">
           <button
             v-for="c in LIGHT_COLORS"
             :key="c.color"
@@ -190,13 +196,13 @@ onBeforeUnmount(() => {
             type="color"
             class="well"
             :value="color"
-            aria-label="Eigen kleur"
+            :aria-label="t('customColor')"
             @change="setColor($event.target as HTMLInputElement)"
           />
           <input
             class="input input-sm mono hex"
             :value="color"
-            aria-label="Eigen kleurcode"
+            :aria-label="t('customColorCode')"
             maxlength="7"
             spellcheck="false"
             @change="setColor($event.target as HTMLInputElement)"
@@ -258,7 +264,7 @@ onBeforeUnmount(() => {
           </section>
         </div>
         <label class="row">
-          <span class="muted">Snelheid</span>
+          <span class="muted">{{ t('speed') }}</span>
           <input
             v-fill
             :value="effect.speed"
@@ -267,7 +273,7 @@ onBeforeUnmount(() => {
             max="100"
             step="1"
             class="grow"
-            aria-label="Snelheid"
+            :aria-label="t('speed')"
             @change="setSpeed($event.target as HTMLInputElement)"
           />
         </label>
@@ -276,7 +282,7 @@ onBeforeUnmount(() => {
       <div class="preview">
         <label class="row check">
           <input v-model="previewOn" type="checkbox" :disabled="!canPreview" />
-          Voorbeeld op de lamp
+          {{ t('previewOnLamp') }}
         </label>
         <p v-if="previewNote" class="muted small note">{{ previewNote }}</p>
       </div>

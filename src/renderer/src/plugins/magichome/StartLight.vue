@@ -2,20 +2,23 @@
 import { computed } from 'vue'
 import { quizUsesLight } from '@shared/light'
 import { useSession } from '../../stores/session'
+import { locale } from '../../lib/locale'
 import ControllerAddress from './ControllerAddress.vue'
+import { LIGHT_PLACE_MESSAGES } from './messages'
 
 /**
  * In "Show starten": het adres van de controller van vanavond. Op elke locatie krijgt hij een
  * ander IP-adres; de app onthoudt het laatste.
  */
 const session = useSession()
+const t = LIGHT_PLACE_MESSAGES.in(locale)
 const uses = computed(() => !!session.quiz && quizUsesLight(session.quiz))
 </script>
 
 <template>
   <div v-if="uses" class="group">
     <div class="group-head">
-      <span class="label grow">Licht</span>
+      <span class="label grow">{{ t('light') }}</span>
     </div>
     <div class="line">
       <span class="name">MagicHome</span>
