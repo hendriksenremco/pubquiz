@@ -2,22 +2,27 @@
 import { computed } from 'vue'
 import { lightOf, setLight } from '@shared/light'
 import { useSession } from '../../stores/session'
+import { locale } from '../../lib/locale'
 import LightPicker from './LightPicker.vue'
+import { LIGHT_PLACE_MESSAGES } from './messages'
 
 /** Bij Quiz-instellingen: het licht van rondes en slides zonder eigen licht, en tussen de rondes. */
 const session = useSession()
+const t = LIGHT_PLACE_MESSAGES.in(locale)
 const quiz = computed(() => session.quiz!)
 </script>
 
 <template>
   <section>
-    <div class="section-head"><h3>Licht</h3></div>
+    <div class="section-head">
+      <h3>{{ t('light') }}</h3>
+    </div>
     <div class="tile light">
-      <span class="muted">Standaard</span>
+      <span class="muted">{{ t('quizDefault') }}</span>
       <LightPicker
-        label="Standaard licht"
-        inherit="Geen"
-        inherit-text="Niet aansturen"
+        :label="t('quizLabel')"
+        :inherit="t('quizInherit')"
+        :inherit-text="t('quizInheritText')"
         :model-value="lightOf(quiz)"
         @update:model-value="setLight(quiz, $event)"
       />
