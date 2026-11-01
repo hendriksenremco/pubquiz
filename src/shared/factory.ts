@@ -30,14 +30,6 @@ export function createChannel(name: string): AudioChannel {
 
 export type RoundPreset = 'normal' | 'music' | 'pictures' | 'break' | 'answers'
 
-export const ROUND_PRESETS: Record<RoundPreset, string> = {
-  normal: 'Gewone ronde',
-  music: 'Muziekronde',
-  pictures: 'Afbeeldingenronde',
-  break: 'Pauze',
-  answers: 'Antwoorden'
-}
-
 /** `quiz` is nodig voor een antwoordenronde: die neemt de muziekrondes van de quiz over. */
 export function createRound(preset: RoundPreset, number: number, quiz?: Quiz): Round {
   const base: Round = {

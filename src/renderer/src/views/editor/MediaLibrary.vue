@@ -14,14 +14,17 @@ import MediaPreview from '../../components/MediaPreview.vue'
 import MediaThumb from '../../components/MediaThumb.vue'
 import MediaTile from '../../components/MediaTile.vue'
 import { formatTime } from '../../lib/format'
+import { locale } from '../../lib/locale'
 import { ask } from '../../lib/confirm'
 import { useMediaImport } from '../../lib/use-media-import'
 import { usePreviewPlayer } from '../../lib/use-preview-player'
 import { useSession } from '../../stores/session'
+import { MEDIA_MESSAGES } from './editor-messages'
 
 const ASSET_TYPE = 'application/x-pubquiz-asset'
 
 const session = useSession()
+const t = MEDIA_MESSAGES.in(locale)
 const quiz = computed(() => session.quiz!)
 const { importFiles, pathsFromDrop } = useMediaImport()
 const preview = usePreviewPlayer()
@@ -35,10 +38,10 @@ const draggingId = ref<string | null>(null)
 const dockX = ref(0)
 
 const FILTERS: { value: MediaKind | 'all'; label: string }[] = [
-  { value: 'all', label: 'Alles' },
-  { value: 'video', label: "Video's" },
-  { value: 'image', label: 'Beelden' },
-  { value: 'audio', label: 'Geluid' }
+  { value: 'all', label: t('all') },
+  { value: 'video', label: t('videos') },
+  { value: 'image', label: t('images') },
+  { value: 'audio', label: t('audio') }
 ]
 
 const folder = computed(() => quiz.value.folders.find((f) => f.id === openFolderId.value) ?? null)
@@ -74,12 +77,12 @@ const folderTiles = computed(() =>
  * bestand ook rechtstreeks van de ene map naar de andere, of in een nieuwe map.
  */
 const dockTargets = computed(() => [
-  ...(folder.value ? [{ key: 'root', label: 'Media', icon: 'images' as const }] : []),
+  ...(folder.value ? [{ key: 'root', label: t('title'), icon: 'images' as const }] : []),
   ...[...quiz.value.folders]
     .filter((f) => f.id !== openFolderId.value)
     .sort((a, b) => naturalCompare(a.name, b.name))
     .map((f) => ({ key: f.id, label: f.name, icon: 'folder' as const })),
-  { key: 'new', label: 'Nieuwe map', icon: 'folder-plus' as const }
+  { key: 'new', label: t('newFolder'), icon: 'folder-plus' as const }
 ])
 
 const isEmpty = computed(
@@ -87,14 +90,14 @@ const isEmpty = computed(
 )
 
 function plural(n: number) {
-  return `${n} ${n === 1 ? 'bestand' : 'bestanden'}`
+  return n === 1 ? t('filesOne') : t('filesMany', { count: n })
 }
 
 /** Nieuwe map (eventueel meteen met een bestand erin), open en klaar om een naam te geven. */
 async function newFolder(asset?: MediaAsset) {
   const names = new Set(quiz.value.folders.map((f) => f.name))
-  let name = 'Nieuwe map'
-  for (let n = 2; names.has(name); n++) name = `Nieuwe map ${n}`
+  let name = t('newFolder')
+  for (let n = 2; names.has(name); n++) name = t('newFolderNumber', { number: n })
   const created = createFolder(quiz.value, name)
   if (asset) moveToFolder(asset, created.id)
   openFolderId.value = created.id
@@ -107,9 +110,9 @@ async function removeFolder() {
   const f = folder.value
   if (!f) return
   const ok = await ask({
-    title: `Map “${f.name}” verwijderen?`,
-    message: 'De bestanden blijven in Media.',
-    confirm: 'Verwijder map'
+    title: t('removeFolderTitle', { name: f.name }),
+    message: t('removeFolderMessage'),
+    confirm: t('removeFolder')
   })
   if (!ok) return
   deleteFolder(quiz.value, f.id)
@@ -121,7 +124,7 @@ function remove(asset: MediaAsset) {
   if (used.length) {
     session.notify({
       level: 'warning',
-      message: `“${asset.name}” is in gebruik: ${used.join(', ')}`
+      message: t('inUse', { name: asset.name, places: used.join(', ') })
     })
     return
   }
@@ -211,27 +214,27 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
         <button
           class="crumb"
           :class="{ drop: dropFolder === 'root', receptive: draggingId }"
-          title="Terug naar Media (sleep een bestand hierheen om het uit de map te halen)"
+          :title="t('back')"
           @click="openFolderId = null"
           @dragenter="onTargetDragOver($event, 'root')"
           @dragover="onTargetDragOver($event, 'root')"
           @dragleave="onTargetDragLeave($event, 'root')"
           @drop="onTargetDrop($event, 'root')"
         >
-          <Icon name="left" :size="18" /> Media
+          <Icon name="left" :size="18" /> {{ t('title') }}
         </button>
         <input
           ref="folderTitle"
           v-model="folder.name"
           class="quiet folder-title"
-          aria-label="Naam van de map"
+          :aria-label="t('folderName')"
         />
         <span class="count">{{ plural(assetsIn(quiz, folder.id).length) }}</span>
         <button class="btn btn-ghost btn-sm danger" @click="removeFolder">
-          <Icon name="trash" :size="14" /> Verwijder map
+          <Icon name="trash" :size="14" /> {{ t('removeFolder') }}
         </button>
       </template>
-      <h2 v-else>Media</h2>
+      <h2 v-else>{{ t('title') }}</h2>
 
       <span class="grow" />
       <div class="filters">
@@ -246,21 +249,15 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
         </button>
       </div>
       <button v-if="!folder" class="btn btn-ghost" @click="newFolder()">
-        <Icon name="folder-plus" /> Nieuwe map
+        <Icon name="folder-plus" /> {{ t('newFolder') }}
       </button>
       <button class="btn" @click="importFiles(undefined, openFolderId)">
-        <Icon name="upload" /> Importeer
+        <Icon name="upload" /> {{ t('import') }}
       </button>
     </header>
 
     <div v-if="isEmpty" class="empty">
-      <template v-if="folder"
-        >Deze map is leeg. Sleep er bestanden of een map uit Finder heen.</template
-      >
-      <template v-else>
-        Sleep video's, muziek, afbeeldingen of hele mappen hierheen. Ze worden in de quizmap
-        bewaard.
-      </template>
+      {{ folder ? t('emptyFolder') : t('empty') }}
     </div>
 
     <section v-if="folderTiles.length" class="grid">
@@ -306,26 +303,26 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
       >
         <button
           class="play"
-          :aria-label="preview.playingId.value === a.id ? 'Stop' : 'Luister'"
+          :aria-label="preview.playingId.value === a.id ? t('stop') : t('listen')"
           @click="preview.toggle(a.id, a)"
         >
           <Icon :name="preview.playingId.value === a.id ? 'stop' : 'play'" :size="12" />
         </button>
         <span class="name grow">{{ a.name }}</span>
-        <span v-if="findAssetUsages(quiz, a.id).length" class="used">in gebruik</span>
+        <span v-if="findAssetUsages(quiz, a.id).length" class="used">{{ t('used') }}</span>
         <span class="meta mono">{{ formatTime(a.duration) }}</span>
         <button
           class="btn btn-ghost btn-sm btn-icon sound-look"
-          aria-label="Voorbeeld"
-          title="Voorbeeld"
+          :aria-label="t('preview')"
+          :title="t('preview')"
           @click="previewId = a.id"
         >
           <Icon name="eye" :size="14" />
         </button>
         <button
           class="btn btn-ghost btn-sm btn-icon sound-remove"
-          aria-label="Verwijder uit quiz"
-          title="Verwijder uit quiz"
+          :aria-label="t('removeFromQuiz')"
+          :title="t('removeFromQuiz')"
           @click="remove(a)"
         >
           <Icon name="trash" :size="14" />
@@ -334,9 +331,7 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
     </section>
 
     <div class="tips faint">
-      <p v-if="visual.length || sounds.length">
-        Sleep een bestand naar een map om het te verplaatsen.
-      </p>
+      <p v-if="visual.length || sounds.length">{{ t('moveTip') }}</p>
     </div>
 
     <Transition name="dock">
@@ -344,10 +339,10 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
         v-if="draggingId"
         class="dock"
         role="group"
-        aria-label="Verplaats naar"
+        :aria-label="t('moveTo')"
         :style="{ left: `${dockX}px` }"
       >
-        <span class="dock-label">Verplaats naar</span>
+        <span class="dock-label">{{ t('moveTo') }}</span>
         <div
           v-for="t in dockTargets"
           :key="t.key"

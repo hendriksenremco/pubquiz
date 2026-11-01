@@ -302,3 +302,193 @@ export const ROUND_MESSAGES = defineMessages(
     }
   }
 )
+
+/** De editor zelf (EditorView): de lijst met rondes links, Media en Quiz-instellingen. */
+export const EDITOR_MESSAGES = defineMessages(
+  {
+    rounds: 'Rondes',
+    untitled: 'Naamloze ronde',
+    addRound: 'Ronde toevoegen',
+    round: 'Ronde',
+    presetNormal: 'Gewone ronde',
+    presetNormalHint: 'Vragen met slides',
+    presetMusic: 'Muziekronde',
+    presetMusicHint: 'Fragmenten, achtergrond pauzeert',
+    presetPictures: 'Afbeeldingenronde',
+    presetPicturesHint: 'Een reeks afbeeldingen, genummerd in beeld',
+    presetBreak: 'Pauze',
+    presetBreakHint: 'Eigen sfeer op de schermen',
+    presetAnswers: 'Antwoorden',
+    presetAnswersHint: 'Vragen, afbeeldingen en fragmenten met hun antwoord',
+    media: 'Media',
+    setup: 'Quiz-instellingen',
+    copyTitle: '{title} (kopie)',
+    removeRound: 'Ronde “{title}” verwijderen?',
+    remove: 'Verwijder',
+    dropHere: 'Laat los om toe te voegen',
+    addedOne: '1 bestand toegevoegd aan Media',
+    addedMany: '{count} bestanden toegevoegd aan Media'
+  },
+  {
+    en: {
+      rounds: 'Rounds',
+      untitled: 'Untitled round',
+      addRound: 'Add round',
+      round: 'Round',
+      presetNormal: 'Regular round',
+      presetNormalHint: 'Questions with slides',
+      presetMusic: 'Music round',
+      presetMusicHint: 'Clips, background music pauses',
+      presetPictures: 'Picture round',
+      presetPicturesHint: 'A series of pictures, numbered on screen',
+      presetBreak: 'Break',
+      presetBreakHint: 'Its own mood on the screens',
+      presetAnswers: 'Answers',
+      presetAnswersHint: 'Questions, pictures and clips with their answers',
+      media: 'Media',
+      setup: 'Quiz settings',
+      copyTitle: '{title} (copy)',
+      removeRound: 'Delete round “{title}”?',
+      remove: 'Delete',
+      dropHere: 'Drop to add',
+      addedOne: '1 file added to Media',
+      addedMany: '{count} files added to Media'
+    }
+  }
+)
+
+/** De mediabibliotheek (MediaLibrary): bestanden, mappen en de balk om te verplaatsen. */
+export const MEDIA_MESSAGES = defineMessages(
+  {
+    title: 'Media',
+    all: 'Alles',
+    videos: "Video's",
+    images: 'Beelden',
+    audio: 'Geluid',
+    newFolder: 'Nieuwe map',
+    newFolderNumber: 'Nieuwe map {number}',
+    import: 'Importeer',
+    back: 'Terug naar Media (sleep een bestand hierheen om het uit de map te halen)',
+    folderName: 'Naam van de map',
+    removeFolder: 'Verwijder map',
+    removeFolderTitle: 'Map “{name}” verwijderen?',
+    removeFolderMessage: 'De bestanden blijven in Media.',
+    filesOne: '1 bestand',
+    filesMany: '{count} bestanden',
+    inUse: '“{name}” is in gebruik: {places}',
+    emptyFolder: 'Deze map is leeg. Sleep er bestanden of een map uit Finder heen.',
+    empty:
+      "Sleep video's, muziek, afbeeldingen of hele mappen hierheen. Ze worden in de quizmap bewaard.",
+    listen: 'Luister',
+    stop: 'Stop',
+    used: 'in gebruik',
+    preview: 'Voorbeeld',
+    removeFromQuiz: 'Verwijder uit quiz',
+    moveTip: 'Sleep een bestand naar een map om het te verplaatsen.',
+    moveTo: 'Verplaats naar'
+  },
+  {
+    en: {
+      title: 'Media',
+      all: 'All',
+      videos: 'Videos',
+      images: 'Pictures',
+      audio: 'Sound',
+      newFolder: 'New folder',
+      newFolderNumber: 'New folder {number}',
+      import: 'Import',
+      back: 'Back to Media (drag a file here to take it out of the folder)',
+      folderName: 'Folder name',
+      removeFolder: 'Delete folder',
+      removeFolderTitle: 'Delete folder “{name}”?',
+      removeFolderMessage: 'The files stay in Media.',
+      filesOne: '1 file',
+      filesMany: '{count} files',
+      inUse: '“{name}” is in use: {places}',
+      emptyFolder: 'This folder is empty. Drag files or a folder here from Finder.',
+      empty:
+        'Drag videos, music, pictures or whole folders here. They are kept in the quiz folder.',
+      listen: 'Listen',
+      stop: 'Stop',
+      used: 'in use',
+      preview: 'Preview',
+      removeFromQuiz: 'Remove from quiz',
+      moveTip: 'Drag a file onto a folder to move it.',
+      moveTo: 'Move to'
+    }
+  }
+)
+
+/** Quiz-instellingen (SetupPanel): schermen, geluid en het quizbestand. */
+export const SETUP_MESSAGES = defineMessages(
+  {
+    quizName: 'Naam van de quiz',
+    screens: 'Schermen',
+    screenName: 'Naam van het scherm',
+    newScreen: 'Scherm {number}',
+    removeScreen: 'Verwijder scherm',
+    removeScreenTitle: 'Scherm “{name}” verwijderen?',
+    removeScreenMessage: 'Wat rondes voor dit scherm hebben ingesteld, vervalt ook.',
+    remove: 'Verwijder',
+    shows: 'Toont',
+    addScreen: 'Scherm toevoegen',
+    sound: 'Geluid',
+    listen: 'Luister',
+    stop: 'Stop',
+    background: 'Achtergrondmuziek',
+    chooseMusic: 'Kies muziek…',
+    volume: 'Volume',
+    duck: 'Bij fragment',
+    duckHint: 'Zo zacht wordt de muziek tijdens een fragment',
+    via: 'Via',
+    backgroundChannel: 'Kanaal van de achtergrondmuziek',
+    channels: 'Audiokanalen',
+    addChannel: 'Kanaal toevoegen',
+    newChannel: 'Kanaal {number}',
+    channelName: 'Naam van het kanaal',
+    removeChannel: 'Verwijder kanaal',
+    channelInUse:
+      'Dit kanaal wordt nog {count}× gebruikt. Zet de achtergrond en fragmenten eerst op een ander kanaal.',
+    noChannel: 'Voeg eerst een audiokanaal toe.',
+    file: 'Bestand',
+    createFromCurrent: 'Nieuwe quiz op basis van deze',
+    exportZip: 'Exporteer als zip',
+    reveal: 'Toon in Finder'
+  },
+  {
+    en: {
+      quizName: 'Quiz name',
+      screens: 'Screens',
+      screenName: 'Screen name',
+      newScreen: 'Screen {number}',
+      removeScreen: 'Delete screen',
+      removeScreenTitle: 'Delete screen “{name}”?',
+      removeScreenMessage: 'What rounds have set for this screen is removed as well.',
+      remove: 'Delete',
+      shows: 'Shows',
+      addScreen: 'Add screen',
+      sound: 'Sound',
+      listen: 'Listen',
+      stop: 'Stop',
+      background: 'Background music',
+      chooseMusic: 'Choose music…',
+      volume: 'Volume',
+      duck: 'During clip',
+      duckHint: 'How soft the music gets while a clip plays',
+      via: 'Via',
+      backgroundChannel: 'Channel for the background music',
+      channels: 'Audio channels',
+      addChannel: 'Add channel',
+      newChannel: 'Channel {number}',
+      channelName: 'Channel name',
+      removeChannel: 'Delete channel',
+      channelInUse:
+        'This channel is still used {count}×. Move the background music and clips to another channel first.',
+      noChannel: 'Add an audio channel first.',
+      file: 'File',
+      createFromCurrent: 'New quiz based on this one',
+      exportZip: 'Export as zip',
+      reveal: 'Show in Finder'
+    }
+  }
+)

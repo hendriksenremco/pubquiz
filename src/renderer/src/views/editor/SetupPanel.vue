@@ -12,12 +12,15 @@ import PluginSlot from '../../plugins/PluginSlot.vue'
 import { vFill } from '../../lib/fill'
 import { ask } from '../../lib/confirm'
 import { percent } from '../../lib/format'
+import { locale } from '../../lib/locale'
 import { usePreviewPlayer } from '../../lib/use-preview-player'
 import { useSession } from '../../stores/session'
+import { SETUP_MESSAGES } from './editor-messages'
 
 const emit = defineEmits<{ createFromCurrent: [] }>()
 const api = window.pubquiz
 const session = useSession()
+const t = SETUP_MESSAGES.in(locale)
 const quiz = computed(() => session.quiz!)
 
 function exportZip() {
@@ -27,16 +30,18 @@ function exportZip() {
 const preview = usePreviewPlayer()
 
 function addScreen() {
-  quiz.value.screens.push(createScreenSlot(`Scherm ${quiz.value.screens.length + 1}`))
+  quiz.value.screens.push(
+    createScreenSlot(t('newScreen', { number: quiz.value.screens.length + 1 }))
+  )
 }
 
 async function removeScreen(id: string) {
   const slot = quiz.value.screens.find((s) => s.id === id)
   if (!slot) return
   const ok = await ask({
-    title: `Scherm “${slot.name}” verwijderen?`,
-    message: 'Wat rondes voor dit scherm hebben ingesteld, vervalt ook.',
-    confirm: 'Verwijder',
+    title: t('removeScreenTitle', { name: slot.name }),
+    message: t('removeScreenMessage'),
+    confirm: t('remove'),
     danger: true
   })
   if (!ok) return
@@ -54,7 +59,9 @@ async function removeScreen(id: string) {
 }
 
 function addChannel() {
-  quiz.value.channels.push(createChannel(`Kanaal ${quiz.value.channels.length + 1}`))
+  quiz.value.channels.push(
+    createChannel(t('newChannel', { number: quiz.value.channels.length + 1 }))
+  )
 }
 
 function removeChannel(id: string) {
@@ -63,7 +70,7 @@ function removeChannel(id: string) {
   if (used > 0) {
     session.notify({
       level: 'warning',
-      message: `Dit kanaal wordt nog ${used}× gebruikt. Zet de achtergrond en fragmenten eerst op een ander kanaal.`
+      message: t('channelInUse', { count: used })
     })
     return
   }
@@ -80,7 +87,7 @@ const backgroundAsset = computed({
     }
     const channelId = quiz.value.channels[0]?.id
     if (!channelId) {
-      session.notify({ level: 'warning', message: 'Voeg eerst een audiokanaal toe.' })
+      session.notify({ level: 'warning', message: t('noChannel') })
       return
     }
     quiz.value.background = { assetId, channelId, volume: 0.7, duckTo: 0.25 } satisfies Background
@@ -96,50 +103,48 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
         id="quiz-title"
         v-model="quiz.title"
         class="quiet page-title"
-        aria-label="Naam van de quiz"
+        :aria-label="t('quizName')"
       />
 
       <section>
         <div class="section-head">
-          <h3>Schermen</h3>
+          <h3>{{ t('screens') }}</h3>
           <span class="count">{{ quiz.screens.length }}</span>
         </div>
         <div class="screens">
           <div v-for="slot in quiz.screens" :key="slot.id" class="screen tile">
             <StagePreview :screen="slot" :caption="false" class="screen-preview" />
             <div class="screen-foot">
-              <input
-                v-model="slot.name"
-                class="quiet screen-name"
-                aria-label="Naam van het scherm"
-              />
+              <input v-model="slot.name" class="quiet screen-name" :aria-label="t('screenName')" />
               <button
                 class="btn btn-ghost btn-sm btn-icon remove-screen"
-                aria-label="Verwijder scherm"
-                title="Verwijder scherm"
+                :aria-label="t('removeScreen')"
+                :title="t('removeScreen')"
                 @click="removeScreen(slot.id)"
               >
                 <Icon name="trash" :size="14" />
               </button>
             </div>
-            <ContentChip v-model="slot.default" label="Toont" />
+            <ContentChip v-model="slot.default" :label="t('shows')" />
           </div>
           <button class="add-tile" @click="addScreen">
             <Icon name="plus" :size="20" />
-            Scherm toevoegen
+            {{ t('addScreen') }}
           </button>
         </div>
       </section>
 
       <section>
-        <div class="section-head"><h3>Geluid</h3></div>
+        <div class="section-head">
+          <h3>{{ t('sound') }}</h3>
+        </div>
         <div class="sound">
           <div class="tile bg">
             <button
               class="art"
               :class="{ playing: preview.playingId.value === 'background' }"
               :disabled="!bgAsset"
-              :aria-label="preview.playingId.value === 'background' ? 'Stop' : 'Luister'"
+              :aria-label="preview.playingId.value === 'background' ? t('stop') : t('listen')"
               @click="preview.toggle('background', bgAsset)"
             >
               <Icon
@@ -150,16 +155,16 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
               />
             </button>
             <div class="bg-main">
-              <span class="tile-title">Achtergrondmuziek</span>
+              <span class="tile-title">{{ t('background') }}</span>
               <MediaPicker
                 v-model="backgroundAsset"
                 :kinds="['audio']"
-                placeholder="Kies muziek…"
+                :placeholder="t('chooseMusic')"
                 class="quiet-select"
               />
               <template v-if="quiz.background">
                 <label class="slider">
-                  <span>Volume</span>
+                  <span>{{ t('volume') }}</span>
                   <input
                     v-model.number="quiz.background.volume"
                     v-fill
@@ -170,8 +175,8 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
                   />
                   <span class="mono val">{{ percent(quiz.background.volume) }}</span>
                 </label>
-                <label class="slider" title="Zo zacht wordt de muziek tijdens een fragment">
-                  <span>Bij fragment</span>
+                <label class="slider" :title="t('duckHint')">
+                  <span>{{ t('duck') }}</span>
                   <input
                     v-model.number="quiz.background.duckTo"
                     v-fill
@@ -183,17 +188,17 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
                   <span class="mono val">{{ percent(quiz.background.duckTo) }}</span>
                 </label>
                 <div class="bg-foot">
-                  <span class="muted">Via</span>
+                  <span class="muted">{{ t('via') }}</span>
                   <Select
                     v-model="quiz.background.channelId"
                     size="sm"
                     class="channel-select"
-                    aria-label="Kanaal van de achtergrondmuziek"
+                    :aria-label="t('backgroundChannel')"
                     :options="quiz.channels.map((c) => ({ value: c.id, label: c.name }))"
                   />
                   <span class="grow" />
                   <button class="btn btn-ghost btn-sm" @click="quiz.background = null">
-                    Verwijder
+                    {{ t('remove') }}
                   </button>
                 </div>
               </template>
@@ -202,18 +207,18 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
 
           <div class="tile channels">
             <div class="tile-head">
-              <span class="tile-title grow">Audiokanalen</span>
+              <span class="tile-title grow">{{ t('channels') }}</span>
               <button
                 class="btn btn-ghost btn-sm btn-icon"
-                aria-label="Kanaal toevoegen"
-                title="Kanaal toevoegen"
+                :aria-label="t('addChannel')"
+                :title="t('addChannel')"
                 @click="addChannel"
               >
                 <Icon name="plus" />
               </button>
             </div>
             <div v-for="c in quiz.channels" :key="c.id" class="channel">
-              <input v-model="c.name" class="quiet channel-name" aria-label="Naam van het kanaal" />
+              <input v-model="c.name" class="quiet channel-name" :aria-label="t('channelName')" />
               <input
                 v-model.number="c.volume"
                 v-fill
@@ -226,7 +231,7 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
               <span class="mono val">{{ percent(c.volume) }}</span>
               <button
                 class="btn btn-ghost btn-sm btn-icon del"
-                aria-label="Verwijder kanaal"
+                :aria-label="t('removeChannel')"
                 @click="removeChannel(c.id)"
               >
                 <Icon name="x" :size="14" />
@@ -239,16 +244,18 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
       <PluginSlot name="quizSettings" />
 
       <section>
-        <div class="section-head"><h3>Bestand</h3></div>
+        <div class="section-head">
+          <h3>{{ t('file') }}</h3>
+        </div>
         <div class="quiz-actions">
           <button class="btn" @click="emit('createFromCurrent')">
-            <Icon name="copy" :size="14" /> Nieuwe quiz op basis van deze
+            <Icon name="copy" :size="14" /> {{ t('createFromCurrent') }}
           </button>
           <button class="btn" @click="exportZip">
-            <Icon name="upload" :size="14" /> Exporteer als zip
+            <Icon name="upload" :size="14" /> {{ t('exportZip') }}
           </button>
           <button class="btn" @click="api.revealQuiz()">
-            <Icon name="folder" :size="14" /> Toon in Finder
+            <Icon name="folder" :size="14" /> {{ t('reveal') }}
           </button>
         </div>
       </section>
