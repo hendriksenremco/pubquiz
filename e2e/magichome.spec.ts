@@ -19,6 +19,7 @@ async function setPlugin(operator: Page, on: boolean, host?: string) {
   const dialog = operator.getByRole('dialog', { name: 'Instellingen' })
   await dialog.getByRole('checkbox', { name: /MagicHome-licht/ }).setChecked(on)
   if (host) {
+    await expect(dialog.getByText('Adres van de controller', { exact: true })).toBeVisible()
     const address = dialog.getByLabel('IP-adres van de MagicHome-controller')
     await address.fill(host)
     await address.press('Enter')
