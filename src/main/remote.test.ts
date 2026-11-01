@@ -1,5 +1,5 @@
 import { mkdirSync, mkdtempSync, writeFileSync } from 'fs'
-import { createServer } from 'http'
+import { createServer, request } from 'http'
 import type { AddressInfo } from 'net'
 import { tmpdir } from 'os'
 import { join } from 'path'
@@ -290,6 +290,19 @@ describe('RemotePlugin', () => {
   })
 })
 
+/** Vraagt een websocket aan; geeft de socket bij 101, anders de statuscode. */
+function upgrade(url: string, cookie?: string) {
+  return new Promise<{ status: number; socket?: import('net').Socket }>((resolve, reject) => {
+    const req = request(url, {
+      headers: { Connection: 'Upgrade', Upgrade: 'websocket', ...(cookie ? { cookie } : {}) }
+    })
+    req.on('upgrade', (res, socket) => resolve({ status: res.statusCode!, socket }))
+    req.on('response', (res) => resolve({ status: res.statusCode! }))
+    req.on('error', reject)
+    req.end()
+  })
+}
+
 describe('RemotePlugin tijdens het ontwikkelen', () => {
   async function devSetup() {
     const seen: { url?: string; host?: string; cookie?: string }[] = []
@@ -297,6 +310,14 @@ describe('RemotePlugin tijdens het ontwikkelen', () => {
       seen.push({ url: req.url, host: req.headers.host, cookie: req.headers.cookie })
       res.writeHead(200, { 'Content-Type': 'text/html' })
       res.end('van vite')
+    })
+    // De websocket voor het herladen (HMR): Vite antwoordt met 101 en stuurt terug wat hij krijgt.
+    vite.on('upgrade', (req, socket) => {
+      seen.push({ url: req.url, host: req.headers.host, cookie: req.headers.cookie })
+      socket.write(
+        'HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n\r\n'
+      )
+      socket.pipe(socket)
     })
     await new Promise<void>((resolve) => vite.listen(0, '127.0.0.1', resolve))
     const devServer = `http://localhost:${(vite.address() as AddressInfo).port}`
@@ -349,6 +370,42 @@ describe('RemotePlugin tijdens het ontwikkelen', () => {
       expect(
         (await fetch(`${origin}/src/remote/main.ts`, { ...right, method: 'POST' })).status
       ).toBe(405)
+      expect(seen).toEqual([])
+    } finally {
+      vite.close()
+    }
+  })
+
+  it('geeft de websocket voor het herladen door aan Vite, zonder ons cookie', async () => {
+    const { seen, vite, devServer, origin, key } = await devSetup()
+    try {
+      const { status, socket } = await upgrade(`${origin}/?token=abc`, `quiznote-remote=${key}`)
+      expect(status).toBe(101)
+      const echo = new Promise<string>((resolve) => socket!.once('data', (d) => resolve(`${d}`)))
+      socket!.write('hallo')
+      expect(await echo).toBe('hallo')
+      expect(seen).toEqual([
+        { url: '/?token=abc', host: new URL(devServer).host, cookie: undefined }
+      ])
+      // Stopt de plug-in, dan gaat de websocket ook dicht.
+      const closed = new Promise((resolve) => socket!.once('close', resolve))
+      plugin!.stop()
+      await closed
+    } finally {
+      vite.close()
+    }
+  })
+
+  it('geen websocket in de gebouwde app, ook niet met de sleutel', async () => {
+    const { url, key } = await setup()
+    await expect(upgrade(`${url.origin}/?key=${key}`, `quiznote-remote=${key}`)).rejects.toThrow()
+  })
+
+  it('geen websocket zonder sleutel', async () => {
+    const { seen, vite, origin } = await devSetup()
+    try {
+      expect((await upgrade(`${origin}/?token=abc`)).status).toBe(401)
+      expect((await upgrade(`${origin}/?token=abc`, 'quiznote-remote=fout')).status).toBe(401)
       expect(seen).toEqual([])
     } finally {
       vite.close()
