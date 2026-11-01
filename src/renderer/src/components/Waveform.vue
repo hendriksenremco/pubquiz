@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { locale } from '../lib/locale'
+import { COMPONENT_MESSAGES } from './messages'
 
 /**
  * Vorm van een geluid als balkjes. Het gespeelde deel kleurt mee: `progress` (0–1) voor een vaste
@@ -21,6 +23,7 @@ const props = withDefaults(
   { progress: null, playing: null, selection: null, step: 0.01, minLength: 0.01 }
 )
 const emit = defineEmits<{ select: [range: [number, number]] }>()
+const t = COMPONENT_MESSAGES.in(locale)
 
 const root = ref<HTMLElement | null>(null)
 const GAP = 1
@@ -107,7 +110,7 @@ const percent = (v: number) => `${(v * 100).toFixed(3)}%`
         class="handle"
         :style="{ left: percent(selection[which]) }"
         role="slider"
-        :aria-label="which === 0 ? 'Begin' : 'Eind'"
+        :aria-label="which === 0 ? t('start') : t('end')"
         aria-valuemin="0"
         aria-valuemax="100"
         :aria-valuenow="Math.round(selection[which] * 100)"

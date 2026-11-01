@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { findAsset } from '@shared/resolve'
+import { locale } from '../lib/locale'
 import { useSession } from '../stores/session'
 import AssetGrid from './AssetGrid.vue'
 import Icon from './Icon.vue'
 import MediaThumb from './MediaThumb.vue'
+import { COMPONENT_MESSAGES } from './messages'
 import Popover from './Popover.vue'
 
 /**
@@ -14,6 +16,7 @@ import Popover from './Popover.vue'
 withDefaults(defineProps<{ label: string; field?: boolean }>(), { field: false })
 const model = defineModel<string | undefined>()
 const session = useSession()
+const t = COMPONENT_MESSAGES.in(locale)
 const image = computed(() => findAsset(session.quiz!, model.value))
 
 function clear(close: () => void) {
@@ -36,7 +39,7 @@ function clear(close: () => void) {
       >
         <MediaThumb v-if="image" :asset="image" class="field-thumb" />
         <span class="value" :class="{ none: !image }">{{
-          image ? image.name.replace(/\.[^.]+$/, '') : 'Geen'
+          image ? image.name.replace(/\.[^.]+$/, '') : t('none')
         }}</span>
         <Icon name="chevron" :size="13" class="chev" />
       </button>
@@ -45,12 +48,14 @@ function clear(close: () => void) {
         type="button"
         class="chip small"
         :class="{ open }"
-        :title="image ? `${label}: ${image.name}` : undefined"
+        :title="image ? t('labelValue', { label, value: image.name }) : undefined"
         @click="toggle"
       >
         <MediaThumb v-if="image" :asset="image" class="opt-thumb" />
         <span class="chip-key">{{ label }}</span>
-        <span class="chip-value">{{ image ? image.name.replace(/\.[^.]+$/, '') : 'geen' }}</span>
+        <span class="chip-value">{{
+          image ? image.name.replace(/\.[^.]+$/, '') : t('noneLower')
+        }}</span>
         <Icon name="chevron" :size="13" class="chev" />
       </button>
     </template>

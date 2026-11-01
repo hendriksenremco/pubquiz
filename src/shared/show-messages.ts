@@ -77,6 +77,7 @@ export const REMOTE_ERRORS = defineMessages(
 /** Wat er over de slide heen op een scherm staat (ScreenStage.vue): voor het publiek. */
 export const SCREEN_MESSAGES = defineMessages(
   {
+    question: 'Vraag',
     fragment: 'Fragment',
     next: 'Volgende',
     inSeconds: 'over {seconds} s',
@@ -86,6 +87,7 @@ export const SCREEN_MESSAGES = defineMessages(
   },
   {
     en: {
+      question: 'Question',
       fragment: 'Clip',
       next: 'Next',
       inSeconds: 'in {seconds} s',

@@ -3,10 +3,12 @@ import { computed, ref, watch } from 'vue'
 import { findAssetUsages } from '@shared/resolve'
 import type { MediaAsset } from '@shared/types'
 import { formatTime } from '../lib/format'
+import { locale } from '../lib/locale'
 import { urlFor } from '../lib/media'
 import { usePreviewPlayer } from '../lib/use-preview-player'
 import { useSession } from '../stores/session'
 import Icon from './Icon.vue'
+import { COMPONENT_MESSAGES } from './messages'
 
 /**
  * Video of afbeelding in de mediabibliotheek; video's zijn hier af te spelen, alles groot te
@@ -16,6 +18,7 @@ const props = defineProps<{ asset: MediaAsset }>()
 const emit = defineEmits<{ remove: []; preview: [] }>()
 
 const session = useSession()
+const t = COMPONENT_MESSAGES.in(locale)
 const preview = usePreviewPlayer()
 const video = ref<HTMLVideoElement | null>(null)
 const playing = computed(() => preview.playingId.value === props.asset.id)
@@ -65,19 +68,24 @@ function onDragStart(event: DragEvent) {
       <button
         v-if="asset.kind === 'video'"
         class="play"
-        :aria-label="playing ? 'Stop voorbeeld' : 'Speel voorbeeld'"
+        :aria-label="playing ? t('stopPreview') : t('playPreview')"
         @click.stop="toggle"
       >
         <Icon :name="playing ? 'stop' : 'play'" :size="16" />
       </button>
-      <button class="look" aria-label="Voorbeeld" title="Voorbeeld" @click.stop="emit('preview')">
+      <button
+        class="look"
+        :aria-label="t('preview')"
+        :title="t('preview')"
+        @click.stop="emit('preview')"
+      >
         <Icon name="eye" :size="16" />
       </button>
     </div>
     <button
       class="remove"
-      aria-label="Verwijder uit quiz"
-      title="Verwijder uit quiz"
+      :aria-label="t('removeFromQuiz')"
+      :title="t('removeFromQuiz')"
       @click="emit('remove')"
     >
       <Icon name="trash" :size="14" />
@@ -85,10 +93,8 @@ function onDragStart(event: DragEvent) {
     <figcaption>
       <span class="name">{{ asset.name }}</span>
       <span class="meta">
-        {{
-          asset.duration ? formatTime(asset.duration) : asset.kind === 'image' ? 'Afbeelding' : ''
-        }}
-        <span v-if="used" class="used">in gebruik</span>
+        {{ asset.duration ? formatTime(asset.duration) : asset.kind === 'image' ? t('image') : '' }}
+        <span v-if="used" class="used">{{ t('inUse') }}</span>
       </span>
     </figcaption>
   </figure>

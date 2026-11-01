@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, useAttrs } from 'vue'
+import { locale } from '../lib/locale'
 import Icon from './Icon.vue'
+import { COMPONENT_MESSAGES } from './messages'
 import Popover from './Popover.vue'
 
 export interface SelectOption {
@@ -19,7 +21,7 @@ export interface SelectOption {
 defineOptions({ inheritAttrs: false })
 const props = withDefaults(
   defineProps<{ options: SelectOption[]; placeholder?: string; size?: 'md' | 'sm' }>(),
-  { placeholder: 'Kies…', size: 'md' }
+  { placeholder: () => COMPONENT_MESSAGES.in(locale)('choose'), size: 'md' }
 )
 const model = defineModel<string>()
 const attrs = useAttrs()

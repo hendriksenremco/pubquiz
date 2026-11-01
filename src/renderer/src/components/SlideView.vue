@@ -1,12 +1,16 @@
 <script setup lang="ts">
 import { computed, inject } from 'vue'
+import type { Locale } from '@shared/i18n'
+import { SCREEN_MESSAGES } from '@shared/show-messages'
 import type { Quiz, Slide } from '@shared/types'
+import { locale as appLocale } from '../lib/locale'
 import { ASSET_URL, assetUrl } from '../lib/media'
 import { slideBackdrop } from '../lib/slide-backdrop'
 
 /**
  * `number`: nummer van een afbeelding in zijn ronde, linksboven in beeld.
  * `withBackdrop: false`: zonder dimmen of kleur; een scherm legt die zelf over de hele breedte.
+ * `locale`: de telefoon geeft de taal van de Mac mee; elders die van het venster.
  */
 const props = withDefaults(
   defineProps<{
@@ -15,9 +19,12 @@ const props = withDefaults(
     quiz?: Quiz | null
     number?: number | null
     withBackdrop?: boolean
+    locale?: Locale
   }>(),
-  { quiz: null, number: null, withBackdrop: true }
+  { quiz: null, number: null, withBackdrop: true, locale: appLocale }
 )
+
+const t = computed(() => SCREEN_MESSAGES.in(props.locale))
 
 const imageUrl = inject(ASSET_URL, (id: string | undefined) => assetUrl(props.quiz, id))
 const image = computed(() => imageUrl(props.slide.imageAssetId))
@@ -36,7 +43,7 @@ const backdrop = computed(() => (props.withBackdrop ? slideBackdrop(props.slide)
     </template>
     <!-- Vraag die de quizmaster voorleest: in beeld alleen het nummer. -->
     <template v-else-if="slide.layout === 'question' && slide.numberOnly">
-      <div class="eyebrow-big">Vraag</div>
+      <div class="eyebrow-big">{{ t('question') }}</div>
       <div class="number">{{ number ?? slide.title }}</div>
     </template>
     <template v-else-if="slide.layout === 'image'">

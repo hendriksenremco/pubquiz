@@ -2,15 +2,19 @@
 import { computed } from 'vue'
 import { groupByFolder } from '@shared/media-folders'
 import type { MediaKind } from '@shared/types'
+import { locale } from '../lib/locale'
 import { useMediaImport } from '../lib/use-media-import'
 import { useSession } from '../stores/session'
 import Icon from './Icon.vue'
 import MediaThumb from './MediaThumb.vue'
+import { COMPONENT_MESSAGES } from './messages'
 
 /** Kies een video of afbeelding op beeld, met een tegel om iets nieuws te importeren. */
 const props = defineProps<{ kind: Extract<MediaKind, 'video' | 'image'> }>()
 const model = defineModel<string | undefined>()
 const emit = defineEmits<{ picked: [assetId: string] }>()
+
+const t = COMPONENT_MESSAGES.in(locale)
 
 const session = useSession()
 const { importFiles } = useMediaImport()
@@ -33,7 +37,7 @@ async function importNew() {
     <template v-for="g in groups" :key="g.folder?.id ?? 'root'">
       <div v-if="showHeaders" class="group">
         <Icon :name="g.folder ? 'folder' : 'images'" :size="13" />
-        {{ g.folder?.name ?? 'Media' }}
+        {{ g.folder?.name ?? t('media') }}
       </div>
       <button
         v-for="a in g.assets"
@@ -50,7 +54,7 @@ async function importNew() {
     </template>
     <button type="button" class="cell add" @click="importNew">
       <span class="cell-thumb add-thumb"><Icon name="upload" /></span>
-      <span class="cell-name">Importeer…</span>
+      <span class="cell-name">{{ t('import') }}</span>
     </button>
   </div>
 </template>
