@@ -104,6 +104,8 @@ export const LIGHT_PLACE_MESSAGES = defineMessages(
 /** Het adres van de controller met de testknop (ControllerAddress). */
 export const CONTROLLER_MESSAGES = defineMessages(
   {
+    /** De kop boven het veld bij Instellingen; zo heet het ook in "Vul eerst het adres … in". */
+    address: 'Adres van de controller',
     placeholder: 'IP-adres van de controller',
     ariaLabel: 'IP-adres van de MagicHome-controller',
     test: 'Test',
@@ -114,6 +116,7 @@ export const CONTROLLER_MESSAGES = defineMessages(
   },
   {
     en: {
+      address: 'Controller address',
       placeholder: 'IP address of the controller',
       ariaLabel: 'IP address of the MagicHome controller',
       test: 'Test',
