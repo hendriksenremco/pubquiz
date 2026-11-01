@@ -22,6 +22,8 @@ const PATHS = {
   upload: 'M12 16V4M7 9l5-5 5 5M4 16v4h16v-4',
   download: 'M12 4v12M7 11l5 5 5-5M4 16v4h16v-4',
   text: 'M5 6h14M12 6v13M9 19h6',
+  hash: 'M10 4L8 20M16 4l-2 16M5 9h15M4 15h15',
+  standings: 'M4 20h16M6 20v-6h4v6M10 20V8h4v12M14 20v-9h4v9',
   image: 'M4 5h16v14H4zM4 15l4-4 4 4 3-3 5 5M15 9h.01',
   check: 'M5 12l5 5 9-10',
   power: 'M12 3v9M6.3 6.3a8 8 0 1 0 11.4 0',
