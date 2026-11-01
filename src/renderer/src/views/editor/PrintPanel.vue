@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import { formRounds, itemSummary, type FormDoc } from '@shared/forms'
 import Icon from '../../components/Icon.vue'
+import { locale } from '../../lib/locale'
 import { useSession } from '../../stores/session'
 
 /**
@@ -64,7 +65,7 @@ async function save(doc: FormDoc) {
             <input v-model="chosen" type="checkbox" :value="r.id" />
             <span>
               <span class="option-title">{{ r.title }}</span>
-              <span class="option-hint">{{ itemSummary(r) }}</span>
+              <span class="option-hint">{{ itemSummary(r, locale) }}</span>
             </span>
           </label>
         </div>
