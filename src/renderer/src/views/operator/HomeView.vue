@@ -5,6 +5,8 @@ import Icon from '../../components/Icon.vue'
 import Popover from '../../components/Popover.vue'
 import QuizCover from '../../components/QuizCover.vue'
 import { relativeDate } from '../../lib/format'
+import { locale } from '../../lib/locale'
+import { HOME_MESSAGES } from './home-messages'
 
 type OpenMode = 'edit' | 'show'
 
@@ -15,6 +17,7 @@ const emit = defineEmits<{
   ai: []
 }>()
 const api = window.pubquiz
+const t = HOME_MESSAGES.in(locale)
 
 const quizzes = ref<RecentQuiz[] | null>(null)
 async function load() {
@@ -28,16 +31,15 @@ const latest = computed(() => quizzes.value?.find((q) => q.exists) ?? null)
 const others = computed(() => quizzes.value?.filter((q) => q !== latest.value) ?? [])
 const templates = computed(() => quizzes.value?.filter((q) => q.exists) ?? [])
 
-function plural(n: number, one: string, many: string) {
-  return `${n} ${n === 1 ? one : many}`
-}
-
 function contents(q: RecentQuiz): string {
-  return `${plural(q.rounds, 'ronde', 'rondes')} en ${plural(q.screens, 'scherm', 'schermen')}`
+  return t('contents', {
+    rounds: t(q.rounds === 1 ? 'roundsOne' : 'roundsMany', { count: q.rounds }),
+    screens: t(q.screens === 1 ? 'screensOne' : 'screensMany', { count: q.screens })
+  })
 }
 
 function edited(q: RecentQuiz): string {
-  return q.modifiedAt ? `Bewerkt ${relativeDate(q.modifiedAt)}` : ''
+  return q.modifiedAt ? t('edited', { when: relativeDate(q.modifiedAt, Date.now(), locale) }) : ''
 }
 
 function folderOf(path: string): string {
@@ -78,7 +80,7 @@ function reveal(q: RecentQuiz) {
       <div v-if="latest" class="hero-grid">
         <QuizCover :quiz="latest" class="hero-cover" />
         <div class="hero-text">
-          <span class="kicker">{{ latest.tour ? 'Begin hier' : 'Laatst geopend' }}</span>
+          <span class="kicker">{{ latest.tour ? t('startHere') : t('lastOpened') }}</span>
           <h1 class="hero-title">{{ latest.title }}</h1>
           <p class="muted hero-meta">
             {{ contents(latest)
@@ -86,31 +88,32 @@ function reveal(q: RecentQuiz) {
           </p>
           <div class="actions">
             <button class="btn btn-primary btn-lg" @click="emit('open', latest.path, 'edit')">
-              <Icon name="pencil" /> Bewerken
+              <Icon name="pencil" /> {{ t('edit') }}
             </button>
             <button class="btn btn-lg" @click="emit('open', latest.path, 'show')">
-              <Icon name="play" :size="14" /> Naar show
+              <Icon name="play" :size="14" /> {{ t('toShow') }}
             </button>
           </div>
         </div>
       </div>
 
       <div v-else class="first">
-        <h1 class="hero-title">Maak je eerste pubquiz</h1>
+        <h1 class="hero-title">{{ t('firstTitle') }}</h1>
         <p class="muted hero-meta">
-          Video-loops op de schermen, achtergrondmuziek en geluidsfragmenten, per ronde in te
-          stellen.
+          {{ t('firstText') }}
         </p>
         <div class="actions">
           <button class="btn btn-primary btn-lg" @click="emit('create')">
-            <Icon name="plus" /> Nieuwe quiz
+            <Icon name="plus" /> {{ t('newQuiz') }}
           </button>
-          <button class="btn btn-lg" @click="emit('ai')"><Icon name="spark" /> Met je AI…</button>
+          <button class="btn btn-lg" @click="emit('ai')">
+            <Icon name="spark" /> {{ t('withAi') }}
+          </button>
           <button class="btn btn-lg" @click="api.openQuiz()">
-            <Icon name="folder" /> Open quiz…
+            <Icon name="folder" /> {{ t('openQuiz') }}
           </button>
           <button class="btn btn-ghost btn-lg" @click="api.importZip()">
-            <Icon name="upload" /> Importeer zip…
+            <Icon name="upload" /> {{ t('importZip') }}
           </button>
         </div>
       </div>
@@ -118,14 +121,14 @@ function reveal(q: RecentQuiz) {
 
     <section v-if="latest" class="body">
       <div class="section-head">
-        <h3>Quizzen</h3>
+        <h3>{{ t('quizzes') }}</h3>
         <span class="count">{{ quizzes.length }}</span>
         <span class="grow" />
         <button class="btn btn-ghost btn-sm" @click="api.openQuiz()">
-          <Icon name="folder" :size="14" /> Open…
+          <Icon name="folder" :size="14" /> {{ t('open') }}
         </button>
         <button class="btn btn-ghost btn-sm" @click="api.importZip()">
-          <Icon name="upload" :size="14" /> Importeer zip…
+          <Icon name="upload" :size="14" /> {{ t('importZip') }}
         </button>
       </div>
 
@@ -134,18 +137,18 @@ function reveal(q: RecentQuiz) {
           <template #trigger="{ toggle }">
             <button class="new-tile" @click="toggle">
               <span class="new-art"><Icon name="plus" :size="26" /></span>
-              <span class="card-title">Nieuwe quiz</span>
-              <span class="card-meta">Leeg, of op basis van een eerdere quiz</span>
+              <span class="card-title">{{ t('newQuiz') }}</span>
+              <span class="card-meta">{{ t('newQuizHint') }}</span>
             </button>
           </template>
           <template #default="{ close }">
             <button class="menu-item" @click="createEmpty(close)">
-              <Icon name="plus" /> Lege quiz
+              <Icon name="plus" /> {{ t('emptyQuiz') }}
             </button>
             <button class="menu-item" @click="(close(), emit('ai'))">
-              <Icon name="spark" /> Met je AI…
+              <Icon name="spark" /> {{ t('withAi') }}
             </button>
-            <div class="menu-label">Op basis van</div>
+            <div class="menu-label">{{ t('basedOnLabel') }}</div>
             <button
               v-for="q in templates"
               :key="q.path"
@@ -173,17 +176,17 @@ function reveal(q: RecentQuiz) {
           <span class="card-title">{{ q.title }}</span>
           <span v-if="q.exists" class="card-meta">{{ contents(q) }}</span>
           <span v-if="q.exists" class="card-meta faint">{{ edited(q) }}</span>
-          <span v-else class="card-meta">Niet gevonden in {{ folderOf(q.path) }}</span>
+          <span v-else class="card-meta">{{ t('notFound', { folder: folderOf(q.path) }) }}</span>
 
           <div class="card-actions" @click.stop @keydown.stop>
             <button v-if="q.exists" class="card-action" @click="createFrom(q)">
-              <Icon name="copy" :size="13" /> Op basis van
+              <Icon name="copy" :size="13" /> {{ t('basedOn') }}
             </button>
             <button v-if="q.exists" class="card-action" @click="reveal(q)">
-              <Icon name="folder" :size="13" /> Finder
+              <Icon name="folder" :size="13" /> {{ t('finder') }}
             </button>
-            <button class="card-action" title="Verwijder uit deze lijst" @click="forget(q)">
-              <Icon name="x" :size="13" /> Uit lijst
+            <button class="card-action" :title="t('forgetHint')" @click="forget(q)">
+              <Icon name="x" :size="13" /> {{ t('forget') }}
             </button>
           </div>
         </div>

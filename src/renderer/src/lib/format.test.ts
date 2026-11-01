@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { formatTime, parseTime, relativeDate } from './format'
+import { placeholders } from '@shared/i18n'
+import { DATE_MESSAGES, formatTime, parseTime, relativeDate } from './format'
 
 describe('formatTime', () => {
   it('formatteert minuten en seconden', () => {
@@ -36,5 +37,23 @@ describe('relativeDate', () => {
     expect(relativeDate(at(19, 12), now)).toBe('4 dagen geleden')
     expect(relativeDate(at(12, 12), now)).toBe('12 okt')
     expect(relativeDate(at(3, 12, 0, 2025, 2), now)).toBe('3 mrt 2025')
+  })
+
+  it('kent ook Engels', () => {
+    expect(relativeDate(now - 20_000, now, 'en')).toBe('just now')
+    expect(relativeDate(now - 60_000, now, 'en')).toBe('1 minute ago')
+    expect(relativeDate(at(22, 9, 30), now, 'en')).toBe('yesterday at 09:30')
+    expect(relativeDate(at(12, 12), now, 'en')).toBe('Oct 12')
+    expect(relativeDate(at(3, 12, 0, 2025, 2), now, 'en')).toBe('Mar 3, 2025')
+  })
+
+  it('heeft in elke taal dezelfde waarden en twaalf maanden', () => {
+    const { nl, ...others } = DATE_MESSAGES.messages
+    for (const messages of [nl, ...Object.values(others)]) {
+      expect(messages.months.split(' ')).toHaveLength(12)
+      for (const [key, text] of Object.entries(nl)) {
+        expect(placeholders(messages[key as keyof typeof nl]), key).toEqual(placeholders(text))
+      }
+    }
   })
 })
