@@ -9,6 +9,7 @@ import {
   SETUP_MESSAGES,
   SLIDE_MESSAGES
 } from './editor-messages'
+import { MENU_MESSAGES } from '../../../../main/messages'
 
 const BOOKS: Record<string, MessageBook<string>> = {
   PRINT_MESSAGES,
@@ -56,5 +57,15 @@ describe('teksten van de editor', () => {
     expect(EDITOR_MESSAGES.in('en')('addedMany', { count: 2 })).toBe('2 files added to Media')
     expect(SETUP_MESSAGES.in('nl')('newScreen', { number: 2 })).toBe('Scherm 2')
     expect(SETUP_MESSAGES.in('en')('newChannel', { number: 3 })).toBe('Channel 3')
+  })
+
+  it('Quiz-instellingen gebruikt de woorden van het menu, met … waar een dialoog volgt', () => {
+    for (const locale of ['nl', 'en'] as const) {
+      const setup = SETUP_MESSAGES.in(locale)
+      const menu = MENU_MESSAGES.in(locale)
+      expect(setup('exportZip').toLowerCase()).toBe(menu('exportZip').toLowerCase())
+      expect(setup('reveal')).toBe(menu('reveal'))
+      expect(setup('createFromCurrent').endsWith('…')).toBe(true)
+    }
   })
 })

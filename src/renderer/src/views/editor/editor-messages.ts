@@ -476,8 +476,8 @@ export const SETUP_MESSAGES = defineMessages(
     timerUnit: 'seconden, met T in de show',
     timerHint: 'Na een vraag. Een ronde kan een eigen tijd hebben.',
     file: 'Bestand',
-    createFromCurrent: 'Nieuwe quiz op basis van deze',
-    exportZip: 'Exporteer als zip',
+    createFromCurrent: 'Nieuwe quiz op basis van deze…',
+    exportZip: 'Exporteer als zip…',
     reveal: 'Toon in Finder'
   },
   {
@@ -516,8 +516,8 @@ export const SETUP_MESSAGES = defineMessages(
       timerUnit: 'seconds, with T in the show',
       timerHint: 'After a question. A round can have its own time.',
       file: 'File',
-      createFromCurrent: 'New quiz based on this one',
-      exportZip: 'Export as zip',
+      createFromCurrent: 'New quiz based on this one…',
+      exportZip: 'Export as zip…',
       reveal: 'Show in Finder'
     }
   }
