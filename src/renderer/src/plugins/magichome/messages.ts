@@ -69,7 +69,7 @@ export const LIGHT_PICKER_MESSAGES = defineMessages(
   }
 )
 
-/** Het licht op zijn plekken in de app: bij de quiz, een ronde, een slide en bij Show starten. */
+/** Het licht op zijn plekken in de app: bij de quiz, een ronde, een slide en bij Start show. */
 export const LIGHT_PLACE_MESSAGES = defineMessages(
   {
     light: 'Licht',

@@ -35,7 +35,7 @@ test('dashboard: leeg starten, recente quiz openen en terugkomen', async () => {
     await operator.screenshot({ path: 'test-results/home.png' })
 
     await operator.getByRole('button', { name: 'Start show' }).click()
-    await expect(operator.getByRole('dialog', { name: 'Show starten' })).toBeVisible()
+    await expect(operator.getByRole('dialog', { name: 'Start show' })).toBeVisible()
     await app.close()
 
     // Opnieuw starten zonder bestand: terug op het dashboard, met dezelfde quiz bovenaan.

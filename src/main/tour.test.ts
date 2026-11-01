@@ -94,10 +94,10 @@ describe('Engelse rondleiding', () => {
     ]
     expect(ids(en)).toEqual(ids(nl))
     expect(en.title).toBe('Tour')
-    // Alleen antwoorden en titels van liedjes heten in beide talen hetzelfde.
+    // Alleen antwoorden, titels van liedjes en de knop Start show heten in beide talen hetzelfde.
     const dutch = new Set(texts(nl))
     expect(new Set(texts(en).filter((text) => text && dutch.has(text)))).toEqual(
-      new Set(['11', '1969', '7', 'Canberra', 'Japan', ...SAME_SONGS])
+      new Set(['11', '1969', '7', 'Canberra', 'Japan', 'Start show', ...SAME_SONGS])
     )
     // De bestanden van die liedjes, en het logo.
     const files = new Set(nl.assets.map((a) => a.file))

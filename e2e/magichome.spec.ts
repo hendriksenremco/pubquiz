@@ -105,7 +105,7 @@ test('licht per ronde en per slide via de plug-in MagicHome', async () => {
         { light: { type: 'effect', effect: 39, speed: 60 } }
       ])
 
-    // Show starten: het adres staat er al, en is getest.
+    // Start show: het adres staat er al, en is getest.
     const sheet = await openStart(operator)
     await expect(sheet.getByLabel('IP-adres van de MagicHome-controller')).toHaveValue(device.host)
     await expect(sheet.locator('.light-status')).toHaveText('Verbonden. Nu: Groen.')

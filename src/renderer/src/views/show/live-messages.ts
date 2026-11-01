@@ -279,10 +279,10 @@ export const MIXER_MESSAGES = defineMessages(
   }
 )
 
-/** Het venster Show starten (StartSheet): schermen en uitgangen koppelen en de controle. */
+/** Het venster Start show (StartSheet): schermen en uitgangen koppelen en de controle. */
 export const START_MESSAGES = defineMessages(
   {
-    title: 'Show starten',
+    title: 'Start show',
     recovery: 'De vorige show stopte onverwacht, om {time}.',
     recoveryAt: 'De vorige show stopte onverwacht, bij {round}, om {time}.',
     dismiss: 'Negeer',

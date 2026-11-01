@@ -956,7 +956,7 @@ const quiz = {
         slide(
           'slot-2',
           'title',
-          L('Show starten', 'Start show'),
+          'Start show',
           L(
             'Koppel je schermen en speakers, speel een testtoon en zie vooraf of er bestanden ontbreken.',
             'Connect your screens and speakers, play a test tone and see beforehand whether any files are missing.'

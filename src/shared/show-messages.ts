@@ -112,7 +112,7 @@ export const ANSWER_CONTEXT = {
   fragment: 'contextFragment'
 } as const satisfies Record<AnswerNoun, string>
 
-/** Wat `findBrokenReferences` meldt bij Show starten: verwijzingen naar media of kanalen die weg zijn. */
+/** Wat `findBrokenReferences` meldt bij Start show: verwijzingen naar media of kanalen die weg zijn. */
 export const CHECK_MESSAGES = defineMessages(
   {
     mediaMissing: '{where}: media ontbreekt',
