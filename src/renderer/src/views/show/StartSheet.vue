@@ -325,8 +325,12 @@ const savedAt = computed(() =>
                 : t('recovery', { time: savedAt })
             }}
           </p>
-          <button class="btn btn-sm" @click="dismissRecovery">{{ t('dismiss') }}</button>
-          <button class="btn btn-sm btn-primary" @click="start(true)">{{ t('resume') }}</button>
+          <button class="btn btn-sm" @click="dismissRecovery">
+            <Icon name="x" :size="14" /> {{ t('dismiss') }}
+          </button>
+          <button class="btn btn-sm btn-primary" @click="start(true)">
+            <Icon name="play" :size="13" /> {{ t('resume') }}
+          </button>
         </div>
 
         <div class="group">
@@ -409,8 +413,14 @@ const savedAt = computed(() =>
             <Icon name="check" :size="16" /> {{ t('allGood') }}
           </span>
           <span v-else class="grow" />
-          <button class="btn" @click="emit('close')">{{ tc('cancel') }}</button>
-          <button class="btn btn-primary" :disabled="starting" @click="start()">
+          <button class="btn btn-ghost" @click="emit('close')">{{ tc('cancel') }}</button>
+          <!-- Eén hoofdknop: na een crash is dat Hervat show, en is opnieuw beginnen gewoon. -->
+          <button
+            class="btn"
+            :class="{ 'btn-primary': !recovery }"
+            :disabled="starting"
+            @click="start()"
+          >
             <Icon name="play" :size="13" /> {{ t('start') }}
           </button>
         </footer>
