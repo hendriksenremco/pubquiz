@@ -230,7 +230,7 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
           :aria-label="t('folderName')"
         />
         <span class="count">{{ plural(assetsIn(quiz, folder.id).length) }}</span>
-        <button class="btn btn-ghost btn-sm danger" @click="removeFolder">
+        <button class="btn btn-ghost btn-sm" @click="removeFolder">
           <Icon name="trash" :size="14" /> {{ t('removeFolder') }}
         </button>
       </template>
@@ -575,9 +575,9 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
   color: var(--muted);
 }
 
-.sound-remove:hover,
-.head .danger {
-  color: var(--live);
+.sound-look:hover,
+.sound-remove:hover {
+  color: var(--text);
 }
 
 .tips {

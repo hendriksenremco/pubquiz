@@ -183,8 +183,8 @@ function onDragStart(event: DragEvent) {
 }
 
 .remove:hover {
-  background: var(--live);
-  color: #fff;
+  background: var(--surface-3);
+  color: var(--text);
 }
 
 figcaption {
