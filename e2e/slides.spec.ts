@@ -55,3 +55,10 @@ test('zet slides op volgorde door de miniatuur te slepen', async () => {
   await expect.poll(savedSlides).toEqual(['number: 1', 'question: Vraag 2', 'title: Ronde 1'])
   await expect(operator.locator('.slide-list .lifted, .slide-list [class*="drop-"]')).toHaveCount(0)
 })
+
+test('Omhoog in de inspector nummert de vragen opnieuw, net als slepen', async () => {
+  const items = operator.locator('.slide-list .item')
+  await items.nth(1).locator('.thumb').click()
+  await operator.locator('.inspector').getByRole('button', { name: 'Omhoog' }).click()
+  await expect.poll(savedSlides).toEqual(['question: Vraag 1', 'number: 2', 'title: Ronde 1'])
+})

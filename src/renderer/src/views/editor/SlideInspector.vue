@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { renumberSlides } from '@shared/order'
 import type { Round, Slide } from '@shared/types'
 import BackdropPicker from '../../components/BackdropPicker.vue'
 import Icon from '../../components/Icon.vue'
@@ -54,6 +55,8 @@ function move(delta: number) {
   if (to < 0 || to >= props.round.slides.length) return
   props.round.slides.splice(index.value, 1)
   props.round.slides.splice(to, 0, props.slide)
+  // Net als na slepen in de lijst: "Vraag 3" krijgt het nummer van zijn nieuwe plek.
+  renumberSlides(props.round)
 }
 
 function remove() {
