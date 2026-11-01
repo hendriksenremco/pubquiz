@@ -91,7 +91,7 @@ function reveal(q: RecentQuiz) {
               <Icon name="pencil" /> {{ t('edit') }}
             </button>
             <button class="btn btn-lg" @click="emit('open', latest.path, 'show')">
-              <Icon name="play" :size="14" /> {{ t('toShow') }}
+              <Icon name="play" :size="13" /> {{ t('startShow') }}
             </button>
           </div>
         </div>

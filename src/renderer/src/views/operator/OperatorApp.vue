@@ -164,7 +164,7 @@ watch(
         <LiveControls v-if="session.live && mode === 'show'" @edit="mode = 'edit'" />
         <div v-else class="actions">
           <button v-if="session.live" class="btn btn-primary" @click="mode = 'show'">
-            {{ t('toShow') }}
+            <Icon name="right" :size="15" /> {{ t('toShow') }}
           </button>
           <template v-else>
             <button
