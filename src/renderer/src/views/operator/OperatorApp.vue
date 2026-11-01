@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import type { MenuAction } from '@shared/ipc'
 import ConfirmHost from '../../components/ConfirmHost.vue'
 import Icon from '../../components/Icon.vue'
@@ -29,6 +29,16 @@ const starting = ref(false)
 const title = computed(() => session.quiz?.title || t('untitled'))
 
 const home = ref<InstanceType<typeof HomeView> | null>(null)
+const editor = ref<InstanceType<typeof EditorView> | null>(null)
+
+/** Rondebestanden uit Finder (issue #99): main heeft de quiz al geopend; de editor importeert. */
+async function importRoundFiles() {
+  const paths = await api.takeRoundFiles()
+  if (!paths.length || !session.quiz) return
+  mode.value = 'edit'
+  await nextTick()
+  for (const path of paths) await editor.value?.importRounds(path)
+}
 
 async function open(path?: string, openIn: 'edit' | 'show' = 'edit') {
   session.flush()
@@ -93,6 +103,8 @@ onMounted(async () => {
   await session.init({ editable: true })
   if (session.live) mode.value = 'show'
   api.onMenu((action) => actions[action]())
+  api.onRoundFiles(() => void importRoundFiles())
+  void importRoundFiles()
   // Afsluiten (⌘Q of het venster dicht) terwijl de show loopt.
   api.onConfirmQuit(async () => {
     const ok = await ask({
@@ -187,7 +199,12 @@ watch(
         @ai="aiOpen = true"
       />
       <ShowLive v-else-if="session.live && mode === 'show'" />
-      <EditorView v-else v-model:page="page" @create-from-current="createFromCurrent" />
+      <EditorView
+        v-else
+        ref="editor"
+        v-model:page="page"
+        @create-from-current="createFromCurrent"
+      />
     </main>
 
     <StartSheet v-if="starting && session.quiz && !session.live" @close="starting = false" />

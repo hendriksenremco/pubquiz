@@ -29,6 +29,11 @@ fileAssociations:
     description: QuizNote-quiz
     role: Editor
     isPackage: true
+  # Rondebestanden (issue #99): dubbelklikken importeert de ronde in de open quiz.
+  - ext: quiznoteronde
+    name: QuizNote-ronde
+    description: Rondebestand van QuizNote
+    role: Viewer
 mac:
   target:
     - dmg

@@ -71,11 +71,12 @@ Meer rondes:
 
 ## Bij het importeren
 
+- Er zijn drie manieren: **Importeren…** onder de lijst met rondes, het bestand op de editor slepen, of dubbelklikken in Finder. Is er dan geen quiz open, dan vraagt de app eerst in welke quiz. De rondes komen na de gekozen ronde.
 - De app controleert eerst alles: het formaat (zod), de paden, of elk bestand bestaat en van de goede soort is, en of de rondes in de quiz passen (een muziekronde heeft een audiokanaal nodig). Bij een fout komt er een melding en verandert er niets.
 - De media gaan naar `media/` van de quiz, onder een hash-naam, zoals altijd. Een bestand dat de quiz al heeft, komt er niet dubbel in.
 - Elke ronde krijgt in Media een map met zijn titel.
 
 ## Nog niet
 
-- Slepen naar de lijst met rondes, dubbelklikken in Finder en de link `quiznote://ronde?url=…` vanaf de site. Die volgen in een tweede pull request.
+- De link `quiznote://ronde?url=…` vanaf de site.
 - Een ronde exporteren als rondebestand. `writeZip` in `src/main/zip.ts` kan het al schrijven.

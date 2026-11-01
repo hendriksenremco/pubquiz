@@ -62,6 +62,8 @@ export class AppController {
   private saveTimer: ReturnType<typeof setTimeout> | null = null
   private recoveryTimer: ReturnType<typeof setTimeout> | null = null
   private recovery: RecoveryData | null = null
+  /** Rondebestanden uit Finder die de editor nog moet importeren (zie `openRoundFile`). */
+  private roundFiles: string[] = []
 
   readonly screens = new ScreenWindows(() => this.operator)
   readonly airplay = new AirPlayBrowser((devices) => this.broadcast(IPC.airplay, [devices]))
@@ -370,6 +372,34 @@ export class AppController {
       this.notify('error', this.t('importFailed', { error: this.failed(err) }))
       return null
     }
+  }
+
+  /**
+   * Een rondebestand uit Finder (dubbelklik): de editor importeert het in de open quiz. Is er geen
+   * quiz open, dan vraagt de app eerst in welke. De editor haalt het op met `takeRoundFiles`.
+   */
+  async openRoundFile(path: string): Promise<void> {
+    if (!this.quizDir) {
+      const result = await dialog.showOpenDialog(this.operator!, {
+        title: this.dialogText('importRoundsTitle'),
+        message: this.dialogText('chooseQuizForRound', { file: basename(path) }),
+        buttonLabel: this.dialogText('openButton'),
+        defaultPath: this.libraryDir,
+        properties: ['openDirectory', 'openFile', 'treatPackageAsDirectory']
+      })
+      const dir = result.filePaths[0]
+      if (result.canceled || !dir) return
+      await this.openQuiz(dir)
+      if (!this.quizDir) return
+    }
+    this.roundFiles.push(path)
+    this.operator?.webContents.send(IPC.roundFiles)
+  }
+
+  takeRoundFiles(): string[] {
+    const files = this.roundFiles
+    this.roundFiles = []
+    return files
   }
 
   async importMedia(paths: string[] | undefined) {

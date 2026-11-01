@@ -110,7 +110,7 @@ fixtures/      demo.pubquiz (werk van Remco!), rondleiding.pubquiz en tour.pubqu
 
 - Een quiz is een map `<naam>.pubquiz` met `quiz.json` en `media/`. Nieuwe quizzen komen in `Documenten/Pubquizzen`.
 - Het formaat staat in `src/shared/quiz-schema.ts`, met `SCHEMA_VERSION` in `version.ts`. Hoog je die op, schrijf dan een migratie in `migrate.ts`.
-- Een rondebestand (`.quiznoteronde`, issue #99) is een zip met `ronde.json` en `media/`, om rondes in een quiz te importeren: Importeren… in de editor. Het formaat staat in `docs/rondebestand.md`; de zip leest `src/main/zip.ts`, zonder `ditto`.
+- Een rondebestand (`.quiznoteronde`, issue #99) is een zip met `ronde.json` en `media/`, om rondes in een quiz te importeren: Importeren… in de editor, slepen op de editor, of dubbelklikken in Finder (`openRoundFile` in de controller; zonder open quiz vraagt de app in welke). Het formaat staat in `docs/rondebestand.md`; de zip leest `src/main/zip.ts`, zonder `ditto`.
 
 **Standaard ⊕ ronde ⊕ slide**
 

@@ -13,6 +13,11 @@ import type { MediaAsset, Quiz, Round } from './types'
  */
 
 export const ROUND_FILE_EXT = '.quiznoteronde'
+
+/** Is dit pad een rondebestand? Op de extensie, zonder op hoofdletters te letten. */
+export function isRoundFile(path: string): boolean {
+  return path.toLowerCase().endsWith(ROUND_FILE_EXT)
+}
 export const ROUND_FILE_JSON = 'ronde.json'
 export const ROUND_FILE_VERSION = 1
 /** Groter wordt het niet: een ronde met liedjes is hooguit enkele tientallen MB. */
