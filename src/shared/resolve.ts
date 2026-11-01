@@ -12,12 +12,16 @@ import { STEP_MESSAGES } from './show-messages'
 export type ScreenOverlay =
   /** `context`: de ronde van het fragment, in een antwoordenronde. */
   | { kind: 'fragment'; number: number; label: string; context?: string }
-  /** Bij een fragment midden in beeld; bij een vraag of afbeelding eronder, die blijft zichtbaar. */
+  /**
+   * Bij een fragment midden in beeld; bij een vraag of afbeelding eronder, die blijft zichtbaar.
+   * Het scherm maakt er zelf "Muziek, fragment 2" van, in de taal van de app.
+   */
   | {
       kind: 'answer'
       number: number
       answer: string
-      context: string
+      round: string
+      noun: AnswerNoun
       placement: 'center' | 'bottom'
     }
   /** Pauze tussen twee fragmenten. `remaining`: deel van de pauze dat nog over is (1 → 0). */
@@ -282,6 +286,8 @@ export function allBlack(quiz: Quiz, state: ShowState): boolean {
   return quiz.screens.length > 0 && quiz.screens.every((s) => state.blackout.includes(s.id))
 }
 
+export type AnswerNoun = 'vraag' | 'afbeelding' | 'fragment'
+
 /** Eén ding om in een antwoordenronde langs te lopen: een vraag, afbeelding of fragment. */
 export interface AnswerItem {
   /** Slide- of fragment-id. */
@@ -290,7 +296,7 @@ export interface AnswerItem {
   round: Round
   /** Nummer in die ronde: vraag 2, afbeelding 2, fragment 2. */
   number: number
-  noun: 'vraag' | 'afbeelding' | 'fragment'
+  noun: AnswerNoun
   answer: string
   /** Vervangt bij het antwoord wat er in beeld stond. */
   answerImageAssetId: string | undefined
@@ -338,13 +344,13 @@ function answerOverlay(
 ): ScreenOverlay | null {
   const item = answerItems(quiz, round)[answer.index]
   if (!item) return null
-  const context = `${item.round.title}, ${item.noun} ${item.number}`
   if (answer.revealed) {
     return {
       kind: 'answer',
       number: item.number,
       answer: item.answer || item.fragment?.label || '—',
-      context,
+      round: item.round.title,
+      noun: item.noun,
       placement: item.slide || item.answerImageAssetId ? 'bottom' : 'center'
     }
   }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { defineMessages, format, pickLocale, placeholders } from './i18n'
+import { defineMessages, format, localeFromQuery, pickLocale, placeholders } from './i18n'
 
 describe('pickLocale', () => {
   it('kiest de eerste taal die de app kent', () => {
@@ -16,6 +16,18 @@ describe('pickLocale', () => {
 
   it('is Nederlands zolang Engels niet af is', () => {
     expect(pickLocale(['en-US'])).toBe('nl')
+  })
+})
+
+describe('localeFromQuery', () => {
+  it('neemt de taal die main in het adres zet, ook een die nog niet af is', () => {
+    expect(localeFromQuery('?locale=en', ['nl-NL'])).toBe('en')
+    expect(localeFromQuery('?locale=nl', ['en-US'])).toBe('nl')
+  })
+
+  it('valt terug op de taal van de browser', () => {
+    expect(localeFromQuery('', ['en-US'])).toBe('nl')
+    expect(localeFromQuery('?locale=de', ['nl-NL'])).toBe('nl')
   })
 })
 

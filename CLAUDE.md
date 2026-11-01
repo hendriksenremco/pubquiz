@@ -144,6 +144,7 @@ fixtures/      demo.pubquiz (werk van Remco!) en rondleiding.pubquiz (gemaakt do
 - De app kiest de taal van macOS (`appLocale()` in `src/main/locale.ts`), maar alleen uit `ACTIVE_LOCALES`. Engels gaat pas aan als alles vertaald is. `PUBQUIZ_LOCALE=en` dwingt Engels af.
 - Al vertaald: de telefoon (`src/renderer/src/remote/messages.ts`); hij neemt de taal van de Mac over via `RemoteView.locale`.
 - Teksten die main en shared maken (vorige/volgende, "Slide 2 van 5", foutmeldingen voor de telefoon) staan in `src/shared/show-messages.ts`; geef de `Locale` mee.
+- Vensters op de Mac kennen de taal via `?locale=` in hun adres (`loadRoute`); in de renderer lees je hem uit `src/renderer/src/lib/locale.ts`. Al vertaald: wat er over de slide heen op een scherm staat (`SCREEN_MESSAGES`), en naam en uitleg van plug-ins (`text` in de definitie).
 
 **Rondesoorten**
 

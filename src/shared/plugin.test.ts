@@ -17,8 +17,10 @@ import type { ShowState } from './types'
 
 const PLAYLIST = definePlugin({
   id: 'proef',
-  name: 'Proef',
-  description: 'Alleen voor de tests.',
+  text: {
+    nl: { name: 'Proef', description: 'Alleen voor de tests.' },
+    en: { name: 'Test', description: 'Only for the tests.' }
+  },
   config: z.object({ volume: z.number().catch(50).default(50) }).catch({ volume: 50 }),
   data: z.object({ playlist: z.string() }),
   status: typeOnly<{ playing: boolean }>(),
@@ -65,8 +67,7 @@ describe('pluginData', () => {
     const { round } = setup()
     const bare = definePlugin({
       id: 'kaal',
-      name: '',
-      description: '',
+      text: { nl: { name: '', description: '' }, en: { name: '', description: '' } },
       config: z.object({}),
       status: typeOnly<null>(),
       actions: {}
@@ -173,8 +174,7 @@ describe('parseAction', () => {
   it('zonder remoteActions mag de telefoon niets', () => {
     const quiet = definePlugin({
       id: 'stil',
-      name: '',
-      description: '',
+      text: { nl: { name: '', description: '' }, en: { name: '', description: '' } },
       config: z.object({}),
       status: typeOnly<null>(),
       actions: { go: action<null>()(z.undefined()) }

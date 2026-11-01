@@ -73,3 +73,12 @@ export function defineMessages<const NL extends Record<string, string>>(
     in: (locale) => (key, params) => format(messages[locale][key] ?? messages.nl[key], params)
   }
 }
+
+/**
+ * De taal uit `?locale=` in het adres van een venster; zonder geldige waarde de taal van de
+ * browser, uit de talen die al af zijn.
+ */
+export function localeFromQuery(search: string, languages: readonly string[]): Locale {
+  const asked = new URLSearchParams(search).get('locale')
+  return isLocale(asked) ? asked : pickLocale(languages)
+}
