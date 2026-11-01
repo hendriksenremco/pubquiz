@@ -17,7 +17,7 @@ import { appLocale } from './locale'
 import { buildMenu } from './menu'
 import { NOTICE_MESSAGES, TOUR_MESSAGES } from './messages'
 import { configurePermissions } from './permissions'
-import { QUIZ_EXT } from './quiz-files'
+import { hasQuizExtension, LEGACY_QUIZ_EXT, QUIZ_EXT } from './quiz-files'
 import { adoptSettings, Settings } from './settings'
 import { createAudioWindow, createOperatorWindow, headless } from './windows'
 
@@ -27,9 +27,8 @@ registerMediaScheme()
 if (process.env['PUBQUIZ_USER_DATA']) app.setPath('userData', process.env['PUBQUIZ_USER_DATA'])
 if (process.env['PUBQUIZ_MUTE']) app.commandLine.appendSwitch('mute-audio')
 
-// macOS kan een .pubquiz openen vóór `ready`; bewaar het pad tot de controller er is.
-let pendingOpen: string | null =
-  process.argv.find((arg) => arg.endsWith(QUIZ_EXT) || arg.endsWith(`${QUIZ_EXT}/`)) ?? null
+// macOS kan een quiz (.quiznote of .pubquiz) openen vóór `ready`; bewaar het pad tot de controller er is.
+let pendingOpen: string | null = process.argv.find(hasQuizExtension) ?? null
 // Net zo voor rondebestanden en links vanaf de site (issue #99); die wachten tot het venster er is.
 const pendingRounds: string[] = process.argv.filter(isRoundFile)
 let controller: AppController | null = null
@@ -65,7 +64,8 @@ function tourSource(): string | null {
   const folder = TOUR_MESSAGES.in(appLocale())('folder')
   return app.isPackaged
     ? join(process.resourcesPath, `${folder}${QUIZ_EXT}`)
-    : join(__dirname, `../../fixtures/${folder.toLowerCase()}${QUIZ_EXT}`)
+    : // `pnpm tour` maakt de rondleiding nog met de oude extensie, net als fixtures/demo.pubquiz.
+      join(__dirname, `../../fixtures/${folder.toLowerCase()}${LEGACY_QUIZ_EXT}`)
 }
 
 app.whenReady().then(async () => {
@@ -90,9 +90,13 @@ app.whenReady().then(async () => {
   // PUBQUIZ_LIBRARY: voor tests, zodat er niets in Documenten belandt.
   // Niet "Pubquiz": macOS negeert hoofdletters, dus dat zou dezelfde map zijn als de broncode in
   // Documenten/pubquiz, en nieuwe quizzen zouden dan in de repo (en in de build) belanden.
-  const library = process.env['PUBQUIZ_LIBRARY'] ?? join(app.getPath('documents'), 'Pubquizzen')
+  // Tot issue #43 was het Documenten/Pubquizzen; de quizzen daar blijven gewoon in de lijst staan.
+  const library = process.env['PUBQUIZ_LIBRARY'] ?? join(app.getPath('documents'), 'QuizNote')
+  const legacyLibraries = process.env['PUBQUIZ_LIBRARY']
+    ? []
+    : [join(app.getPath('documents'), 'Pubquizzen')]
   const analytics = measuring() ? createAnalytics(settings) : null
-  const ctl = new AppController(settings, library, analytics)
+  const ctl = new AppController(settings, library, analytics, legacyLibraries)
   controller = ctl
   handleMediaProtocol({ current: () => ctl.mediaRoot, isRecent: (dir) => ctl.isRecent(dir) })
   registerIpc(ctl)

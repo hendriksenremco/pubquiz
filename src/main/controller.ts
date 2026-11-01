@@ -32,6 +32,7 @@ import {
   importMediaFiles,
   importZip,
   isQuizDir,
+  quizBaseName,
   readQuiz,
   summarizeQuiz,
   writeQuiz
@@ -92,10 +93,12 @@ export class AppController {
 
   constructor(
     private readonly settings: Settings,
-    /** Waar nieuwe en geïmporteerde quizzen komen (standaard Documenten/Pubquizzen). */
+    /** Waar nieuwe en geïmporteerde quizzen komen (standaard Documenten/QuizNote). */
     readonly libraryDir: string,
     /** Anoniem meten; null = uit voor deze build (ontwikkelen en tests). */
-    readonly analytics: Analytics | null = null
+    readonly analytics: Analytics | null = null,
+    /** Oudere bibliotheekmappen (Documenten/Pubquizzen): alleen nog lezen, er komt niets nieuws in. */
+    readonly legacyLibraryDirs: readonly string[] = []
   ) {
     this.screens.watch((change, display) => this.onDisplayChange(change, display))
     this.plugins.apply(settings.plugins, null, this.show.current)
@@ -199,7 +202,7 @@ export class AppController {
   }
 
   /**
-   * Nieuwe quiz in de bibliotheekmap (Documenten/Pubquizzen); de map krijgt de naam van de quiz.
+   * Nieuwe quiz in de bibliotheekmap (Documenten/QuizNote); de map krijgt de naam van de quiz.
    * Geeft een foutmelding voor in het dialoogvenster terug, of null als het gelukt is.
    */
   async createNamedQuiz(
@@ -255,7 +258,7 @@ export class AppController {
     await this.flushSave()
     const result = await dialog.showSaveDialog(this.operator!, {
       title: this.dialogText('exportZipTitle'),
-      defaultPath: `${basename(this.quizDir, QUIZ_EXT)}.zip`,
+      defaultPath: `${quizBaseName(this.quizDir)}.zip`,
       filters: [{ name: 'Zip', extensions: ['zip'] }]
     })
     if (result.canceled || !result.filePath) return

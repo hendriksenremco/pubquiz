@@ -23,6 +23,7 @@ import { appLocale } from './locale'
 import { AI_ERRORS, NOTICE_MESSAGES } from './messages'
 import {
   QUIZ_EXT,
+  hasQuizExtension,
   createQuizDir,
   createQuizFromTemplate,
   folderNameFor,
@@ -104,15 +105,17 @@ const exists = (path: string) =>
 class Agent {
   constructor(private readonly ctl: AppController) {}
 
-  /** Recente quizzen plus alles in de bibliotheekmap. */
+  /** Recente quizzen plus alles in de bibliotheekmap (en de oude, Documenten/Pubquizzen). */
   async list() {
-    const library = await fs.readdir(this.ctl.libraryDir).catch(() => [] as string[])
-    const dirs = [
-      ...new Set([
-        ...this.ctl.recentDirs,
-        ...library.filter((f) => f.endsWith(QUIZ_EXT)).map((f) => join(this.ctl.libraryDir, f))
-      ])
-    ]
+    const libraries = [this.ctl.libraryDir, ...this.ctl.legacyLibraryDirs]
+    const inLibraries = await Promise.all(
+      libraries.map(async (library) =>
+        (await fs.readdir(library).catch(() => [] as string[]))
+          .filter(hasQuizExtension)
+          .map((f) => join(library, f))
+      )
+    )
+    const dirs = [...new Set([...this.ctl.recentDirs, ...inLibraries.flat()])]
     const open = this.ctl.current?.dir
     const quizzes = await Promise.all(dirs.map((dir) => summarizeQuiz(dir)))
     return quizzes
