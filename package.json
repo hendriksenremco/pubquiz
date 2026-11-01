@@ -6,6 +6,7 @@
   "description": "Pubquizen in elkaar klikken en live draaien: video-loops op externe schermen, geluidsfragmenten op meerdere audio-uitgangen.",
   "main": "./out/main/index.js",
   "author": "Remco Hendriksen",
+  "license": "UNLICENSED",
   "scripts": {
     "dev": "electron-vite dev",
     "start": "electron-vite preview",

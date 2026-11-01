@@ -84,7 +84,7 @@ The old working name "Pubquiz" still appears in the code: the repo, `.pubquiz` f
 3. **Commit messages in English.** Text in the app and code comments are in Dutch. Text in the app is moving to per-part dictionaries (`defineMessages` in `src/shared/i18n.ts`); English stays off until everything is translated (issue #53).
 4. **Before a pull request:** `pnpm typecheck`, `pnpm test`, the e2e tests if you can (macOS), and `npx prettier --check` on the files you changed.
 5. **Open a pull request to `master`.** The CI (`.github/workflows/ci.yml`) runs on macOS: typecheck, unit tests, e2e tests and an unsigned dmg. The e2e screenshots are uploaded as the `test-results` artifact. A job that compares them with `master` and posts the differences as a comment is on its way (#28).
-6. **Remco reviews and merges.**
+6. **Remco reviews and merges.** By contributing, you agree that your contribution may be used in QuizNote (see [LICENSE](LICENSE)).
 
 Open work is tracked as [GitHub issues](https://github.com/hendriksenremco/pubquiz/issues); [TODO.md](TODO.md) explains the labels.
 
@@ -99,3 +99,7 @@ Before a release, update the top heading of [CHANGELOG.md](CHANGELOG.md): a unit
 ```sh
 git tag v0.1.0 && git push origin v0.1.0
 ```
+
+## License
+
+All rights reserved. The code is public so you can read it and contribute; it is not open source. Using the app is free, under the [terms](https://quiznote.app/en/voorwaarden). See [LICENSE](LICENSE).
