@@ -138,6 +138,12 @@ fixtures/      demo.pubquiz (werk van Remco!) en rondleiding.pubquiz (gemaakt do
 - `src/renderer/src/lib/live-controls.ts` deelt de bediening tussen de werkbalk, de sneltoetsen en `ShowLive.vue`.
 - `stepTarget` bepaalt waar ← → doorheen gaan: de antwoorden, de fragmenten of de slides.
 
+**Talen** (issue #53)
+
+- `src/shared/i18n.ts`: een klein eigen woordenboek. Elk onderdeel heeft zijn teksten in `defineMessages`: Nederlands is de bron, Engels moet dezelfde sleutels hebben (typecheck).
+- De app kiest de taal van macOS (`appLocale()` in `src/main/locale.ts`), maar alleen uit `ACTIVE_LOCALES`. Engels gaat pas aan als alles vertaald is. `PUBQUIZ_LOCALE=en` dwingt Engels af.
+- Al vertaald: de telefoon (`src/renderer/src/remote/messages.ts`); hij neemt de taal van de Mac over via `RemoteView.locale`.
+
 **Rondesoorten**
 
 - Het zijn presets in `createRound` in `src/shared/factory.ts`: normal, music, pictures, break en answers.

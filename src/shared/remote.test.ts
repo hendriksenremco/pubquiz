@@ -144,6 +144,11 @@ describe('remoteView', () => {
     expect(remoteView(null, live(), plugins).plugins).toEqual([])
   })
 
+  it('geeft de taal van de Mac door, standaard Nederlands', () => {
+    expect(remoteView(null, createShowState()).locale).toBe('nl')
+    expect(remoteView(null, createShowState(), [], 'en').locale).toBe('en')
+  })
+
   it('zonder quiz', () => {
     expect(remoteView(null, createShowState())).toMatchObject({
       quiz: null,

@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { computed, onMounted, provide } from 'vue'
+import { computed, onMounted, provide, watchEffect } from 'vue'
 import { STEP_NAMES } from '@shared/resolve'
 import Icon from '../components/Icon.vue'
 import SlideView from '../components/SlideView.vue'
 import { ASSET_URL } from '../lib/media'
 import { PHONE_PLUGINS } from '../plugins/phone'
-import { connect, imageUrl, link, send, toast, view } from './connection'
+import { connect, imageUrl, link, locale, send, t, toast, view } from './connection'
 
 /**
  * De afstandsbediening op een telefoon of tablet: de slide die in beeld staat, vorige en volgende
@@ -30,39 +30,47 @@ const plugins = computed(() =>
 )
 
 const stepNames = computed(() =>
-  step.value ? STEP_NAMES[step.value.target] : ['Vorige', 'Volgende']
+  step.value ? STEP_NAMES[step.value.target] : [t.value('prev'), t.value('next')]
 )
 
 const status = computed(() => {
-  if (link.value === 'lost') return { text: 'Geen verbinding', tone: 'warn' }
-  if (!view.value) return { text: 'Verbinden…', tone: 'idle' }
-  return view.value.live ? { text: 'Live', tone: 'live' } : { text: 'Niet live', tone: 'idle' }
+  const say = t.value
+  if (link.value === 'lost') return { text: say('statusLost'), tone: 'warn' }
+  if (!view.value) return { text: say('statusConnecting'), tone: 'idle' }
+  return view.value.live
+    ? { text: say('statusLive'), tone: 'live' }
+    : { text: say('statusIdle'), tone: 'idle' }
 })
 
 const eyebrow = computed(() => {
   const v = view.value
   if (!v?.live) return ''
-  return round.value ? `Ronde ${round.value.number} van ${v.rounds}` : 'Tussen twee rondes'
+  return round.value
+    ? t.value('roundOf', { number: round.value.number, total: v.rounds })
+    : t.value('betweenRounds')
 })
 
 const heading = computed(() => {
   const v = view.value
-  if (!v) return 'Verbinden met de Mac…'
-  if (!v.quiz) return 'Geen quiz open op de Mac'
-  if (!v.live) return 'Start de show op de Mac'
-  return round.value?.title ?? (v.nextRound ? `Hierna: ${v.nextRound}` : 'Dit was de laatste ronde')
+  const say = t.value
+  if (!v) return say('connecting')
+  if (!v.quiz) return say('noQuiz')
+  if (!v.live) return say('startShow')
+  return (
+    round.value?.title ?? (v.nextRound ? say('upNext', { title: v.nextRound }) : say('lastRound'))
+  )
 })
+
+// Voor de voorleesfunctie en het afbreken van woorden.
+watchEffect(() => (document.documentElement.lang = locale.value))
 
 onMounted(connect)
 </script>
 
 <template>
   <div v-if="link === 'denied'" class="denied">
-    <h1>Scan de QR-code opnieuw</h1>
-    <p class="muted">
-      Deze link werkt niet meer. De QR-code staat op de Mac, onder Telefoon in de werkbalk van de
-      show.
-    </p>
+    <h1>{{ t('deniedTitle') }}</h1>
+    <p class="muted">{{ t('deniedText') }}</p>
   </div>
 
   <div v-else class="remote">
@@ -71,9 +79,7 @@ onMounted(connect)
       <span class="status" :class="status.tone"><span class="dot" />{{ status.text }}</span>
     </header>
 
-    <p v-if="link === 'lost'" class="banner" role="status">
-      Verbinding met de Mac kwijt. Opnieuw verbinden…
-    </p>
+    <p v-if="link === 'lost'" class="banner" role="status">{{ t('lostBanner') }}</p>
 
     <main class="controls" :class="{ idle: !live }">
       <section class="now">
@@ -81,19 +87,19 @@ onMounted(connect)
         <h1>{{ heading }}</h1>
       </section>
 
-      <section class="card" aria-label="In beeld">
+      <section class="card" :aria-label="t('onScreen')">
         <div class="step-head">
-          <span class="eyebrow grow">{{ step?.label ?? 'In beeld' }}</span>
-          <span v-if="step?.playing" class="playing"><span class="dot" />Speelt</span>
+          <span class="eyebrow grow">{{ step?.label ?? t('onScreen') }}</span>
+          <span v-if="step?.playing" class="playing"><span class="dot" />{{ t('playing') }}</span>
         </div>
-        <div class="preview" :class="{ black: view?.blackout }" aria-label="Preview van de slide">
+        <div class="preview" :class="{ black: view?.blackout }" :aria-label="t('preview')">
           <SlideView
             v-if="screen"
             :key="screen.slide.id"
             :slide="screen.slide"
             :number="screen.number"
           />
-          <span v-else class="empty">Geen slide in beeld</span>
+          <span v-else class="empty">{{ t('noSlide') }}</span>
         </div>
         <!-- De knoppen meteen onder de preview (vaste hoogte): wat er onder komt, kan ze niet
              verschuiven terwijl je tikt. -->
@@ -117,17 +123,18 @@ onMounted(connect)
         </div>
         <p v-if="step?.text" class="step-text">{{ step.text }}</p>
         <p v-if="step?.answer" class="answer">
-          <span class="answer-label">Antwoord</span>{{ step.answer }}
+          <span class="answer-label">{{ t('answer') }}</span
+          >{{ step.answer }}
         </p>
       </section>
 
-      <section class="pair" aria-label="Rondes">
+      <section class="pair" :aria-label="t('rounds')">
         <button
           class="tile"
           :disabled="!live || !view?.prevRound"
           @click="send({ type: 'round', direction: 'prev' })"
         >
-          <span class="tile-label"><Icon name="left" :size="16" />Vorige ronde</span>
+          <span class="tile-label"><Icon name="left" :size="16" />{{ t('prevRound') }}</span>
           <span class="tile-sub">{{ view?.prevRound ?? '–' }}</span>
         </button>
         <button
@@ -135,7 +142,7 @@ onMounted(connect)
           :disabled="!live || !view?.nextRound"
           @click="send({ type: 'round', direction: 'next' })"
         >
-          <span class="tile-label">Volgende ronde<Icon name="right" :size="16" /></span>
+          <span class="tile-label">{{ t('nextRound') }}<Icon name="right" :size="16" /></span>
           <span class="tile-sub">{{ view?.nextRound ?? '–' }}</span>
         </button>
         <button
@@ -143,11 +150,11 @@ onMounted(connect)
           :disabled="!live || !view?.restartRound"
           @click="send({ type: 'restartRound' })"
         >
-          <span class="tile-label"><Icon name="restart" :size="15" />Ronde opnieuw</span>
+          <span class="tile-label"><Icon name="restart" :size="15" />{{ t('restartRound') }}</span>
           <span class="tile-sub">{{ view?.restartRound ?? '–' }}</span>
         </button>
         <button class="tile end" :disabled="!live || !round" @click="send({ type: 'endRound' })">
-          <span class="tile-label">Einde ronde<Icon name="end" :size="14" /></span>
+          <span class="tile-label">{{ t('endRound') }}<Icon name="end" :size="14" /></span>
           <span class="tile-sub">{{ round?.title ?? '–' }}</span>
         </button>
       </section>
@@ -160,7 +167,7 @@ onMounted(connect)
           @click="send({ type: 'blackout', on: !view?.blackout })"
         >
           <Icon :name="view?.blackout ? 'monitor' : 'screen-off'" :size="22" />
-          <span class="tile-label">{{ view?.blackout ? 'Beeld terug' : 'Beeld op zwart' }}</span>
+          <span class="tile-label">{{ view?.blackout ? t('blackoutOff') : t('blackoutOn') }}</span>
         </button>
         <button
           class="tile toggle"
@@ -169,7 +176,7 @@ onMounted(connect)
           @click="send({ type: 'mute', on: !view?.muted })"
         >
           <Icon :name="view?.muted ? 'volume' : 'volume-off'" :size="22" />
-          <span class="tile-label">{{ view?.muted ? 'Geluid aan' : 'Geluid uit' }}</span>
+          <span class="tile-label">{{ view?.muted ? t('muteOff') : t('muteOn') }}</span>
         </button>
       </section>
     </main>
