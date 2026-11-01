@@ -216,7 +216,7 @@ function setAnswersFor(roundId: string, on: boolean) {
         {{ t('countdown') }}
       </label>
       <button class="btn btn-ghost btn-sm renumber" @click="renumber">
-        {{ t('renumber') }}
+        <Icon name="hash" :size="14" /> {{ t('renumber') }}
       </button>
     </div>
 
