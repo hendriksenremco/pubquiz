@@ -282,20 +282,20 @@ const empty = computed(() => !props.round.slides.length && !props.round.fragment
             </template>
             <template #default="{ close }">
               <button class="menu-item" @click="addSlide('title', close)">
-                {{ t('slideTitle') }}
+                <Icon name="text" /> {{ t('slideTitle') }}
               </button>
               <button class="menu-item" @click="addSlide('number', close)">
-                {{ t('slideNumber') }}
+                <Icon name="hash" /> {{ t('slideNumber') }}
               </button>
               <button class="menu-item" @click="addSlide('image', close)">
-                {{ t('slideImage') }}
+                <Icon name="image" /> {{ t('slideImage') }}
               </button>
               <button
                 v-if="session.pluginOn('scores')"
                 class="menu-item"
                 @click="addStandings(close)"
               >
-                {{ t('slideStandings') }}
+                <Icon name="standings" /> {{ t('slideStandings') }}
               </button>
             </template>
           </Popover>

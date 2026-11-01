@@ -129,6 +129,8 @@ test('een slide Tussenstand toont de stand op het scherm', async () => {
 
     // Een titelslide met de markering van de plug-in (na de gekozen slide, of achteraan).
     await addSlide.click()
+    await expect(operator.locator('.menu-item', { hasText: 'Tussenstand' })).toBeVisible()
+    await operator.screenshot({ path: 'test-results/round-add-slide.png' })
     await operator.locator('.menu-item', { hasText: 'Tussenstand' }).click()
     await expect
       .poll(() => savedSlides().filter((s: unknown[]) => s[2]))
