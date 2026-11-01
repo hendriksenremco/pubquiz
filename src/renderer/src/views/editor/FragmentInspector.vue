@@ -174,7 +174,7 @@ function remove() {
         <Icon name="right" :size="14" class="turn" /> {{ t('moveDown') }}
       </button>
       <span class="grow" />
-      <button class="btn btn-ghost btn-sm btn-danger" @click="remove">
+      <button class="btn btn-ghost btn-sm" @click="remove">
         <Icon name="trash" :size="14" /> {{ t('remove') }}
       </button>
     </footer>
