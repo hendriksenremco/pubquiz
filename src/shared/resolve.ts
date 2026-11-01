@@ -7,7 +7,7 @@ import type { Fragment, MediaAsset, Quiz, Round, ScreenContent, ShowState, Slide
 import { autoplayCountdown } from './autoplay'
 import { answerSlides } from './factory'
 import type { Locale } from './i18n'
-import { STEP_MESSAGES } from './show-messages'
+import { CHECK_MESSAGES, STEP_MESSAGES } from './show-messages'
 
 export type ScreenOverlay =
   /** `context`: de ronde van het fragment, in een antwoordenronde. */
@@ -441,38 +441,38 @@ export function findAssetUsages(quiz: Quiz, assetId: string): string[] {
 }
 
 /** Problemen die een show in de weg zitten (ontbrekende assets/kanalen). */
-export function findBrokenReferences(quiz: Quiz): string[] {
+export function findBrokenReferences(quiz: Quiz, locale: Locale = 'nl'): string[] {
+  const t = CHECK_MESSAGES.in(locale)
   const assetIds = new Set(quiz.assets.map((a) => a.id))
   const channelIds = new Set(quiz.channels.map((c) => c.id))
   const problems: string[] = []
   const checkAsset = (id: string | undefined, where: string) => {
-    if (id && !assetIds.has(id)) problems.push(`${where}: media ontbreekt`)
+    if (id && !assetIds.has(id)) problems.push(t('mediaMissing', { where }))
   }
   const checkContent = (c: ScreenContent, where: string) => {
     if (c.type !== 'black') checkAsset(c.assetId, where)
   }
 
-  for (const slot of quiz.screens) checkContent(slot.default, `Scherm "${slot.name}"`)
+  for (const slot of quiz.screens) checkContent(slot.default, t('screen', { name: slot.name }))
   if (quiz.background) {
-    checkAsset(quiz.background.assetId, 'Achtergrondmuziek')
-    if (!channelIds.has(quiz.background.channelId)) {
-      problems.push('Achtergrondmuziek: audiokanaal ontbreekt')
-    }
+    checkAsset(quiz.background.assetId, t('background'))
+    if (!channelIds.has(quiz.background.channelId)) problems.push(t('backgroundChannelMissing'))
   }
   for (const round of quiz.rounds) {
-    const where = `Ronde "${round.title}"`
+    const where = t('round', { title: round.title })
     for (const content of Object.values(round.screens)) checkContent(content, where)
     if (typeof round.background === 'object') checkAsset(round.background.replaceAssetId, where)
     for (const f of round.fragments) {
-      checkAsset(f.assetId, `${where}, ${f.label}`)
-      if (!channelIds.has(f.channelId)) problems.push(`${where}, ${f.label}: kanaal ontbreekt`)
+      const fragment = `${where}, ${f.label}`
+      checkAsset(f.assetId, fragment)
+      if (!channelIds.has(f.channelId)) problems.push(t('channelMissing', { where: fragment }))
     }
     for (const s of round.slides) {
-      checkAsset(s.imageAssetId, `${where}, slide`)
-      checkAsset(s.answerImageAssetId, `${where}, afbeelding bij antwoord`)
+      checkAsset(s.imageAssetId, t('slide', { round: where }))
+      checkAsset(s.answerImageAssetId, t('answerImage', { where }))
     }
     for (const f of round.fragments) {
-      checkAsset(f.answerImageAssetId, `${where}, ${f.label}, afbeelding bij antwoord`)
+      checkAsset(f.answerImageAssetId, t('answerImage', { where: `${where}, ${f.label}` }))
     }
   }
   return problems

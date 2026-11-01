@@ -102,3 +102,29 @@ export const ANSWER_CONTEXT = {
   afbeelding: 'contextImage',
   fragment: 'contextFragment'
 } as const satisfies Record<AnswerNoun, string>
+
+/** Wat `findBrokenReferences` meldt bij Show starten: verwijzingen naar media of kanalen die weg zijn. */
+export const CHECK_MESSAGES = defineMessages(
+  {
+    mediaMissing: '{where}: media ontbreekt',
+    channelMissing: '{where}: kanaal ontbreekt',
+    backgroundChannelMissing: 'Achtergrondmuziek: audiokanaal ontbreekt',
+    screen: 'Scherm "{name}"',
+    background: 'Achtergrondmuziek',
+    round: 'Ronde "{title}"',
+    slide: '{round}, slide',
+    answerImage: '{where}, afbeelding bij antwoord'
+  },
+  {
+    en: {
+      mediaMissing: '{where}: media missing',
+      channelMissing: '{where}: channel missing',
+      backgroundChannelMissing: 'Background music: audio channel missing',
+      screen: 'Screen "{name}"',
+      background: 'Background music',
+      round: 'Round "{title}"',
+      slide: '{round}, slide',
+      answerImage: '{where}, picture with the answer'
+    }
+  }
+)

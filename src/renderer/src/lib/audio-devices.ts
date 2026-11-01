@@ -1,13 +1,34 @@
 import { sameDisplayName } from '@shared/airplay'
+import { defineMessages, type Locale } from '@shared/i18n'
 import type { AudioTarget, ScreenTarget } from '@shared/types'
+
+/** Namen van uitgangen die Chromium zelf niet geeft. */
+export const AUDIO_DEVICE_MESSAGES = defineMessages(
+  {
+    systemDefault: 'Systeemstandaard',
+    systemDefaultNamed: 'Systeemstandaard ({name})',
+    output: 'Uitgang {number}'
+  },
+  {
+    en: {
+      systemDefault: 'System default',
+      systemDefaultNamed: 'System default ({name})',
+      output: 'Output {number}'
+    }
+  }
+)
 
 export interface AudioOutput {
   deviceId: string
   label: string
 }
 
-/** Altijd met "Systeemstandaard" vooraan, ook als Chromium (zonder media-permissie) geen namen geeft. */
-export async function listAudioOutputs(): Promise<AudioOutput[]> {
+/**
+ * Altijd met "Systeemstandaard" vooraan, ook als Chromium (zonder media-permissie) geen namen geeft.
+ * De taal is alleen voor de namen in beeld; een uitgang zonder naam heet "Uitgang 1".
+ */
+export async function listAudioOutputs(locale: Locale = 'nl'): Promise<AudioOutput[]> {
+  const t = AUDIO_DEVICE_MESSAGES.in(locale)
   const devices = (await navigator.mediaDevices.enumerateDevices()).filter(
     (d) => d.kind === 'audiooutput'
   )
@@ -16,11 +37,11 @@ export async function listAudioOutputs(): Promise<AudioOutput[]> {
     ?.label.replace(/^Default - /, '')
   const named = devices
     .filter((d) => d.deviceId !== '' && d.deviceId !== 'default')
-    .map((d, i) => ({ deviceId: d.deviceId, label: d.label || `Uitgang ${i + 1}` }))
+    .map((d, i) => ({ deviceId: d.deviceId, label: d.label || t('output', { number: i + 1 }) }))
   return [
     {
       deviceId: 'default',
-      label: systemDefault ? `Systeemstandaard (${systemDefault})` : 'Systeemstandaard'
+      label: systemDefault ? t('systemDefaultNamed', { name: systemDefault }) : t('systemDefault')
     },
     ...named
   ]

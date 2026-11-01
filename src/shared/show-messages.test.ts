@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { placeholders, type MessageBook } from './i18n'
-import { ANSWER_CONTEXT, REMOTE_ERRORS, SCREEN_MESSAGES, STEP_MESSAGES } from './show-messages'
+import {
+  ANSWER_CONTEXT,
+  CHECK_MESSAGES,
+  REMOTE_ERRORS,
+  SCREEN_MESSAGES,
+  STEP_MESSAGES
+} from './show-messages'
 import { stepNames } from './resolve'
 
 function samePlaceholders<Key extends string>(book: MessageBook<Key>) {
@@ -17,6 +23,7 @@ describe('teksten over de show', () => {
     samePlaceholders(STEP_MESSAGES)
     samePlaceholders(REMOTE_ERRORS)
     samePlaceholders(SCREEN_MESSAGES)
+    samePlaceholders(CHECK_MESSAGES)
   })
 })
 
