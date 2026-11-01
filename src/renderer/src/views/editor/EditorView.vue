@@ -39,7 +39,7 @@ const PRESETS: { preset: RoundPreset; label: string; hint: string }[] = [
 ]
 
 function addRound(preset: RoundPreset, close: () => void) {
-  const r = createRound(preset, quiz.value.rounds.length + 1, quiz.value)
+  const r = createRound(preset, quiz.value.rounds.length + 1, quiz.value, locale)
   quiz.value.rounds.push(r)
   page.value = r.id
   close()

@@ -150,7 +150,7 @@ class Agent {
       if (source) {
         await createQuizFromTemplate(source, dir, { rounds: false, fragments: false }, title)
       } else {
-        await createQuizDir(dir, title)
+        await createQuizDir(dir, title, appLocale())
       }
       quiz = await readQuiz(dir)
       await this.insert(quiz, dir, rounds, quiz.rounds.length)
@@ -199,7 +199,7 @@ class Agent {
     const assetFor = await this.importFiles(quiz, dir, drafts)
     drafts.forEach((draft, i) => {
       const earlier = { ...quiz, rounds: quiz.rounds.slice(0, at + i) }
-      quiz.rounds.splice(at + i, 0, buildRound(earlier, draft, assetFor))
+      quiz.rounds.splice(at + i, 0, buildRound(earlier, draft, assetFor, appLocale()))
     })
   }
 

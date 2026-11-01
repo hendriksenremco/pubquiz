@@ -7,6 +7,7 @@ import type { Fragment, MediaAsset, Quiz, Round, ScreenContent, ShowState, Slide
 import { autoplayCountdown } from './autoplay'
 import { answerSlides } from './factory'
 import type { Locale } from './i18n'
+import { USAGE_MESSAGES } from './quiz-messages'
 import { CHECK_MESSAGES, STEP_MESSAGES } from './show-messages'
 
 export type ScreenOverlay =
@@ -411,30 +412,32 @@ function resolveFragment(quiz: Quiz, state: ShowState): ResolvedFragment | null 
 }
 
 /** Alle plekken waar een asset gebruikt wordt, leesbaar voor de host. */
-export function findAssetUsages(quiz: Quiz, assetId: string): string[] {
+export function findAssetUsages(quiz: Quiz, assetId: string, locale: Locale = 'nl'): string[] {
+  const t = USAGE_MESSAGES.in(locale)
   const usages: string[] = []
   const uses = (c: ScreenContent) => c.type !== 'black' && c.assetId === assetId
 
   for (const slot of quiz.screens) {
-    if (uses(slot.default)) usages.push(`Standaard van scherm "${slot.name}"`)
+    if (uses(slot.default)) usages.push(t('screenDefault', { name: slot.name }))
   }
-  if (quiz.background?.assetId === assetId) usages.push('Achtergrondmuziek')
+  if (quiz.background?.assetId === assetId) usages.push(t('background'))
   for (const round of quiz.rounds) {
-    if (Object.values(round.screens).some(uses)) usages.push(`Ronde "${round.title}": scherm`)
+    const title = round.title
+    if (Object.values(round.screens).some(uses)) usages.push(t('roundScreen', { title }))
     if (typeof round.background === 'object' && round.background.replaceAssetId === assetId) {
-      usages.push(`Ronde "${round.title}": achtergrond`)
+      usages.push(t('roundBackground', { title }))
     }
     if (round.fragments.some((f) => f.assetId === assetId)) {
-      usages.push(`Ronde "${round.title}": fragment`)
+      usages.push(t('roundFragment', { title }))
     }
     if (round.slides.some((s) => s.imageAssetId === assetId)) {
-      usages.push(`Ronde "${round.title}": slide`)
+      usages.push(t('roundSlide', { title }))
     }
     if (
       round.slides.some((s) => s.answerImageAssetId === assetId) ||
       round.fragments.some((f) => f.answerImageAssetId === assetId)
     ) {
-      usages.push(`Ronde "${round.title}": bij een antwoord`)
+      usages.push(t('roundAnswer', { title }))
     }
   }
   return usages

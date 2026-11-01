@@ -381,6 +381,8 @@ describe('referenties', () => {
     expect(findAssetUsages(quiz, 'music')).toEqual(['Ronde "Muziek": scherm'])
     expect(findAssetUsages(quiz, 'bg')).toEqual(['Achtergrondmuziek'])
     expect(findAssetUsages(quiz, 'loop2')).toEqual([])
+    expect(findAssetUsages(quiz, 'music', 'en')).toEqual(['Round "Muziek": screen'])
+    expect(findAssetUsages(quiz, 'bg', 'en')).toEqual(['Background music'])
   })
 
   it('meldt ontbrekende media en kanalen', () => {

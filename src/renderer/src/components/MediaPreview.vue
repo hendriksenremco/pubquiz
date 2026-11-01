@@ -30,7 +30,9 @@ const length = ref<number | null>(null)
 
 const index = computed(() => props.items.findIndex((a) => a.id === id.value))
 const asset = computed(() => props.items[index.value] ?? null)
-const usages = computed(() => (asset.value ? findAssetUsages(session.quiz!, asset.value.id) : []))
+const usages = computed(() =>
+  asset.value ? findAssetUsages(session.quiz!, asset.value.id, locale) : []
+)
 const folder = computed(() => session.quiz?.folders.find((f) => f.id === asset.value?.folderId))
 
 const t = COMPONENT_MESSAGES.in(locale)

@@ -207,7 +207,7 @@ export class AppController {
       const path = join(this.libraryDir, folder)
       const { dir } = template
         ? await createQuizFromTemplate(template.source, path, template.options, title)
-        : await createQuizDir(path, title)
+        : await createQuizDir(path, title, appLocale())
       await this.openQuiz(dir)
       return null
     } catch (err) {

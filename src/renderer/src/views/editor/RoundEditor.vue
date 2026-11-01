@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { createFragment, createImageSlide, createSlide } from '@shared/factory'
+import { createFragment, createImageSlide, createSlide, fragmentChannel } from '@shared/factory'
 import { groupByFolder, naturalCompare } from '@shared/media-folders'
 import type { MediaAsset, Round, Slide } from '@shared/types'
 import Icon from '../../components/Icon.vue'
@@ -110,11 +110,8 @@ function addImages(assets: MediaAsset[]) {
   if (images.length) insertSlides(...images.map((a) => createImageSlide(a.id)))
 }
 
-/** Fragmenten gaan standaard naar het kanaal "Fragmenten", anders naar het laatste kanaal. */
-const defaultChannel = computed(
-  () =>
-    quiz.value.channels.find((c) => /fragment/i.test(c.name))?.id ?? quiz.value.channels.at(-1)?.id
-)
+/** Fragmenten gaan standaard naar het kanaal "Fragmenten" of "Clips", anders naar het laatste. */
+const defaultChannel = computed(() => fragmentChannel(quiz.value)?.id)
 
 function addFragments(assets: MediaAsset[]) {
   const audio = assets.filter((a) => a.kind === 'audio')

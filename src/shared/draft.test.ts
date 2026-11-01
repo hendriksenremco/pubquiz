@@ -8,19 +8,20 @@ import {
   type RoundDraft
 } from './draft'
 import { createQuiz } from './factory'
+import type { Locale } from './i18n'
 import { QuizSchema } from './quiz-schema'
 import type { Quiz } from './types'
 
 /** Bouwt rondes na elkaar, zoals de app doet; bestanden krijgen een asset-id op hun naam. */
-function build(drafts: RoundDraft[]): Quiz {
-  const quiz = createQuiz('Italië')
+function build(drafts: RoundDraft[], locale: Locale = 'nl'): Quiz {
+  const quiz = createQuiz('Italië', locale)
   for (const draft of drafts) {
     for (const f of draftFiles(draft)) {
       if (!quiz.assets.some((a) => a.id === f.path)) {
         quiz.assets.push({ id: f.path, kind: f.kind, file: `media/${f.path}`, name: f.path })
       }
     }
-    quiz.rounds.push(buildRound(quiz, draft, (path) => path))
+    quiz.rounds.push(buildRound(quiz, draft, (path) => path, locale))
   }
   return QuizSchema.parse(quiz)
 }
@@ -122,6 +123,20 @@ describe('buildRound', () => {
     const quiz = build([questions, { type: 'answers', rounds: ['ronde 1: italië'] }])
     expect(quiz.rounds[1].answersFor).toEqual([quiz.rounds[0].id])
     expect(() => build([questions, { type: 'answers', rounds: ['Ronde 9'] }])).toThrow(DraftError)
+  })
+
+  it('geeft wat de AI niet noemt een naam in de taal van de app', () => {
+    const music: RoundDraft = {
+      type: 'music',
+      title: 'Hits',
+      songs: [{ audio: 'a.mp3', answer: 'A' }]
+    }
+    const quiz = build([questions, music, { type: 'break' }, { type: 'answers' }], 'en')
+    const [first, songs, pause, answers] = quiz.rounds
+    expect(first.slides[1].title).toBe('Question 1')
+    expect(songs.fragments[0].label).toBe('Clip 1')
+    expect(quiz.channels.find((c) => c.id === songs.fragments[0].channelId)?.name).toBe('Clips')
+    expect([pause.title, answers.title]).toEqual(['Break', 'Answers'])
   })
 })
 
