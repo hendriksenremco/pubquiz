@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { placeholders, type MessageBook } from '@shared/i18n'
-import { FRAGMENT_MESSAGES, PRINT_MESSAGES } from './editor-messages'
+import { FRAGMENT_MESSAGES, PRINT_MESSAGES, SLIDE_MESSAGES } from './editor-messages'
 
-const BOOKS: Record<string, MessageBook<string>> = { PRINT_MESSAGES, FRAGMENT_MESSAGES }
+const BOOKS: Record<string, MessageBook<string>> = {
+  PRINT_MESSAGES,
+  FRAGMENT_MESSAGES,
+  SLIDE_MESSAGES
+}
 
 describe('teksten van de editor', () => {
   for (const [name, book] of Object.entries(BOOKS)) {
@@ -21,5 +25,10 @@ describe('teksten van de editor', () => {
       'Nakijkformulier opslaan'
     )
     expect(PRINT_MESSAGES.in('nl')('chosen', { chosen: 2, total: 5 })).toBe('2 van 5')
+  })
+
+  it('noemt een afbeeldingsslide met zijn nummer', () => {
+    expect(SLIDE_MESSAGES.in('nl')('kindImage', { number: 3 })).toBe('Afbeelding 3')
+    expect(SLIDE_MESSAGES.in('en')('kindImage', { number: 3 })).toBe('Picture 3')
   })
 })

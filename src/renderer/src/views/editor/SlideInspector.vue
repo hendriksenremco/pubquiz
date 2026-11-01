@@ -6,21 +6,24 @@ import Icon from '../../components/Icon.vue'
 import ImageChip from '../../components/ImageChip.vue'
 import StagePreview from '../../components/StagePreview.vue'
 import PluginSlot from '../../plugins/PluginSlot.vue'
+import { locale } from '../../lib/locale'
 import { useSession } from '../../stores/session'
+import { SLIDE_MESSAGES } from './editor-messages'
 
 /** Paneel rechts voor de gekozen slide: hoe hij eruitziet en waar hij komt. */
 const props = defineProps<{ round: Round; slide: Slide }>()
 const emit = defineEmits<{ select: [id: string | null] }>()
 const session = useSession()
+const t = SLIDE_MESSAGES.in(locale)
 const quiz = computed(() => session.quiz!)
 const screens = computed(() => quiz.value.screens)
 const index = computed(() => props.round.slides.indexOf(props.slide))
 
 const LAYOUTS: { value: Slide['layout']; label: string }[] = [
-  { value: 'title', label: 'Titel' },
-  { value: 'question', label: 'Vraag' },
-  { value: 'number', label: 'Nummer' },
-  { value: 'image', label: 'Afbeelding' }
+  { value: 'title', label: t('layoutTitle') },
+  { value: 'question', label: t('layoutQuestion') },
+  { value: 'number', label: t('layoutNumber') },
+  { value: 'image', label: t('layoutImage') }
 ]
 
 function targets(screenId: string): boolean {
@@ -71,7 +74,7 @@ function remove() {
         :slide-index="index"
         :caption="false"
       />
-      <div v-if="screens.length > 1" class="segmented" role="group" aria-label="Voorbeeld op">
+      <div v-if="screens.length > 1" class="segmented" role="group" :aria-label="t('previewOn')">
         <button
           v-for="s in screens.filter((x) => targets(x.id))"
           :key="s.id"
@@ -85,8 +88,8 @@ function remove() {
     </div>
 
     <div class="inspector-group">
-      <span class="label">Vorm</span>
-      <div class="segmented" role="group" aria-label="Vorm">
+      <span class="label">{{ t('layout') }}</span>
+      <div class="segmented" role="group" :aria-label="t('layout')">
         <button
           v-for="l in LAYOUTS"
           :key="l.value"
@@ -101,45 +104,45 @@ function remove() {
     </div>
 
     <div v-if="slide.layout === 'question'" class="inspector-group">
-      <span class="label">In beeld</span>
-      <div class="segmented" role="group" aria-label="In beeld">
+      <span class="label">{{ t('shown') }}</span>
+      <div class="segmented" role="group" :aria-label="t('shown')">
         <button
           type="button"
           :class="{ on: !slide.numberOnly }"
           :aria-pressed="!slide.numberOnly"
           @click="slide.numberOnly = undefined"
         >
-          De vraag
+          {{ t('showQuestion') }}
         </button>
         <button
           type="button"
           :class="{ on: slide.numberOnly }"
           :aria-pressed="!!slide.numberOnly"
-          title="Jij leest de vraag voor"
+          :title="t('readAloud')"
           @click="slide.numberOnly = true"
         >
-          Alleen het nummer
+          {{ t('showNumberOnly') }}
         </button>
       </div>
     </div>
 
     <div class="inspector-group">
       <div v-if="slide.layout !== 'number'" class="inspector-row">
-        <span class="row-label">Afbeelding</span>
-        <ImageChip v-model="slide.imageAssetId" label="Afbeelding" field />
+        <span class="row-label">{{ t('image') }}</span>
+        <ImageChip v-model="slide.imageAssetId" :label="t('image')" field />
       </div>
       <div v-if="slide.layout !== 'title'" class="inspector-row">
-        <span class="row-label">Bij antwoord</span>
-        <ImageChip v-model="slide.answerImageAssetId" label="Afbeelding bij het antwoord" field />
+        <span class="row-label">{{ t('onAnswer') }}</span>
+        <ImageChip v-model="slide.answerImageAssetId" :label="t('answerImage')" field />
       </div>
       <div class="inspector-row">
-        <span class="row-label">Achtergrond</span>
+        <span class="row-label">{{ t('backdrop') }}</span>
         <BackdropPicker :slide="slide" />
       </div>
       <PluginSlot name="slideInspector" :round="round" :slide="slide" />
       <div v-if="screens.length > 1" class="inspector-row">
-        <span class="row-label">Op</span>
-        <div class="checks" role="group" aria-label="Op welke schermen">
+        <span class="row-label">{{ t('on') }}</span>
+        <div class="checks" role="group" :aria-label="t('onScreens')">
           <label v-for="s in screens" :key="s.id">
             <input type="checkbox" :checked="targets(s.id)" @change="toggleTarget(s.id)" />
             {{ s.name }}
@@ -150,18 +153,18 @@ function remove() {
 
     <footer class="foot">
       <button class="btn btn-ghost btn-sm" :disabled="index === 0" @click="move(-1)">
-        <Icon name="left" :size="14" class="turn" /> Omhoog
+        <Icon name="left" :size="14" class="turn" /> {{ t('moveUp') }}
       </button>
       <button
         class="btn btn-ghost btn-sm"
         :disabled="index === round.slides.length - 1"
         @click="move(1)"
       >
-        <Icon name="right" :size="14" class="turn" /> Omlaag
+        <Icon name="right" :size="14" class="turn" /> {{ t('moveDown') }}
       </button>
       <span class="grow" />
       <button class="btn btn-ghost btn-sm btn-danger" @click="remove">
-        <Icon name="trash" :size="14" /> Verwijder
+        <Icon name="trash" :size="14" /> {{ t('remove') }}
       </button>
     </footer>
   </div>
