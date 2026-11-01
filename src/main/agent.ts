@@ -19,6 +19,8 @@ import type { AiSetup } from '@shared/ipc'
 import type { Quiz } from '@shared/types'
 import type { AppController } from './controller'
 import { readJson, writeJson } from './json-store'
+import { appLocale } from './locale'
+import { NOTICE_MESSAGES } from './messages'
 import {
   QUIZ_EXT,
   createQuizDir,
@@ -163,7 +165,7 @@ class Agent {
     // Tijdens een show wisselen we nooit van quiz: hij staat dan klaar op het dashboard.
     if (this.ctl.live) {
       this.ctl.remember(dir)
-      this.ctl.notify('info', `Nieuwe quiz “${title}” staat klaar op het dashboard`)
+      this.ctl.notify('info', NOTICE_MESSAGES.in(appLocale())('quizReady', { title }))
     } else {
       await this.ctl.openQuiz(dir)
     }

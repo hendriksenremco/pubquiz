@@ -179,4 +179,20 @@ describe('MagicHomePlugin', () => {
     })
     plugin.stop()
   })
+
+  it('geeft zijn foutmeldingen in de taal van de app', async () => {
+    const device = await fakeController()
+    const host = device.host
+    await device.close()
+    const plugin = new MagicHomePlugin(vi.fn(), undefined, 'en')
+    expect(await plugin.actions.probe('')).toEqual({
+      ok: false,
+      error: 'Enter the IP address of the controller'
+    })
+    expect(await plugin.actions.probe(host)).toMatchObject({
+      ok: false,
+      error: expect.stringContaining('refuses the connection')
+    })
+    plugin.stop()
+  })
 })

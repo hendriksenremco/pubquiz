@@ -36,6 +36,7 @@ import {
 } from './quiz-files'
 import { appLocale } from './locale'
 import { locateMedia } from './media-path'
+import { DIALOG_MESSAGES, errorText, NOTICE_MESSAGES } from './messages'
 import { renderFormPdf } from './pdf'
 import { Plugins } from './plugins'
 import { SaveQueue } from './save-queue'
@@ -100,6 +101,19 @@ export class AppController {
     return this.settings.recent.includes(dir)
   }
 
+  /** Meldingen in de taal van de app. */
+  private get t() {
+    return NOTICE_MESSAGES.in(appLocale())
+  }
+
+  private get dialogText() {
+    return DIALOG_MESSAGES.in(appLocale())
+  }
+
+  private failed(err: unknown): string {
+    return errorText(err, appLocale())
+  }
+
   get windowTitle(): string {
     return this.quiz ? `${this.quiz.title} — QuizNote` : 'QuizNote'
   }
@@ -146,14 +160,14 @@ export class AppController {
     const dir = basename(path) === 'quiz.json' ? dirname(path) : path
     if (!(await isQuizDir(dir))) {
       this.settings.removeRecent(dir)
-      this.notify('error', `Geen quiz gevonden in ${dir}`)
+      this.notify('error', this.t('noQuizIn', { dir }))
       return
     }
     let quiz: Quiz
     try {
       quiz = await readQuiz(dir)
     } catch (err) {
-      this.notify('error', `Quiz openen mislukt: ${(err as Error).message}`)
+      this.notify('error', this.t('openFailed', { error: this.failed(err) }))
       return
     }
     if (this.live) await this.stopShow()
@@ -172,7 +186,7 @@ export class AppController {
 
     const missing = await findMissingMedia(dir, quiz)
     if (missing.length > 0) {
-      this.notify('warning', `Ontbrekende media: ${missing.slice(0, 5).join(', ')}`)
+      this.notify('warning', this.t('missingMedia', { files: missing.slice(0, 5).join(', ') }))
     }
   }
 
@@ -186,7 +200,7 @@ export class AppController {
   ): Promise<string | null> {
     const title = name.trim()
     const folder = folderNameFor(title)
-    if (!folder) return 'Geef de quiz een naam'
+    if (!folder) return this.t('nameQuiz')
     if (template?.source === this.quizDir) await this.flushSave()
     try {
       await fs.mkdir(this.libraryDir, { recursive: true })
@@ -197,15 +211,15 @@ export class AppController {
       await this.openQuiz(dir)
       return null
     } catch (err) {
-      return (err as Error).message
+      return this.failed(err)
     }
   }
 
   async promptOpenQuiz(): Promise<void> {
     const result = await dialog.showOpenDialog(this.operator!, {
-      title: 'Quiz openen',
-      buttonLabel: 'Open',
-      message: `Kies een ${QUIZ_EXT}-map (of het quiz.json-bestand erin)`,
+      title: this.dialogText('openTitle'),
+      buttonLabel: this.dialogText('openButton'),
+      message: this.dialogText('openMessage', { ext: QUIZ_EXT }),
       properties: ['openDirectory', 'openFile', 'treatPackageAsDirectory']
     })
     const path = result.filePaths[0]
@@ -214,7 +228,7 @@ export class AppController {
 
   async promptImportZip(): Promise<void> {
     const source = await dialog.showOpenDialog(this.operator!, {
-      title: 'Quiz importeren uit zip',
+      title: this.dialogText('importZipTitle'),
       filters: [{ name: 'Zip', extensions: ['zip'] }],
       properties: ['openFile']
     })
@@ -224,7 +238,7 @@ export class AppController {
       await fs.mkdir(this.libraryDir, { recursive: true })
       await this.openQuiz(await importZip(zip, this.libraryDir))
     } catch (err) {
-      this.notify('error', `Importeren mislukt: ${(err as Error).message}`)
+      this.notify('error', this.t('importFailed', { error: this.failed(err) }))
     }
   }
 
@@ -232,16 +246,16 @@ export class AppController {
     if (!this.quizDir) return
     await this.flushSave()
     const result = await dialog.showSaveDialog(this.operator!, {
-      title: 'Exporteer als zip',
+      title: this.dialogText('exportZipTitle'),
       defaultPath: `${basename(this.quizDir, QUIZ_EXT)}.zip`,
       filters: [{ name: 'Zip', extensions: ['zip'] }]
     })
     if (result.canceled || !result.filePath) return
     try {
       await exportZip(this.quizDir, result.filePath)
-      this.notify('info', `Geëxporteerd naar ${basename(result.filePath)}`)
+      this.notify('info', this.t('exported', { file: basename(result.filePath) }))
     } catch (err) {
-      this.notify('error', `Exporteren mislukt: ${(err as Error).message}`)
+      this.notify('error', this.t('exportFailed', { error: this.failed(err) }))
     }
   }
 
@@ -254,7 +268,7 @@ export class AppController {
     let target = fixedDir ? join(fixedDir, name) : null
     if (!target) {
       const result = await dialog.showSaveDialog(this.operator!, {
-        title: 'Pdf opslaan',
+        title: this.dialogText('savePdfTitle'),
         defaultPath: join(app.getPath('downloads'), name),
         filters: [{ name: 'Pdf', extensions: ['pdf'] }]
       })
@@ -263,10 +277,10 @@ export class AppController {
     }
     try {
       await fs.writeFile(target, await renderFormPdf(options))
-      this.notify('info', `Opgeslagen: ${basename(target)}`)
+      this.notify('info', this.t('saved', { file: basename(target) }))
       if (!headless) void shell.openPath(target)
     } catch (err) {
-      this.notify('error', `Pdf maken mislukt: ${(err as Error).message}`)
+      this.notify('error', this.t('pdfFailed', { error: this.failed(err) }))
     }
   }
 
@@ -283,7 +297,7 @@ export class AppController {
   /** Terug naar het dashboard. Niet tijdens een show. */
   async closeQuiz(): Promise<void> {
     if (this.live) {
-      this.notify('warning', 'Stop eerst de show voordat je naar het overzicht gaat')
+      this.notify('warning', this.t('stopShowFirst'))
       return
     }
     await this.flushSave()
@@ -337,13 +351,13 @@ export class AppController {
     let sources = paths
     if (!sources) {
       const result = await dialog.showOpenDialog(this.operator!, {
-        title: 'Media importeren',
-        message: 'Kies bestanden of een hele map',
-        buttonLabel: 'Importeer',
+        title: this.dialogText('importMediaTitle'),
+        message: this.dialogText('importMediaMessage'),
+        buttonLabel: this.dialogText('importMediaButton'),
         properties: ['openFile', 'openDirectory', 'multiSelections'],
         filters: [
           {
-            name: 'Video, audio en afbeeldingen',
+            name: this.dialogText('mediaFilter'),
             extensions: [
               'mp4',
               'm4v',
@@ -370,7 +384,7 @@ export class AppController {
     }
     const result = await importMediaFiles(this.quizDir, sources)
     if (result.skipped.length > 0) {
-      this.notify('warning', `Niet geïmporteerd (onbekend type): ${result.skipped.join(', ')}`)
+      this.notify('warning', this.t('notImported', { files: result.skipped.join(', ') }))
     }
     return result
   }
@@ -381,7 +395,10 @@ export class AppController {
     const parsed = QuizSchema.safeParse(input)
     if (!parsed.success) {
       const issue = parsed.error.issues[0]
-      this.notify('error', `Ongeldige wijziging bij ${issue?.path.join('.')}: ${issue?.message}`)
+      this.notify(
+        'error',
+        this.t('invalidChange', { path: issue?.path.join('.') ?? '', error: issue?.message ?? '' })
+      )
       return
     }
     const previous = this.quiz
@@ -410,7 +427,7 @@ export class AppController {
       )
       if (saved) this.broadcast(IPC.saved, [false])
     } catch (err) {
-      this.notify('error', `Opslaan mislukt: ${(err as Error).message}`)
+      this.notify('error', this.t('saveFailed', { error: this.failed(err) }))
     }
   }
 
@@ -461,7 +478,7 @@ export class AppController {
   }
 
   audioEvent(event: AudioEngineEvent): void {
-    if (event.type === 'error') this.notify('error', `Audio: ${event.message}`)
+    if (event.type === 'error') this.notify('error', this.t('audioError', { error: event.message }))
     this.show.audioEvent(event)
   }
 
@@ -541,7 +558,7 @@ export class AppController {
     const missing = this.screens.sync(this.quiz, this.hardware, this.live)
     if (reportMissing) {
       for (const slot of missing) {
-        this.notify('warning', `Scherm "${slot.name}": gekoppeld display is niet aangesloten`)
+        this.notify('warning', this.t('screenMissing', { name: slot.name }))
       }
     }
   }
@@ -563,9 +580,9 @@ export class AppController {
 
   private onDisplayChange(change: DisplayChange, display: Display): void {
     this.broadcast(IPC.displays, [listDisplays()])
-    const label = display.label || `Scherm ${display.id}`
-    if (change === 'removed') this.notify('warning', `Display losgekoppeld: ${label}`)
-    if (change === 'added') this.notify('info', `Display aangesloten: ${label}`)
+    const name = display.label || this.t('displayName', { id: display.id })
+    if (change === 'removed') this.notify('warning', this.t('displayRemoved', { name }))
+    if (change === 'added') this.notify('info', this.t('displayAdded', { name }))
     if (this.live) this.syncScreens(false)
   }
 }
