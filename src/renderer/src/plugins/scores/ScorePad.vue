@@ -9,7 +9,8 @@ import { SCORE_PAD_MESSAGES } from './messages'
 
 /**
  * Tijdens de show: per team de punten van de ronde die nu loopt, of bij een antwoordenronde van
- * de rondes die je nakijkt. Teams toevoegen doe je bij Quiz-instellingen.
+ * de rondes die je nakijkt. Teams toevoegen doe je bij Quiz-instellingen. Een ronde zonder punten
+ * (een pauze, of een antwoordenronde die niets nakijkt) krijgt geen blok.
  */
 const props = defineProps<{ round: Round }>()
 const session = useSession()
@@ -23,13 +24,12 @@ const totals = computed(
 </script>
 
 <template>
-  <section class="card pad" data-testid="score-pad">
+  <section v-if="rounds.length" class="card pad" data-testid="score-pad">
     <header class="card-head">
       <h3 class="grow">{{ t('title') }}</h3>
     </header>
     <div class="card-body">
       <p v-if="!scores.teams.length" class="muted empty">{{ t('noTeams') }}</p>
-      <p v-else-if="!rounds.length" class="muted empty">{{ t('noRounds') }}</p>
       <table v-else>
         <thead>
           <tr>

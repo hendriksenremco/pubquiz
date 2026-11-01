@@ -201,7 +201,7 @@ Plug-ins zijn optionele extra's. Je zet ze per Mac aan of uit bij Instellingen (
 
 **Tussenstand** (`scores`, issue #107)
 
-- Teams en hun punten per ronde, met de hand ingevuld in een tabel bij Quiz-instellingen (`ScoreTable.vue`). Antwoordenrondes krijgen geen kolom.
+- Teams en hun punten per ronde, met de hand ingevuld in een tabel bij Quiz-instellingen (`ScoreTable.vue`). Antwoordenrondes krijgen geen kolom, en rondes zonder vragen of fragmenten (een pauze, `hasAnswers`) ook niet, tenzij er al punten in staan (issue #116).
 - De gegevens staan op de quiz onder `plugins.scores`; de hulpjes en `standings` staan in `src/shared/scores.ts`. Main doet er niets mee.
 - De stand op een slide: een titelslide met `plugins.scores.standings` (Slide → Tussenstand in de editor, `createStandingsSlide`). `useStandings()` in `src/renderer/src/plugins/scores/standings.ts` geeft `SlideView` de stand, zolang de plug-in aan staat; anders, en op de telefoon, is het een gewone titelslide.
 - Punten invullen tijdens de show: `ScorePad.vue` in het midden van de show (`PluginSlot` `liveRound`), voor de ronde die loopt of, bij een antwoordenronde, de rondes die je nakijkt (`roundsToScore`). Alleen op de Mac; de telefoon kent het niet.

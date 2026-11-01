@@ -6,7 +6,7 @@
  */
 import { z } from 'zod'
 import { definePlugin, pluginData, setPluginData, typeOnly, type HasPlugins } from './plugin'
-import { createSlide, newId } from './factory'
+import { createSlide, hasAnswers, newId } from './factory'
 import type { Quiz, Round, Slide } from './types'
 
 const TeamSchema = z.object({ id: z.string(), name: z.string() })
@@ -55,18 +55,24 @@ function save(quiz: HasPlugins, scores: Scores): void {
   setPluginData(SCORES, quiz, empty ? undefined : scores)
 }
 
-/** De rondes met punten: alles behalve antwoordenrondes (daar kijk je een andere ronde na). */
+/**
+ * De rondes met punten. Niet: antwoordenrondes (daar kijk je een andere ronde na) en rondes
+ * zonder vragen, nummers, afbeeldingen of fragmenten, zoals een pauze (`hasAnswers`, issue #116).
+ * Een ronde waar al punten in staan, houdt zijn kolom.
+ */
 export function scoredRounds(quiz: Quiz): Round[] {
-  return quiz.rounds.filter((r) => !r.answersFor.length)
+  const { points } = scoresOf(quiz)
+  return quiz.rounds.filter((r) => !r.answersFor.length && (hasAnswers(r) || r.id in points))
 }
 
 /**
- * Voor welke rondes vul je tijdens deze ronde punten in? Een gewone ronde: zichzelf. Een
- * antwoordenronde: de rondes die je dan nakijkt.
+ * Voor welke rondes vul je tijdens deze ronde punten in? Een gewone ronde: zichzelf, als die
+ * punten krijgt (een pauze niet). Een antwoordenronde: de rondes die je dan nakijkt.
  */
 export function roundsToScore(quiz: Quiz, round: Round): Round[] {
-  if (!round.answersFor.length) return [round]
-  return scoredRounds(quiz).filter((r) => round.answersFor.includes(r.id))
+  const rounds = scoredRounds(quiz)
+  if (!round.answersFor.length) return rounds.filter((r) => r.id === round.id)
+  return rounds.filter((r) => round.answersFor.includes(r.id))
 }
 
 export function addTeam(quiz: HasPlugins, name: string): Team {

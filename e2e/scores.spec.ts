@@ -44,8 +44,12 @@ test('teams en punten per ronde bij Quiz-instellingen, via de plug-in Tussenstan
     await names.nth(1).fill('Quizzly Bears')
     await names.nth(1).press('Tab')
 
-    // Antwoordenrondes hebben geen kolom; de demo heeft er geen, dus vier rondes.
-    await expect(table.locator('th.round')).toHaveCount(4)
+    // Antwoordenrondes en de pauze (geen vragen of fragmenten) hebben geen kolom.
+    await expect(table.locator('th.round')).toHaveText([
+      'Ronde 1: algemeen',
+      'Ronde 2: muziek',
+      'Ronde 4: intro’s'
+    ])
     const points = (team: string, round: string) =>
       table.getByLabel(`Punten van ${team} in ${round}`)
     await points('De Slimmeriken', 'Ronde 1: algemeen').fill('7,5')
@@ -216,6 +220,11 @@ test('punten invullen tijdens de show, voor de ronde die nu loopt', async () => 
     await expect.poll(saved).toEqual({ [one.id]: { t0: 8.5, t1: 7 } })
     await operator.waitForTimeout(300)
     await operator.screenshot({ path: 'test-results/scores-live.png' })
+
+    // In de pauze vul je geen punten in.
+    await operator.locator('.rounds .round', { hasText: 'Pauze' }).click()
+    await expect(operator.locator('.now-title')).toHaveText('Pauze')
+    await expect(pad).toHaveCount(0)
   } finally {
     await app.close()
     rmSync(userData, { recursive: true, force: true })
