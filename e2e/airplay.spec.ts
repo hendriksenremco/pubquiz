@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { rmSync } from 'fs'
 import { dirname } from 'path'
-import { copyFixture, launch, openStart, tempDir } from './helpers'
+import { copyFixture, launch, openStart, snap, tempDir } from './helpers'
 
 // Vaste lijst i.p.v. het echte netwerk; zelfde soort apparaten als op kantoor gevonden.
 const FAKE_AIRPLAY = [
@@ -47,7 +47,7 @@ test('AirPlay in de buurt: schermen in de lijst, met hulp bij verbinden', async 
     await expect(operator.locator('.channel [role="combobox"]').first()).toHaveText(
       /Systeemstandaard/
     )
-    await operator.screenshot({ path: 'test-results/airplay.png' })
+    await snap(operator, 'test-results/airplay.png')
   } finally {
     await app.close()
     rmSync(userData, { recursive: true, force: true })

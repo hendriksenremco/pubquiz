@@ -313,10 +313,10 @@ onBeforeUnmount(() => {
           <template v-else>
             <div class="ov-label">{{ t('next') }}</div>
             <div class="ov-number">{{ resolved.overlay.nextNumber }}</div>
-            <div class="ov-count">
+            <div class="ov-count" data-volatile>
               {{ t('inSeconds', { seconds: resolved.overlay.seconds }) }}
             </div>
-            <div class="ov-bar">
+            <div class="ov-bar" data-volatile>
               <span :style="{ transform: `scaleX(${resolved.overlay.remaining})` }" />
             </div>
           </template>

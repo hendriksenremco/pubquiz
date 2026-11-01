@@ -1,7 +1,7 @@
 import { expect, test, type ElectronApplication, type Page } from '@playwright/test'
 import { copyFileSync, existsSync, readFileSync, rmSync, writeFileSync } from 'fs'
 import { dirname, join } from 'path'
-import { confirmIn, copyFixture, launch, tempDir } from './helpers'
+import { confirmIn, copyFixture, launch, snap, tempDir } from './helpers'
 
 let app: ElectronApplication
 let operator: Page
@@ -74,7 +74,7 @@ test('maakt het antwoordformulier, de antwoorden en de vragenkaarten als pdf', a
     'Ronde 4: intro’s'
   ])
   await operator.waitForTimeout(200)
-  await operator.screenshot({ path: 'test-results/print-page.png' })
+  await snap(operator, 'test-results/print-page.png')
 
   await dialog.getByRole('button', { name: 'Antwoordformulier opslaan' }).click()
   const sheet = await saved('Demo-pubquiz – antwoordformulier.pdf')
@@ -103,7 +103,7 @@ test('acties staan zichtbaar in beeld, niet achter drie stippen', async () => {
   }
   await expect(operator.getByRole('button', { name: 'Verwijder scherm' })).toHaveCount(2)
   await operator.waitForTimeout(300)
-  await operator.screenshot({ path: 'test-results/quiz-actions.png' })
+  await snap(operator, 'test-results/quiz-actions.png')
 
   // Ronde dupliceren en verwijderen, onderaan de instellingen van de ronde.
   const rounds = operator.locator('.sidebar .round')
@@ -113,13 +113,13 @@ test('acties staan zichtbaar in beeld, niet achter drie stippen', async () => {
   await expect(rounds).toHaveCount(5)
   await expect(operator.locator('#round-title')).toHaveValue('Ronde 1: algemeen (kopie)')
   await operator.getByRole('tab', { name: 'Ronde' }).click()
-  await operator.screenshot({ path: 'test-results/round-actions.png' })
+  await snap(operator, 'test-results/round-actions.png')
   await operator.getByRole('button', { name: 'Verwijder ronde' }).click()
   await confirmIn(operator, 'Verwijder')
   await expect(rounds).toHaveCount(4)
 
   await operator.getByRole('button', { name: /^Media/ }).click()
   await expect(operator.getByRole('button', { name: 'Verwijder uit quiz' }).first()).toBeVisible()
-  await operator.screenshot({ path: 'test-results/media-actions.png' })
+  await snap(operator, 'test-results/media-actions.png')
   await expect(operator.getByRole('button', { name: 'Meer' })).toHaveCount(0)
 })

@@ -54,6 +54,113 @@ jobs:
           path: test-results/
           retention-days: 7
 
+  # Dezelfde e2e-tests op master, alleen voor de screenshots. Falende tests mogen hier: ook
+  # op master zijn een paar tests wisselvallig (issue #47).
+  e2e-base:
+    name: Screenshots van master
+    if: github.event_name == 'pull_request'
+    runs-on: macos-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 8
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: ffmpeg
+        run: |
+          brew install ffmpeg-full
+          echo "$(brew --prefix ffmpeg-full)/bin" >> "$GITHUB_PATH"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test:e2e || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: screenshots-base
+          path: test-results/*.png
+          retention-days: 7
+
+  # Vergelijkt de screenshots en zet de verschillen als één commentaar op de pull request.
+  # De plaatjes staan op de branch pr-screenshots, in de map pr-<nummer>/. Niet bij een fork:
+  # die mag niet schrijven.
+  screenshots:
+    name: Screenshots vergelijken
+    needs: [e2e, e2e-base]
+    if: >-
+      always() && github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      needs.e2e.result != 'cancelled' && needs.e2e-base.result != 'cancelled'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+      PR: ${{ github.event.pull_request.number }}
+      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: ImageMagick
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq imagemagick
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: test-results
+          path: ${{ runner.temp }}/pr
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: screenshots-base
+          path: ${{ runner.temp }}/base
+      - name: Vergelijken
+        run: scripts/screenshot-diff.sh "$RUNNER_TEMP/base" "$RUNNER_TEMP/pr" "$RUNNER_TEMP/diff"
+      - name: Plaatjes op pr-screenshots zetten
+        id: push
+        run: |
+          shots=$RUNNER_TEMP/shots
+          git init -q "$shots"
+          cd "$shots"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git"
+          # Andere pull requests kunnen tegelijk pushen: dan opnieuw ophalen en nog eens proberen.
+          for attempt in 1 2 3 4 5; do
+            if git fetch -q --depth 1 origin pr-screenshots; then
+              git checkout -q -f -B pr-screenshots FETCH_HEAD
+            else
+              git checkout -q --orphan pr-screenshots
+            fi
+            rm -rf "pr-$PR"
+            mkdir -p "pr-$PR"
+            find "$RUNNER_TEMP/diff" -maxdepth 1 -name '*.png' -exec cp {} "pr-$PR/" \;
+            git add -A "pr-$PR"
+            git commit -q --allow-empty -m "Screenshots for #$PR at ${HEAD_SHA:0:7}"
+            if git push -q origin pr-screenshots; then break; fi
+            [ "$attempt" -lt 5 ] || exit 1
+            sleep $((attempt * 5))
+          done
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Commentaar bijwerken
+        env:
+          SHOTS_SHA: ${{ steps.push.outputs.sha }}
+        run: |
+          body=$RUNNER_TEMP/comment.md
+          url="https://raw.githubusercontent.com/${REPO}/${SHOTS_SHA}/pr-${PR}"
+          sed "s|{{URL}}|${url}|g" "$RUNNER_TEMP/diff/comment.md" > "$body"
+          printf '\n<sub>Bij commit %s.</sub>\n' "${HEAD_SHA:0:7}" >> "$body"
+          id=$(gh api "repos/${REPO}/issues/${PR}/comments" --paginate \
+            --jq '.[] | select(.body | startswith("<!-- pr-screenshots -->")) | .id' | head -n 1)
+          if [ -n "$id" ]; then
+            gh api -X PATCH "repos/${REPO}/issues/comments/${id}" -F "body=@${body}" > /dev/null
+          else
+            gh pr comment "$PR" --repo "$REPO" --body-file "$body"
+          fi
+
   build:
     name: Build (ongesigneerde dmg)
     runs-on: macos-latest

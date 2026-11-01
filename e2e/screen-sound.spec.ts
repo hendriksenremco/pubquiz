@@ -6,6 +6,7 @@ import {
   copyFixture,
   launch,
   openStart,
+  snap,
   startShow,
   tempDir,
   useWindowedScreens,
@@ -48,7 +49,7 @@ test('zet geluid aan voor de standaardvideo en een ronde-video', async () => {
   await operator.getByLabel('Geluid van de video').check()
   await expect(operator.getByLabel('Volume van de video')).toHaveValue('0.8')
   await operator.waitForTimeout(300) // popover laten infaden voor de screenshot
-  await operator.screenshot({ path: 'test-results/screen-sound-popover.png' })
+  await snap(operator, 'test-results/screen-sound-popover.png')
   await operator.keyboard.press('Escape')
   await expect(beamerTile.locator('.chip-sound')).toBeVisible()
 
@@ -60,7 +61,7 @@ test('zet geluid aan voor de standaardvideo en een ronde-video', async () => {
   await expect(operator.getByLabel('Geluid van de video')).toBeChecked()
   await operator.getByLabel('Geluid van de video').uncheck()
   await operator.waitForTimeout(300)
-  await operator.screenshot({ path: 'test-results/screen-sound-round-muted.png' })
+  await snap(operator, 'test-results/screen-sound-round-muted.png')
   await operator.keyboard.press('Escape')
   await expect(roundBeamer).toHaveAttribute('title', /Standaard, zonder geluid/)
 
@@ -80,7 +81,7 @@ test('kiest bij Show waar het videogeluid heen gaat', async () => {
   await expect(sound).toHaveCount(1)
   await expect(sound).toHaveAttribute('aria-label', 'Videogeluid van Beamer via')
   await expect(sound).toHaveAttribute('data-value', 'auto')
-  await operator.screenshot({ path: 'test-results/screen-sound-prepare.png' })
+  await snap(operator, 'test-results/screen-sound-prepare.png')
 })
 
 test('speelt het videogeluid alleen op het scherm, duckt bij een fragment en zwijgt bij zwart', async () => {
@@ -98,7 +99,7 @@ test('speelt het videogeluid alleen op het scherm, duckt bij een fragment en zwi
   // Fader van het scherm in de mixer.
   await operator.getByLabel('Videogeluid Beamer', { exact: true }).fill('0.5')
   await expect.poll(async () => (await sound(beamer)).volume).toBe(0.4)
-  await operator.screenshot({ path: 'test-results/screen-sound-mixer.png' })
+  await snap(operator, 'test-results/screen-sound-mixer.png')
 
   // Ronde 1: standaardvideo blijft lopen, maar zonder geluid.
   await operator.locator('.rounds .round').nth(0).click()

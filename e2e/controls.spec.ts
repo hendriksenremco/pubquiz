@@ -1,7 +1,7 @@
 import { expect, test, type ElectronApplication, type Page } from '@playwright/test'
 import { readFileSync, rmSync } from 'fs'
 import { dirname, join } from 'path'
-import { copyFixture, launch, tempDir } from './helpers'
+import { copyFixture, launch, snap, tempDir } from './helpers'
 
 // Bediening in de stijl van de app in plaats van die van macOS: kleuren, vinkjes, schuifjes.
 
@@ -37,7 +37,7 @@ test('een slide krijgt een kleur uit het rijtje of een eigen kleurcode', async (
     'true'
   )
   await operator.waitForTimeout(200)
-  await operator.screenshot({ path: 'test-results/controls-colors.png' })
+  await snap(operator, 'test-results/controls-colors.png')
 
   const hex = panel.getByLabel('Eigen kleurcode')
   // Het paneel is gegroeid maar blijft helemaal in het venster.
