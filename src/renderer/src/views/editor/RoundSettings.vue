@@ -234,7 +234,7 @@ function setAnswersFor(roundId: string, on: boolean) {
           :aria-label="t('timerLabel')"
           @change="setTimer"
         />
-        <span class="muted">{{ t('seconds') }}</span>
+        <span class="muted">{{ t('timerUnit') }}</span>
       </span>
       <span v-if="round.timerSeconds === undefined" class="muted small">
         {{ t('timerQuiz', { seconds: timerSeconds(quiz, null) }) }}
