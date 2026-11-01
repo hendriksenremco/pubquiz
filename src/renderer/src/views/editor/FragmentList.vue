@@ -7,6 +7,8 @@ import { formatTime } from '../../lib/format'
 import { usePreviewPlayer } from '../../lib/use-preview-player'
 import { useSession } from '../../stores/session'
 import FragmentWave from '../show/FragmentWave.vue'
+import { locale } from '../../lib/locale'
+import { FRAGMENT_MESSAGES } from './editor-messages'
 
 /**
  * De fragmenten van een ronde: luisteren, naam en antwoord meteen te typen, en de vorm van wat
@@ -15,6 +17,7 @@ import FragmentWave from '../show/FragmentWave.vue'
 defineProps<{ round: Round; selectedId: string | null }>()
 const emit = defineEmits<{ select: [id: string] }>()
 const session = useSession()
+const t = FRAGMENT_MESSAGES.in(locale)
 const quiz = computed(() => session.quiz!)
 const preview = usePreviewPlayer()
 /** Wanneer het voorbeeld begon, zodat de waveform meeloopt. */
@@ -56,20 +59,27 @@ function timing(f: Fragment) {
         type="button"
         class="play"
         :class="{ playing: preview.playingId.value === f.id }"
-        :aria-label="preview.playingId.value === f.id ? 'Stop' : `Luister naar ${f.label}`"
+        :aria-label="
+          preview.playingId.value === f.id ? t('stop') : t('listenTo', { name: f.label })
+        "
         @click.stop="play(f)"
       >
         <Icon :name="preview.playingId.value === f.id ? 'stop' : 'play'" :size="12" />
       </button>
       <div class="text">
-        <input v-model="f.label" class="quiet title" aria-label="Naam" placeholder="Naam" />
+        <input
+          v-model="f.label"
+          class="quiet title"
+          :aria-label="t('name')"
+          :placeholder="t('name')"
+        />
         <input
           v-model="f.answer"
           class="quiet sub"
-          aria-label="Antwoord"
-          placeholder="Antwoord, voor de antwoordenronde"
+          :aria-label="t('answer')"
+          :placeholder="t('answerPlaceholder')"
         />
-        <span v-if="!assetOf(f)" class="missing">Bestand ontbreekt</span>
+        <span v-if="!assetOf(f)" class="missing">{{ t('fileMissing') }}</span>
       </div>
       <FragmentWave class="wave" :fragment="f" :playing="timing(f)" />
       <span class="dur mono">{{ seconds(f) === null ? '' : formatTime(seconds(f)!) }}</span>

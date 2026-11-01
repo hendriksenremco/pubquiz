@@ -4,6 +4,7 @@ import { formRounds, itemSummary, type FormDoc } from '@shared/forms'
 import Icon from '../../components/Icon.vue'
 import { locale } from '../../lib/locale'
 import { useSession } from '../../stores/session'
+import { PRINT_MESSAGES } from './editor-messages'
 
 /**
  * Pdf's om te printen: het antwoordformulier voor de teams, de antwoorden om na te kijken en
@@ -11,6 +12,7 @@ import { useSession } from '../../stores/session'
  */
 const api = window.pubquiz
 const session = useSession()
+const t = PRINT_MESSAGES.in(locale)
 
 const rounds = computed(() => formRounds(session.quiz!))
 const chosen = ref(rounds.value.map((r) => r.id))
@@ -19,18 +21,18 @@ const busy = ref<FormDoc | null>(null)
 const DOCS: { doc: FormDoc; title: string; hint: string }[] = [
   {
     doc: 'sheet',
-    title: 'Antwoordformulier',
-    hint: 'Voor de teams: tot vier rondes per A4, elk in een eigen vak om los te knippen'
+    title: t('sheetTitle'),
+    hint: t('sheetHint')
   },
   {
     doc: 'key',
-    title: 'Nakijkformulier',
-    hint: 'Precies dezelfde opmaak met de antwoorden erop: leg hem naast een ingevuld formulier'
+    title: t('keyTitle'),
+    hint: t('keyHint')
   },
   {
     doc: 'cards',
-    title: 'Vragenkaarten',
-    hint: 'Voor jou: per ronde de vragen met antwoord, vier ansichtkaarten per A4 om te knippen'
+    title: t('cardsTitle'),
+    hint: t('cardsHint')
   }
 ]
 
@@ -46,19 +48,20 @@ async function save(doc: FormDoc) {
 <template>
   <div class="print">
     <header class="head">
-      <h2>Afdrukken</h2>
+      <h2>{{ t('title') }}</h2>
     </header>
 
     <p v-if="!rounds.length" class="tile empty muted">
-      Deze quiz heeft nog geen vragen, afbeeldingen of fragmenten. Voeg ze toe in een ronde; dan kun
-      je hier de formulieren maken.
+      {{ t('empty') }}
     </p>
 
     <div v-else class="cols">
       <section>
         <div class="section-head">
-          <h3>Rondes</h3>
-          <span class="count">{{ chosen.length }} van {{ rounds.length }}</span>
+          <h3>{{ t('rounds') }}</h3>
+          <span class="count">{{
+            t('chosen', { chosen: chosen.length, total: rounds.length })
+          }}</span>
         </div>
         <div class="list">
           <label v-for="r in rounds" :key="r.id" class="tile option">
@@ -72,7 +75,9 @@ async function save(doc: FormDoc) {
       </section>
 
       <section>
-        <div class="section-head"><h3>Pdf</h3></div>
+        <div class="section-head">
+          <h3>{{ t('pdf') }}</h3>
+        </div>
         <div class="list">
           <div v-for="d in DOCS" :key="d.doc" class="tile doc">
             <div class="grow">
@@ -83,11 +88,11 @@ async function save(doc: FormDoc) {
               class="btn"
               :class="{ 'btn-primary': d.doc === 'sheet' }"
               :disabled="!!busy || !chosen.length"
-              :aria-label="`${d.title} opslaan`"
+              :aria-label="t('saveDoc', { title: d.title })"
               @click="save(d.doc)"
             >
               <Icon name="upload" :size="14" />
-              {{ busy === d.doc ? 'Bezig…' : 'Opslaan' }}
+              {{ busy === d.doc ? t('busy') : t('save') }}
             </button>
           </div>
         </div>
