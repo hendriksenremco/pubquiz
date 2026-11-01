@@ -137,7 +137,7 @@ export const SLIDE_MESSAGES = defineMessages(
     onScreens: 'Op welke schermen',
     moveUp: 'Omhoog',
     moveDown: 'Omlaag',
-    remove: 'Verwijder'
+    remove: 'Verwijder slide'
   },
   {
     en: {
@@ -176,7 +176,7 @@ export const SLIDE_MESSAGES = defineMessages(
       onScreens: 'On which screens',
       moveUp: 'Move up',
       moveDown: 'Move down',
-      remove: 'Delete'
+      remove: 'Delete slide'
     }
   }
 )
