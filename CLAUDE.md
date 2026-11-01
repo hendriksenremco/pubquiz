@@ -8,13 +8,13 @@ QuizNote is een macOS-app om een pubquiz in elkaar te klikken en live te draaien
 
 De app is van Remco Hendriksen (remco@quiznote.app) en staat los van zijn bedrijf Guts & Gusto.
 
-Wat er nog moet gebeuren voordat de app uit kan, staat in **TODO.md**. Werk je daaraan, houd die lijst dan bij.
+Wat er nog moet gebeuren, staat als **issues** op GitHub (`gh issue list`). Hoe de labels werken, staat in `TODO.md`.
 
 ## Stand op 31 oktober 2026
 
 - **Versie:** 0.1.0, alleen voor macOS en alleen in het Nederlands.
-- **Release:** `pnpm build:mac` maakt een ongesigneerde dmg. Er is nog geen release en geen download.
-- **Site:** live op https://quiznote.app (Firebase Hosting), nog zonder downloadknop. De site heeft een eigen repo: `~/Documents/pubquiz-site`, met een eigen CLAUDE.md.
+- **Release:** 0.1.0 staat op GitHub Releases, gesigneerd en genotariseerd (`.github/workflows/release.yml`, bij een tag `v*`). Lokaal maakt `pnpm build:mac` een ongesigneerde dmg.
+- **Site:** live op https://quiznote.app (Firebase Hosting), met een downloadknop naar de nieuwste release. De site heeft een eigen repo: `~/Documents/pubquiz-site`, met een eigen CLAUDE.md.
 - **Laatst samengevoegd (30 oktober):** #12 en #13. Kijk met `gh pr list --state all` wat er sindsdien is gebeurd.
   - #12: Ronde opnieuw, dezelfde knoppen op de Mac en de telefoon, en het licht in de werkbalk van de show.
   - #13: vier vragenkaarten per A4, met snijlijnen.
@@ -87,7 +87,6 @@ pnpm install:mac                                # zet de app in /Applications; a
   - Vensters zie je alleen met `PUBQUIZ_HEADED=1`. Gebruik dat alleen als Remco erom vraagt.
   - Screenshots komen in `test-results/`. Playwright leegt die map bij elke run.
 - `make-demo.mjs` schrijft `fixtures/demo.pubquiz/quiz.json` alleen als die nog niet bestaat, of met `--force`. Gebruik `--force` nooit.
-- Bekend probleem op 30 oktober: twee dashboardtests in `e2e/home.spec.ts` falen ook op master. Eén faalt altijd, de andere soms.
 
 ## Opbouw
 
@@ -194,7 +193,7 @@ Nieuwe optionele koppelingen, zoals Spotify of YouTube, volgen hetzelfde patroon
   - `window.pubquiz` en `PubquizApi`;
   - de omgevingsvariabelen `PUBQUIZ_*`.
 
-  Of dat vóór de release verandert, staat als vraag in TODO.md. "pubquiz" blijft gewoon het woord voor een quiz.
+  Of dat vóór de release verandert, is een open vraag (issue #43). "pubquiz" blijft gewoon het woord voor een quiz.
 
 - **Huisstijl:** nachtblauw met één amber accent (`#ffa53d`), koppen in Bricolage Grotesque. De tokens staan in `src/renderer/src/styles/base.css`.
 - **Logo en icoon:** het icoon is de Q uit het woordmerk, in amber op nachtblauw. De bestanden worden gemaakt in de site-repo met `brand/quiznote/bron/maak.py`. De app-iconen staan in `build/` en `resources/`.
@@ -211,13 +210,13 @@ Nieuwe optionele koppelingen, zoals Spotify of YouTube, volgen hetzelfde patroon
 ## Agent en CI
 
 - **CI:** elke pull request naar `master` draait op macOS in GitHub Actions (`.github/workflows/ci.yml`): typecheck, unit-tests, e2e-tests en een ongesigneerde dmg.
-- **Agent:** op de thuisserver werkt doorlopend een Claude-sessie zelf aan TODO.md: is een run klaar, dan begint de volgende. Hoe en wat staat in `agent/`. Zijn pull requests hebben het label `agent`, zijn vragen aan Remco zijn issues met het label `vraag`.
+- **Agent:** op de thuisserver werkt doorlopend een Claude-sessie zelf aan de issues met het label `claude`: is een run klaar, dan begint de volgende. Hoe en wat staat in `agent/`. Zijn pull requests hebben het label `agent`, zijn vragen aan Remco zijn issues met het label `vraag`.
 
 ## Meer
 
-- `TODO.md`: wat er nog moet gebeuren voor de release.
+- `TODO.md`: hoe de issues en hun labels werken.
 - `MAGICHOME.md`: de controller, het protocol en wat we over het netwerk hebben geleerd.
-- `PLUGINS.md`: voorstel om plug-ins generieker te maken (1 november 2026, wacht op Remco).
+- `PLUGINS.md`: plan om plug-ins generieker te maken (goedgekeurd op 1 november 2026, issue #31).
 - `README.md`: in het Engels, voor ontwikkelaars. De screenshots staan in `docs/`.
 - `~/Documents/pubquiz-site`: de site. Nuxt 4, branches `master` en `develop`. Pushen naar `develop` mag; een push naar `master` zet de site live (zie de CLAUDE.md van de site).
 - Het geheugen van Claude voor dit project, op de Mac van Remco: `~/.claude/projects/-Users-remcohendriksen-Documents-pubquiz/memory/`.

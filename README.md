@@ -86,7 +86,7 @@ The old working name "Pubquiz" still appears in the code: the repo, `.pubquiz` f
 5. **Open a pull request to `master`.** The CI (`.github/workflows/ci.yml`) runs on macOS: typecheck, unit tests, e2e tests and an unsigned dmg. The e2e screenshots are uploaded as the `test-results` artifact. A job that compares them with `master` and posts the differences as a comment is on its way (#28).
 6. **Remco reviews and merges.**
 
-Two tests in `e2e/home.spec.ts` currently fail on `master` too; see [TODO.md](TODO.md).
+Open work is tracked as [GitHub issues](https://github.com/hendriksenremco/pubquiz/issues); [TODO.md](TODO.md) explains the labels.
 
 Interface changes follow the design rules in CLAUDE.md: calm, in the spirit of Apple's minimalism, red only for live, and actions as visible buttons with an icon and text.
 

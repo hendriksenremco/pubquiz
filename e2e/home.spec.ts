@@ -17,7 +17,7 @@ test('dashboard: leeg starten, recente quiz openen en terugkomen', async () => {
     ;({ app, operator } = await launch(userData, quizDir))
     await expect(operator.locator('.topbar .name')).toHaveText('Demo-pubquiz')
     await operator.getByRole('button', { name: 'Quizzen' }).click()
-    await expect(operator.locator('.kicker')).toHaveText('Laatst geopend')
+    await expect(operator.locator('.hero .kicker')).toHaveText('Laatst geopend')
     await expect(operator.locator('.hero-title')).toHaveText('Demo-pubquiz')
     await expect(operator.locator('.hero-meta')).toContainText('4 rondes en 2 schermen')
 
@@ -56,7 +56,7 @@ test('dashboard: de rondleiding staat de eerste keer klaar, en komt niet terug a
   try {
     // Eerste start: een kopie in de bibliotheek, bovenaan het dashboard.
     let { app, operator } = await launch(userData, undefined, env)
-    await expect(operator.locator('.kicker')).toHaveText('Begin hier')
+    await expect(operator.locator('.hero .kicker')).toHaveText('Begin hier')
     await expect(operator.locator('.hero-title')).toHaveText('Rondleiding')
     expect(existsSync(join(library, 'Rondleiding.pubquiz', 'quiz.json'))).toBe(true)
     await operator.waitForTimeout(800) // cover en gloed laten laden voor de screenshot
@@ -68,7 +68,7 @@ test('dashboard: de rondleiding staat de eerste keer klaar, en komt niet terug a
     // Een eigen quiz gaat voor; de rondleiding blijft in de lijst.
     ;({ app, operator } = await launch(userData, quizDir, env))
     await operator.getByRole('button', { name: 'Quizzen' }).click()
-    await expect(operator.locator('.kicker')).toHaveText('Laatst geopend')
+    await expect(operator.locator('.hero .kicker')).toHaveText('Laatst geopend')
     await expect(operator.locator('.hero-title')).toHaveText('Demo-pubquiz')
     const tour = operator.locator('.card', { hasText: 'Rondleiding' })
     await expect(tour).toHaveCount(1)
