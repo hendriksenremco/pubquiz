@@ -1,200 +1,40 @@
-# TODO: QuizNote uitbrengen
+# Wat er nog moet gebeuren
 
-Stand op 31 oktober 2026.
+Sinds 1 november 2026 staan de taken als **issues** op GitHub, niet meer in dit bestand: https://github.com/hendriksenremco/pubquiz/issues
 
-**Doel:** een gesigneerde QuizNote die iedereen kan downloaden via quiznote.app.
+## Labels
 
-**Wie doet wat:**
+**Wie**
 
-- **[Remco]**: alleen Remco kan dit, want het gaat om een beslissing, een account, een betaling of echte apparatuur.
-- **[Claude]**: een sessie kan dit zelf doen.
+- `claude`: Claude of de agent op de thuisserver doet dit.
+- `remco`: alleen Remco kan dit (een beslissing, een account, een betaling of echte apparatuur).
+- Allebei: ze doen het samen.
+- `eerst-vragen`: Claude doet het, maar vraagt Remco eerst.
 
-Is een punt af, vink het dan aan en zet erbij wanneer het klaar was. Kom je iets nieuws tegen, zet het erbij.
+**Volgorde**
 
-## 0. Doorlopend werk van de agent
+- `prio-1`, `prio-2`, `prio-3`: in die volgorde; binnen een prioriteit het oudste issue eerst.
+- `later`: pas na de eerste release.
 
-Deze punten gaan vóór de rest. De agent op de thuisserver pakt ze op; zie `agent/`.
+**Onderwerp:** `doorlopend`, `beslissing`, `release`, `kwaliteit`, `engels`, `site`, `beheer`, `juridisch`.
 
-- [ ] **[Claude] Screenshots in elke pull request.** Het script `scripts/screenshot-diff.sh` is er (31 oktober 2026); de jobs voor `.github/workflows/ci.yml` staan in de pull request, maar het token van de agent mag geen workflows pushen. Wacht op Remco (issue met label `vraag`). Een job in `.github/workflows/ci.yml`, op macOS:
-  - draai de e2e-tests op `master` en op de branch van de pull request;
-  - vergelijk de screenshots in `test-results/` per bestandsnaam, met ImageMagick (`compare`);
-  - maak van elk veranderd scherm een plaatje met de verschillen in amber (`#ffa53d`) gemarkeerd, naast het oude scherm;
-  - zet de plaatjes op een aparte branch `pr-screenshots` (map `pr-<nummer>/`) en zet ze in één commentaar op de pull request, dat bij elke push wordt bijgewerkt;
-  - geen verschillen: dan zegt het commentaar dat.
-- [ ] **[Claude] Plug-ins generieker maken.** Nu heeft elke plug-in eigen code in main, de renderer en de show.
-  - Breng eerst in kaart wat MagicHome en Afstandsbediening gemeen hebben, en wat een volgende plug-in (Spotify, YouTube) nodig zou hebben.
-  - Schrijf een voorstel in `PLUGINS.md`: één interface voor instellingen, quizgegevens (quiz ⊕ ronde ⊕ slide), knoppen in de show en status.
-  - Open een issue met het label `vraag` met het voorstel en jouw advies. Bouw pas na het antwoord, in kleine stappen.
-- [ ] **[Claude] De interface eenvoudiger.** De app is complex geworden.
-  - Loop de schermen één voor één door: startscherm, editor, inspector, Quiz-instellingen, show voorbereiden, de show zelf.
-  - Per scherm één pull request die het rustiger maakt: minder tegelijk in beeld, duidelijkere rangorde, dezelfde woorden overal. Volg de ontwerpregels in CLAUDE.md.
-  - Hooguit één UI-pull request tegelijk open. Haal geen functies weg zonder het eerst te vragen.
-- [ ] **[Claude] README.md voor ontwikkelaars.** De repo is openbaar; een nieuwe ontwikkelaar moet er zonder hulp mee aan de slag kunnen. In het Engels.
-  - Wat QuizNote is, met een screenshot.
-  - Installeren en draaien: Node, pnpm, ffmpeg, `pnpm install`, de commando's uit CLAUDE.md, en waarom `env -u ELECTRON_RUN_AS_NODE`.
-  - De opbouw van de code in het kort, met verwijzingen naar CLAUDE.md voor de details.
-  - Bijdragen: een issue openen, een branch vanaf `master`, commitberichten in het Engels, typecheck en tests vóór een pull request, wat de CI op een pull request doet (ook de screenshots), en dat Remco samenvoegt.
-  - Releases: een tag `v*` start `.github/workflows/release.yml`.
-  - Dit vervangt het punt "README.md bijwerken" in hoofdstuk 4.
+**Werkstroom**
 
-- **Ideeën uit onderzoek.** Een wekelijkse taak onderzoekt concurrenten en zet voorstellen als issue met het label `idee`. Zet Remco er het label `doen` op, dan bouwt de agent het.
+- `vraag`: de agent wacht op een antwoord van Remco.
+- `doen`: Remco wil dat dit gebouwd wordt; gaat voor de rest.
+- `idee`: een voorstel uit het wekelijkse onderzoek. Pas met `doen` wordt het gebouwd.
+- `agent`: een pull request van de agent.
 
-## 1. Beslissingen
+## Zo werkt het
 
-De rest van de lijst hangt hiervan af.
+- Begin je aan een issue, zet er dan een opmerking bij. Een pull request die het afrondt, krijgt `Closes #<nummer>` in de beschrijving.
+- Kom je iets nieuws tegen, maak er een issue van met de juiste labels. Geen geheimen: de repo is openbaar.
+- Alleen voor Remco en wacht een taak op een beslissing? Zet het in het issue, niet hier.
 
-- [ ] **[Remco] Prijs en licentie.** Wordt de app gratis, betaald, of eerst een gratis bèta?
-  - Dit bepaalt of de app licenties of betalingen nodig heeft. Nu zit er niets van in.
-  - Het bepaalt ook welke voorwaarden er op de site komen.
-- [x] **[Remco] Wie brengt de app uit:** Remco als privépersoon, met zijn individuele Apple-account (klaar op 31 oktober 2026). Remco als privépersoon, of een (nieuwe) onderneming? De app staat los van Guts & Gusto.
-  - Dit bepaalt met welk Apple-team de app gesigneerd wordt.
-  - Het bepaalt ook welke naam in de app staat en welke gegevens op de site komen.
-- [x] **[Remco] Waar de download komt te staan:** GitHub Releases van deze (openbare) repo (klaar op 31 oktober 2026).
-  - Advies: GitHub Releases, in een aparte openbare repo. De broncode-repo hoeft dan niet openbaar te worden.
-  - Diezelfde plek kan de app later gebruiken om updates op te halen.
-  - Nog niet bevestigd.
-- [ ] **[Remco] Engels.** De app is alleen Nederlands, maar de eerste doelgroep is ook Engelstalig; de naam is daarop gekozen.
-  - Kies: eerst een Nederlandse release, of pas uitbrengen met een Engelse versie. Zie hoofdstuk 5.
-- [ ] **[Remco] De oude werknaam in bestandsnamen.** Quizzen heten `<naam>.pubquiz` en staan in `Documenten/Pubquizzen`. Dat ziet de gebruiker.
-  - Vóór de eerste release is omzetten goedkoop, bijvoorbeeld naar `.quiznote` en `Documenten/QuizNote`.
-  - Na de release moet de app beide namen blijven lezen.
-  - Interne namen (`window.pubquiz`, `PUBQUIZ_*`) mogen blijven zoals ze zijn.
-- [ ] **[Remco] Analytics in de app.** PostHog EU is al gekozen voor de site en de app.
-  - Moet de app ook iets meten? En zo ja: wat, en vraag je eerst toestemming (opt-in)?
-  - Daarna is een privacyverklaring nodig.
-- [ ] **[Remco] Foutrapporten.** Wil je meldingen van crashes bij gebruikers, bijvoorbeeld met Sentry of PostHog? Zonder iets hoor je alleen van problemen als iemand mailt.
-- [x] **[Remco] Welke Macs:** Apple Silicon en Intel, als universele app (klaar op 31 oktober 2026).
-  - Alleen Apple Silicon, of ook Intel? Voor Intel is een universal build nodig, of twee dmg's.
-  - Welke macOS-versie heb je minimaal nodig?
+## Niet beloofd en niet gebouwd
 
-## 2. Signeren en notariseren
+Noem dit niet als "binnenkort", tenzij Remco het zegt:
 
-**Nu (31 oktober 2026):** releases worden gesigneerd en genotariseerd door `.github/workflows/release.yml` (een tag `v*` of met de hand). Versie 0.1.0 staat online, universeel (Apple Silicon en Intel). Lokaal blijft `pnpm build:mac` ongesigneerd.
-
-- [x] **[Remco] Certificaat en notarisatie-sleutel** (klaar op 31 oktober 2026): Developer ID van Remco (individueel), en de API-sleutel "QuizNote notarization". Staan als secrets in de repo.
-  - Maak een "Developer ID Application"-certificaat in het juiste Apple-team en zet het in de sleutelhanger. Op 25 oktober stond er geen op deze Mac.
-  - Maak voor het notariseren een App Store Connect API-sleutel of een app-specifiek wachtwoord aan.
-- [x] **[Claude] electron-builder instellen** (klaar op 31 oktober 2026): `electron-builder.release.yml` en `.github/workflows/release.yml`.
-  - Zet `identity` en `hardenedRuntime: true`, en vul `notarize` in.
-  - De gegevens komen uit omgevingsvariabelen, nooit uit de repo.
-  - Loop `build/entitlements.mac.plist` na. Nu staan daarin `allow-jit`, `allow-unsigned-executable-memory` en `allow-dyld-environment-variables`.
-- [ ] **[Claude] Lokaal netwerk.** Voeg `extendInfo` toe aan `electron-builder.yml`:
-  - `NSLocalNetworkUsageDescription`, want de app praat met de MagicHome-controller, serveert de afstandsbediening en zoekt AirPlay-apparaten met `dns-sd`;
-  - waarschijnlijk ook `NSBonjourServices` met `_airplay._tcp`.
-
-  Test daarna op een gesigneerde build op macOS 15 of nieuwer:
-  - Vraagt macOS om toegang tot het lokale netwerk, en werkt alles na "Sta toe"?
-  - Komt de firewallvraag als je de afstandsbediening aanzet, en werkt die daarna?
-
-- [ ] **[Claude] AI-koppeling in de gesigneerde app.**
-  - Werkt `ELECTRON_RUN_AS_NODE=1 <app-binary> …/mcp.js` met hardened runtime, en met `mcp.js` in `app.asar`?
-  - Koppel Claude Desktop en laat de AI een quiz maken.
-  - De Electron-fuse `RunAsNode` moet aan blijven.
-- [x] **[Claude] Controleren** (klaar op 31 oktober 2026): `codesign` en `spctl` draaien in de release-workflow.
-  - Draai `codesign --verify --deep --strict` en `spctl -a -vv` op de app.
-  - Open de dmg op een andere Mac, of onder een schone gebruiker.
-
-## 3. Updates en releases
-
-- [ ] **[Claude] Automatische updates** met `electron-updater` en GitHub Releases.
-  - Dit vraagt een gesigneerde app, en een `zip`-target naast de dmg.
-  - Installeer nooit tijdens een show: pas na "Stop show" of bij het afsluiten.
-- [x] **[Claude] Versies.** Een changelog bij elke release, en een venster "Over QuizNote" met het versienummer. Klaar op 31 oktober 2026: `CHANGELOG.md`, en Over QuizNote in het appmenu. Werk bij elke release de bovenste kop van de changelog bij; een test controleert dat die bij de versie in `package.json` hoort.
-- [x] **[Claude] Release-script** (klaar op 31 oktober 2026): `.github/workflows/release.yml`. Een script of een GitHub Actions-workflow op een macOS-runner die bouwt, signeert, notariseert en de release aanmaakt.
-  - Geheimen gaan in de repository-secrets.
-  - `pnpm build:mac` maakt ook de rondleiding (`tour:build`), die met de app wordt meegeleverd.
-
-## 4. Kwaliteit vóór de eerste release
-
-- [ ] **[Claude] Alle e2e-tests groen.** Twee tests in `e2e/home.spec.ts` falen ook op master: één altijd, de andere soms. Repareer ze.
-  - Op de CI (macOS-runner) falen op 31 oktober per run ook andere tests, telkens wisselend:
-    - `e2e/forms.spec.ts` "maakt het antwoordformulier…": de pdf bestaat al maar is nog leeg als de test hem leest (`saved()` wacht alleen op `existsSync`);
-    - `e2e/media.spec.ts` "toont een bestand groot als voorbeeld…": de video staat na 5 seconden nog op pauze;
-    - `e2e/answers.spec.ts`: "een afbeeldingenronde…" vindt `slideLoopSeconds` niet in `quiz.json`, en de twee tests erna falen daardoor ook.
-- [ ] **[Remco en Claude] Een volledige proefavond met echte apparatuur:**
-  - een beamer en een tv;
-  - twee audio-uitgangen en een presenter-clicker;
-  - een muziekronde en een antwoordenronde, met "Ronde opnieuw";
-  - de show hervatten nadat de app geforceerd is afgesloten.
-- [ ] **[Remco] Echte apparatuur voor wat alleen met nep-apparaten getest is:**
-  - een AirPlay-scherm (Apple TV);
-  - videogeluid via de speakers van een tv (HDMI);
-  - de afstandsbediening op een echte iPhone, iPad en Android-telefoon.
-
-  Claude mag niet met de echte AirPlay-apparaten op het netwerk van Remco verbinden.
-
-- [ ] **[Remco] MagicHome op een andere locatie.** Test met een ander wifi-netwerk, dus een ander IP-adres. Test ook op wifi met client-isolatie: daar faalt de verbinding zonder melding.
-- [ ] **[Claude] De afstandsbediening in dev-modus.** Probeer de proxy naar Vite één keer met de hand. Nu is die alleen met unit-tests getest.
-- [ ] **[Claude] Veiligheid van de afstandsbediening nalopen.**
-  - Het verkeer op het lokale netwerk gaat zonder https, en de sleutel staat in de URL.
-  - Wie de QR-code ziet of het netwerk afluistert, kan dus de show bedienen. Is dat aanvaardbaar op een café-wifi?
-  - In elk geval moeten "Nieuwe code" en de plug-in uitzetten makkelijk te vinden zijn.
-- [ ] **[Claude] README.md bijwerken met wat er nu in de app zit:**
-  - antwoordenrondes en afbeeldingenrondes;
-  - afdrukken en videogeluid;
-  - de plug-ins Licht en Afstandsbediening;
-  - Ronde opnieuw (toets R).
-
-## 5. Engelse app
-
-Alleen als Remco daarvoor kiest; zie hoofdstuk 1.
-
-- [ ] **[Claude] De teksten vertalen.**
-  - Haal de teksten uit de componenten, met vue-i18n of een klein eigen woordenboek, in het Nederlands en het Engels. De app kiest de taal van macOS.
-  - Vergeet deze teksten niet:
-    - de pdf's (formulieren en vragenkaarten);
-    - de rondleiding;
-    - de beschrijvingen van de MCP-tools;
-    - de pagina op de telefoon.
-
-## 6. Site (`~/Documents/pubquiz-site`)
-
-- [x] **[Remco] Pushen** (klaar op 31 oktober 2026). De lokale `develop` loopt voor op GitHub: op 31 oktober 12 commits, met onder meer de merkbestanden, de naam QuizNote, Firebase en de opruimronde. Push alleen als Remco het zegt.
-- [x] **[Claude] Downloadknop** (klaar op 31 oktober 2026): naar `releases/latest/download/QuizNote.dmg`.
-  - Vul `downloadUrl` in `nuxt.config.ts` in (of `NUXT_PUBLIC_DOWNLOAD_URL`) zodra de dmg ergens staat.
-  - Is het veld leeg, dan toont de site een melding in plaats van de knop.
-- [x] **[Claude] De uitleg over "Open toch" bij de download weghalen** (klaar op 31 oktober 2026) zodra de app genotariseerd is.
-- [ ] **[Claude, eerst vragen] Teksten op de site bijwerken.**
-  - De CLAUDE.md van de site zet "bediening vanaf de telefoon" onder "Niet beloven", maar die zit nu in de app (plug-in Afstandsbediening). Het licht (MagicHome) ook.
-  - Vraag Remco of ze op de site mogen. Allebei zijn ze nog niet met echte telefoons getest, en het licht nog niet op andere locaties.
-- [ ] **[Claude] Contact op de site.** Een duidelijke manier om contact op te nemen, in beeld (niet weggestopt), in het Nederlands en het Engels.
-  - Begin eenvoudig: een mailadres (remco@quiznote.app; support@ bestaat niet) in de footer en bij de download, en een korte "Vragen of ideeën?"-regel.
-  - Een formulier alleen als het zonder eigen server en zonder cookies kan; anders eerst vragen.
-- [x] **[Claude] Privacyverklaring op de site** (31 oktober 2026): `/privacy` en `/en/privacy`, gelinkt in de footer.
-- [ ] **[Claude] Screenshots in de taal van de site.** Op `/en` horen Engelse screenshots, op `/` Nederlandse.
-  - Kan pas als de app Engels spreekt (hoofdstuk 5). Laat de e2e-tests dan de rondleiding in beide talen fotograferen (`tour-*.nl.png` en `tour-*.en.png`).
-  - De site kiest per taal de juiste set in `public/screens/`, ook de `alt`-teksten.
-- [ ] **[Claude] Screenshots vernieuwen.** De bediening tijdens de show is in PR #12 veranderd, en de site gebruikt `tour-*.png` uit de e2e-tests.
-- [ ] **[Remco] Teksten voor de download:** de privacyverklaring staat online (31 oktober 2026); nog nodig: contactgegevens (remco@quiznote.app), en de voorwaarden of licentie. Nodig zodra er een download of analytics is.
-- [x] **[Claude] PostHog EU op de site** (klaar op 31 oktober 2026), zonder cookies, als Remco dat bevestigt. Stel het in zonder cookies, zodat er geen cookiebanner nodig is.
-- [ ] **[Remco] quiznote.nl doorsturen naar quiznote.app.** quiznote.nl staat nog op de parkeerpagina van TransIP (A-record 37.97.254.27).
-- **Deployen:** dat doet Remco met `pnpm deploy:site`, of hij geeft eerst toestemming.
-
-## 7. Mail en domein
-
-- [ ] **[Remco] DMARC strenger zetten, vanaf 8 november 2026.**
-  - Stuur eerst een testmail en controleer dat SPF, DKIM en DMARC alle drie op PASS staan.
-  - Zet daarna DMARC van quiznote.app van `p=none` naar `p=quarantine`.
-  - Controleren kan met `dig +short TXT _dmarc.quiznote.app`.
-  - De herinnering staat ook in `~/Documents/pubquiz-site/HERINNERINGEN.md`. Haal hem op beide plekken weg als het gedaan is.
-- [ ] **[Remco] Nagaan of "Mail verzenden als"** voor hallo@ en support@quiznote.app werkt in Gmail.
-
-## 8. Merk en juridisch
-
-- [ ] **[Remco] Merkonderzoek voor QuizNote** vóór de lancering, voor zover bekend nog niet gedaan.
-  - Zoek in EUIPO/TMview, BOIP, UKIPO en USPTO, in de klassen 9 en 42.
-  - Laat het merk eventueel inschrijven via een merkengemachtigde.
-- [ ] **[Remco] Geen "Keynote"** in openbare teksten, ook niet in de slogan: het is een merk van Apple.
-
-## Later, na de eerste release
-
-Dit blokkeert de eerste release niet.
-
-- **YouTube en Spotify, als plug-ins.**
-  - YouTube-geluid gaat niet via de eigen audio-uitgangen, en de speler vraagt een localhost-origin (anders Error 153).
-  - Spotify vraagt Premium en speelt via de Spotify-app.
-- **Een quizbestand importeren**, voor AI's zonder lokale MCP zoals ChatGPT.
-- **Niet beloofd en niet gebouwd:**
-  - Windows of Linux;
-  - een scorebord of tussenstand;
-  - teams die antwoorden met hun telefoon.
+- Windows of Linux;
+- een scorebord of tussenstand;
+- teams die antwoorden met hun telefoon.

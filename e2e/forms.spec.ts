@@ -40,8 +40,17 @@ function pageCount(file: string): number {
 
 async function saved(name: string): Promise<string> {
   const file = join(saveDir, name)
-  await expect.poll(() => existsSync(file), { timeout: 20_000 }).toBe(true)
-  expect(readFileSync(file).subarray(0, 5).toString()).toBe('%PDF-')
+  // Wachten tot de pdf helemaal geschreven is: het bestand bestaat al voordat
+  // de inhoud erin staat.
+  const complete = (): boolean => {
+    if (!existsSync(file)) return false
+    const pdf = readFileSync(file)
+    return (
+      pdf.subarray(0, 5).toString() === '%PDF-' &&
+      pdf.subarray(-32).toString('latin1').includes('%%EOF')
+    )
+  }
+  await expect.poll(complete, { timeout: 20_000 }).toBe(true)
   // Kopie om te bekijken, net als de screenshots.
   copyFileSync(file, join('test-results', name))
   return file
