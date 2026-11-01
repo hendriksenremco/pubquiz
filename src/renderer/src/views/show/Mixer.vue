@@ -75,6 +75,7 @@ const soundScreens = computed(() =>
           class="btn btn-sm"
           @click="api.command({ type: 'toggleBackground' })"
         >
+          <Icon :name="session.state.backgroundEnabled ? 'volume-off' : 'volume'" :size="14" />
           {{ session.state.backgroundEnabled ? t('turnOff') : t('turnOn') }}
         </button>
       </div>
