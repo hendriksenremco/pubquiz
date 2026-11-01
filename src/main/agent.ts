@@ -19,6 +19,8 @@ import type { AiSetup } from '@shared/ipc'
 import type { Quiz } from '@shared/types'
 import type { AppController } from './controller'
 import { readJson, writeJson } from './json-store'
+import { appLocale } from './locale'
+import { AI_ERRORS, NOTICE_MESSAGES } from './messages'
 import {
   QUIZ_EXT,
   createQuizDir,
@@ -163,7 +165,7 @@ class Agent {
     // Tijdens een show wisselen we nooit van quiz: hij staat dan klaar op het dashboard.
     if (this.ctl.live) {
       this.ctl.remember(dir)
-      this.ctl.notify('info', `Nieuwe quiz “${title}” staat klaar op het dashboard`)
+      this.ctl.notify('info', NOTICE_MESSAGES.in(appLocale())('quizReady', { title }))
     } else {
       await this.ctl.openQuiz(dir)
     }
@@ -328,14 +330,15 @@ export async function aiSetup(): Promise<AiSetup> {
 
 /** Voegt QuizNote toe aan de MCP-servers van Claude Desktop; de rest blijft staan. */
 export async function connectClaude(): Promise<string | null> {
+  const t = AI_ERRORS.in(appLocale())
   const path = claudeConfig()
-  if (!(await exists(dirname(path)))) return 'Claude Desktop is niet gevonden op deze Mac.'
+  if (!(await exists(dirname(path)))) return t('claudeMissing')
   let config: Record<string, unknown> = {}
   if (await exists(path)) {
     try {
       config = JSON.parse(await fs.readFile(path, 'utf8')) as Record<string, unknown>
     } catch {
-      return 'De instellingen van Claude Desktop zijn niet te lezen. Voeg QuizNote daar zelf toe met de instellingen hieronder.'
+      return t('configUnreadable')
     }
   }
   const servers = (config['mcpServers'] ?? {}) as Record<string, unknown>

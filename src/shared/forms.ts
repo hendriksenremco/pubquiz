@@ -3,6 +3,8 @@
  * nakijkformulier (dezelfde opmaak met de antwoorden erop) en vragenkaarten voor de quizmaster.
  */
 import { answerSlides } from './factory'
+import { FORM_MESSAGES } from './form-messages'
+import type { Locale } from './i18n'
 import { roundItems, type AnswerItem } from './resolve'
 import type { Quiz, Round } from './types'
 
@@ -37,25 +39,26 @@ export function formSections(quiz: Quiz, roundIds: string[]): FormSection[] {
 }
 
 /** "2 vragen, 8 fragmenten" */
-export function itemSummary(round: Round): string {
+export function itemSummary(round: Round, locale: Locale = 'nl'): string {
+  const t = FORM_MESSAGES.in(locale)
   const slides = answerSlides(round)
   const images = slides.filter((s) => s.layout === 'image').length
   const parts = [
-    [slides.length - images, 'vraag', 'vragen'],
-    [images, 'afbeelding', 'afbeeldingen'],
-    [round.fragments.length, 'fragment', 'fragmenten']
+    [slides.length - images, 'questionsOne', 'questionsMany'],
+    [images, 'imagesOne', 'imagesMany'],
+    [round.fragments.length, 'fragmentsOne', 'fragmentsMany']
   ] as const
   return parts
     .filter(([n]) => n > 0)
-    .map(([n, one, many]) => `${n} ${n === 1 ? one : many}`)
+    .map(([n, one, many]) => t(n === 1 ? one : many, { count: n }))
     .join(', ')
 }
 
-const FILE_NAMES: Record<FormDoc, string> = {
-  sheet: 'antwoordformulier',
-  key: 'nakijkformulier',
-  cards: 'vragenkaarten'
-}
+const FILE_NAMES = {
+  sheet: 'fileSheet',
+  key: 'fileKey',
+  cards: 'fileCards'
+} as const satisfies Record<FormDoc, string>
 
 /** Regels die in een vak (een kwart A4) passen; een grotere ronde krijgt een hele rij. */
 export const SHEET_BLOCK_LINES = 16
@@ -138,9 +141,10 @@ export function cardSheets(sections: FormSection[], fits: CardFit[]): QuestionCa
 }
 
 /** "Pubquiz november – antwoordformulier.pdf", zonder tekens die in een bestandsnaam niet mogen. */
-export function formFileName(quiz: Quiz, doc: FormDoc): string {
-  const title = quiz.title.replace(/[/\\:]/g, '-').trim() || 'Pubquiz'
-  return `${title} – ${FILE_NAMES[doc]}.pdf`
+export function formFileName(quiz: Quiz, doc: FormDoc, locale: Locale = 'nl'): string {
+  const t = FORM_MESSAGES.in(locale)
+  const title = quiz.title.replace(/[/\\:]/g, '-').trim() || t('untitled')
+  return `${title} – ${t(FILE_NAMES[doc])}.pdf`
 }
 
 /** Wat de quizmaster bij een nummer ziet: de vraag, het bijschrift of de naam van het fragment. */

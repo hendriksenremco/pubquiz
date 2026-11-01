@@ -3,7 +3,9 @@
  * Net als de schermen: slide ⊕ ronde ⊕ standaard. Staat nergens iets, dan blijft het licht zoals het is.
  */
 import { z } from 'zod'
-import { effectInfo } from './light-effects'
+import type { Locale } from './i18n'
+import { effectInfo, effectLabel } from './light-effects'
+import { LIGHT_MESSAGES } from './light-messages'
 import {
   EFFECT_MAX,
   EFFECT_MIN,
@@ -111,26 +113,35 @@ export function quizUsesLight(quiz: Quiz): boolean {
 export const sameLight = (a: Light | null, b: Light | null): boolean =>
   JSON.stringify(a) === JSON.stringify(b)
 
-/** Kleuren die op een ledstrip goed uit elkaar te houden zijn; daarnaast kan elke kleur. */
+/**
+ * Kleuren die op een ledstrip goed uit elkaar te houden zijn; daarnaast kan elke kleur. De naam
+ * staat in LIGHT_MESSAGES (`color.<key>`); gebruik `lightColorName`.
+ */
 export const LIGHT_COLORS = [
-  { color: '#ff0000', name: 'Rood' },
-  { color: '#ff5000', name: 'Oranje' },
-  { color: '#ffc000', name: 'Geel' },
-  { color: '#00ff00', name: 'Groen' },
-  { color: '#00ffff', name: 'Cyaan' },
-  { color: '#0000ff', name: 'Blauw' },
-  { color: '#8000ff', name: 'Paars' },
-  { color: '#ff0080', name: 'Roze' },
-  { color: '#ffffff', name: 'Wit' },
-  { color: '#ffa040', name: 'Warm wit' }
+  { color: '#ff0000', key: 'red' },
+  { color: '#ff5000', key: 'orange' },
+  { color: '#ffc000', key: 'yellow' },
+  { color: '#00ff00', key: 'green' },
+  { color: '#00ffff', key: 'cyan' },
+  { color: '#0000ff', key: 'blue' },
+  { color: '#8000ff', key: 'purple' },
+  { color: '#ff0080', key: 'pink' },
+  { color: '#ffffff', key: 'white' },
+  { color: '#ffa040', key: 'warmWhite' }
 ] as const
+
+export const lightColorName = (color: (typeof LIGHT_COLORS)[number], locale: Locale): string =>
+  LIGHT_MESSAGES.in(locale)(`color.${color.key}`)
 
 /** Waar "Effect" mee begint: rustig, alle kleuren. */
 export const DEFAULT_EFFECT = 2
 export const DEFAULT_SPEED = 60
 
-export function effectName(effect: number): string {
-  return effectInfo(effect)?.name ?? `Effect ${effect}`
+export function effectName(effect: number, locale: Locale): string {
+  const info = effectInfo(effect)
+  return info
+    ? effectLabel(info, locale)
+    : LIGHT_MESSAGES.in(locale)('effectNumber', { number: effect })
 }
 
 /** Het licht zoals de controller het meldt, om na een voorbeeld naar terug te gaan. */
@@ -142,9 +153,10 @@ export function stateLight(state: MagicHomeState): Light {
   return { type: 'color', color: state.color }
 }
 
-export function lightLabel(light: Light): string {
-  if (light.type === 'off') return 'Uit'
-  if (light.type === 'effect') return effectName(light.effect)
+/** Naam van een licht, bv. "Rood", "#123456", "Uit" of de naam van het effect. */
+export function lightLabel(light: Light, locale: Locale): string {
+  if (light.type === 'off') return LIGHT_MESSAGES.in(locale)('off')
+  if (light.type === 'effect') return effectName(light.effect, locale)
   const known = LIGHT_COLORS.find((c) => c.color === light.color.toLowerCase())
-  return known?.name ?? light.color.toLowerCase()
+  return known ? lightColorName(known, locale) : light.color.toLowerCase()
 }

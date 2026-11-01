@@ -18,7 +18,9 @@ import {
   type MagicHomeState
 } from '@shared/magichome'
 import type { Quiz, ShowState } from '@shared/types'
+import type { Locale } from '@shared/i18n'
 import type { PluginConfig } from '@shared/plugins'
+import { MAGICHOME_ERRORS } from './messages'
 import type { ActionHandlers, MainPlugin, Notify } from './plugins'
 
 const TIMEOUT_MS = 2000
@@ -63,8 +65,14 @@ export class MagicHomePlugin implements MainPlugin<'magichome'> {
   constructor(
     private readonly notify: Notify,
     /** Wat er nu brandt: de werkbalk en de afstandsbediening tonen het meteen. */
-    private readonly publish: (status: LightStatus) => void = () => {}
-  ) {}
+    private readonly publish: (status: LightStatus) => void = () => {},
+    /** De taal van de foutmeldingen. */
+    locale: Locale = 'nl'
+  ) {
+    this.t = MAGICHOME_ERRORS.in(locale)
+  }
+
+  private readonly t: ReturnType<typeof MAGICHOME_ERRORS.in>
 
   readonly actions: ActionHandlers<'magichome'> = {
     choose: (light) => this.choose(light),
@@ -105,14 +113,14 @@ export class MagicHomePlugin implements MainPlugin<'magichome'> {
   /** Alleen de toestand opvragen; het licht verandert niet. */
   private async probe(host: string): Promise<MagicHomeProbe> {
     const address = parseAddress(host)
-    if (!address) return { ok: false, error: 'Vul het IP-adres van de controller in' }
+    if (!address) return { ok: false, error: this.t('fillAddress') }
     // Dezelfde controller: over de verbinding die er al is, niet nog een erbij.
     const same = this.link && JSON.stringify(address) === JSON.stringify(this.address)
     const link = same ? this.link! : new Link(address)
     try {
       return { ok: true, state: await link.send([]) }
     } catch (err) {
-      return { ok: false, error: explain(err, address) }
+      return { ok: false, error: this.explain(err, address) }
     } finally {
       if (!same) link.close()
     }
@@ -129,8 +137,8 @@ export class MagicHomePlugin implements MainPlugin<'magichome'> {
 
   /** Tijdens de show met de hand een licht kiezen; null = weer het licht van de show. */
   private choose(light: Light | null): MagicHomeResult {
-    if (!this.live) return { ok: false, error: 'Alleen tijdens de show' }
-    if (!this.link) return { ok: false, error: 'Vul eerst het adres van de controller in' }
+    if (!this.live) return { ok: false, error: this.t('onlyLive') }
+    if (!this.link) return { ok: false, error: this.t('fillAddressFirst') }
     this.manual = light ? { light, showLight: this.showLight } : null
     this.want(light ?? this.showLight)
     this.publishStatus()
@@ -153,11 +161,16 @@ export class MagicHomePlugin implements MainPlugin<'magichome'> {
     void this.flush()
   }
 
+  /** Wat er misging met de controller, in woorden voor wie hem instelt. */
+  private explain(err: unknown, address: MagicHomeAddress): string {
+    return this.t(explainKey(err), { host: address.host, error: (err as Error).message })
+  }
+
   /** Laat een licht zien zonder show; null = klaar, terug naar hoe het was. */
   private async preview(light: Light | null): Promise<MagicHomeResult> {
     const { address, link } = this
-    if (this.live) return { ok: false, error: 'Tijdens de show volgt het licht de show' }
-    if (!address || !link) return { ok: false, error: 'Vul eerst het adres van de controller in' }
+    if (this.live) return { ok: false, error: this.t('followsShow') }
+    if (!address || !link) return { ok: false, error: this.t('fillAddressFirst') }
     if (!light) {
       await this.endPreview()
       return { ok: true }
@@ -172,7 +185,7 @@ export class MagicHomePlugin implements MainPlugin<'magichome'> {
       await before
     } catch (err) {
       if (this.before === before) this.before = null
-      return { ok: false, error: explain(err, address) }
+      return { ok: false, error: this.explain(err, address) }
     }
     if (this.live || this.before !== before) return { ok: true }
     this.wanted = light
@@ -212,7 +225,7 @@ export class MagicHomePlugin implements MainPlugin<'magichome'> {
           this.failing = false
         } catch (err) {
           if (this.link !== link) continue
-          if (!this.failing) this.notify('warning', explain(err, link.address))
+          if (!this.failing) this.notify('warning', this.explain(err, link.address))
           this.failing = true
           return
         }
@@ -353,17 +366,14 @@ class Link {
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
-function explain(err: unknown, address: MagicHomeAddress): string {
+function explainKey(err: unknown): 'refused' | 'unreachable' | 'other' {
   const code = (err as NodeJS.ErrnoException).code
-  const where = address.host
-  if (code === 'ECONNREFUSED') {
-    return `${where} weigert de verbinding. Is dit de MagicHome-controller?`
-  }
+  if (code === 'ECONNREFUSED') return 'refused'
   if (
     (err as Error).message === 'timeout' ||
     ['EHOSTUNREACH', 'ENETUNREACH', 'ETIMEDOUT', 'EHOSTDOWN'].includes(code ?? '')
   ) {
-    return `MagicHome-controller op ${where} niet bereikbaar. Zit hij op hetzelfde wifi-netwerk als deze Mac?`
+    return 'unreachable'
   }
-  return `MagicHome-controller op ${where}: ${(err as Error).message}`
+  return 'other'
 }

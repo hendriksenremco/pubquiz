@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { nextTick, ref, watch } from 'vue'
 import { pendingConfirm } from '../lib/confirm'
+import { locale } from '../lib/locale'
 import Dialog from './Dialog.vue'
+import { COMPONENT_MESSAGES } from './messages'
 
 /** Toont de openstaande vraag van ask(); één keer in het operator-venster. */
+const t = COMPONENT_MESSAGES.in(locale)
 const cancel = ref<HTMLButtonElement | null>(null)
 const confirm = ref<HTMLButtonElement | null>(null)
 
@@ -24,7 +27,7 @@ watch(pendingConfirm, async (pending) => {
   <Dialog v-if="pendingConfirm" :title="pendingConfirm.title" @close="answer(false)">
     <p v-if="pendingConfirm.message" class="muted message">{{ pendingConfirm.message }}</p>
     <template #actions>
-      <button ref="cancel" class="btn btn-ghost" @click="answer(false)">Annuleer</button>
+      <button ref="cancel" class="btn btn-ghost" @click="answer(false)">{{ t('cancel') }}</button>
       <button
         ref="confirm"
         class="btn"

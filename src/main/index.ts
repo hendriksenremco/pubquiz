@@ -11,7 +11,9 @@ import { AgentBridge, aiSetup, connectClaude, handleAgent } from './agent'
 import { Analytics } from './analytics'
 import { AppController } from './controller'
 import { handleMediaProtocol, registerMediaScheme } from './media-protocol'
+import { appLocale } from './locale'
 import { buildMenu } from './menu'
+import { NOTICE_MESSAGES } from './messages'
 import { configurePermissions } from './permissions'
 import { QUIZ_EXT } from './quiz-files'
 import { adoptSettings, Settings } from './settings'
@@ -96,7 +98,7 @@ app.whenReady().then(async () => {
 
   ctl.audio = createAudioWindow()
   ctl.audio.webContents.on('render-process-gone', () => {
-    ctl.notify('error', 'De audio-engine is gecrasht en wordt herstart')
+    ctl.notify('error', NOTICE_MESSAGES.in(appLocale())('audioCrashed'))
     ctl.audio?.webContents.reload()
   })
 

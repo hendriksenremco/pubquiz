@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { encode } from 'uqr'
+import { locale } from '../../lib/locale'
 import { useSession } from '../../stores/session'
+import { REMOTE_QR_MESSAGES } from './messages'
 
 /**
  * De QR-code die een telefoon of tablet naar de afstandsbediening brengt, met het adres en wie er
@@ -10,6 +12,7 @@ import { useSession } from '../../stores/session'
  */
 const api = window.pubquiz
 const session = useSession()
+const t = REMOTE_QR_MESSAGES.in(locale)
 
 const link = computed(() => session.statusOf('remote'))
 
@@ -29,8 +32,8 @@ const modules = computed(() =>
 
 const devices = computed(() => {
   const n = link.value?.devices ?? 0
-  if (n === 0) return 'Nog niets verbonden'
-  return n === 1 ? '1 apparaat verbonden' : `${n} apparaten verbonden`
+  if (n === 0) return t('noDevices')
+  return n === 1 ? t('oneDevice') : t('devices', { count: n })
 })
 </script>
 
@@ -43,30 +46,26 @@ const devices = computed(() => {
         :viewBox="`0 0 ${qr.size} ${qr.size}`"
         shape-rendering="crispEdges"
         role="img"
-        aria-label="QR-code voor de afstandsbediening"
+        :aria-label="t('qrLabel')"
       >
         <rect :width="qr.size" :height="qr.size" fill="#fff" />
         <path :d="modules" fill="#000" />
       </svg>
       <p class="muted tip">
-        Scan met de camera van een telefoon of tablet op hetzelfde wifi-netwerk.
+        {{ t('scan') }}
       </p>
       <p class="url mono" data-volatile :title="link.url">{{ link.url }}</p>
       <div class="foot">
         <span class="devices" :class="{ on: link.devices > 0 }">
           <span class="dot" />{{ devices }}
         </span>
-        <button
-          class="btn btn-ghost btn-sm"
-          title="Telefoons met de oude code kunnen dan niets meer"
-          @click="renew"
-        >
-          Nieuwe code
+        <button class="btn btn-ghost btn-sm" :title="t('newCodeTitle')" @click="renew">
+          {{ t('newCode') }}
         </button>
       </div>
     </template>
     <p v-else-if="link" class="muted tip">
-      Geen netwerk gevonden. Verbind deze Mac met het wifi-netwerk waar je telefoon op zit.
+      {{ t('noNetwork') }}
     </p>
   </div>
 </template>

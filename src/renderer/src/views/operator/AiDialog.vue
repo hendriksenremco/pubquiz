@@ -3,10 +3,13 @@ import { computed, onMounted, ref } from 'vue'
 import type { AiSetup } from '@shared/ipc'
 import Dialog from '../../components/Dialog.vue'
 import Icon from '../../components/Icon.vue'
+import { locale } from '../../lib/locale'
+import { AI_MESSAGES } from './operator-messages'
 
 /** Een quiz laten maken door je eigen AI-assistent: QuizNote als MCP-server koppelen. */
 const emit = defineEmits<{ close: [] }>()
 const api = window.pubquiz
+const t = AI_MESSAGES.in(locale)
 
 const setup = ref<AiSetup | null>(null)
 const error = ref<string | null>(null)
@@ -36,44 +39,40 @@ function copy() {
 </script>
 
 <template>
-  <Dialog title="Een quiz maken met je AI" @close="emit('close')">
-    <p class="muted">Vraag je AI-assistent bijvoorbeeld:</p>
-    <p class="example">Maak een pubquiz in QuizNote met zes rondes over Italië.</p>
-    <p class="muted">
-      De quiz verschijnt dan hier, met vragen, antwoorden en een antwoordenronde. Muziek en foto's
-      maakt een AI niet zelf: noem een map met je liedjes of foto's, of voeg ze daarna toe.
-    </p>
+  <Dialog :title="t('title')" @close="emit('close')">
+    <p class="muted">{{ t('askFor') }}</p>
+    <p class="example">{{ t('example') }}</p>
+    <p class="muted">{{ t('explain') }}</p>
 
     <template v-if="setup">
       <section class="step">
         <h4>Claude Desktop</h4>
         <p v-if="setup.claudeConnected" class="ok">
-          <Icon name="check" :size="14" /> Gekoppeld. Start Claude Desktop opnieuw als hij open
-          stond.
+          <Icon name="check" :size="14" /> {{ t('connected') }}
         </p>
         <template v-else-if="setup.claudeInstalled">
-          <p class="muted small">Eén keer koppelen, daarna kun je het Claude gewoon vragen.</p>
+          <p class="muted small">{{ t('connectOnce') }}</p>
           <button class="btn btn-primary connect" :disabled="busy" @click="connect">
-            <Icon name="spark" :size="14" /> Koppel aan Claude Desktop
+            <Icon name="spark" :size="14" /> {{ t('connect') }}
           </button>
         </template>
-        <p v-else class="muted small">Claude Desktop staat niet op deze Mac.</p>
+        <p v-else class="muted small">{{ t('notInstalled') }}</p>
         <p v-if="error" class="error" role="alert">{{ error }}</p>
       </section>
 
       <section class="step">
-        <h4>Andere AI-apps</h4>
-        <p class="muted small">Voeg QuizNote toe als MCP-server met deze instellingen:</p>
+        <h4>{{ t('otherApps') }}</h4>
+        <p class="muted small">{{ t('otherAppsHint') }}</p>
         <pre class="snippet">{{ snippet }}</pre>
         <button class="btn btn-sm copy" @click="copy">
           <Icon :name="copied ? 'check' : 'copy'" :size="13" />
-          {{ copied ? 'Gekopieerd' : 'Kopieer' }}
+          {{ copied ? t('copied') : t('copy') }}
         </button>
       </section>
     </template>
 
     <template #actions>
-      <button class="btn" @click="emit('close')">Klaar</button>
+      <button class="btn" @click="emit('close')">{{ t('done') }}</button>
     </template>
   </Dialog>
 </template>

@@ -10,6 +10,7 @@ import { migrateQuiz } from '@shared/migrate'
 import { quizFromTemplate, type TemplateOptions } from '@shared/template'
 import type { MediaAsset, Quiz } from '@shared/types'
 import { readJson, writeJson } from './json-store'
+import { NoticeError } from './messages'
 
 const run = promisify(execFile)
 
@@ -30,7 +31,7 @@ export async function isQuizDir(path: string): Promise<boolean> {
 
 export async function readQuiz(dir: string): Promise<Quiz> {
   const raw = await readJson<unknown>(join(dir, QUIZ_FILE))
-  if (raw === null) throw new Error(`Geen leesbare ${QUIZ_FILE} gevonden in ${dir}`)
+  if (raw === null) throw new NoticeError('unreadableQuiz', { file: QUIZ_FILE, dir })
   return migrateQuiz(raw)
 }
 
@@ -56,7 +57,7 @@ async function makeQuizDir(path: string): Promise<string> {
     () => true,
     () => false
   )
-  if (exists) throw new Error(`Er bestaat al een quiz met de naam "${basename(dir, QUIZ_EXT)}"`)
+  if (exists) throw new NoticeError('quizExists', { name: basename(dir, QUIZ_EXT) })
   await fs.mkdir(join(dir, MEDIA_DIR), { recursive: true })
   return dir
 }
@@ -229,7 +230,7 @@ export async function importZip(zip: string, destParent: string): Promise<string
   try {
     await run('ditto', ['-x', '-k', zip, staging])
     const found = await findQuizDir(staging)
-    if (!found) throw new Error('Geen quiz gevonden in dit zip-bestand')
+    if (!found) throw new NoticeError('noQuizInZip')
 
     let target = join(destParent, withQuizExtension(basename(found, QUIZ_EXT)))
     for (

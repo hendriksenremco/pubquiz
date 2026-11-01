@@ -78,7 +78,7 @@ type Factories = {
 }
 
 const FACTORIES: Factories = {
-  magichome: (host) => new MagicHomePlugin(host.notify, host.publish),
+  magichome: (host) => new MagicHomePlugin(host.notify, host.publish, appLocale()),
   remote: (host) => new RemotePlugin(host, remoteOptions())
 }
 

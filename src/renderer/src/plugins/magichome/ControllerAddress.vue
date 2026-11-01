@@ -2,7 +2,9 @@
 import { computed, onMounted, ref } from 'vue'
 import { effectName, lightLabel } from '@shared/light'
 import type { MagicHomeProbe } from '@shared/magichome'
+import { locale } from '../../lib/locale'
 import { useControllerHost } from './controller'
+import { CONTROLLER_MESSAGES } from './messages'
 
 /**
  * Het IP-adres van de controller met een testknop. Testen vraagt alleen de toestand op, dus het
@@ -10,6 +12,7 @@ import { useControllerHost } from './controller'
  */
 const props = defineProps<{ autotest?: boolean }>()
 const api = window.pubquiz
+const t = CONTROLLER_MESSAGES.in(locale)
 const { host, setHost } = useControllerHost()
 const status = ref<MagicHomeProbe | null>(null)
 const testing = ref(false)
@@ -37,12 +40,12 @@ const statusText = computed(() => {
   const s = status.value
   if (!s) return ''
   if (!s.ok) return s.error
-  if (!s.state.on) return 'Verbonden. Het licht staat uit.'
+  if (!s.state.on) return t('connectedOff')
   const now =
     s.state.effect !== null
-      ? effectName(s.state.effect)
-      : lightLabel({ type: 'color', color: s.state.color })
-  return `Verbonden. Nu: ${now}.`
+      ? effectName(s.state.effect, locale)
+      : lightLabel({ type: 'color', color: s.state.color }, locale)
+  return t('connectedNow', { now })
 })
 
 onMounted(() => {
@@ -56,17 +59,17 @@ onMounted(() => {
       <input
         class="input grow"
         :value="host"
-        placeholder="IP-adres van de controller"
-        aria-label="IP-adres van de MagicHome-controller"
+        :placeholder="t('placeholder')"
+        :aria-label="t('ariaLabel')"
         spellcheck="false"
         @change="change($event.target as HTMLInputElement)"
         @keydown.enter="change($event.target as HTMLInputElement)"
       />
       <button class="btn btn-ghost btn-sm" :disabled="!host || testing" @click="test">
-        {{ testing ? 'Testen…' : 'Test' }}
+        {{ testing ? t('testing') : t('test') }}
       </button>
     </div>
-    <p v-if="!host" class="status">Zonder adres blijft het licht zoals het is.</p>
+    <p v-if="!host" class="status">{{ t('noAddress') }}</p>
     <p v-else-if="status" class="status light-status" :class="status.ok ? 'ok' : 'warn'">
       {{ statusText }}
     </p>
