@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, inject } from 'vue'
 import type { Locale } from '@shared/i18n'
+import type { Standing } from '@shared/scores'
 import { SCREEN_MESSAGES } from '@shared/show-messages'
 import type { Quiz, Slide } from '@shared/types'
 import { locale as appLocale } from '../lib/locale'
@@ -11,6 +12,7 @@ import { slideBackdrop } from '../lib/slide-backdrop'
  * `number`: nummer van een afbeelding in zijn ronde, linksboven in beeld.
  * `withBackdrop: false`: zonder dimmen of kleur; een scherm legt die zelf over de hele breedte.
  * `locale`: de telefoon geeft de taal van de Mac mee; elders die van het venster.
+ * `standings`: een titelslide van de plug-in Tussenstand toont de stand onder de titel.
  */
 const props = withDefaults(
   defineProps<{
@@ -20,8 +22,9 @@ const props = withDefaults(
     number?: number | null
     withBackdrop?: boolean
     locale?: Locale
+    standings?: Standing[] | null
   }>(),
-  { quiz: null, number: null, withBackdrop: true, locale: appLocale }
+  { quiz: null, number: null, withBackdrop: true, locale: appLocale, standings: null }
 )
 
 const t = computed(() => SCREEN_MESSAGES.in(props.locale))
@@ -29,6 +32,18 @@ const t = computed(() => SCREEN_MESSAGES.in(props.locale))
 const imageUrl = inject(ASSET_URL, (id: string | undefined) => assetUrl(props.quiz, id))
 const image = computed(() => imageUrl(props.slide.imageAssetId))
 const backdrop = computed(() => (props.withBackdrop ? slideBackdrop(props.slide) : {}))
+
+/** Tot tien teams onder elkaar, daarna in twee kolommen; de regels krimpen mee met het aantal. */
+const MAX_ROWS = 10
+const standingsGrid = computed(() => {
+  const count = props.standings?.length ?? 0
+  const rows = count > MAX_ROWS ? Math.ceil(count / 2) : count
+  return {
+    gridTemplateRows: `repeat(${Math.max(rows, 1)}, auto)`,
+    gridTemplateColumns: count > MAX_ROWS ? '1fr 1fr' : '1fr',
+    fontSize: `${Math.min(7, 62 / Math.max(rows, 1))}cqh`
+  }
+})
 </script>
 
 <template>
@@ -50,6 +65,16 @@ const backdrop = computed(() => (props.withBackdrop ? slideBackdrop(props.slide)
       <img v-if="image" class="full-image" :src="image" alt="" />
       <div v-if="number" class="image-number">{{ number }}</div>
       <div v-if="slide.title" class="caption">{{ slide.title }}</div>
+    </template>
+    <template v-else-if="slide.layout === 'title' && standings">
+      <div class="eyebrow-big">{{ slide.title }}</div>
+      <ol class="standings" :style="standingsGrid">
+        <li v-for="s in standings" :key="s.team.id" class="standing">
+          <span class="place">{{ s.place }}</span>
+          <span class="team">{{ s.team.name }}</span>
+          <span class="total">{{ s.total.toLocaleString(locale) }}</span>
+        </li>
+      </ol>
     </template>
     <template v-else-if="slide.layout === 'title'">
       <div class="title">{{ slide.title }}</div>
@@ -188,6 +213,53 @@ const backdrop = computed(() => (props.withBackdrop ? slideBackdrop(props.slide)
   max-height: 55cqh;
   object-fit: contain;
   border-radius: 1cqh;
+}
+
+.standings {
+  display: grid;
+  grid-auto-flow: column;
+  column-gap: 6cqw;
+  width: 100%;
+  max-width: 120cqh;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  white-space: nowrap;
+}
+
+.standings:has(> :nth-child(11)) {
+  max-width: none;
+}
+
+.standing {
+  display: flex;
+  align-items: baseline;
+  gap: 0.8em;
+  padding: 0.18em 0;
+  border-bottom: 0.08cqh solid rgba(255, 255, 255, 0.18);
+  font-weight: 650;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+
+.place {
+  min-width: 1.4em;
+  color: var(--accent);
+  font-family: var(--display);
+  font-weight: 800;
+  text-align: right;
+}
+
+.team {
+  flex: 1;
+  overflow: hidden;
+  text-align: left;
+  text-overflow: ellipsis;
+}
+
+.total {
+  font-family: var(--display);
+  font-weight: 800;
 }
 
 .layout-title .image {

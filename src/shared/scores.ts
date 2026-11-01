@@ -1,12 +1,13 @@
 /**
  * Plug-in Tussenstand: teams en hun punten per ronde, met de hand ingevuld op de Mac. Geen
- * telefoons van teams en geen automatisch nakijken. De gegevens staan op de quiz zelf (niet per
- * ronde of slide): `plugins.scores`.
+ * telefoons van teams en geen automatisch nakijken. De teams en punten staan op de quiz zelf:
+ * `plugins.scores`. Een titelslide met `plugins.scores.standings` toont de stand; staat de plug-in
+ * uit (of kent een oudere app hem niet), dan blijft het een gewone titelslide.
  */
 import { z } from 'zod'
-import { newId } from './factory'
 import { definePlugin, pluginData, setPluginData, typeOnly, type HasPlugins } from './plugin'
-import type { Quiz, Round } from './types'
+import { createSlide, newId } from './factory'
+import type { Quiz, Round, Slide } from './types'
 
 const TeamSchema = z.object({ id: z.string(), name: z.string() })
 
@@ -16,7 +17,9 @@ const PointsSchema = z.number().min(0).max(9999)
 export const ScoresSchema = z.object({
   teams: z.array(TeamSchema).default([]),
   /** Per ronde-id, per team-id: de punten. Ontbreekt = nog niet ingevuld. */
-  points: z.record(z.string(), z.record(z.string(), PointsSchema)).default({})
+  points: z.record(z.string(), z.record(z.string(), PointsSchema)).default({}),
+  /** Alleen op een slide: die toont de stand van dat moment. */
+  standings: z.literal(true).optional()
 })
 
 export type Scores = z.output<typeof ScoresSchema>
@@ -141,4 +144,16 @@ export function standings(quiz: Quiz): Standing[] {
     if (i === 0 || total !== totals[i - 1].total) place = i + 1
     return { team, total, place }
   })
+}
+
+/** Toont deze slide de stand? Alleen een titelslide. */
+export function isStandingsSlide(slide: Slide): boolean {
+  return slide.layout === 'title' && pluginData(SCORES, slide)?.standings === true
+}
+
+/** Een titelslide die de stand toont; de titel staat erboven. */
+export function createStandingsSlide(title: string): Slide {
+  const slide = createSlide('title', title)
+  setPluginData(SCORES, slide, { standings: true })
+  return slide
 }

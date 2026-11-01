@@ -201,7 +201,8 @@ Plug-ins zijn optionele extra's. Je zet ze per Mac aan of uit bij Instellingen (
 
 - Teams en hun punten per ronde, met de hand ingevuld in een tabel bij Quiz-instellingen (`ScoreTable.vue`). Antwoordenrondes krijgen geen kolom.
 - De gegevens staan op de quiz onder `plugins.scores`; de hulpjes en `standings` staan in `src/shared/scores.ts`. Main doet er niets mee.
-- Nog niet gebouwd: de stand op een slide, en punten invullen tijdens de show.
+- De stand op een slide: een titelslide met `plugins.scores.standings` (Slide → Tussenstand in de editor, `createStandingsSlide`). `useStandings()` in `src/renderer/src/plugins/scores/standings.ts` geeft `SlideView` de stand, zolang de plug-in aan staat; anders, en op de telefoon, is het een gewone titelslide.
+- Nog niet gebouwd: punten invullen tijdens de show.
 
 Nieuwe optionele koppelingen, zoals Spotify of YouTube, volgen hetzelfde patroon.
 
