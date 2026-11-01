@@ -7,6 +7,7 @@ import { locale } from '../lib/locale'
 import { assetUrl } from '../lib/media'
 import { slideBackdrop } from '../lib/slide-backdrop'
 import { useNow } from '../lib/use-now'
+import { useStandings } from '../plugins/scores/standings'
 import { levelsOf, useWaveform } from '../lib/waveform'
 import SlideView from './SlideView.vue'
 import Waveform from './Waveform.vue'
@@ -34,6 +35,7 @@ const counting = computed(() => {
 const now = useNow(200, () => counting.value)
 const resolved = computed(() => resolveScreen(props.quiz, props.state, props.screenId, now.value))
 const t = SCREEN_MESSAGES.in(locale)
+const standingsOf = useStandings()
 
 // ── Waveform bij het fragmentnummer ─────────────────────────────────────────
 
@@ -264,6 +266,7 @@ onBeforeUnmount(() => {
           :number="resolved.slideNumber"
           :quiz="quiz"
           :with-backdrop="false"
+          :standings="standingsOf(quiz, resolved.slide)"
         />
       </Transition>
 

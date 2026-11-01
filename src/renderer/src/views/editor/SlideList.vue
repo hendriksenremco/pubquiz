@@ -4,6 +4,7 @@ import { moveById, renumberSlides } from '@shared/order'
 import { slideNumber } from '@shared/resolve'
 import type { Round, Slide } from '@shared/types'
 import SlideView from '../../components/SlideView.vue'
+import { useStandings } from '../../plugins/scores/standings'
 import { locale } from '../../lib/locale'
 import { useSession } from '../../stores/session'
 import { SLIDE_MESSAGES } from './editor-messages'
@@ -17,8 +18,10 @@ const emit = defineEmits<{ select: [id: string] }>()
 const session = useSession()
 const quiz = computed(() => session.quiz!)
 const t = SLIDE_MESSAGES.in(locale)
+const standingsOf = useStandings()
 
 function kind(round: Round, s: Slide): string {
+  if (standingsOf(quiz.value, s)) return t('kindStandings')
   if (s.layout === 'title') return t('kindTitle')
   if (s.layout === 'number') return t('kindNumber')
   return t('kindImage', { number: slideNumber(round, s) ?? '' })
@@ -84,7 +87,12 @@ const lineAt = (id: string, after: boolean) =>
         @dragstart="onDragStart($event, s.id)"
         @dragend="onDragEnd"
       >
-        <SlideView :slide="s" :quiz="quiz" :number="slideNumber(round, s)" />
+        <SlideView
+          :slide="s"
+          :quiz="quiz"
+          :number="slideNumber(round, s)"
+          :standings="standingsOf(quiz, s)"
+        />
       </button>
 
       <div class="text">

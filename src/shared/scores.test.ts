@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { createQuiz, createRound } from './factory'
+import { createQuiz, createRound, createSlide } from './factory'
 import { QuizSchema } from './quiz-schema'
 import {
   addTeam,
   clearPoints,
+  createStandingsSlide,
+  isStandingsSlide,
   removeTeam,
   renameTeam,
   scoredRounds,
@@ -97,5 +99,31 @@ describe('tussenstand', () => {
       ['C', 7.5, 2],
       ['D', 0, 4]
     ])
+  })
+})
+
+describe('slide met de stand', () => {
+  it('is een titelslide met een markering van de plug-in', () => {
+    const slide = createStandingsSlide('Tussenstand')
+    expect(slide.layout).toBe('title')
+    expect(slide.title).toBe('Tussenstand')
+    expect(slide.plugins).toEqual({ scores: { standings: true } })
+    expect(isStandingsSlide(slide)).toBe(true)
+  })
+
+  it('herkent gewone slides niet als stand', () => {
+    expect(isStandingsSlide(createSlide('title', 'Ronde 1'))).toBe(false)
+    const question = { ...createStandingsSlide('Stand'), layout: 'question' as const }
+    expect(isStandingsSlide(question)).toBe(false)
+  })
+
+  it('blijft geldig in de quiz, en laat de punten op de quiz ongemoeid', () => {
+    const { quiz, one } = setup()
+    const team = addTeam(quiz, 'Quizzers')
+    setPoints(quiz, one.id, team.id, 8)
+    one.slides.push(createStandingsSlide('Tussenstand'))
+    const parsed = QuizSchema.parse(JSON.parse(JSON.stringify(quiz)))
+    expect(isStandingsSlide(parsed.rounds[0].slides.at(-1)!)).toBe(true)
+    expect(standings(parsed)[0]).toMatchObject({ total: 8, place: 1 })
   })
 })

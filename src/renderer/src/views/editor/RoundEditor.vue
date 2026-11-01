@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import { createFragment, createImageSlide, createSlide, fragmentChannel } from '@shared/factory'
 import { groupByFolder, naturalCompare } from '@shared/media-folders'
+import { createStandingsSlide, isStandingsSlide } from '@shared/scores'
 import type { MediaAsset, Round, Slide } from '@shared/types'
 import Icon from '../../components/Icon.vue'
 import Popover from '../../components/Popover.vue'
@@ -65,6 +66,9 @@ function select(kind: 'slide' | 'fragment', id: string | null) {
 const itemLabel = computed(() => {
   if (fragment.value) return t('tabFragment')
   const layout = slide.value?.layout
+  if (slide.value && session.pluginOn('scores') && isStandingsSlide(slide.value)) {
+    return t('tabStandings')
+  }
   return layout === 'question'
     ? t('tabQuestion')
     : layout === 'title'
@@ -103,6 +107,12 @@ function addSlide(layout: 'title' | 'number' | 'image', close: () => void) {
         ? createSlide('number', String(n))
         : createImageSlide()
   )
+}
+
+/** Plug-in Tussenstand: een titelslide die de stand van dat moment toont. */
+function addStandings(close: () => void) {
+  close()
+  insertSlides(createStandingsSlide(t('newStandings')))
 }
 
 function addImages(assets: MediaAsset[]) {
@@ -279,6 +289,13 @@ const empty = computed(() => !props.round.slides.length && !props.round.fragment
               </button>
               <button class="menu-item" @click="addSlide('image', close)">
                 {{ t('slideImage') }}
+              </button>
+              <button
+                v-if="session.pluginOn('scores')"
+                class="menu-item"
+                @click="addStandings(close)"
+              >
+                {{ t('slideStandings') }}
               </button>
             </template>
           </Popover>
