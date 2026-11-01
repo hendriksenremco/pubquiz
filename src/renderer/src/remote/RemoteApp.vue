@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, provide, watchEffect } from 'vue'
-import { STEP_NAMES } from '@shared/resolve'
+import { stepNames as namesOf } from '@shared/resolve'
 import Icon from '../components/Icon.vue'
 import SlideView from '../components/SlideView.vue'
 import { ASSET_URL } from '../lib/media'
@@ -30,7 +30,7 @@ const plugins = computed(() =>
 )
 
 const stepNames = computed(() =>
-  step.value ? STEP_NAMES[step.value.target] : [t.value('prev'), t.value('next')]
+  step.value ? namesOf(step.value.target, locale.value) : [t.value('prev'), t.value('next')]
 )
 
 const status = computed(() => {

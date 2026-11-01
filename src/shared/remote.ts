@@ -14,6 +14,7 @@ import {
   adjacentRound,
   allBlack,
   answerItems,
+  type AnswerItem,
   loopActive,
   resolveScreen,
   restartRound,
@@ -21,6 +22,7 @@ import {
   stepTarget,
   type StepTarget
 } from './resolve'
+import { STEP_MESSAGES } from './show-messages'
 import type { Quiz, Round, ShowState, Slide } from './types'
 
 export const REMOTE = definePlugin({
@@ -132,7 +134,7 @@ export function remoteView(
     prevRound: (quiz && adjacentRound(quiz, state, 'prev')?.title) ?? null,
     nextRound: (quiz && adjacentRound(quiz, state, 'next')?.title) ?? null,
     restartRound: (quiz && restartRound(quiz, state)?.title) ?? null,
-    step: quiz && round ? remoteStep(quiz, round, state) : null,
+    step: quiz && round ? remoteStep(quiz, round, state, locale) : null,
     screen: quiz ? onScreen(quiz, state) : null,
     screens: !!quiz?.screens.length,
     blackout: !!quiz && allBlack(quiz, state),
@@ -170,7 +172,13 @@ export function remoteCommand(
 }
 
 /** Ook voor de knoppen op de Mac, zodat die hetzelfde tonen en kunnen. */
-export function remoteStep(quiz: Quiz, round: Round, state: ShowState): RemoteStep {
+export function remoteStep(
+  quiz: Quiz,
+  round: Round,
+  state: ShowState,
+  locale: Locale = 'nl'
+): RemoteStep {
+  const t = STEP_MESSAGES.in(locale)
   const target = stepTarget(quiz, round)
   const base = { target, text: null, answer: null, playing: false }
   const playing = (id: string | undefined) => !!id && state.fragment?.fragmentId === id
@@ -180,12 +188,11 @@ export function remoteStep(quiz: Quiz, round: Round, state: ShowState): RemoteSt
     const current = state.answer?.roundId === round.id ? state.answer : null
     const item = current ? items[current.index] : undefined
     if (!current || !item) {
-      return { ...base, label: `${items.length} om na te lopen`, prev: false, next: true }
+      return { ...base, label: t('answersToGo', { count: items.length }), prev: false, next: true }
     }
-    const noun = item.noun[0].toUpperCase() + item.noun.slice(1)
     return {
       ...base,
-      label: `${noun} ${item.number}, ${item.round.title}`,
+      label: t(ANSWER_LABELS[item.noun], { number: item.number, round: item.round.title }),
       text: item.slide ? questionText(item.slide) : (item.fragment?.label ?? null),
       answer: current.revealed ? item.answer || item.fragment?.label || '—' : null,
       playing: playing(item.fragment?.id),
@@ -200,8 +207,8 @@ export function remoteStep(quiz: Quiz, round: Round, state: ShowState): RemoteSt
     return {
       ...base,
       label: fragment
-        ? `Fragment ${ids.indexOf(fragment.id) + 1} van ${ids.length}`
-        : `${ids.length} fragmenten`,
+        ? t('fragmentOf', { number: ids.indexOf(fragment.id) + 1, total: ids.length })
+        : t('fragments', { count: ids.length }),
       text: fragment?.label ?? null,
       playing: playing(fragment?.id),
       prev: adjacentFragment(ids, state.lastFragmentId, 'prev') !== null,
@@ -214,15 +221,21 @@ export function remoteStep(quiz: Quiz, round: Round, state: ShowState): RemoteSt
   return {
     ...base,
     label: !count
-      ? 'Geen slides in deze ronde'
+      ? t('noSlides')
       : slide
-        ? `Slide ${state.slideIndex + 1} van ${count}`
-        : `Geen slide, ${count} in deze ronde`,
+        ? t('slideOf', { number: state.slideIndex + 1, total: count })
+        : t('noSlideOf', { count }),
     text: slide ? questionText(slide) : null,
     prev: state.slideIndex > -1,
     next: state.slideIndex < count - 1 || loopActive(round, state.slideIndex)
   }
 }
+
+const ANSWER_LABELS = {
+  vraag: 'answerQuestion',
+  afbeelding: 'answerImage',
+  fragment: 'answerFragment'
+} as const satisfies Record<AnswerItem['noun'], string>
 
 /** De vraag om voor te lezen, ook als er alleen het nummer in beeld staat. */
 function questionText(slide: Slide): string | null {

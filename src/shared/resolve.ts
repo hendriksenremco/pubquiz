@@ -6,6 +6,8 @@ import type { ShowCommand } from './ipc'
 import type { Fragment, MediaAsset, Quiz, Round, ScreenContent, ShowState, Slide } from './types'
 import { autoplayCountdown } from './autoplay'
 import { answerSlides } from './factory'
+import type { Locale } from './i18n'
+import { STEP_MESSAGES } from './show-messages'
 
 export type ScreenOverlay =
   /** `context`: de ronde van het fragment, in een antwoordenronde. */
@@ -259,10 +261,14 @@ export function stepTarget(quiz: Quiz, round: Round | null): StepTarget {
 }
 
 /** Hoe vorige en volgende heten, op de Mac en op de telefoon. */
-export const STEP_NAMES: Record<StepTarget, readonly [prev: string, next: string]> = {
-  slides: ['Vorige slide', 'Volgende slide'],
-  fragments: ['Vorig fragment', 'Volgend fragment'],
-  answers: ['Vorige stap', 'Volgende stap']
+export function stepNames(
+  target: StepTarget,
+  locale: Locale = 'nl'
+): readonly [prev: string, next: string] {
+  const t = STEP_MESSAGES.in(locale)
+  if (target === 'answers') return [t('prevStep'), t('nextStep')]
+  if (target === 'fragments') return [t('prevFragment'), t('nextFragment')]
+  return [t('prevSlide'), t('nextSlide')]
 }
 
 export function stepCommand(target: StepTarget, direction: 'next' | 'prev'): ShowCommand {

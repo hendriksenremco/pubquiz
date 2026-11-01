@@ -5,6 +5,7 @@ import { tmpdir } from 'os'
 import { join } from 'path'
 import { afterEach, describe, expect, it, vi, type Mock } from 'vitest'
 import { createQuiz, createRound, createShowState, createSlide } from '@shared/factory'
+import type { Locale } from '@shared/i18n'
 import type { RemoteLink, RemoteView } from '@shared/remote'
 import type { ShowState } from '@shared/types'
 import type { PluginConfig } from '@shared/plugins'
@@ -27,7 +28,7 @@ function fakeBuild(): string {
 let plugin: RemotePlugin | null = null
 afterEach(() => plugin?.stop())
 
-async function setup(light: unknown = null) {
+async function setup(light: unknown = null, locale?: Locale) {
   const dir = fakeBuild()
   const host = {
     mediaFile: (file: string) => join(dir, 'quiz', file),
@@ -39,7 +40,7 @@ async function setup(light: unknown = null) {
     act: vi.fn(async (): Promise<any> => ({ ok: true })),
     remoteAct: vi.fn(async (): Promise<unknown> => ({ ok: true }))
   } satisfies PluginHost<'remote'>
-  plugin = new RemotePlugin(host, { page: { dir }, host: '127.0.0.1', port: 0 })
+  plugin = new RemotePlugin(host, { page: { dir }, host: '127.0.0.1', port: 0, locale })
   plugin.configure({})
   const url = new URL((await published(host)).url!)
   const key = url.searchParams.get('key')!
@@ -162,6 +163,18 @@ describe('RemotePlugin', () => {
     })
     expect(await published(host, (link) => link.devices === 1)).toMatchObject({ devices: 1 })
     await events.cancel()
+  })
+
+  it('meldt fouten in de taal van de app', async () => {
+    const { act } = await setup(null, 'en')
+    expect(await (await act({ type: 'step', direction: 'next' })).json()).toEqual({
+      ok: false,
+      error: 'Start the show on the Mac first'
+    })
+    expect(await (await act({ type: 'step', direction: 'next' }, 'fout')).json()).toEqual({
+      ok: false,
+      error: 'Scan the QR code again'
+    })
   })
 
   it('geeft knoppen door aan de show, alleen als die loopt', async () => {
