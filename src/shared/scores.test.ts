@@ -8,6 +8,7 @@ import {
   isStandingsSlide,
   removeTeam,
   renameTeam,
+  roundsToScore,
   scoredRounds,
   scoresOf,
   setPoints,
@@ -125,5 +126,13 @@ describe('slide met de stand', () => {
     const parsed = QuizSchema.parse(JSON.parse(JSON.stringify(quiz)))
     expect(isStandingsSlide(parsed.rounds[0].slides.at(-1)!)).toBe(true)
     expect(standings(parsed)[0]).toMatchObject({ total: 8, place: 1 })
+  })
+
+  it('vult tijdens een ronde de punten van die ronde in, of van de rondes die je nakijkt', () => {
+    const { quiz, one, two, answers } = setup()
+    expect(roundsToScore(quiz, two)).toEqual([two])
+    expect(roundsToScore(quiz, answers)).toEqual([one])
+    answers.answersFor = [two.id, one.id, 'weg']
+    expect(roundsToScore(quiz, answers)).toEqual([one, two])
   })
 })

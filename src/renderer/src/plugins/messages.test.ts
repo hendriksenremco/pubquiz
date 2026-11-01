@@ -7,7 +7,7 @@ import {
   LIGHT_PLACE_MESSAGES
 } from './magichome/messages'
 import { REMOTE_QR_MESSAGES } from './remote/messages'
-import { SCORE_TABLE_MESSAGES } from './scores/messages'
+import { SCORE_PAD_MESSAGES, SCORE_TABLE_MESSAGES } from './scores/messages'
 
 const BOOKS: Record<string, MessageBook<string>> = {
   CONTROLLER_MESSAGES,
@@ -15,6 +15,7 @@ const BOOKS: Record<string, MessageBook<string>> = {
   LIGHT_PICKER_MESSAGES,
   LIGHT_PLACE_MESSAGES,
   REMOTE_QR_MESSAGES,
+  SCORE_PAD_MESSAGES,
   SCORE_TABLE_MESSAGES
 }
 

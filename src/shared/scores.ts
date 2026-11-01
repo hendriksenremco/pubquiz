@@ -60,6 +60,15 @@ export function scoredRounds(quiz: Quiz): Round[] {
   return quiz.rounds.filter((r) => !r.answersFor.length)
 }
 
+/**
+ * Voor welke rondes vul je tijdens deze ronde punten in? Een gewone ronde: zichzelf. Een
+ * antwoordenronde: de rondes die je dan nakijkt.
+ */
+export function roundsToScore(quiz: Quiz, round: Round): Round[] {
+  if (!round.answersFor.length) return [round]
+  return scoredRounds(quiz).filter((r) => round.answersFor.includes(r.id))
+}
+
 export function addTeam(quiz: HasPlugins, name: string): Team {
   const scores = scoresOf(quiz)
   const team = { id: newId(), name }

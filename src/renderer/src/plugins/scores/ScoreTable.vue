@@ -8,13 +8,13 @@ import {
   renameTeam,
   scoredRounds,
   scoresOf,
-  setPoints,
   standings
 } from '@shared/scores'
 import Icon from '../../components/Icon.vue'
 import { ask } from '../../lib/confirm'
 import { locale } from '../../lib/locale'
 import { useSession } from '../../stores/session'
+import { enterPoints } from './enter-points'
 import { SCORE_TABLE_MESSAGES } from './messages'
 
 /** Bij Quiz-instellingen: de teams, en per ronde hun punten. De stand komt op een slide. */
@@ -37,11 +37,7 @@ function rename(teamId: string, event: Event) {
 }
 
 function enter(roundId: string, teamId: string, event: Event) {
-  const input = event.target as HTMLInputElement
-  const raw = input.value.trim().replace(',', '.')
-  setPoints(quiz.value, roundId, teamId, raw === '' ? null : Number(raw))
-  // Ongeldig: het veld laat weer zien wat er bewaard is.
-  input.value = String(pointsOf(scoresOf(quiz.value), roundId, teamId) ?? '')
+  enterPoints(quiz.value, roundId, teamId, event)
 }
 
 async function remove(teamId: string, name: string) {
