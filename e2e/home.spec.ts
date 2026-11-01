@@ -34,7 +34,7 @@ test('dashboard: leeg starten, recente quiz openen en terugkomen', async () => {
     await operator.waitForTimeout(800) // cover en gloed laten laden voor de screenshot
     await operator.screenshot({ path: 'test-results/home.png' })
 
-    await operator.getByRole('button', { name: 'Naar show' }).click()
+    await operator.getByRole('button', { name: 'Start show' }).click()
     await expect(operator.getByRole('dialog', { name: 'Show starten' })).toBeVisible()
     await app.close()
 

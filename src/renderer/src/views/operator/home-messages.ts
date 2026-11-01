@@ -12,7 +12,7 @@ export const HOME_MESSAGES = defineMessages(
     contents: '{rounds} en {screens}',
     edited: 'Bewerkt {when}',
     edit: 'Bewerken',
-    toShow: 'Naar show',
+    startShow: 'Start show',
     firstTitle: 'Maak je eerste pubquiz',
     firstText:
       'Video-loops op de schermen, achtergrondmuziek en geluidsfragmenten, per ronde in te stellen.',
@@ -41,7 +41,7 @@ export const HOME_MESSAGES = defineMessages(
       contents: '{rounds} and {screens}',
       edited: 'Edited {when}',
       edit: 'Edit',
-      toShow: 'Go to show',
+      startShow: 'Start show',
       firstTitle: 'Make your first pub quiz',
       firstText: 'Video loops on the screens, background music and sound clips, set up per round.',
       newQuiz: 'New quiz',
