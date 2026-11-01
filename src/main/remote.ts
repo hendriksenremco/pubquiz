@@ -174,7 +174,9 @@ export class RemotePlugin implements MainPlugin<'remote'> {
       else if (url.pathname === '/api/check') this.check(url, res)
       else if (url.pathname === '/api/action') await this.action(url, req, res)
       else if (url.pathname.startsWith('/media/')) await this.media(url, req, res)
-      else await servePage(this.options.page, url, req, res)
+      else if ('devServer' in this.options.page)
+        this.dev(this.options.page.devServer, url, req, res)
+      else await servePage(this.options.page.dir, url, req, res)
     } catch {
       if (res.headersSent) res.destroy()
       else reply(res, 500, { ok: false, error: 'Er ging iets mis op de Mac' })
@@ -248,8 +250,33 @@ export class RemotePlugin implements MainPlugin<'remote'> {
     return { ok: true }
   }
 
+  /**
+   * Tijdens het ontwikkelen (pnpm dev): de pagina komt van de Vite-server. Die serveert ook de
+   * broncode en bestanden via /@fs/, dus alleen voor wie de sleutel heeft. De pagina zelf krijgt
+   * hem in de URL en zet hem in een cookie, voor de scripts en stijlen die de browser daarna haalt.
+   */
+  private dev(devServer: string, url: URL, req: IncomingMessage, res: ServerResponse): void {
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+      return reply(res, 405, { ok: false, error: 'Alleen GET' })
+    }
+    const page = url.pathname === '/'
+    if (!this.matches(page ? url.searchParams.get('key') : cookie(req, DEV_COOKIE))) {
+      return reply(res, 401, { ok: false, error: 'Scan de QR-code opnieuw' })
+    }
+    // De sleutel hoeft Vite niet te zien; zijn eigen query's (?v=, ?vue&type=) wel.
+    const target = new URL(page ? '/remote.html' : url.pathname + url.search, devServer)
+    const extra: OutgoingHttpHeaders = page
+      ? { 'Set-Cookie': `${DEV_COOKIE}=${this.key}; Path=/; HttpOnly; SameSite=Strict` }
+      : {}
+    proxy(target, req, res, extra)
+  }
+
   private authorized(url: URL): boolean {
-    const given = Buffer.from(url.searchParams.get('key') ?? '')
+    return this.matches(url.searchParams.get('key'))
+  }
+
+  private matches(value: string | null | undefined): boolean {
+    const given = Buffer.from(value ?? '')
     const key = Buffer.from(this.key)
     return key.length > 0 && given.length === key.length && timingSafeEqual(given, key)
   }
@@ -332,11 +359,24 @@ const isPrivate = (ip: string) => /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/
 
 const newKey = () => randomBytes(16).toString('base64url')
 
+/** Het cookie met de sleutel, alleen tijdens het ontwikkelen. */
+const DEV_COOKIE = 'quiznote-remote'
+
+function cookie(req: IncomingMessage, name: string): string | null {
+  for (const part of (req.headers.cookie ?? '').split(';')) {
+    const [k, ...v] = part.trim().split('=')
+    if (k === name) return v.join('=')
+  }
+  return null
+}
+
 /** De sleutel staat in de URL; die hoort niet in een Referer naar buiten. */
 const HEADERS: OutgoingHttpHeaders = {
   'Cache-Control': 'no-store',
   'Referrer-Policy': 'no-referrer',
-  'X-Content-Type-Options': 'nosniff'
+  'X-Content-Type-Options': 'nosniff',
+  // Een andere site mag de pagina niet in een frame zetten en de knoppen laten indrukken.
+  'X-Frame-Options': 'DENY'
 }
 
 function reply(res: ServerResponse, status: number, body: RemoteResult): void {
@@ -392,7 +432,7 @@ const TYPES: Record<string, string> = {
 
 /** De pagina zelf op `/`, en wat Vite ervoor bouwde in assets/; verder niets. */
 async function servePage(
-  page: RemotePage,
+  dir: string,
   url: URL,
   req: IncomingMessage,
   res: ServerResponse
@@ -401,14 +441,8 @@ async function servePage(
     return reply(res, 405, { ok: false, error: 'Alleen GET' })
   }
   const path = url.pathname === '/' ? '/remote.html' : url.pathname
-  if ('devServer' in page) {
-    // De sleutel hoeft Vite niet te zien; zijn eigen query's (?v=, ?vue&type=) wel.
-    const search = url.pathname === '/' ? '' : url.search
-    return proxy(new URL(path + search, page.devServer), req, res)
-  }
-
-  const file = resolve(page.dir, `.${decodeURIComponent(path)}`)
-  const inside = relative(page.dir, file)
+  const file = resolve(dir, `.${decodeURIComponent(path)}`)
+  const inside = relative(dir, file)
   const allowed = inside === 'remote.html' || inside.startsWith(`assets${sep}`)
   await sendFile(
     allowed ? file : null,
@@ -448,13 +482,19 @@ async function sendFile(
   else stream.pipe(res)
 }
 
-/** Tijdens het ontwikkelen (pnpm dev): de pagina komt van de Vite-server, die alleen op localhost luistert. */
-function proxy(target: URL, req: IncomingMessage, res: ServerResponse): void {
+/** Een verzoek doorgeven aan de Vite-server, die alleen op localhost luistert; zonder ons cookie. */
+function proxy(
+  target: URL,
+  req: IncomingMessage,
+  res: ServerResponse,
+  extra: OutgoingHttpHeaders
+): void {
+  const { cookie: _, ...headers } = req.headers
   const upstream = request(
     target,
-    { method: req.method, headers: { ...req.headers, host: target.host } },
+    { method: req.method, headers: { ...headers, host: target.host } },
     (answer) => {
-      res.writeHead(answer.statusCode ?? 502, answer.headers)
+      res.writeHead(answer.statusCode ?? 502, { ...answer.headers, ...extra })
       answer.pipe(res)
     }
   )

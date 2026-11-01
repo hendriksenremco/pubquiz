@@ -117,6 +117,8 @@ describe('RemotePlugin', () => {
     const { url } = await setup()
     const page = await fetch(`${url.origin}/`)
     expect(page.headers.get('content-type')).toContain('text/html')
+    expect(page.headers.get('x-frame-options')).toBe('DENY')
+    expect(page.headers.get('referrer-policy')).toBe('no-referrer')
     expect(await page.text()).toContain('Afstandsbediening')
     const script = await fetch(`${url.origin}/assets/remote.js`)
     expect(script.headers.get('content-encoding')).toBe('gzip')
@@ -266,10 +268,10 @@ describe('RemotePlugin', () => {
 })
 
 describe('RemotePlugin tijdens het ontwikkelen', () => {
-  it('haalt de pagina bij de Vite-server, met diens eigen hostnaam', async () => {
-    const seen: { url?: string; host?: string }[] = []
+  async function devSetup() {
+    const seen: { url?: string; host?: string; cookie?: string }[] = []
     const vite = createServer((req, res) => {
-      seen.push({ url: req.url, host: req.headers.host })
+      seen.push({ url: req.url, host: req.headers.host, cookie: req.headers.cookie })
       res.writeHead(200, { 'Content-Type': 'text/html' })
       res.end('van vite')
     })
@@ -286,15 +288,45 @@ describe('RemotePlugin tijdens het ontwikkelen', () => {
       remoteAct: vi.fn(async () => null)
     }
     plugin = new RemotePlugin(host, { page: { devServer }, host: '127.0.0.1', port: 0 })
+    const key = 'k'.repeat(22)
+    plugin.configure({ key })
+    const { origin } = new URL((await published(host)).url!)
+    return { seen, vite, devServer, origin, key }
+  }
+
+  it('haalt de pagina bij de Vite-server, met diens eigen hostnaam', async () => {
+    const { seen, vite, devServer, origin, key } = await devSetup()
     try {
-      plugin.configure({ key: 'k'.repeat(22) })
-      const { origin } = new URL((await published(host)).url!)
-      expect(await (await fetch(`${origin}/?key=${'k'.repeat(22)}`)).text()).toBe('van vite')
-      await fetch(`${origin}/src/remote/main.ts?t=1`)
+      const page = await fetch(`${origin}/?key=${key}`)
+      expect(await page.text()).toBe('van vite')
+      const cookie = page.headers.get('set-cookie')!
+      expect(cookie).toContain('HttpOnly')
+      expect(cookie).toContain('SameSite=Strict')
+      await fetch(`${origin}/src/remote/main.ts?t=1`, {
+        headers: { cookie: cookie.split(';')[0] }
+      })
       expect(seen).toEqual([
-        { url: '/remote.html', host: new URL(devServer).host },
-        { url: '/src/remote/main.ts?t=1', host: new URL(devServer).host }
+        { url: '/remote.html', host: new URL(devServer).host, cookie: undefined },
+        { url: '/src/remote/main.ts?t=1', host: new URL(devServer).host, cookie: undefined }
       ])
+    } finally {
+      vite.close()
+    }
+  })
+
+  it('geeft Vite niet vrij zonder sleutel', async () => {
+    const { seen, vite, origin, key } = await devSetup()
+    try {
+      expect((await fetch(`${origin}/`)).status).toBe(401)
+      expect((await fetch(`${origin}/?key=fout`)).status).toBe(401)
+      expect((await fetch(`${origin}/@fs/etc/passwd`)).status).toBe(401)
+      const wrong = { headers: { cookie: 'quiznote-remote=fout' } }
+      expect((await fetch(`${origin}/src/remote/main.ts`, wrong)).status).toBe(401)
+      const right = { headers: { cookie: `quiznote-remote=${key}` } }
+      expect(
+        (await fetch(`${origin}/src/remote/main.ts`, { ...right, method: 'POST' })).status
+      ).toBe(405)
+      expect(seen).toEqual([])
     } finally {
       vite.close()
     }
