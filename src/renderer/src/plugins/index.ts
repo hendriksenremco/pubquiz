@@ -8,6 +8,7 @@ import SlideLight from './magichome/SlideLight.vue'
 import StartLight from './magichome/StartLight.vue'
 import RemoteButton from './remote/RemoteButton.vue'
 import RemoteQr from './remote/RemoteQr.vue'
+import ScoreTable from './scores/ScoreTable.vue'
 
 /** Plekken in de app waar een plug-in iets kan tonen; zie PluginSlot.vue. */
 export type PluginSlotName =
@@ -40,5 +41,9 @@ export const RENDERER_PLUGINS: RendererPlugin[] = [
   {
     id: 'remote',
     slots: { liveControls: RemoteButton, settings: RemoteQr }
+  },
+  {
+    id: 'scores',
+    slots: { quizSettings: ScoreTable }
   }
 ]

@@ -2,12 +2,13 @@ import type { z } from 'zod'
 import { MAGICHOME } from './light'
 import { pluginConfig, type PluginAction, type TypeOnly } from './plugin'
 import { REMOTE } from './remote'
+import { SCORES } from './scores'
 
 /**
  * Ingebouwde plug-ins: extra's die je per Mac aan- of uitzet bij Instellingen. Staat een plug-in
  * uit, dan toont de app er niets van en doet hij niets; wat hij in een quiz bewaarde, blijft staan.
  */
-export const PLUGINS = [MAGICHOME, REMOTE] as const
+export const PLUGINS = [MAGICHOME, REMOTE, SCORES] as const
 
 export type PluginId = (typeof PLUGINS)[number]['id']
 

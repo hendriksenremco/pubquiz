@@ -7,13 +7,15 @@ import {
   LIGHT_PLACE_MESSAGES
 } from './magichome/messages'
 import { REMOTE_QR_MESSAGES } from './remote/messages'
+import { SCORE_TABLE_MESSAGES } from './scores/messages'
 
 const BOOKS: Record<string, MessageBook<string>> = {
   CONTROLLER_MESSAGES,
   LIGHT_PANEL_MESSAGES,
   LIGHT_PICKER_MESSAGES,
   LIGHT_PLACE_MESSAGES,
-  REMOTE_QR_MESSAGES
+  REMOTE_QR_MESSAGES,
+  SCORE_TABLE_MESSAGES
 }
 
 describe('teksten van de plug-ins in de app', () => {
