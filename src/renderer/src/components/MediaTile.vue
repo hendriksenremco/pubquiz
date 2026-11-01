@@ -31,7 +31,11 @@ watch(playing, (on) => {
   if (!el) return
   if (on) {
     el.currentTime = 0
-    void el.play().catch(() => preview.stop())
+    // Neemt intussen een ander voorbeeld het over, dan breekt pause() deze play() af. Alleen
+    // stoppen als deze tegel nog speelt, anders stopt het nieuwe voorbeeld meteen ook.
+    void el.play().catch(() => {
+      if (playing.value) preview.stop()
+    })
   } else {
     el.pause()
     el.currentTime = 1

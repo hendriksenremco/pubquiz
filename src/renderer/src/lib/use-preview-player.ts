@@ -47,7 +47,10 @@ function toggle(id: string, asset: MediaAsset | null, start = 0, end?: number) {
   position.value = start
   stopAt = end ?? null
   playingId.value = id
-  void audio.play().catch(stop)
+  // Afgebroken omdat een ander voorbeeld het overnam? Dan niet diens voorbeeld stoppen.
+  void audio.play().catch(() => {
+    if (playingId.value === id) stop()
+  })
 }
 
 export function usePreviewPlayer() {
