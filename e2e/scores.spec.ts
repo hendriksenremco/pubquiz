@@ -67,8 +67,8 @@ test('teams en punten per ronde bij Quiz-instellingen, via de plug-in Tussenstan
     await table.screenshot({ path: 'test-results/scores-table.png' })
 
     // Een team weghalen, met zijn punten.
-    await table.getByRole('button', { name: 'Team weghalen' }).nth(1).click()
-    await confirmIn(operator, 'Weghalen')
+    await table.getByRole('button', { name: 'Verwijder team' }).nth(1).click()
+    await confirmIn(operator, 'Verwijder')
     await expect(names).toHaveCount(2)
     await expect.poll(() => JSON.stringify(saved())).not.toContain('Quizzly')
 
