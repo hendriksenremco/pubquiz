@@ -8,7 +8,7 @@ import { LIGHT_PICKER_MESSAGES } from './messages'
 
 const api = window.pubquiz
 
-/** Het adres van de controller, voor deze Mac; bij Instellingen en bij Show starten te wijzigen. */
+/** Het adres van de controller, voor deze Mac; bij Instellingen en bij Start show te wijzigen. */
 export function useControllerHost() {
   const session = useSession()
   const setting = computed(() => session.plugins.magichome ?? PLUGIN_OFF)

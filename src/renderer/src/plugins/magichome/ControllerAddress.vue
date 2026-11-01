@@ -9,7 +9,7 @@ import { CONTROLLER_MESSAGES } from './messages'
 
 /**
  * Het IP-adres van de controller met een testknop. Testen vraagt alleen de toestand op, dus het
- * licht verandert niet. `autotest`: meteen testen, bv. bij Show starten.
+ * licht verandert niet. `autotest`: meteen testen, bv. bij Start show.
  */
 const props = defineProps<{ autotest?: boolean }>()
 const api = window.pubquiz

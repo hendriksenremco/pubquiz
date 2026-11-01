@@ -7,7 +7,7 @@ import ControllerAddress from './ControllerAddress.vue'
 import { LIGHT_PLACE_MESSAGES } from './messages'
 
 /**
- * In "Show starten": het adres van de controller van vanavond. Op elke locatie krijgt hij een
+ * In "Start show": het adres van de controller van vanavond. Op elke locatie krijgt hij een
  * ander IP-adres; de app onthoudt het laatste.
  */
 const session = useSession()

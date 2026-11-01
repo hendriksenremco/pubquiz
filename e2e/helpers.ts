@@ -103,18 +103,18 @@ export async function choose(page: Page, combobox: Locator, option: string | Reg
   await page.getByRole('listbox').getByRole('option', { name: option, exact: true }).click()
 }
 
-/** Opent het venster "Show starten" met de knop in de werkbalk. */
+/** Opent het venster "Start show" met de knop in de werkbalk. */
 export async function openStart(page: Page): Promise<Locator> {
   await page.locator('.topbar').getByRole('button', { name: 'Start show' }).click()
-  const sheet = page.getByRole('dialog', { name: 'Show starten' })
+  const sheet = page.getByRole('dialog', { name: 'Start show' })
   await expect(sheet).toBeVisible()
   return sheet
 }
 
-/** Start de show vanuit het venster "Show starten". */
+/** Start de show vanuit het venster "Start show". */
 export async function startShow(page: Page) {
   await page
-    .getByRole('dialog', { name: 'Show starten' })
+    .getByRole('dialog', { name: 'Start show' })
     .getByRole('button', { name: 'Start show' })
     .click()
   await expect(page.locator('.live')).toBeVisible()
