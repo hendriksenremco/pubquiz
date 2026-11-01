@@ -232,7 +232,7 @@ const empty = computed(() => !props.round.slides.length && !props.round.fragment
             </template>
             <template #default="{ close }">
               <button class="menu-item" @click="fromFiles(close)">
-                <Icon name="upload" /> {{ t('fromFiles') }}
+                <Icon name="download" /> {{ t('fromFiles') }}
               </button>
               <template v-if="imageFolders.length">
                 <div class="menu-label">{{ t('fromMedia') }}</div>
@@ -257,7 +257,7 @@ const empty = computed(() => !props.round.slides.length && !props.round.fragment
             </template>
             <template #default="{ close }">
               <button class="menu-item" @click="fromFiles(close)">
-                <Icon name="upload" /> {{ t('fromFiles') }}
+                <Icon name="download" /> {{ t('fromFiles') }}
               </button>
               <template v-if="audioFolders.length">
                 <div class="menu-label">{{ t('fromMedia') }}</div>
