@@ -122,10 +122,9 @@ function reveal(q: RecentQuiz) {
     <section v-if="latest" class="body">
       <div class="section-head">
         <h3>{{ t('quizzes') }}</h3>
-        <span class="count">{{ quizzes.length }}</span>
         <span class="grow" />
         <button class="btn btn-ghost btn-sm" @click="api.openQuiz()">
-          <Icon name="folder" :size="14" /> {{ t('open') }}
+          <Icon name="folder" :size="14" /> {{ t('openQuiz') }}
         </button>
         <button class="btn btn-ghost btn-sm" @click="api.importZip()">
           <Icon name="upload" :size="14" /> {{ t('importZip') }}
