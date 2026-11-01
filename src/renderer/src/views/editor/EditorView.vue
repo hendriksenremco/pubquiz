@@ -323,21 +323,19 @@ defineExpose({ importRounds })
   padding-right: 4px;
 }
 
+/* Alleen het nummer: de achtergrond van de rij laat al zien welke ronde gekozen is. */
 .num {
-  display: grid;
-  place-items: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 6px;
-  background: var(--surface-3);
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 700;
+  flex: none;
+  width: 18px;
+  color: var(--faint);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .round.on .num {
-  background: var(--accent);
-  color: var(--accent-ink);
+  color: var(--muted);
 }
 
 .round-title {
