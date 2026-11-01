@@ -84,6 +84,7 @@ function remove() {
           {{ preview.playingId.value === fragment.id ? t('stop') : t('listen') }}
         </button>
       </div>
+      <MediaPicker v-model="fragment.assetId" :kinds="['audio']" size="sm" :aria-label="t('file')" />
       <Waveform
         class="edit-wave"
         :bars="bars"
@@ -111,10 +112,6 @@ function remove() {
 
     <div class="inspector-group">
       <div class="inspector-row">
-        <span class="row-label">{{ t('file') }}</span>
-        <MediaPicker v-model="fragment.assetId" :kinds="['audio']" size="sm" :aria-label="t('file')" />
-      </div>
-      <div class="inspector-row">
         <span class="row-label">{{ t('onAnswer') }}</span>
         <ImageChip v-model="fragment.answerImageAssetId" :label="t('answerImage')" field />
       </div>
@@ -131,35 +128,37 @@ function remove() {
           :options="quiz.channels.map((c) => ({ value: c.id, label: c.name }))"
         />
       </div>
-      <div class="inspector-row">
-        <span class="row-label">{{ t('fadeIn') }}</span>
-        <span class="seconds">
-          <input
-            :value="fragment.fadeIn ?? 0"
-            type="number"
-            min="0"
-            step="0.1"
-            class="input input-sm"
-            :aria-label="t('fadeInSeconds')"
-            @change="fragment.fadeIn = numberFrom($event, 0)"
-          />
-          <span class="muted">{{ t('seconds') }}</span>
-        </span>
-      </div>
-      <div class="inspector-row">
-        <span class="row-label">{{ t('fadeOut') }}</span>
-        <span class="seconds">
-          <input
-            :value="fragment.fadeOut ?? 0"
-            type="number"
-            min="0"
-            step="0.1"
-            class="input input-sm"
-            :aria-label="t('fadeOutSeconds')"
-            @change="fragment.fadeOut = numberFrom($event, 0)"
-          />
-          <span class="muted">{{ t('seconds') }}</span>
-        </span>
+      <div class="times">
+        <label class="field">
+          <span class="label">{{ t('fadeIn') }}</span>
+          <span class="seconds">
+            <input
+              :value="fragment.fadeIn ?? 0"
+              type="number"
+              min="0"
+              step="0.1"
+              class="input input-sm"
+              :aria-label="t('fadeInSeconds')"
+              @change="fragment.fadeIn = numberFrom($event, 0)"
+            />
+            <span class="muted">{{ t('seconds') }}</span>
+          </span>
+        </label>
+        <label class="field">
+          <span class="label">{{ t('fadeOut') }}</span>
+          <span class="seconds">
+            <input
+              :value="fragment.fadeOut ?? 0"
+              type="number"
+              min="0"
+              step="0.1"
+              class="input input-sm"
+              :aria-label="t('fadeOutSeconds')"
+              @change="fragment.fadeOut = numberFrom($event, 0)"
+            />
+            <span class="muted">{{ t('seconds') }}</span>
+          </span>
+        </label>
       </div>
     </div>
 
@@ -218,7 +217,8 @@ function remove() {
 }
 
 .seconds .input {
-  width: 72px;
+  flex: 1;
+  min-width: 0;
 }
 
 .foot {
