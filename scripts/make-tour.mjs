@@ -5,6 +5,7 @@
 // Gebruik: pnpm tour [--force]
 //          node scripts/make-tour.mjs --quiz-only <map>   (alleen een verse quiz.json, voor tests)
 //          node scripts/make-tour.mjs --into <map>        (alles vers in een lege map, voor de build)
+//          --locale en                                    (de Engelse rondleiding, fixtures/tour.pubquiz)
 import { execFileSync } from 'node:child_process'
 import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve, sep } from 'node:path'
@@ -15,10 +16,19 @@ const argAfter = (flag) => {
   const index = process.argv.indexOf(flag)
   return index === -1 ? null : (process.argv[index + 1] ?? '')
 }
+// De taal van alle teksten, bestandsnamen en mappen; de app zet de rondleiding in de taal van de
+// Mac klaar (`installTour` in src/main/controller.ts).
+const locale = argAfter('--locale') ?? 'nl'
+if (locale !== 'nl' && locale !== 'en') throw new Error('--locale moet nl of en zijn')
+/** De Nederlandse of de Engelse tekst. */
+const L = (nl, en) => (locale === 'en' ? en : nl)
 const quizOnly = argAfter('--quiz-only') !== null
 // Voor de build: altijd vers, zodat de app nooit een aangepaste of verouderde rondleiding meekrijgt.
 const into = argAfter('--into')
-const quizDir = argAfter('--quiz-only') ?? into ?? join(root, 'fixtures', 'rondleiding.pubquiz')
+const quizDir =
+  argAfter('--quiz-only') ??
+  into ??
+  join(root, 'fixtures', L('rondleiding.pubquiz', 'tour.pubquiz'))
 if (!quizDir) throw new Error('Gebruik: --quiz-only <map> of --into <map>')
 // De map wordt eerst leeggemaakt; alleen binnen dist/, zodat een verkeerd pad niets wist.
 if (into && !resolve(into).startsWith(join(root, 'dist') + sep)) {
@@ -39,6 +49,19 @@ const fontfile = font ? `fontfile='${font}':` : ''
 const text = (label, size, color = 'white', dy = 0) =>
   `drawtext=${fontfile}text='${label}':fontcolor=${color}:fontsize=${size}:` +
   `x=(w-text_w)/2:y=(h-text_h)/2+${dy}`
+
+/** Bestandsnamen in de taal van de rondleiding; de id's in quiz.json blijven Nederlands. */
+const FILE = {
+  background: L('achtergrond.m4a', 'background.m4a'),
+  breakMusic: L('pauzemuziek.m4a', 'break-music.m4a'),
+  welcomeLoop: L('welkom-loop.mp4', 'welcome-loop.mp4'),
+  musicLoop: L('muziek-loop.mp4', 'music-loop.mp4'),
+  breakLoop: L('pauze-loop.mp4', 'break-loop.mp4'),
+  clock: L('klokslagen.mp4', 'clock-strikes.mp4'),
+  logo: 'logo.png',
+  blueAndYellow: L('blauw-en-geel.png', 'blue-and-yellow.png'),
+  green: L('groen.png', 'green.png')
+}
 
 function ffmpeg(output, args, input) {
   const target = join(mediaDir, output)
@@ -250,7 +273,7 @@ const background = loopMusic({
   pattern: [0, 1, 2, 3, 2, 1, 2, 1],
   arpTimbre: PIANO
 })
-ffmpeg('achtergrond.m4a', [...pcmIn, ...aacOut], pcm(background, 0.7))
+ffmpeg(FILE.background, [...pcmIn, ...aacOut], pcm(background, 0.7))
 
 const breakMusic = loopMusic({
   chords: [
@@ -264,18 +287,19 @@ const breakMusic = loopMusic({
   pattern: [0, 2, 1, 2, 3, 2, 1, 2],
   arpTimbre: KEYS
 })
-ffmpeg('pauzemuziek.m4a', [...pcmIn, ...aacOut], pcm(breakMusic, 0.7))
+ffmpeg(FILE.breakMusic, [...pcmIn, ...aacOut], pcm(breakMusic, 0.7))
 
 const SONGS = [
   {
-    file: 'vader-jacob.m4a',
-    answer: 'Vader Jacob',
+    file: L('vader-jacob.m4a', 'frere-jacques.m4a'),
+    answer: L('Vader Jacob', 'Frère Jacques'),
     audio: melody('C4 D4 E4 C4 C4 D4 E4 C4 E4 F4 G4*2 E4 F4 G4*2', 120, PIANO)
   },
   {
-    file: 'kortjakje.m4a',
-    answer: 'Altijd is Kortjakje ziek',
-    cover: ['Altijd is', 'Kortjakje ziek'],
+    file: L('kortjakje.m4a', 'twinkle-twinkle.m4a'),
+    answer: L('Altijd is Kortjakje ziek', 'Twinkle, Twinkle, Little Star'),
+    // Zonder komma's: die scheiden de filters van ffmpeg.
+    cover: L(['Altijd is', 'Kortjakje ziek'], ['Twinkle Twinkle', 'Little Star']),
     audio: melody('C4 C4 G4 G4 A4 A4 G4*2 F4 F4 E4 E4 D4 D4 C4*2', 110, MUSIC_BOX, 12)
   },
   {
@@ -341,7 +365,7 @@ const glow = (phase, rx, ry, size) =>
   `exp(-(pow(X-W*(0.5+${rx}*cos(2*PI*T/20+${phase})),2)+pow(Y-H*(0.5+${ry}*sin(2*PI*T/20+${phase})),2))/(2*pow(W*${size},2)))`
 const amber = glow(0, 0.32, 0.28, 0.26)
 const blue = glow(3.4, 0.3, 0.26, 0.24)
-ffmpeg('welkom-loop.mp4', [
+ffmpeg(FILE.welcomeLoop, [
   '-f',
   'lavfi',
   '-i',
@@ -353,7 +377,7 @@ ffmpeg('welkom-loop.mp4', [
 
 // Muziekronde: het spectrum van de achtergrondmuziek, in de kleuren van de app.
 ffmpeg(
-  'muziek-loop.mp4',
+  FILE.musicLoop,
   [
     ...pcmIn,
     '-filter_complex',
@@ -365,7 +389,7 @@ ffmpeg(
   pcm(background)
 )
 
-ffmpeg('pauze-loop.mp4', [
+ffmpeg(FILE.breakLoop, [
   '-f',
   'lavfi',
   '-i',
@@ -386,7 +410,7 @@ const halo = `(1-${disc})*exp(-(hypot(X-W/2,Y-H/2)-H*0.3)/(H*0.07))`
 const channel = (base, dim, bright) =>
   `${base}+${disc}*(${dim - base}+${bright - dim}*${strike})+${halo}*${bright - base}*0.6*${strike}`
 ffmpeg(
-  'klokslagen.mp4',
+  FILE.clock,
   [
     '-f',
     'lavfi',
@@ -420,7 +444,7 @@ const still = (size, color = '0x0f1420') => [
 // scherm, dus op een 21:9-scherm valt er boven en onder 13% af en op een 4:3-beamer links en
 // rechts; het logo staat daarom zo ver van de rand dat het altijd in beeld blijft.
 const center = 'exp(-(pow(X-W/2,2)+pow(Y-H/2,2))/(2*pow(W*0.3,2)))'
-ffmpeg('logo.png', [
+ffmpeg(FILE.logo, [
   ...still('1280x720'),
   '-vf',
   `format=rgb24,geq=r='15+60*${center}':g='20+38*${center}':b='32+14*${center}',` +
@@ -438,11 +462,11 @@ function discs(file, items) {
     `format=rgba,geq=r='${mix(0)}':g='${mix(1)}':b='${mix(2)}':a='255*gt(${alpha},0)'`
   ])
 }
-discs('blauw-en-geel.png', [
+discs(FILE.blueAndYellow, [
   [0.34, [47, 111, 228]],
   [0.66, [255, 214, 10]]
 ])
-discs('groen.png', [[0.5, [43, 179, 74]]])
+discs(FILE.green, [[0.5, [43, 179, 74]]])
 
 // Vlaggen: drie banen, of een eigen tekening.
 const bands = (direction, colors) => {
@@ -453,29 +477,35 @@ const bands = (direction, colors) => {
       : `drawbox=x=0:y=${i * 200}:w=900:h=200:color=${color}:t=fill`
   return [...still('900x600', a), '-vf', `${box(1, b)},${box(2, c)}`]
 }
+// `key` geeft de id's in quiz.json; de bestandsnaam volgt de taal.
 const FLAGS = [
   {
-    file: 'vlag-italie.png',
-    country: 'Italië',
+    key: 'italie',
+    file: L('vlag-italie.png', 'flag-italy.png'),
+    country: L('Italië', 'Italy'),
     args: bands('vertical', ['0x009246', '0xffffff', '0xce2b37'])
   },
   {
-    file: 'vlag-ierland.png',
-    country: 'Ierland',
+    key: 'ierland',
+    file: L('vlag-ierland.png', 'flag-ireland.png'),
+    country: L('Ierland', 'Ireland'),
     args: bands('vertical', ['0x169b62', '0xffffff', '0xff883e'])
   },
   {
-    file: 'vlag-belgie.png',
-    country: 'België',
+    key: 'belgie',
+    file: L('vlag-belgie.png', 'flag-belgium.png'),
+    country: L('België', 'Belgium'),
     args: bands('vertical', ['0x2d2926', '0xfdda24', '0xef3340'])
   },
   {
-    file: 'vlag-oostenrijk.png',
-    country: 'Oostenrijk',
+    key: 'oostenrijk',
+    file: L('vlag-oostenrijk.png', 'flag-austria.png'),
+    country: L('Oostenrijk', 'Austria'),
     args: bands('horizontal', ['0xc8102e', '0xffffff', '0xc8102e'])
   },
   {
-    file: 'vlag-japan.png',
+    key: 'japan',
+    file: L('vlag-japan.png', 'flag-japan.png'),
     country: 'Japan',
     crop: '300:200:500:150',
     args: [
@@ -485,8 +515,9 @@ const FLAGS = [
     ]
   },
   {
-    file: 'vlag-zweden.png',
-    country: 'Zweden',
+    key: 'zweden',
+    file: L('vlag-zweden.png', 'flag-sweden.png'),
+    country: L('Zweden', 'Sweden'),
     crop: '300:200:220:180',
     args: [
       ...still('960x600', '0x006aa7'),
@@ -495,11 +526,12 @@ const FLAGS = [
     ]
   }
 ]
+const cropFile = (flag) => flag.file.replace('.png', L('-uitsnede.png', '-crop.png'))
 for (const flag of FLAGS) {
   ffmpeg(flag.file, flag.args)
   // Een uitsnede als vraag; de hele vlag komt pas in de antwoordenronde in beeld.
   if (flag.crop) {
-    ffmpeg(flag.file.replace('.png', '-uitsnede.png'), [
+    ffmpeg(cropFile(flag), [
       '-i',
       join(mediaDir, flag.file),
       '-vf',
@@ -558,22 +590,22 @@ const round = (fields) => ({
 
 const quiz = {
   schemaVersion: 3,
-  id: 'rondleiding',
-  title: 'Rondleiding',
+  id: L('rondleiding', 'tour'),
+  title: L('Rondleiding', 'Tour'),
   folders: [
-    { id: 'videos', name: "Video's" },
-    { id: 'muziek', name: 'Muziek' },
-    { id: 'liedjes', name: 'Liedjes' },
-    { id: 'vlaggen', name: 'Vlaggen' },
-    { id: 'afbeeldingen', name: 'Afbeeldingen' }
+    { id: 'videos', name: L("Video's", 'Videos') },
+    { id: 'muziek', name: L('Muziek', 'Music') },
+    { id: 'liedjes', name: L('Liedjes', 'Songs') },
+    { id: 'vlaggen', name: L('Vlaggen', 'Flags') },
+    { id: 'afbeeldingen', name: L('Afbeeldingen', 'Pictures') }
   ],
   assets: [
-    asset('welkom-loop', 'video', 'welkom-loop.mp4', 'videos', 20),
-    asset('muziek-loop', 'video', 'muziek-loop.mp4', 'videos', durationOf(background)),
-    asset('pauze-loop', 'video', 'pauze-loop.mp4', 'videos', 20),
-    asset('klokslagen', 'video', 'klokslagen.mp4', 'videos', CLOCK_SECONDS),
-    asset('achtergrond', 'audio', 'achtergrond.m4a', 'muziek', durationOf(background)),
-    asset('pauzemuziek', 'audio', 'pauzemuziek.m4a', 'muziek', durationOf(breakMusic)),
+    asset('welkom-loop', 'video', FILE.welcomeLoop, 'videos', 20),
+    asset('muziek-loop', 'video', FILE.musicLoop, 'videos', durationOf(background)),
+    asset('pauze-loop', 'video', FILE.breakLoop, 'videos', 20),
+    asset('klokslagen', 'video', FILE.clock, 'videos', CLOCK_SECONDS),
+    asset('achtergrond', 'audio', FILE.background, 'muziek', durationOf(background)),
+    asset('pauzemuziek', 'audio', FILE.breakMusic, 'muziek', durationOf(breakMusic)),
     ...SONGS.map((song, i) =>
       asset(`liedje-${i + 1}`, 'audio', song.file, 'liedjes', durationOf(song.audio))
     ),
@@ -582,134 +614,197 @@ const quiz = {
     ),
     ...FLAGS.map((flag, i) => asset(`vlag-${i + 1}`, 'image', flag.file, 'vlaggen')),
     ...FLAGS.filter((f) => f.crop).map((flag) =>
-      asset(
-        `${flag.file.replace('.png', '')}-uitsnede`,
-        'image',
-        flag.file.replace('.png', '-uitsnede.png'),
-        'vlaggen'
-      )
+      asset(`vlag-${flag.key}-uitsnede`, 'image', cropFile(flag), 'vlaggen')
     ),
-    asset('logo', 'image', 'logo.png', 'afbeeldingen'),
-    asset('blauw-en-geel', 'image', 'blauw-en-geel.png', 'afbeeldingen'),
-    asset('groen', 'image', 'groen.png', 'afbeeldingen')
+    asset('logo', 'image', FILE.logo, 'afbeeldingen'),
+    asset('blauw-en-geel', 'image', FILE.blueAndYellow, 'afbeeldingen'),
+    asset('groen', 'image', FILE.green, 'afbeeldingen')
   ],
   screens: [
-    { id: 'beamer', name: 'Beamer', default: { type: 'video', assetId: 'welkom-loop' } },
-    { id: 'tv', name: 'TV bar', default: { type: 'image', assetId: 'logo' } }
+    {
+      id: 'beamer',
+      name: L('Beamer', 'Projector'),
+      default: { type: 'video', assetId: 'welkom-loop' }
+    },
+    { id: 'tv', name: L('TV bar', 'Bar TV'), default: { type: 'image', assetId: 'logo' } }
   ],
   channels: [
-    { id: 'zaal', name: 'Zaal', volume: 0.9 },
-    { id: 'fragmenten', name: 'Fragmenten', volume: 1 }
+    { id: 'zaal', name: L('Zaal', 'Room'), volume: 0.9 },
+    { id: 'fragmenten', name: L('Fragmenten', 'Clips'), volume: 1 }
   ],
   background: { assetId: 'achtergrond', channelId: 'zaal', volume: 0.5, duckTo: 0.25 },
   rounds: [
     round({
       id: 'welkom',
-      title: 'Welkom',
-      hostNotes:
+      title: L('Welkom', 'Welcome'),
+      hostNotes: L(
         'Alleen jij ziet deze notities. Blader met → door de slides en start ronde 1 met Enter. ' +
-        'In de mixer rechts zet je het volume per uitgang.',
+          'In de mixer rechts zet je het volume per uitgang.',
+        'Only you can see these notes. Press → to go through the slides and Return to start ' +
+          'round 1. Under Sound on the right you set the volume of each output.'
+      ),
       slides: [
         slide(
           'welkom-1',
           'title',
-          'Welkom bij QuizNote',
-          'Een korte quiz die laat zien wat de app kan.\nDruk op → voor de volgende slide.',
+          L('Welkom bij QuizNote', 'Welcome to QuizNote'),
+          L(
+            'Een korte quiz die laat zien wat de app kan.\nDruk op → voor de volgende slide.',
+            'A short quiz that shows what the app can do.\nPress → for the next slide.'
+          ),
           beamerOnly
         ),
         slide(
           'welkom-2',
           'title',
-          'Elk scherm z’n eigen beeld',
-          'Deze slides staan alleen op de beamer; de tv in de bar houdt zijn logo.\n' +
-            'Tussen de rondes tonen ze allebei hun standaard.',
+          L('Elk scherm z’n eigen beeld', 'Every screen its own picture'),
+          L(
+            'Deze slides staan alleen op de beamer; de tv in de bar houdt zijn logo.\n' +
+              'Tussen de rondes tonen ze allebei hun standaard.',
+            'These slides are only on the projector; the TV in the bar keeps its logo.\n' +
+              'Between rounds, both show their default.'
+          ),
           beamerOnly
         ),
         slide(
           'welkom-3',
           'title',
-          'Achtergrondmuziek',
-          'Speelt de hele avond door.\n' +
-            'Elke ronde kiest zelf: doorspelen, zachter, pauzeren of andere muziek.',
+          L('Achtergrondmuziek', 'Background music'),
+          L(
+            'Speelt de hele avond door.\n' +
+              'Elke ronde kiest zelf: doorspelen, zachter, pauzeren of andere muziek.',
+            'Plays all night long.\n' +
+              'Each round chooses: keep playing, quieter, pause or other music.'
+          ),
           beamerOnly
         ),
         slide(
           'welkom-4',
           'title',
-          'Bedienen',
-          'Enter start de volgende ronde, E beëindigt hem.\n' +
-            'B zet alle schermen op zwart, M zet het geluid uit.',
+          L('Bedienen', 'Controls'),
+          L(
+            'Enter start de volgende ronde, E beëindigt hem.\n' +
+              'B zet alle schermen op zwart, M zet het geluid uit.',
+            'Return starts the next round, E ends it.\n' +
+              'B blacks out all screens, M mutes the sound.'
+          ),
           beamerOnly
         ),
-        slide('welkom-5', 'title', 'Klaar voor ronde 1?', 'Druk op Enter.', beamerOnly)
+        slide(
+          'welkom-5',
+          'title',
+          L('Klaar voor ronde 1?', 'Ready for round 1?'),
+          L('Druk op Enter.', 'Press Return.'),
+          beamerOnly
+        )
       ]
     }),
     round({
       id: 'vragen',
-      title: 'Ronde 1: algemene kennis',
+      title: L('Ronde 1: algemene kennis', 'Round 1: general knowledge'),
       background: 'duck',
-      hostNotes:
+      hostNotes: L(
         'Vraag 3 lees je zelf voor: op het scherm staat alleen het nummer. ' +
-        'De achtergrondmuziek speelt in deze ronde zachter. ' +
-        'Onder Afdrukken maak je van deze vragen een antwoordformulier.',
+          'De achtergrondmuziek speelt in deze ronde zachter. ' +
+          'Onder Afdrukken maak je van deze vragen een antwoordformulier.',
+        'You read question 3 out yourself: the screen only shows its number. ' +
+          'The background music plays quieter in this round. ' +
+          'Under Print you turn these questions into an answer sheet.'
+      ),
       slides: [
         slide(
           'vragen-titel',
           'title',
-          'Ronde 1: algemene kennis',
-          'Een vraag per slide, met het antwoord erbij.\n' +
-            'Bij vraag 3 staat alleen het nummer in beeld: die leest de quizmaster voor.'
+          L('Ronde 1: algemene kennis', 'Round 1: general knowledge'),
+          L(
+            'Een vraag per slide, met het antwoord erbij.\n' +
+              'Bij vraag 3 staat alleen het nummer in beeld: die leest de quizmaster voor.',
+            'One question per slide, with its answer.\n' +
+              'Question 3 only shows its number: the quizmaster reads it out.'
+          )
         ),
-        slide('vragen-1', 'question', 'Vraag 1', 'Wat is de hoofdstad van Australië?', {
-          answer: 'Canberra'
-        }),
-        slide('vragen-2', 'question', 'Vraag 2', 'Welke kleur krijg je als je deze twee mengt?', {
-          imageAssetId: 'blauw-en-geel',
-          answer: 'Groen',
-          answerImageAssetId: 'groen'
-        }),
+        slide(
+          'vragen-1',
+          'question',
+          L('Vraag 1', 'Question 1'),
+          L('Wat is de hoofdstad van Australië?', 'What is the capital of Australia?'),
+          { answer: 'Canberra' }
+        ),
+        slide(
+          'vragen-2',
+          'question',
+          L('Vraag 2', 'Question 2'),
+          L(
+            'Welke kleur krijg je als je deze twee mengt?',
+            'What colour do you get when you mix these two?'
+          ),
+          {
+            imageAssetId: 'blauw-en-geel',
+            answer: L('Groen', 'Green'),
+            answerImageAssetId: 'groen'
+          }
+        ),
         slide(
           'vragen-3',
           'question',
-          'Vraag 3',
-          'Hoeveel spelers van één team staan er bij voetbal op het veld?',
+          L('Vraag 3', 'Question 3'),
+          L(
+            'Hoeveel spelers van één team staan er bij voetbal op het veld?',
+            'How many players of one team are on the pitch in football?'
+          ),
           { numberOnly: true, answer: '11' }
         ),
-        slide('vragen-4', 'question', 'Vraag 4', 'Welk element heeft het symbool Fe?', {
-          answer: 'IJzer'
-        }),
+        slide(
+          'vragen-4',
+          'question',
+          L('Vraag 4', 'Question 4'),
+          L('Welk element heeft het symbool Fe?', 'Which element has the symbol Fe?'),
+          { answer: L('IJzer', 'Iron') }
+        ),
         slide(
           'vragen-5',
           'question',
-          'Vraag 5',
-          'In welk jaar zette de eerste mens voet op de maan?',
+          L('Vraag 5', 'Question 5'),
+          L(
+            'In welk jaar zette de eerste mens voet op de maan?',
+            'In what year did the first person set foot on the moon?'
+          ),
           { answer: '1969' }
         )
       ]
     }),
     round({
       id: 'muziek',
-      title: 'Ronde 2: muziek',
+      title: L('Ronde 2: muziek', 'Round 2: music'),
       screens: { beamer: { type: 'video', assetId: 'muziek-loop' } },
       fragmentScreens: ['beamer'],
       background: 'pause',
-      hostNotes:
+      hostNotes: L(
         'Druk op → of 1 voor het eerste liedje. A speelt ze allemaal na elkaar, met aftellen ' +
-        'ertussen; spatie stopt. Liedje 5 en 6 zijn ingekort en faden uit. ' +
-        'De achtergrondmuziek staat in deze ronde op pauze.',
+          'ertussen; spatie stopt. Liedje 5 en 6 zijn ingekort en faden uit. ' +
+          'De achtergrondmuziek staat in deze ronde op pauze.',
+        'Press → or 1 for the first song. A plays them all in a row, with a countdown in ' +
+          'between; Space stops. Songs 5 and 6 are shortened and fade out. ' +
+          'The background music is paused in this round.'
+      ),
       slides: [
         slide(
           'muziek-titel',
           'title',
-          'Ronde 2: muziek',
-          'Welk liedje hoor je?\n' +
-            'De quizmaster speelt ze met 1–6 of →, of in één reeks met aftellen (A).\n' +
-            'Het nummer staat alleen op de beamer.'
+          L('Ronde 2: muziek', 'Round 2: music'),
+          L(
+            'Welk liedje hoor je?\n' +
+              'De quizmaster speelt ze met 1–6 of →, of in één reeks met aftellen (A).\n' +
+              'Het nummer staat alleen op de beamer.',
+            'Which song do you hear?\n' +
+              'The quizmaster plays them with 1–6 or →, or in one sequence with a countdown (A).\n' +
+              'The number is only on the projector.'
+          )
         )
       ],
       fragments: SONGS.map((song, i) => ({
         id: `liedje-${i + 1}`,
-        label: `Liedje ${i + 1}`,
+        label: L(`Liedje ${i + 1}`, `Song ${i + 1}`),
         assetId: `liedje-${i + 1}`,
         channelId: 'fragmenten',
         ...(song.end !== undefined ? { start: 0, end: song.end } : {}),
@@ -721,41 +816,56 @@ const quiz = {
     }),
     round({
       id: 'pauze',
-      title: 'Pauze',
+      title: L('Pauze', 'Break'),
       screens: {
         beamer: { type: 'video', assetId: 'pauze-loop' },
         tv: { type: 'video', assetId: 'pauze-loop' }
       },
       background: { replaceAssetId: 'pauzemuziek' },
-      hostNotes: 'Tijdens de pauze speelt andere muziek. Daarna start Enter de volgende ronde.',
+      hostNotes: L(
+        'Tijdens de pauze speelt andere muziek. Daarna start Enter de volgende ronde.',
+        'Other music plays during the break. Afterwards, Return starts the next round.'
+      ),
       slides: [
         slide(
           'pauze-titel',
           'title',
-          'Pauze',
-          'Even andere muziek, en alle schermen tonen de pauze-loop.\n' +
-            'Na de pauze start Enter de volgende ronde.'
+          L('Pauze', 'Break'),
+          L(
+            'Even andere muziek, en alle schermen tonen de pauze-loop.\n' +
+              'Na de pauze start Enter de volgende ronde.',
+            'Some other music, and all screens show the break loop.\n' +
+              'After the break, Return starts the next round.'
+          )
         )
       ]
     }),
     round({
       id: 'vlaggen',
-      title: 'Ronde 3: vlaggen',
+      title: L('Ronde 3: vlaggen', 'Round 3: flags'),
       slideLoopSeconds: 5,
-      hostNotes:
+      hostNotes: L(
         'De vlaggen wisselen na de titelslide vanzelf, elke 5 seconden. Met L pauzeer je de ' +
-        'loop, met ← → blader je zelf. In de antwoordenronde komt bij 5 en 6 de hele vlag in beeld.',
+          'loop, met ← → blader je zelf. In de antwoordenronde komt bij 5 en 6 de hele vlag in beeld.',
+        'After the title slide the flags change by themselves, every 5 seconds. L pauses the ' +
+          'loop, ← → let you go through them yourself. In the answers round, 5 and 6 show the ' +
+          'whole flag.'
+      ),
       slides: [
         slide(
           'vlaggen-titel',
           'title',
-          'Ronde 3: vlaggen',
-          'Van welk land is deze vlag?\n' +
-            'De vlaggen lopen vanzelf rond. Bij 5 en 6 zie je maar een stukje.'
+          L('Ronde 3: vlaggen', 'Round 3: flags'),
+          L(
+            'Van welk land is deze vlag?\n' +
+              'De vlaggen lopen vanzelf rond. Bij 5 en 6 zie je maar een stukje.',
+            'Which country does this flag belong to?\n' +
+              'The flags go round by themselves. Of 5 and 6 you only see a part.'
+          )
         ),
         ...FLAGS.map((flag, i) =>
           slide(`vlaggen-${i + 1}`, 'image', '', '', {
-            imageAssetId: flag.crop ? `${flag.file.replace('.png', '')}-uitsnede` : `vlag-${i + 1}`,
+            imageAssetId: flag.crop ? `vlag-${flag.key}-uitsnede` : `vlag-${i + 1}`,
             backdrop: { color: '#000000' },
             answer: flag.country,
             ...(flag.crop ? { answerImageAssetId: `vlag-${i + 1}` } : {})
@@ -765,76 +875,107 @@ const quiz = {
     }),
     round({
       id: 'kijken',
-      title: 'Ronde 4: kijken en luisteren',
+      title: L('Ronde 4: kijken en luisteren', 'Round 4: watch and listen'),
       screens: { beamer: { type: 'video', assetId: 'klokslagen', volume: 1 } },
       background: 'pause',
-      hostNotes:
+      hostNotes: L(
         'Het geluid van deze video komt uit de speakers van de beamer; kies die bij Show ' +
-        'voorbereiden. Druk op → voor de vraag: die staat over de video heen. ' +
-        'Heeft een standaardvideo geluid, dan zet je dat per ronde uit bij Geluid van de video.',
+          'starten. Druk op → voor de vraag: die staat over de video heen. ' +
+          'Heeft een standaardvideo geluid, dan zet je dat per ronde uit bij Geluid van de video.',
+        "The sound of this video comes from the projector's speakers; choose them at Start " +
+          'show. Press → for the question: it appears on top of the video. ' +
+          'If a default video has sound, you turn it off per round at Video sound.'
+      ),
       slides: [
         slide(
           'kijken-titel',
           'title',
-          'Ronde 4: kijken en luisteren',
-          'Deze video speelt zijn geluid af via de speakers van de beamer zelf.'
+          L('Ronde 4: kijken en luisteren', 'Round 4: watch and listen'),
+          L(
+            'Deze video speelt zijn geluid af via de speakers van de beamer zelf.',
+            "This video plays its sound through the projector's own speakers."
+          )
         ),
-        slide('kijken-1', 'question', 'Vraag 1', 'Hoe vaak slaat de klok?', {
-          backdrop: 'over-video',
-          answer: '7'
-        })
+        slide(
+          'kijken-1',
+          'question',
+          L('Vraag 1', 'Question 1'),
+          L('Hoe vaak slaat de klok?', 'How many times does the clock strike?'),
+          { backdrop: 'over-video', answer: '7' }
+        )
       ]
     }),
     round({
       id: 'antwoorden',
-      title: 'Antwoorden',
+      title: L('Antwoorden', 'Answers'),
       answersFor: ['vragen', 'muziek', 'vlaggen', 'kijken'],
       fragmentScreens: ['beamer'],
       background: 'duck',
-      hostNotes:
+      hostNotes: L(
         '← → lopen door de antwoorden van ronde 1 tot en met 4: eerst de vraag, dan het ' +
-        'antwoord. Bij de liedjes, vraag 2 en vlag 5 en 6 komt een eigen afbeelding in beeld.',
+          'antwoord. Bij de liedjes, vraag 2 en vlag 5 en 6 komt een eigen afbeelding in beeld.',
+        '← → go through the answers of rounds 1 to 4: first the question, then the answer. ' +
+          'The songs, question 2 and flags 5 and 6 show a picture of their own.'
+      ),
       slides: [
         slide(
           'antwoorden-titel',
           'title',
-          'Antwoorden',
-          'Met → komt eerst de vraag terug (een liedje speelt opnieuw), daarna het antwoord.\n' +
-            'Deze ronde zet je waar je wilt, ook pas aan het eind.'
+          L('Antwoorden', 'Answers'),
+          L(
+            'Met → komt eerst de vraag terug (een liedje speelt opnieuw), daarna het antwoord.\n' +
+              'Deze ronde zet je waar je wilt, ook pas aan het eind.',
+            'With → the question comes back first (a song plays again), then the answer.\n' +
+              'You put this round wherever you like, even at the very end.'
+          )
         )
       ]
     }),
     round({
       id: 'slot',
-      title: 'Tot slot',
-      hostNotes:
+      title: L('Tot slot', 'Finally'),
+      hostNotes: L(
         'Stop de show met Stop show. Valt de app tijdens een show uit, dan kun je bij het ' +
-        'opnieuw openen verder waar je was.',
+          'opnieuw openen verder waar je was.',
+        'End the show with Stop show. If the app quits during a show, you can carry on ' +
+          'where you were when you open it again.'
+      ),
       slides: [
         slide(
           'slot-1',
           'title',
-          'Afdrukken',
-          'Een antwoordformulier voor de teams, een nakijkformulier en vragenkaarten voor jou.\n' +
-            'In de editor onder Afdrukken.',
+          L('Afdrukken', 'Print'),
+          L(
+            'Een antwoordformulier voor de teams, een nakijkformulier en vragenkaarten voor jou.\n' +
+              'In de editor onder Afdrukken.',
+            'An answer sheet for the teams, a marking sheet and question cards for you.\n' +
+              'In the editor under Print.'
+          ),
           beamerOnly
         ),
         slide(
           'slot-2',
           'title',
-          'Show voorbereiden',
-          'Koppel je schermen en speakers, speel een testtoon en zie vooraf of er bestanden ontbreken.',
+          L('Show starten', 'Start show'),
+          L(
+            'Koppel je schermen en speakers, speel een testtoon en zie vooraf of er bestanden ontbreken.',
+            'Connect your screens and speakers, play a test tone and see beforehand whether any files are missing.'
+          ),
           beamerOnly
         ),
         slide(
           'slot-3',
           'title',
-          'Je eigen quiz',
-          'Sleep je video’s, muziek en foto’s in Media en klik je rondes in elkaar.\n' +
-            'Of begin met Nieuwe quiz op basis van deze.',
+          L('Je eigen quiz', 'Your own quiz'),
+          L(
+            'Sleep je video’s, muziek en foto’s in Media en klik je rondes in elkaar.\n' +
+              'Of begin met Nieuwe quiz op basis van deze.',
+            'Drag your videos, music and photos into Media and click your rounds together.\n' +
+              'Or start with New quiz based on this one.'
+          ),
           beamerOnly
         ),
-        slide('slot-4', 'title', 'Veel plezier!', '', beamerOnly)
+        slide('slot-4', 'title', L('Veel plezier!', 'Have fun!'), '', beamerOnly)
       ]
     })
   ]

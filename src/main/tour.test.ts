@@ -1,14 +1,17 @@
 import { describe, expect, it } from 'vitest'
 import { hasAnswers } from '@shared/factory'
+import { LOCALES } from '@shared/i18n'
 import { migrateQuiz } from '@shared/migrate'
 import { answerItems, findAssetUsages, findBrokenReferences } from '@shared/resolve'
 import { freshTourQuiz } from './demo-fixture'
 
-const tour = migrateQuiz(freshTourQuiz())
-const round = (id: string) => tour.rounds.find((r) => r.id === id)!
-const slides = tour.rounds.flatMap((r) => r.slides)
+const tours = { nl: migrateQuiz(freshTourQuiz('nl')), en: migrateQuiz(freshTourQuiz('en')) }
 
-describe('rondleiding', () => {
+describe.each(LOCALES)('rondleiding (%s)', (locale) => {
+  const tour = tours[locale]
+  const round = (id: string) => tour.rounds.find((r) => r.id === id)!
+  const slides = tour.rounds.flatMap((r) => r.slides)
+
   it('is een geldige quiz die al zijn bestanden gebruikt, elk in een map', () => {
     expect(findBrokenReferences(tour)).toEqual([])
     expect(tour.assets.filter((a) => !findAssetUsages(tour, a.id).length)).toEqual([])
@@ -60,5 +63,54 @@ describe('rondleiding', () => {
     const index = tour.rounds.indexOf(answers)
     expect(sources.every((r) => tour.rounds.indexOf(r) < index)).toBe(true)
     expect(answerItems(tour, answers).every((item) => item.answer)).toBe(true)
+  })
+})
+
+const SAME_SONGS = [
+  'Happy Birthday',
+  'Jingle Bells',
+  'Ode an die Freude (Beethoven)',
+  'Für Elise (Beethoven)'
+]
+
+describe('Engelse rondleiding', () => {
+  const { nl, en } = tours
+  // Alle teksten van de quiz, zonder id's en bestandsnamen.
+  const texts = (quiz: typeof en) => {
+    const out: string[] = [quiz.title, ...quiz.folders.map((f) => f.name)]
+    out.push(...quiz.screens.map((s) => s.name), ...quiz.channels.map((c) => c.name))
+    for (const r of quiz.rounds) {
+      out.push(r.title, r.hostNotes ?? '')
+      for (const s of r.slides) out.push(s.title ?? '', s.body ?? '', s.answer ?? '')
+      for (const f of r.fragments) out.push(f.label ?? '', f.answer ?? '')
+    }
+    return out
+  }
+
+  it('heeft dezelfde opbouw als de Nederlandse, met andere teksten en bestandsnamen', () => {
+    const ids = (quiz: typeof en) => [
+      ...quiz.assets.map((a) => a.id),
+      ...quiz.rounds.flatMap((r) => [r.id, ...r.slides.map((s) => s.id)])
+    ]
+    expect(ids(en)).toEqual(ids(nl))
+    expect(en.title).toBe('Tour')
+    // Alleen antwoorden en titels van liedjes heten in beide talen hetzelfde.
+    const dutch = new Set(texts(nl))
+    expect(new Set(texts(en).filter((text) => text && dutch.has(text)))).toEqual(
+      new Set(['11', '1969', '7', 'Canberra', 'Japan', ...SAME_SONGS])
+    )
+    // De bestanden van die liedjes, en het logo.
+    const files = new Set(nl.assets.map((a) => a.file))
+    expect(en.assets.filter((a) => files.has(a.file)).map((a) => a.id)).toEqual([
+      'liedje-3',
+      'liedje-4',
+      'liedje-5',
+      'liedje-6',
+      'hoes-3',
+      'hoes-4',
+      'hoes-5',
+      'hoes-6',
+      'logo'
+    ])
   })
 })

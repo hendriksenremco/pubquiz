@@ -191,3 +191,9 @@ export const AI_ERRORS = defineMessages(
     }
   }
 )
+
+/**
+ * De map van de meegeleverde rondleiding: in de app (`pnpm tour:build`), tijdens het ontwikkelen
+ * in `fixtures/` (in kleine letters), en in de bibliotheek na de eerste start.
+ */
+export const TOUR_MESSAGES = defineMessages({ folder: 'Rondleiding' }, { en: { folder: 'Tour' } })

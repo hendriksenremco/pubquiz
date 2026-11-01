@@ -32,7 +32,7 @@ You need macOS, [Node.js](https://nodejs.org) 22, [pnpm](https://pnpm.io) 8 and 
 ```sh
 pnpm install
 pnpm demo                                       # creates fixtures/demo.pubquiz with test videos and tones
-pnpm tour                                       # creates fixtures/rondleiding.pubquiz, the tour
+pnpm tour                                       # creates the tour in Dutch and English (fixtures/rondleiding.pubquiz, tour.pubquiz)
 env -u ELECTRON_RUN_AS_NODE pnpm dev            # the app with hot reload
 ```
 

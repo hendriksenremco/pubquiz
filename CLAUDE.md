@@ -98,7 +98,7 @@ src/renderer/  Vue 3 en Pinia; index.html voor de app, remote.html voor de telef
 src/mcp/       MCP-server, wordt out/main/mcp.js
 e2e/           Playwright-tests van de gebouwde app
 scripts/       make-demo, make-tour (de rondleiding), install-app
-fixtures/      demo.pubquiz (werk van Remco!) en rondleiding.pubquiz (gemaakt door pnpm tour)
+fixtures/      demo.pubquiz (werk van Remco!), rondleiding.pubquiz en tour.pubquiz (gemaakt door pnpm tour)
 ```
 
 **Quizbestanden**
@@ -146,6 +146,7 @@ fixtures/      demo.pubquiz (werk van Remco!) en rondleiding.pubquiz (gemaakt do
 - Teksten die main en shared maken (vorige/volgende, "Slide 2 van 5", foutmeldingen voor de telefoon) staan in `src/shared/show-messages.ts`; geef de `Locale` mee.
 - Vensters op de Mac kennen de taal via `?locale=` in hun adres (`loadRoute`); in de renderer lees je hem uit `src/renderer/src/lib/locale.ts`. Al vertaald: wat er over de slide heen op een scherm staat (`SCREEN_MESSAGES`), en naam en uitleg van plug-ins (`text` in de definitie).
 - Het licht: de namen van kleuren en effecten staan in `src/shared/light-messages.ts` (`lightLabel`, `effectLabel` en `groupName` krijgen de `Locale` mee); het paneel om het licht met de hand te kiezen in `plugins/magichome/messages.ts`. Een onderdeel op de telefoon krijgt de taal als `locale` in `PhoneProps`.
+- De rondleiding: `scripts/make-tour.mjs --locale en` maakt de Engelse (`Tour.pubquiz`), met eigen teksten en bestandsnamen maar dezelfde id's. De app neemt hem mee en zet bij de eerste start die in de taal van de Mac klaar (`TOUR_MESSAGES` in `src/main/messages.ts`).
 - De pdf's: de teksten op de formulieren en vragenkaarten, hun bestandsnamen en de samenvatting per ronde ("2 vragen") staan in `src/shared/form-messages.ts` (`formFileName` en `itemSummary` krijgen de `Locale` mee).
 - De werkbalk van de app en de dialogen Nieuwe quiz, Met je AI… en Instellingen: `src/renderer/src/views/operator/operator-messages.ts`; de algemene onderdelen (keuzelijsten, media kiezen en bekijken, achtergrond van een slide) in `src/renderer/src/components/messages.ts`. "Vraag" op een slide met alleen het nummer staat in `SCREEN_MESSAGES`; `SlideView` krijgt op de telefoon de taal als `locale` mee.
 - De editor: de lijst met rondes (EditorView), Media, Quiz-instellingen, Afdrukken, de fragmenten, de slides (lijst en inspector) en de ronde zelf (RoundEditor, RoundSettings) in `src/renderer/src/views/editor/editor-messages.ts`.
