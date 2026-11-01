@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { quizLights, type Light, type LightStatus } from '@shared/light'
+import { computed } from 'vue'
+import { quizLights, type Light } from '@shared/light'
 import type { RemoteLight } from '@shared/remote'
 import Popover from '../../components/Popover.vue'
 import { useSession } from '../../stores/session'
@@ -9,37 +9,19 @@ import LightPanel from './LightPanel.vue'
 
 /**
  * In de werkbalk van de show: het licht met de hand kiezen, zoals op de afstandsbediening. Het
- * bolletje toont wat er nu brandt.
+ * bolletje toont wat er nu brandt, ook als het op de telefoon gekozen is.
  */
 const api = window.pubquiz
 const session = useSession()
-/** Ook een keuze op de telefoon zien. */
-const REFRESH_MS = 2000
 
-const status = ref<LightStatus | null>(null)
+const status = computed(() => session.statusOf('magichome'))
 const light = computed<RemoteLight | null>(() =>
   status.value && session.quiz ? { ...status.value, quiz: quizLights(session.quiz) } : null
 )
 
-async function load() {
-  status.value = (await api.pluginInvoke('magichome', 'status')) as LightStatus | null
-}
-
 async function choose(choice: Light | null) {
-  await api.pluginInvoke('magichome', 'choose', choice)
-  await load()
+  await api.pluginAct('magichome', 'choose', choice ? { ...choice } : null)
 }
-
-// Een andere ronde of slide kan een ander licht kiezen.
-watch(() => session.state, load)
-let timer: ReturnType<typeof setInterval> | null = null
-onMounted(() => {
-  void load()
-  timer = setInterval(() => void load(), REFRESH_MS)
-})
-onBeforeUnmount(() => {
-  if (timer) clearInterval(timer)
-})
 </script>
 
 <template>

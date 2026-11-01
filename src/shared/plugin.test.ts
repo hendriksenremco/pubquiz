@@ -1,7 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
 import { createQuiz, createRound, createShowState, createSlide } from './factory'
-import { definePlugin, pluginConfig, pluginData, resolvePluginData, setPluginData } from './plugin'
+import {
+  action,
+  definePlugin,
+  parseAction,
+  pluginConfig,
+  pluginData,
+  resolvePluginData,
+  setPluginData,
+  typeOnly
+} from './plugin'
 import { configOf } from './plugins'
 import type { ShowState } from './types'
 
@@ -10,7 +19,12 @@ const PLAYLIST = definePlugin({
   name: 'Proef',
   description: 'Alleen voor de tests.',
   config: z.object({ volume: z.number().catch(50).default(50) }).catch({ volume: 50 }),
-  data: z.object({ playlist: z.string() })
+  data: z.object({ playlist: z.string() }),
+  status: typeOnly<{ playing: boolean }>(),
+  actions: {
+    play: action<{ ok: boolean }>()(z.object({ track: z.number().int() })),
+    stop: action<null>()(z.undefined())
+  }
 })
 
 function setup() {
@@ -47,7 +61,14 @@ describe('pluginData', () => {
 
   it('zonder schema voor gegevens is er niets', () => {
     const { round } = setup()
-    const bare = definePlugin({ id: 'kaal', name: '', description: '', config: z.object({}) })
+    const bare = definePlugin({
+      id: 'kaal',
+      name: '',
+      description: '',
+      config: z.object({}),
+      status: typeOnly<null>(),
+      actions: {}
+    })
     round.plugins = { kaal: { x: 1 } }
     expect(pluginData(bare, round)).toBeUndefined()
   })
@@ -123,5 +144,21 @@ describe('pluginConfig', () => {
       undefined
     )
     expect(configOf({}, 'remote').key).toBeUndefined()
+  })
+})
+
+describe('parseAction', () => {
+  it('geeft de gecontroleerde invoer van een bekende actie', () => {
+    expect(parseAction(PLAYLIST, 'play', { track: 3, extra: true })).toEqual({
+      input: { track: 3 }
+    })
+    expect(parseAction(PLAYLIST, 'stop', undefined)).toEqual({ input: undefined })
+  })
+
+  it('weigert een onbekende actie of foute invoer', () => {
+    expect(parseAction(PLAYLIST, 'pause', undefined)).toBeNull()
+    expect(parseAction(PLAYLIST, 'toString', undefined)).toBeNull()
+    expect(parseAction(PLAYLIST, 'play', { track: 'drie' })).toBeNull()
+    expect(parseAction(PLAYLIST, 'stop', { track: 1 })).toBeNull()
   })
 })

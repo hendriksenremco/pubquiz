@@ -4,12 +4,20 @@
  */
 import { z } from 'zod'
 import { effectInfo } from './light-effects'
-import { EFFECT_MAX, EFFECT_MIN, type MagicHomeState } from './magichome'
 import {
+  EFFECT_MAX,
+  EFFECT_MIN,
+  type MagicHomeProbe,
+  type MagicHomeResult,
+  type MagicHomeState
+} from './magichome'
+import {
+  action,
   definePlugin,
   pluginData,
   resolvePluginData,
   setPluginData,
+  typeOnly,
   type HasPlugins
 } from './plugin'
 import type { Quiz, ShowState } from './types'
@@ -41,7 +49,16 @@ export const MAGICHOME = definePlugin({
     'Ledstrips met een MagicHome-controller een kleur of effect geven, per ronde en per slide.',
   /** Het adres van de controller, per Mac; leeg = nog niet ingesteld. */
   config: z.object({ host: z.string().catch('').default('') }).catch({ host: '' }),
-  data: z.object({ light: LightSchema })
+  data: z.object({ light: LightSchema }),
+  status: typeOnly<LightStatus>(),
+  actions: {
+    /** Tijdens de show met de hand een licht kiezen; null = weer het licht van de show. */
+    choose: action<MagicHomeResult>()(LightSchema.nullable()),
+    /** Buiten de show een licht laten zien; null = klaar, terug naar hoe het was. */
+    preview: action<MagicHomeResult>()(LightSchema.nullable()),
+    /** Vraagt alleen de toestand op van de controller op dit adres; het licht verandert niet. */
+    probe: action<MagicHomeProbe>()(z.string())
+  }
 })
 
 /** Het licht van een slide, ronde of quiz; iets ongeldigs telt als niets. */

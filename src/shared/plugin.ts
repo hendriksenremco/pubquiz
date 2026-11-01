@@ -14,10 +14,39 @@ export const PluginDataSchema = z.record(z.string(), z.unknown())
 
 export type PluginData = z.infer<typeof PluginDataSchema>
 
+declare const TYPE: unique symbol
+
+/** Alleen voor TypeScript: draagt een type mee, zonder waarde. Maak er een met `typeOnly<T>()`. */
+export interface TypeOnly<T> {
+  readonly [TYPE]?: T
+}
+
+export const typeOnly = <T>(): TypeOnly<T> => ({})
+
+/** Iets wat een knop, de telefoon of de AI een plug-in kan vragen. */
+export interface PluginAction<Input extends z.ZodType = z.ZodType, Result = unknown> {
+  /** Wat de actie meekrijgt; main controleert het voordat de plug-in het ziet. */
+  input: Input
+  /** Wat de actie teruggeeft. */
+  result: TypeOnly<Result>
+}
+
+/** Een actie met invoer `input` die `Result` teruggeeft: `action<Result>()(schema)`. */
+export function action<Result>() {
+  return <Input extends z.ZodType>(input: Input): PluginAction<Input, Result> => ({
+    input,
+    result: typeOnly<Result>()
+  })
+}
+
+export type PluginActions = Record<string, PluginAction>
+
 export interface PluginDefinition<
   Id extends string = string,
   Config extends z.ZodType<object> = z.ZodType<object>,
-  Data extends z.ZodType<object> | undefined = z.ZodType<object> | undefined
+  Data extends z.ZodType<object> | undefined = z.ZodType<object> | undefined,
+  Status = unknown,
+  Actions extends PluginActions = PluginActions
 > {
   id: Id
   name: string
@@ -26,15 +55,37 @@ export interface PluginDefinition<
   config: Config
   /** Gegevens op de quiz, een ronde of een slide (slide ⊕ ronde ⊕ quiz); ongeldig telt als niets. */
   data?: Data
+  /** Wat main naar de vensters en de telefoons duwt zodra het verandert (`PluginHost.publish`). */
+  status: TypeOnly<Status>
+  /** Wat de vensters de plug-in kunnen vragen; main weigert een onbekende actie of foute invoer. */
+  actions: Actions
 }
 
-/** Geeft de definitie terug zoals hij is, maar TypeScript onthoudt het id en de schema's. */
+/** Geeft de definitie terug zoals hij is, maar TypeScript onthoudt het id, de schema's en de types. */
 export function definePlugin<
   const Id extends string,
   Config extends z.ZodType<object>,
+  Status,
+  Actions extends PluginActions,
   Data extends z.ZodType<object> | undefined = undefined
->(definition: PluginDefinition<Id, Config, Data>): PluginDefinition<Id, Config, Data> {
+>(
+  definition: PluginDefinition<Id, Config, Data, Status, Actions>
+): PluginDefinition<Id, Config, Data, Status, Actions> {
   return definition
+}
+
+/**
+ * Controleert een actie met de definitie: de invoer zoals zod hem teruggeeft, of null als de actie
+ * niet bestaat of de invoer niet klopt.
+ */
+export function parseAction(
+  definition: { actions: PluginActions },
+  name: string,
+  input: unknown
+): { input: unknown } | null {
+  if (!Object.hasOwn(definition.actions, name)) return null
+  const parsed = definition.actions[name].input.safeParse(input)
+  return parsed.success ? { input: parsed.data } : null
 }
 
 /** De instellingen van een plug-in, gecontroleerd; iets ongeldigs wordt de standaard. */

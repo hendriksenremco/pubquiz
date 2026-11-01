@@ -168,8 +168,8 @@ function registerIpc(ctl: AppController): void {
   ipcMain.handle(IPC.setPlugin, (_e, id: PluginId, setting: PluginSetting) =>
     ctl.setPlugin(id, setting)
   )
-  ipcMain.handle(IPC.pluginInvoke, (_e, id: PluginId, action: string, payload: unknown) =>
-    ctl.plugins.invoke(id, action, payload)
+  ipcMain.handle(IPC.pluginAct, (_e, id: PluginId, name: string, input: unknown) =>
+    ctl.plugins.act(id, name, input)
   )
   ipcMain.on(IPC.audioEvent, (_e, event: AudioEngineEvent) => ctl.audioEvent(event))
 }

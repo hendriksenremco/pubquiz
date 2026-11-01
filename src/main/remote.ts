@@ -13,19 +13,17 @@ import { networkInterfaces, type NetworkInterfaceInfo } from 'os'
 import { extname, relative, resolve, sep } from 'path'
 import { createGzip } from 'zlib'
 import { createShowState } from '@shared/factory'
-import type { LightStatus } from '@shared/light'
 import {
   RemoteActionSchema,
   remoteCommand,
   remoteView,
   type RemoteAction,
-  type RemoteLink,
   type RemoteResult,
   type RemoteView
 } from '@shared/remote'
 import type { Quiz, ShowState } from '@shared/types'
 import type { PluginConfig } from '@shared/plugins'
-import type { MainPlugin, PluginHost } from './plugins'
+import type { ActionHandlers, MainPlugin, PluginHost } from './plugins'
 import { mimeType } from './range'
 
 /** "QUIZ" op een telefoontoetsenbord. Vast, zodat een bladwijzer op de telefoon blijft werken. */
@@ -34,6 +32,8 @@ const MAX_CLIENTS = 16
 const MAX_BODY = 4096
 /** Houdt de verbinding open via wifi en routers die stille verbindingen sluiten. */
 const PING_MS = 20_000
+/** Een ander netwerk (andere locatie) geeft een ander adres in de QR-code. */
+const NETWORK_MS = 3000
 
 /** Waar de pagina voor de telefoon vandaan komt: de build, of tijdens het ontwikkelen Vite. */
 export type RemotePage = { dir: string } | { devServer: string }
@@ -54,7 +54,7 @@ type RemoteConfig = PluginConfig<'remote'>
  * de knoppen. Alleen wie de sleutel uit de QR-code heeft, mag iets; een nieuwe code sluit alle
  * telefoons buiten. Het licht loopt via de plug-in MagicHome-licht, als die aan staat.
  */
-export class RemotePlugin implements MainPlugin<RemoteConfig> {
+export class RemotePlugin implements MainPlugin<'remote'> {
   private config: RemoteConfig = {}
   private key = ''
   private server: Server | null = null
@@ -69,11 +69,22 @@ export class RemotePlugin implements MainPlugin<RemoteConfig> {
   private sent = ''
   private pushing: ReturnType<typeof setTimeout> | null = null
   private ping: ReturnType<typeof setInterval> | null = null
+  private network: ReturnType<typeof setInterval> | null = null
 
   constructor(
-    private readonly host: PluginHost<RemoteConfig>,
+    private readonly host: PluginHost<'remote'>,
     private readonly options: RemoteOptions
   ) {}
+
+  readonly actions: ActionHandlers<'remote'> = {
+    renew: () => {
+      this.disconnect()
+      this.key = newKey()
+      this.host.saveConfig({ ...this.config, key: this.key })
+      void this.publishLink()
+      return { ok: true }
+    }
+  }
 
   configure(config: RemoteConfig): void {
     this.config = config
@@ -87,6 +98,8 @@ export class RemotePlugin implements MainPlugin<RemoteConfig> {
       this.key = key
     }
     this.port ??= this.listen()
+    this.network ??= setInterval(() => void this.publishLink(), NETWORK_MS)
+    void this.publishLink()
   }
 
   update(quiz: Quiz | null, state: ShowState): void {
@@ -96,24 +109,20 @@ export class RemotePlugin implements MainPlugin<RemoteConfig> {
   }
 
   /** Bv. het licht met de hand gekozen op de Mac. */
-  changed(): void {
+  statusChanged(): void {
     this.schedule()
   }
 
-  async invoke(action: string): Promise<RemoteLink | null> {
-    if (action === 'renew') {
-      this.disconnect()
-      this.key = newKey()
-      this.host.saveConfig({ ...this.config, key: this.key })
-    } else if (action !== 'link') {
-      return null
-    }
+  /** Het adres voor de QR-code en wie er verbonden is; main stuurt alleen een verandering. */
+  private async publishLink(): Promise<void> {
+    const generation = this.generation
     const port = await this.port
+    if (generation !== this.generation) return
     const address = this.options.host ?? lanAddress()
-    return {
+    this.host.publish({
       url: port && address ? `http://${address}:${port}/?key=${this.key}` : null,
       devices: this.clients.size
-    }
+    })
   }
 
   stop(): void {
@@ -121,6 +130,8 @@ export class RemotePlugin implements MainPlugin<RemoteConfig> {
     this.disconnect()
     if (this.pushing) clearTimeout(this.pushing)
     this.pushing = null
+    if (this.network) clearInterval(this.network)
+    this.network = null
     this.server?.close()
     this.server?.closeAllConnections()
     this.server = null
@@ -175,8 +186,10 @@ export class RemotePlugin implements MainPlugin<RemoteConfig> {
     res.on('close', () => {
       this.clients.delete(res)
       this.keepAlive()
+      void this.publishLink()
     })
     this.keepAlive()
+    void this.publishLink()
     // Iedereen opnieuw: wie al verbonden was, kan iets gemist hebben dat de nieuwe wel krijgt.
     this.sent = ''
     this.schedule()
@@ -212,10 +225,8 @@ export class RemotePlugin implements MainPlugin<RemoteConfig> {
   private async perform(action: RemoteAction): Promise<RemoteResult> {
     if (!this.state.live) return { ok: false, error: 'Start eerst de show op de Mac' }
     if (action.type === 'light') {
-      const result = await this.host.invoke('magichome', 'choose', action.light)
-      return (
-        (result as RemoteResult | null) ?? { ok: false, error: 'Het licht staat uit op de Mac' }
-      )
+      const result = await this.host.act('magichome', 'choose', action.light)
+      return result ?? { ok: false, error: 'Het licht staat uit op de Mac' }
     }
     const command = this.quiz && remoteCommand(this.quiz, this.state, action)
     if (command) this.host.command(command)
@@ -228,20 +239,19 @@ export class RemotePlugin implements MainPlugin<RemoteConfig> {
     return key.length > 0 && given.length === key.length && timingSafeEqual(given, key)
   }
 
-  private async view(): Promise<RemoteView> {
-    const light = await this.host.invoke('magichome', 'status')
-    return remoteView(this.quiz, this.state, light as LightStatus | null)
+  private view(): RemoteView {
+    return remoteView(this.quiz, this.state, this.host.status('magichome'))
   }
 
   /** De telefoons bijwerken; één keer voor alles wat tegelijk verandert. */
   private schedule(): void {
     if (this.pushing || this.clients.size === 0) return
-    this.pushing = setTimeout(() => void this.push(), 0)
+    this.pushing = setTimeout(() => this.push(), 0)
   }
 
-  private async push(): Promise<void> {
+  private push(): void {
     this.pushing = null
-    const json = JSON.stringify(await this.view())
+    const json = JSON.stringify(this.view())
     if (json === this.sent) return
     this.sent = json
     for (const res of this.clients) res.write(`data: ${json}\n\n`)

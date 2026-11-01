@@ -3,9 +3,9 @@ import { createServer } from 'http'
 import type { AddressInfo } from 'net'
 import { tmpdir } from 'os'
 import { join } from 'path'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi, type Mock } from 'vitest'
 import { createQuiz, createRound, createShowState, createSlide } from '@shared/factory'
-import type { RemoteView } from '@shared/remote'
+import type { RemoteLink, RemoteView } from '@shared/remote'
 import type { ShowState } from '@shared/types'
 import type { PluginConfig } from '@shared/plugins'
 import type { PluginHost } from './plugins'
@@ -34,15 +34,13 @@ async function setup(light: unknown = null) {
     notify: vi.fn(),
     command: vi.fn(),
     saveConfig: vi.fn((config: PluginConfig<'remote'>) => plugin!.configure(config)),
-    invoke: vi.fn(async (_id: string, action: string) =>
-      action === 'status' ? light : { ok: true }
-    ),
-    changed: vi.fn()
-  } satisfies PluginHost<PluginConfig<'remote'>>
+    publish: vi.fn(),
+    status: vi.fn((): any => light),
+    act: vi.fn(async (): Promise<any> => ({ ok: true }))
+  } satisfies PluginHost<'remote'>
   plugin = new RemotePlugin(host, { page: { dir }, host: '127.0.0.1', port: 0 })
   plugin.configure({})
-  const link = (await plugin.invoke('link'))!
-  const url = new URL(link.url!)
+  const url = new URL((await published(host)).url!)
   const key = url.searchParams.get('key')!
   const quiz = createQuiz('Kroegquiz')
   const round = createRound('normal', 1)
@@ -63,6 +61,19 @@ async function setup(light: unknown = null) {
   const act = (body: unknown, k = key) =>
     fetch(api('/api/action', k), { method: 'POST', body: JSON.stringify(body) })
   return { host, plugin, url, key, quiz, live, api, act }
+}
+
+/** Wat de plug-in het laatst publiceerde (adres en apparaten), zodra er iets is. */
+async function published(
+  host: { publish: Mock },
+  check: (link: RemoteLink) => boolean = () => true
+) {
+  let link: RemoteLink | undefined
+  await vi.waitFor(() => {
+    link = host.publish.mock.lastCall?.[0]
+    expect(link && check(link)).toBe(true)
+  })
+  return link!
 }
 
 /** Leest de server-sent events: elke `next()` is de volgende toestand. */
@@ -133,7 +144,7 @@ describe('RemotePlugin', () => {
   })
 
   it('stuurt de toestand en elke wijziging', async () => {
-    const { plugin, quiz, live, api } = await setup()
+    const { host, plugin, quiz, live, api } = await setup()
     const events = await subscribe(api('/api/events'))
     expect(events.res.headers.get('content-type')).toBe('text/event-stream')
     expect(await events.next()).toMatchObject({ quiz: null, live: false })
@@ -146,7 +157,7 @@ describe('RemotePlugin', () => {
       step: { target: 'slides', label: 'Slide 1 van 2', next: true },
       screen: { slide: { layout: 'title', title: 'Ronde 1' } }
     })
-    expect(await plugin.invoke('link')).toMatchObject({ devices: 1 })
+    expect(await published(host, (link) => link.devices === 1)).toMatchObject({ devices: 1 })
     await events.cancel()
   })
 
@@ -180,11 +191,11 @@ describe('RemotePlugin', () => {
     const on = await setup({ light: null, manual: false })
     on.plugin.update(on.quiz, on.live())
     expect((await on.act({ type: 'light', light: red })).status).toBe(200)
-    expect(on.host.invoke).toHaveBeenCalledWith('magichome', 'choose', red)
+    expect(on.host.act).toHaveBeenCalledWith('magichome', 'choose', red)
     on.plugin.stop()
 
     const off = await setup()
-    off.host.invoke.mockResolvedValue(null)
+    off.host.act.mockResolvedValue(null)
     off.plugin.update(off.quiz, off.live())
     const result = await off.act({ type: 'light', light: red })
     expect(await result.json()).toEqual({ ok: false, error: 'Het licht staat uit op de Mac' })
@@ -198,17 +209,18 @@ describe('RemotePlugin', () => {
     const events = await subscribe(api('/api/events'))
     expect(await events.next()).toMatchObject({ light: { light: null, manual: false } })
     Object.assign(status, { light: red, manual: true })
-    plugin.changed()
+    plugin.statusChanged()
     expect(await events.next()).toMatchObject({ light: { light: red, manual: true } })
     await events.cancel()
   })
 
   it('een nieuwe code sluit verbonden telefoons buiten', async () => {
-    const { plugin, api, key } = await setup()
+    const { host, plugin, api, key } = await setup()
     const events = await subscribe(api('/api/events'))
     await events.next()
-    const renewed = await plugin.invoke('renew')
-    expect(renewed?.url).not.toContain(key)
+    expect(await plugin.actions.renew(undefined)).toEqual({ ok: true })
+    const renewed = await published(host, (link) => !link.url?.includes(key))
+    expect(renewed.url).toContain('?key=')
     expect(await events.closed()).toBe(true)
     expect((await fetch(api('/api/events'))).status).toBe(401)
   })
@@ -228,14 +240,15 @@ describe('RemotePlugin tijdens het ontwikkelen', () => {
       notify: vi.fn(),
       command: vi.fn(),
       saveConfig: vi.fn(),
-      invoke: vi.fn(),
       mediaFile: vi.fn(),
-      changed: vi.fn()
+      publish: vi.fn(),
+      status: vi.fn(() => null),
+      act: vi.fn(async () => null)
     }
     plugin = new RemotePlugin(host, { page: { devServer }, host: '127.0.0.1', port: 0 })
     try {
       plugin.configure({ key: 'k'.repeat(22) })
-      const { origin } = new URL((await plugin.invoke('link'))!.url!)
+      const { origin } = new URL((await published(host)).url!)
       expect(await (await fetch(`${origin}/?key=${'k'.repeat(22)}`)).text()).toBe('van vite')
       await fetch(`${origin}/src/remote/main.ts?t=1`)
       expect(seen).toEqual([

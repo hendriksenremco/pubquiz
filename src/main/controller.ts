@@ -67,6 +67,7 @@ export class AppController {
     saveConfig: (id, config) =>
       this.setPlugin(id, { ...(this.settings.plugins[id] ?? PLUGIN_OFF), config }),
     command: (command) => this.show.handle(command),
+    publishStatus: (id, status) => this.broadcast(IPC.pluginStatus, [id, status]),
     mediaFile: (file) => {
       const location = locateMedia(mediaUrl(file), {
         current: () => this.quizDir,
@@ -127,6 +128,7 @@ export class AppController {
       libraryDir: this.libraryDir,
       airplay: this.airplay.list,
       plugins: this.settings.plugins,
+      pluginStatus: this.plugins.statuses(),
       dirty: this.dirty
     }
   }
