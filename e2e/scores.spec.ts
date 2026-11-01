@@ -169,3 +169,54 @@ test('een slide Tussenstand toont de stand op het scherm', async () => {
     rmSync(dirname(quizDir), { recursive: true, force: true })
   }
 })
+
+test('punten invullen tijdens de show, voor de ronde die nu loopt', async () => {
+  const userData = tempDir('userdata')
+  const quizDir = copyFixture()
+  const file = join(quizDir, 'quiz.json')
+  const quiz = JSON.parse(readFileSync(file, 'utf8'))
+  const [one] = quiz.rounds
+  quiz.plugins = {
+    ...quiz.plugins,
+    scores: {
+      teams: [
+        { id: 't0', name: 'De Slimmeriken' },
+        { id: 't1', name: 'Quizzly Bears' }
+      ],
+      points: {}
+    }
+  }
+  writeFileSync(file, JSON.stringify(quiz, null, 2))
+  const saved = () => JSON.parse(readFileSync(file, 'utf8')).plugins?.scores?.points ?? null
+
+  const { app, operator } = await launch(userData, quizDir)
+  const pad = operator.getByTestId('score-pad')
+  try {
+    await operator.locator('.topbar').getByRole('button', { name: 'Quizzen' }).click()
+    await operator.locator('.topbar').getByRole('button', { name: 'Instellingen' }).click()
+    const dialog = operator.getByRole('dialog', { name: 'Instellingen' })
+    await dialog.getByRole('checkbox', { name: /Tussenstand/ }).check()
+    await dialog.getByRole('button', { name: 'Klaar' }).click()
+    await operator.getByRole('button', { name: 'Bewerken' }).click()
+
+    await openStart(operator)
+    await useWindowedScreens(operator)
+    await startShow(operator)
+    await operator.locator('.rounds .round').first().click()
+    await expect(operator.locator('.now-title')).toHaveText(one.title)
+    await expect(pad.locator('th.round')).toHaveText([one.title])
+    const points = (team: string) => pad.getByLabel(`Punten van ${team} in ${one.title}`)
+    await points('De Slimmeriken').fill('8,5')
+    await points('De Slimmeriken').press('Tab')
+    await points('Quizzly Bears').fill('7')
+    await points('Quizzly Bears').press('Tab')
+    await expect(pad.locator('td.total')).toHaveText(['8.5', '7'])
+    await expect.poll(saved).toEqual({ [one.id]: { t0: 8.5, t1: 7 } })
+    await operator.waitForTimeout(300)
+    await operator.screenshot({ path: 'test-results/scores-live.png' })
+  } finally {
+    await app.close()
+    rmSync(userData, { recursive: true, force: true })
+    rmSync(dirname(quizDir), { recursive: true, force: true })
+  }
+})

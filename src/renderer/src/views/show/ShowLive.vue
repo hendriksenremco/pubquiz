@@ -7,6 +7,7 @@ import ScreenStage from '../../components/ScreenStage.vue'
 import { useLiveControls } from '../../lib/live-controls'
 import { locale } from '../../lib/locale'
 import { useNow } from '../../lib/use-now'
+import PluginSlot from '../../plugins/PluginSlot.vue'
 import { useSession } from '../../stores/session'
 import AnswersPad from './AnswersPad.vue'
 import FragmentPad from './FragmentPad.vue'
@@ -180,6 +181,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
         :round="round"
         :arrows="arrows === 'fragments'"
       />
+      <PluginSlot v-if="round" name="liveRound" :round="round" />
     </main>
 
     <aside class="side scroll">
