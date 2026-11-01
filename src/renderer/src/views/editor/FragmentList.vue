@@ -73,12 +73,15 @@ function timing(f: Fragment) {
           :aria-label="t('name')"
           :placeholder="t('name')"
         />
-        <input
-          v-model="f.answer"
-          class="quiet sub"
-          :aria-label="t('answer')"
-          :placeholder="t('answerPlaceholder')"
-        />
+        <label class="answer">
+          <span>{{ t('answer') }}</span>
+          <input
+            v-model="f.answer"
+            class="quiet"
+            :aria-label="t('answer')"
+            :placeholder="t('answerPlaceholder')"
+          />
+        </label>
         <span v-if="!assetOf(f)" class="missing">{{ t('fileMissing') }}</span>
       </div>
       <FragmentWave class="wave" :fragment="f" :playing="timing(f)" />
@@ -145,8 +148,20 @@ function timing(f: Fragment) {
   font-weight: 600;
 }
 
-.sub {
+/* Zoals bij de slides: "Antwoord" ervoor, het antwoord zelf in gewone tekst. */
+.answer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   color: var(--muted);
+}
+
+.answer > span {
+  flex: none;
+}
+
+.answer input {
+  color: var(--text);
 }
 
 .missing {
