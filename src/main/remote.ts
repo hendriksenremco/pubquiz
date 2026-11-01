@@ -10,6 +10,7 @@ import {
 } from 'http'
 import type { AddressInfo } from 'net'
 import { networkInterfaces, type NetworkInterfaceInfo } from 'os'
+import type { Duplex } from 'stream'
 import { extname, relative, resolve, sep } from 'path'
 import { createGzip } from 'zlib'
 import { createShowState } from '@shared/factory'
@@ -77,6 +78,8 @@ export class RemotePlugin implements MainPlugin<'remote'> {
   /** Telt bij elke stop: een server die daarna nog start, is niet meer nodig. */
   private generation = 0
   private readonly clients = new Set<ServerResponse>()
+  /** Websockets naar Vite (tijdens het ontwikkelen); die sluit de server niet zelf. */
+  private readonly tunnels = new Set<Duplex>()
   private quiz: Quiz | null = null
   private state: ShowState = createShowState()
   /** Wat de telefoons het laatst kregen. */
@@ -152,6 +155,8 @@ export class RemotePlugin implements MainPlugin<'remote'> {
     this.network = null
     this.server?.close()
     this.server?.closeAllConnections()
+    for (const socket of this.tunnels) socket.destroy()
+    this.tunnels.clear()
     this.server = null
     this.port = null
   }
@@ -161,6 +166,7 @@ export class RemotePlugin implements MainPlugin<'remote'> {
     let error: unknown
     for (const port of new Set([this.options.port ?? REMOTE_PORT, 0])) {
       const server = createServer((req, res) => void this.handle(req, res))
+      server.on('upgrade', (req, socket, head) => this.upgrade(req, socket, head))
       try {
         const bound = await bind(server, port, this.options.host)
         if (generation !== this.generation) {
@@ -282,6 +288,21 @@ export class RemotePlugin implements MainPlugin<'remote'> {
       ? { 'Set-Cookie': `${DEV_COOKIE}=${this.key}; Path=/; HttpOnly; SameSite=Strict` }
       : {}
     proxy(target, req, res, extra)
+  }
+
+  /**
+   * Een websocket: alleen tijdens het ontwikkelen, voor het herladen door Vite (HMR). Dezelfde
+   * regel als voor de scripts: alleen met het cookie.
+   */
+  private upgrade(req: IncomingMessage, socket: Duplex, head: Buffer): void {
+    const page = this.options.page
+    if (!('devServer' in page)) return void socket.destroy()
+    if (!this.matches(cookie(req, DEV_COOKIE))) {
+      socket.end('HTTP/1.1 401 Unauthorized\r\nConnection: close\r\n\r\n')
+      return
+    }
+    const target = new URL(req.url ?? '/', page.devServer)
+    tunnel(target, req, socket, head, this.tunnels)
   }
 
   private authorized(url: URL): boolean {
@@ -517,4 +538,49 @@ function proxy(
     res.end()
   })
   upstream.end()
+}
+
+/** Een websocket doorgeven aan de Vite-server, net als `proxy`: zonder ons cookie. */
+function tunnel(
+  target: URL,
+  req: IncomingMessage,
+  socket: Duplex,
+  head: Buffer,
+  open: Set<Duplex>
+): void {
+  const { cookie: _, ...headers } = req.headers
+  const upstream = request(target, { method: 'GET', headers: { ...headers, host: target.host } })
+  open.add(socket)
+  socket.on('close', () => open.delete(socket))
+  socket.on('error', () => socket.destroy())
+  upstream.on('upgrade', (answer, remote, remoteHead) => {
+    open.add(remote)
+    remote.on('close', () => {
+      open.delete(remote)
+      socket.destroy()
+    })
+    remote.on('error', () => remote.destroy())
+    socket.on('close', () => remote.destroy())
+    socket.write(statusLine(answer) + headerLines(answer.rawHeaders) + '\r\n')
+    if (remoteHead.length) socket.write(remoteHead)
+    if (head.length) remote.write(head)
+    remote.pipe(socket)
+    socket.pipe(remote)
+  })
+  // Vite wil geen websocket (bv. een verkeerde token): zijn antwoord, en dicht.
+  upstream.on('response', (answer) => {
+    socket.end(statusLine(answer) + 'Connection: close\r\n\r\n')
+    answer.resume()
+  })
+  upstream.on('error', () => socket.end('HTTP/1.1 502 Bad Gateway\r\nConnection: close\r\n\r\n'))
+  upstream.end()
+}
+
+const statusLine = (answer: IncomingMessage) =>
+  `HTTP/1.1 ${answer.statusCode} ${answer.statusMessage ?? ''}\r\n`
+
+function headerLines(raw: string[]): string {
+  let lines = ''
+  for (let i = 0; i < raw.length; i += 2) lines += `${raw[i]}: ${raw[i + 1]}\r\n`
+  return lines
 }
