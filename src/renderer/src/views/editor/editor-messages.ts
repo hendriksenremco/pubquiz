@@ -67,7 +67,7 @@ export const FRAGMENT_MESSAGES = defineMessages(
     seconds: 's',
     moveUp: 'Omhoog',
     moveDown: 'Omlaag',
-    remove: 'Verwijder'
+    remove: 'Verwijder fragment'
   },
   {
     en: {
@@ -94,7 +94,7 @@ export const FRAGMENT_MESSAGES = defineMessages(
       seconds: 's',
       moveUp: 'Move up',
       moveDown: 'Move down',
-      remove: 'Delete'
+      remove: 'Delete fragment'
     }
   }
 )
