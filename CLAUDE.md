@@ -90,7 +90,6 @@ pnpm install:mac                                # zet de app in /Applications; a
   - Vensters zie je alleen met `PUBQUIZ_HEADED=1`. Gebruik dat alleen als Remco erom vraagt.
   - Screenshots komen in `test-results/`. Playwright leegt die map bij elke run.
 - `make-demo.mjs` schrijft `fixtures/demo.pubquiz/quiz.json` alleen als die nog niet bestaat, of met `--force`. Gebruik `--force` nooit.
-- Bekend probleem op 30 oktober: twee dashboardtests in `e2e/home.spec.ts` falen ook op master. Eén faalt altijd, de andere soms.
 
 ## Opbouw
 
