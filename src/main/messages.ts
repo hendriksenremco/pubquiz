@@ -112,7 +112,9 @@ export const NOTICE_MESSAGES = defineMessages(
     notAudio: '{file} is geen geluidsbestand',
     noAudioChannel:
       'Deze quiz heeft geen audiokanaal voor de liedjes. Voeg er een toe bij Quiz-instellingen.',
-    roundFileTooBig: 'Dit rondebestand is groter dan 1 GB'
+    roundFileTooBig: 'Dit rondebestand is groter dan 1 GB',
+    badRoundLink: 'QuizNote opent alleen rondes van quiznote.app',
+    roundDownloadFailed: 'Het rondebestand ophalen is mislukt: {error}'
   },
   {
     en: {
@@ -149,7 +151,9 @@ export const NOTICE_MESSAGES = defineMessages(
       notAPicture: '{file} is not a picture',
       notAudio: '{file} is not an audio file',
       noAudioChannel: 'This quiz has no audio channel for the songs. Add one in Quiz settings.',
-      roundFileTooBig: 'This round file is larger than 1 GB'
+      roundFileTooBig: 'This round file is larger than 1 GB',
+      badRoundLink: 'QuizNote only opens rounds from quiznote.app',
+      roundDownloadFailed: 'Could not download the round file: {error}'
     }
   }
 )
