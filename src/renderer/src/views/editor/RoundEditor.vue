@@ -5,9 +5,11 @@ import { groupByFolder, naturalCompare } from '@shared/media-folders'
 import type { MediaAsset, Round, Slide } from '@shared/types'
 import Icon from '../../components/Icon.vue'
 import Popover from '../../components/Popover.vue'
+import { locale } from '../../lib/locale'
 import { useMediaImport } from '../../lib/use-media-import'
 import { useSession } from '../../stores/session'
 import FragmentInspector from './FragmentInspector.vue'
+import { ROUND_MESSAGES } from './editor-messages'
 import FragmentList from './FragmentList.vue'
 import RoundSettings from './RoundSettings.vue'
 import SlideInspector from './SlideInspector.vue'
@@ -22,6 +24,7 @@ const emit = defineEmits<{ duplicate: []; remove: [] }>()
 const session = useSession()
 const quiz = computed(() => session.quiz!)
 const { importFiles, pathsFromDrop } = useMediaImport()
+const t = ROUND_MESSAGES.in(locale)
 
 type Selection = { kind: 'slide' | 'fragment'; id: string } | null
 
@@ -60,15 +63,15 @@ function select(kind: 'slide' | 'fragment', id: string | null) {
 }
 
 const itemLabel = computed(() => {
-  if (fragment.value) return 'Fragment'
+  if (fragment.value) return t('tabFragment')
   const layout = slide.value?.layout
   return layout === 'question'
-    ? 'Vraag'
+    ? t('tabQuestion')
     : layout === 'title'
-      ? 'Titel'
+      ? t('tabTitle')
       : layout === 'number'
-        ? 'Nummer'
-        : 'Afbeelding'
+        ? t('tabNumber')
+        : t('tabImage')
 })
 
 // ── Toevoegen ────────────────────────────────────────────────────────────────
@@ -84,7 +87,10 @@ function addQuestion() {
   const n = props.round.slides.filter((s) => s.layout === 'question').length + 1
   // Een nieuwe vraag toont net als de vorige vraag de vraag zelf, of alleen het nummer.
   const lastQuestion = props.round.slides.findLast((s) => s.layout === 'question')
-  insertSlides({ ...createSlide('question', `Vraag ${n}`), numberOnly: lastQuestion?.numberOnly })
+  insertSlides({
+    ...createSlide('question', t('newQuestion', { number: n })),
+    numberOnly: lastQuestion?.numberOnly
+  })
 }
 
 function addSlide(layout: 'title' | 'number' | 'image', close: () => void) {
@@ -117,13 +123,14 @@ function addFragments(assets: MediaAsset[]) {
   if (!channelId) {
     session.notify({
       level: 'warning',
-      message: 'Voeg eerst een audiokanaal toe bij Quiz-instellingen.'
+      message: t('noChannel')
     })
     return
   }
-  const added = audio.map((asset, i) =>
-    createFragment(asset.id, channelId, props.round.fragments.length + i + 1)
-  )
+  const added = audio.map((asset, i) => {
+    const number = props.round.fragments.length + i + 1
+    return createFragment(asset.id, channelId, number, t('fragmentName', { number }))
+  })
   props.round.fragments.push(...added)
   select('fragment', added[0].id)
 }
@@ -181,11 +188,11 @@ const empty = computed(() => !props.round.slides.length && !props.round.fragment
           id="round-title"
           v-model="round.title"
           class="quiet round-title"
-          aria-label="Titel van de ronde"
+          :aria-label="t('roundTitle')"
         />
 
         <section v-if="round.slides.length" class="part">
-          <h3 v-if="both" class="part-label">Slides</h3>
+          <h3 v-if="both" class="part-label">{{ t('slides') }}</h3>
           <SlideList
             :round="round"
             :selected-id="slide?.id ?? null"
@@ -194,7 +201,7 @@ const empty = computed(() => !props.round.slides.length && !props.round.fragment
         </section>
 
         <section v-if="round.fragments.length" class="part">
-          <h3 v-if="both" class="part-label">Fragmenten</h3>
+          <h3 v-if="both" class="part-label">{{ t('fragments') }}</h3>
           <FragmentList
             :round="round"
             :selected-id="fragment?.id ?? null"
@@ -203,25 +210,25 @@ const empty = computed(() => !props.round.slides.length && !props.round.fragment
         </section>
 
         <p v-if="empty" class="muted empty-hint">
-          Nog leeg. Voeg hieronder iets toe, of sleep afbeeldingen of geluid hierheen.
+          {{ t('empty') }}
         </p>
 
         <div class="add-bar">
           <button class="btn add" @click="addQuestion">
-            <Icon name="plus" :size="14" /> Vraag
+            <Icon name="plus" :size="14" /> {{ t('addQuestion') }}
           </button>
           <Popover :width="260">
             <template #trigger="{ open, toggle }">
               <button class="btn add" :class="{ active: open }" @click="toggle">
-                <Icon name="plus" :size="14" /> Afbeeldingen
+                <Icon name="plus" :size="14" /> {{ t('addImages') }}
               </button>
             </template>
             <template #default="{ close }">
               <button class="menu-item" @click="fromFiles(close)">
-                <Icon name="upload" /> Bestanden of map…
+                <Icon name="upload" /> {{ t('fromFiles') }}
               </button>
               <template v-if="imageFolders.length">
-                <div class="menu-label">Uit Media</div>
+                <div class="menu-label">{{ t('fromMedia') }}</div>
                 <button
                   v-for="g in imageFolders"
                   :key="g.folder!.id"
@@ -238,15 +245,15 @@ const empty = computed(() => !props.round.slides.length && !props.round.fragment
           <Popover :width="260">
             <template #trigger="{ open, toggle }">
               <button class="btn add" :class="{ active: open }" @click="toggle">
-                <Icon name="plus" :size="14" /> Fragmenten
+                <Icon name="plus" :size="14" /> {{ t('addFragments') }}
               </button>
             </template>
             <template #default="{ close }">
               <button class="menu-item" @click="fromFiles(close)">
-                <Icon name="upload" /> Bestanden of map…
+                <Icon name="upload" /> {{ t('fromFiles') }}
               </button>
               <template v-if="audioFolders.length">
-                <div class="menu-label">Uit Media</div>
+                <div class="menu-label">{{ t('fromMedia') }}</div>
                 <button
                   v-for="g in audioFolders"
                   :key="g.folder!.id"
@@ -263,31 +270,37 @@ const empty = computed(() => !props.round.slides.length && !props.round.fragment
           <Popover :width="200">
             <template #trigger="{ open, toggle }">
               <button class="btn add" :class="{ active: open }" @click="toggle">
-                <Icon name="plus" :size="14" /> Slide
+                <Icon name="plus" :size="14" /> {{ t('addSlide') }}
               </button>
             </template>
             <template #default="{ close }">
-              <button class="menu-item" @click="addSlide('title', close)">Titel</button>
-              <button class="menu-item" @click="addSlide('number', close)">Nummer</button>
-              <button class="menu-item" @click="addSlide('image', close)">Afbeelding</button>
+              <button class="menu-item" @click="addSlide('title', close)">
+                {{ t('slideTitle') }}
+              </button>
+              <button class="menu-item" @click="addSlide('number', close)">
+                {{ t('slideNumber') }}
+              </button>
+              <button class="menu-item" @click="addSlide('image', close)">
+                {{ t('slideImage') }}
+              </button>
             </template>
           </Popover>
         </div>
 
         <section class="part notes-part">
-          <label class="part-label" for="round-notes">Notities voor jou</label>
+          <label class="part-label" for="round-notes">{{ t('notes') }}</label>
           <textarea
             id="round-notes"
             v-model="round.hostNotes"
             class="quiet notes"
             rows="2"
-            placeholder="Alleen jij ziet dit, tijdens de ronde."
+            :placeholder="t('notesPlaceholder')"
           />
         </section>
       </div>
     </div>
 
-    <aside class="inspector scroll" aria-label="Instellingen">
+    <aside class="inspector scroll" :aria-label="t('inspector')">
       <div v-if="selection" class="segmented tabs" role="tablist">
         <button
           type="button"
@@ -305,7 +318,7 @@ const empty = computed(() => !props.round.slides.length && !props.round.fragment
           :class="{ on: tab === 'round' }"
           @click="tab = 'round'"
         >
-          Ronde
+          {{ t('tabRound') }}
         </button>
       </div>
 
