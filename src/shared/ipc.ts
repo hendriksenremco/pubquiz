@@ -1,4 +1,5 @@
 import type { AirPlayDevice } from './airplay'
+import type { ErrorReport } from './analytics'
 import type { FormOptions } from './forms'
 import type {
   ActionInput,
@@ -67,6 +68,8 @@ export interface Snapshot {
   airplay: AirPlayDevice[]
   plugins: PluginSettings
   pluginStatus: PluginStatuses
+  /** Anoniem meten: true of false als het gevraagd is, null = nog vragen (zie issue #40). */
+  analytics: boolean | null
 }
 
 export interface RecoveryInfo {
@@ -157,6 +160,11 @@ export interface PubquizApi {
     input: ActionInput<Id, Name>
   ): Promise<ActionResult<Id, Name> | null>
 
+  /** Toestemming voor anoniem meten geven of intrekken (voor deze Mac). */
+  setAnalytics(consent: boolean): Promise<void>
+  /** Een onverwerkte fout in een venster; gaat alleen weg met toestemming. */
+  reportError(report: ErrorReport): void
+
   audioEvent(event: AudioEngineEvent): void
   onAudioCommand(cb: (command: AudioEngineCommand) => void): () => void
 
@@ -204,6 +212,8 @@ export const IPC = {
   pluginAct: 'pq:plugin-act',
   plugins: 'pq:plugins',
   pluginStatus: 'pq:plugin-status',
+  setAnalytics: 'pq:set-analytics',
+  reportError: 'pq:report-error',
   audioEvent: 'pq:audio-event',
   audioCommand: 'pq:audio-command',
   quiz: 'pq:quiz',
