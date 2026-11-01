@@ -129,7 +129,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
         <div class="section-row">
           <span class="label grow">Slides</span>
           <template v-if="loopText">
-            <span class="muted loop">{{ loopText }}</span>
+            <span class="muted loop" data-volatile>{{ loopText }}</span>
             <button class="btn btn-ghost btn-sm" @click="toggleLoop">
               {{ state.loopPaused ? 'Loop verder' : 'Pauzeer loop' }} <span class="kbd">L</span>
             </button>

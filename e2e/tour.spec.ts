@@ -8,6 +8,7 @@ import {
   copyTour,
   launch,
   openStart,
+  snap,
   startShow,
   tempDir,
   useWindowedScreens,
@@ -41,8 +42,8 @@ test.afterAll(async () => {
 async function shoot(name: string) {
   const beamer = await windowFor('screen/beamer')
   await operator.waitForTimeout(800)
-  await operator.screenshot({ path: `test-results/tour-${name}.png` })
-  await beamer.screenshot({ path: `test-results/tour-${name}-beamer.png` })
+  await snap(operator, `test-results/tour-${name}.png`)
+  await snap(beamer, `test-results/tour-${name}-beamer.png`)
 }
 
 /** Staat deze tekst in beeld? Tijdens het overvloeien staan oude en nieuwe slide er allebei. */
@@ -60,7 +61,7 @@ test('opent de rondleiding en start de show zonder ontbrekende bestanden', async
   await operator.locator('.sidebar .round').nth(2).click()
   await expect(operator.locator('#round-title')).toHaveValue('Ronde 2: muziek')
   await operator.waitForTimeout(800)
-  await operator.screenshot({ path: 'test-results/tour-editor.png' })
+  await snap(operator, 'test-results/tour-editor.png')
 
   await openStart(operator)
   await useWindowedScreens(operator)
@@ -197,5 +198,5 @@ test('tot slot: uitleg over afdrukken, en stoppen', async () => {
     'Ronde 3: vlaggen',
     'Ronde 4: kijken en luisteren'
   ])
-  await operator.screenshot({ path: 'test-results/tour-afdrukken.png' })
+  await snap(operator, 'test-results/tour-afdrukken.png')
 })

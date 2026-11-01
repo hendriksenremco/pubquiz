@@ -1,7 +1,7 @@
 import { expect, test, type ElectronApplication, type Page } from '@playwright/test'
 import { readFileSync, rmSync, writeFileSync } from 'fs'
 import { dirname, join } from 'path'
-import { copyFixture, launch, tempDir } from './helpers'
+import { copyFixture, launch, snap, tempDir } from './helpers'
 
 let app: ElectronApplication
 let operator: Page
@@ -64,7 +64,7 @@ test('menu’s vallen niet buiten het venster en liggen bovenop', async () => {
   await operator.locator('.round-settings .picker').last().click()
   await expectPanelOnTop(operator)
   await operator.waitForTimeout(200) // infaden afwachten voor de screenshot
-  await operator.screenshot({ path: 'test-results/popover-background.png' })
+  await snap(operator, 'test-results/popover-background.png')
 
   // Sluiten en meteen van pagina wisselen mag geen menu achterlaten.
   await operator.keyboard.press('Escape')
@@ -80,7 +80,7 @@ test('toont mappen en maakt een nieuwe map', async () => {
     operator.locator('.folder', { hasText: 'Loops' }).locator('.mosaic-cell')
   ).toHaveCount(3)
   await operator.waitForTimeout(500) // thumbnails laten laden voor de screenshot
-  await operator.screenshot({ path: 'test-results/media-folders.png' })
+  await snap(operator, 'test-results/media-folders.png')
 
   await operator.getByRole('button', { name: 'Nieuwe map' }).click()
   const title = operator.getByLabel('Naam van de map')
@@ -122,7 +122,7 @@ test('verplaatst een bestand naar een map door het te slepen', async () => {
   await dock.locator('.dock-target', { hasText: 'Nieuwe map' }).hover()
   await expect(dock.locator('.dock-target.drop')).toHaveText('Nieuwe map')
   await operator.waitForTimeout(400) // infaden afwachten voor de screenshot
-  await operator.screenshot({ path: 'test-results/media-drag-dock.png' })
+  await snap(operator, 'test-results/media-drag-dock.png')
   await operator.mouse.up()
 
   // De nieuwe map staat open met het bestand erin, klaar om een naam te geven.
@@ -148,7 +148,7 @@ test('speelt een video af als voorbeeld', async () => {
   await expect
     .poll(() => tile.locator('video').evaluate((v: HTMLVideoElement) => v.paused))
     .toBe(false)
-  await operator.screenshot({ path: 'test-results/media-folder-loops.png' })
+  await snap(operator, 'test-results/media-folder-loops.png')
 
   await tile.getByRole('button', { name: 'Stop voorbeeld' }).click()
   await expect(tile.locator('.frame')).not.toHaveClass(/playing/)
@@ -174,7 +174,7 @@ test('toont een bestand groot als voorbeeld en bladert verder', async () => {
   await expect(dialog.locator('.usages')).toContainText('Standaard van scherm "Beamer"')
   await expect(dialog.locator('.count')).toHaveText('1 van 3')
   await operator.waitForTimeout(700) // gloed laten infaden voor de screenshot
-  await operator.screenshot({ path: 'test-results/media-preview.png' })
+  await snap(operator, 'test-results/media-preview.png')
 
   // Eigen bediening, niet die van macOS: pauzeren, spoelen met de tijdbalk.
   const video = dialog.locator('video')
@@ -211,7 +211,7 @@ test('toont een bestand groot als voorbeeld en bladert verder', async () => {
   // De informatie en knoppen blijven in beeld, ook bij een staande foto.
   await expect(dialog.locator('.info')).toBeInViewport({ ratio: 1 })
   await operator.waitForTimeout(400) // infaden afwachten voor de screenshot
-  await operator.screenshot({ path: 'test-results/media-preview-portrait.png' })
+  await snap(operator, 'test-results/media-preview-portrait.png')
   await dialog.getByRole('button', { name: 'Volgende' }).click()
   await expect(dialog).toHaveAccessibleName('Voorbeeld: background.m4a')
   await expect
@@ -220,7 +220,7 @@ test('toont een bestand groot als voorbeeld en bladert verder', async () => {
   await expect(dialog.getByRole('button', { name: 'Pauzeer' })).toBeVisible()
   await expect(dialog.locator('.transport .time').last()).toHaveText('0:30')
   await operator.waitForTimeout(300)
-  await operator.screenshot({ path: 'test-results/media-preview-sound.png' })
+  await snap(operator, 'test-results/media-preview-sound.png')
   await dialog.getByRole('button', { name: 'Sluiten' }).click()
   await expect(dialog).toHaveCount(0)
 
@@ -248,7 +248,5 @@ test('voegt een hele Media-map als fragmenten toe aan een ronde', async () => {
       .evaluateAll((els) => els.map((e) => (e as HTMLInputElement).value))
   ).toEqual(Array.from({ length: 8 }, (_, i) => `Fragment ${i + 1}`))
   // Het eerste is gekozen: rechts staat zijn bestand.
-  await expect(operator.getByRole('combobox', { name: 'Bestand' })).toContainText(
-    'fragment-1.m4a'
-  )
+  await expect(operator.getByRole('combobox', { name: 'Bestand' })).toContainText('fragment-1.m4a')
 })

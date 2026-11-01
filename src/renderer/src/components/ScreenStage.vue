@@ -292,8 +292,8 @@ onBeforeUnmount(() => {
           <template v-else>
             <div class="ov-label">Volgende</div>
             <div class="ov-number">{{ resolved.overlay.nextNumber }}</div>
-            <div class="ov-count">over {{ resolved.overlay.seconds }} s</div>
-            <div class="ov-bar">
+            <div class="ov-count" data-volatile>over {{ resolved.overlay.seconds }} s</div>
+            <div class="ov-bar" data-volatile>
               <span :style="{ transform: `scaleX(${resolved.overlay.remaining})` }" />
             </div>
           </template>

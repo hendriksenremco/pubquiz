@@ -1,7 +1,7 @@
 import { expect, test, type Locator } from '@playwright/test'
 import { readFileSync, rmSync, writeFileSync } from 'fs'
 import { dirname, join } from 'path'
-import { copyFixture, launch, tempDir } from './helpers'
+import { copyFixture, launch, snap, tempDir } from './helpers'
 
 // Echte namen van gedownloade video's, zoals ze in de praktijk binnenkomen.
 const LONG_NAMES: Record<string, string> = {
@@ -38,7 +38,7 @@ test('lange bestandsnamen blijven binnen hun chip en tegel', async () => {
       'title',
       /Spooky Horror Ambience/
     )
-    await operator.screenshot({ path: 'test-results/long-names-setup.png' })
+    await snap(operator, 'test-results/long-names-setup.png')
 
     // Instellingen van de ronde: de keuzes voor de schermen blijven binnen het paneel.
     await operator.locator('.sidebar .round').nth(1).click()
@@ -47,7 +47,7 @@ test('lange bestandsnamen blijven binnen hun chip en tegel', async () => {
     const pickers = panel.locator('.picker')
     await expect(pickers.first()).toBeVisible()
     for (const picker of await pickers.all()) await expectInside(picker, panel)
-    await operator.screenshot({ path: 'test-results/long-names-round.png' })
+    await snap(operator, 'test-results/long-names-round.png')
   } finally {
     await app.close()
     rmSync(userData, { recursive: true, force: true })

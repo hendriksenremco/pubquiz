@@ -8,6 +8,7 @@ import {
   copyFixture,
   launch,
   openStart,
+  snap,
   startShow,
   tempDir,
   useWindowedScreens,
@@ -46,7 +47,7 @@ test('opent de demo-quiz in de editor', async () => {
   await expect(numberOn.getByLabel('Beamer')).toBeChecked()
   await expect(numberOn.getByLabel('TV bar')).not.toBeChecked()
   await operator.waitForTimeout(800) // previews laten laden voor de screenshot
-  await operator.screenshot({ path: 'test-results/editor-round.png' })
+  await snap(operator, 'test-results/editor-round.png')
 
   await operator.locator('.track').nth(2).click()
   await expect(operator.getByRole('tab', { name: 'Fragment' })).toHaveAttribute(
@@ -68,25 +69,25 @@ test('opent de demo-quiz in de editor', async () => {
     )
     .toBe(0.5)
   await expect(operator.locator('.times input').first()).toHaveValue('0:00.5')
-  await operator.screenshot({ path: 'test-results/editor-fragment-open.png' })
+  await snap(operator, 'test-results/editor-fragment-open.png')
 
   await operator.locator('.sidebar .round').first().click()
   await operator.waitForTimeout(600)
-  await operator.screenshot({ path: 'test-results/editor-round-slides.png' })
+  await snap(operator, 'test-results/editor-round-slides.png')
 
   await operator.getByRole('button', { name: 'Quiz-instellingen' }).click()
   await operator.waitForTimeout(800)
-  await operator.screenshot({ path: 'test-results/editor-setup.png' })
+  await snap(operator, 'test-results/editor-setup.png')
 
   await operator.getByRole('button', { name: /^Media/ }).click()
   await operator.waitForTimeout(500)
-  await operator.screenshot({ path: 'test-results/editor-media.png' })
+  await snap(operator, 'test-results/editor-media.png')
 })
 
 test('bereidt de show voor met schermen als venster', async () => {
   await openStart(operator)
   await useWindowedScreens(operator)
-  await operator.screenshot({ path: 'test-results/show-prepare.png' })
+  await snap(operator, 'test-results/show-prepare.png')
 
   // De keuzelijst werkt ook met het toetsenbord: openen, bladeren, Escape laat alles staan.
   const target = operator.locator('.screen .screen-target [role="combobox"]').first()
@@ -97,7 +98,7 @@ test('bereidt de show voor met schermen als venster', async () => {
   await operator.keyboard.press('ArrowUp')
   await expect(list.getByRole('option', { name: 'Uit' })).toBeFocused()
   await operator.waitForTimeout(200)
-  await operator.screenshot({ path: 'test-results/select-open.png' })
+  await snap(operator, 'test-results/select-open.png')
   await operator.keyboard.press('Escape')
   await expect(list).toHaveCount(0)
   await expect(target).toBeFocused()
@@ -152,7 +153,7 @@ test('vult het scherm met de achtergrond en houdt de inhoud 16:9', async () => {
   expect((await box('.slide-backdrop')).width).toBeCloseTo(1260, 0)
   // Na de overvloeier (600 ms), zodat het screenshot het eindbeeld laat zien.
   await beamer.waitForTimeout(800)
-  await beamer.screenshot({ path: 'test-results/screen-ultrawide.png' })
+  await snap(beamer, 'test-results/screen-ultrawide.png')
 
   // Hoger, zoals een 4:3-beamer: de inhoud houdt boven en onder ruimte, de video vult alles.
   await resize(720, 540)
@@ -214,13 +215,13 @@ test('beeld- en geluidknoppen zijn terug te draaien', async () => {
   await operator.getByRole('button', { name: /Geluid uit/ }).click()
   await expect.poll(async () => (await audio()).background?.playing).toBe(false)
   await operator.waitForTimeout(300)
-  await operator.locator('.topbar').screenshot({ path: 'test-results/show-bar-alert.png' })
+  await snap(operator.locator('.topbar'), 'test-results/show-bar-alert.png')
 
   await operator.getByRole('button', { name: /Beeld terug/ }).click()
   await expect.poll(() => activeVideo(beamer)).toContain('default-loop.mp4')
   await operator.getByRole('button', { name: /Geluid aan/ }).click()
   await expect.poll(async () => (await audio()).background?.playing).toBe(true)
-  await operator.locator('.topbar').screenshot({ path: 'test-results/show-bar.png' })
+  await snap(operator.locator('.topbar'), 'test-results/show-bar.png')
 })
 
 test('speelt een fragment af tot het einde en markeert het als gespeeld', async () => {
@@ -244,7 +245,7 @@ test('speelt een fragment af tot het einde en markeert het als gespeeld', async 
   await expect(operator.locator('.notice.error')).toHaveCount(0)
   await expect.poll(() => activeVideo(operator)).toContain('music-loop.mp4')
   await operator.waitForTimeout(700) // crossfade en slide-fade afwachten voor de screenshot
-  await operator.screenshot({ path: 'test-results/show-live.png' })
+  await snap(operator, 'test-results/show-live.png')
   await expect(first).toHaveClass(/played/, { timeout: 10_000 })
   await expect(beamer.locator('.overlay')).toHaveCount(0)
 })
@@ -259,7 +260,7 @@ test('autoplay toont fragmentnummer en countdown op het scherm', async () => {
   await expect(beamer.locator('.overlay .ov-number')).toHaveText('3')
   await expect(beamer.locator('.overlay .ov-count')).toContainText(/over \d s/)
   await beamer.waitForTimeout(1200)
-  await beamer.screenshot({ path: 'test-results/screen-countdown.png' })
+  await snap(beamer, 'test-results/screen-countdown.png')
   await expect(beamer.locator('.overlay .ov-number')).toHaveText('3')
   await operator.getByRole('button', { name: 'Stop reeks' }).click()
   await expect(beamer.locator('.overlay')).toHaveCount(0)
@@ -283,7 +284,7 @@ test('bladert met de pijltjes door de fragmenten', async () => {
   await expect(frag(4)).toHaveClass(/on/)
   await expect(frag(3)).not.toHaveClass(/on/)
   await operator.waitForTimeout(300)
-  await operator.screenshot({ path: 'test-results/show-fragment-arrows.png' })
+  await snap(operator, 'test-results/show-fragment-arrows.png')
 
   await operator.keyboard.press('ArrowLeft')
   await expect(frag(3)).toHaveClass(/on/)
@@ -299,7 +300,7 @@ test('stoppen en afsluiten vragen het eerst, in een venster van de app', async (
   // Niet terug te draaien: de focus staat op Annuleer.
   await expect(stop.getByRole('button', { name: 'Annuleer' })).toBeFocused()
   await operator.waitForTimeout(200) // infaden afwachten voor de screenshot
-  await operator.screenshot({ path: 'test-results/confirm-stop.png' })
+  await snap(operator, 'test-results/confirm-stop.png')
   // Enter is dan voor het venster, niet "volgende ronde".
   await operator.keyboard.press('Enter')
   await expect(stop).toHaveCount(0)

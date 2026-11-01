@@ -7,6 +7,7 @@ import {
   copyFixture,
   launch,
   openStart,
+  snap,
   startShow,
   tempDir,
   useWindowedScreens
@@ -71,7 +72,7 @@ test('de show bedienen met een telefoon via de QR-code', async () => {
     await address.fill(device.host)
     await address.press('Enter')
     await expect(settings.locator('.light-status')).toHaveText('Verbonden. Nu: Groen.')
-    await operator.screenshot({ path: 'test-results/remote-settings.png' })
+    await snap(operator, 'test-results/remote-settings.png')
     await settings.getByRole('button', { name: 'Klaar' }).click()
     await operator.getByRole('button', { name: 'Bewerken' }).click()
 
@@ -89,7 +90,7 @@ test('de show bedienen met een telefoon via de QR-code', async () => {
     const phone = await openRemote(app, url, PHONE)
     await expect(phone.locator('.status')).toHaveText('Live')
     await expect(qr.getByText('1 apparaat verbonden')).toBeVisible()
-    await operator.screenshot({ path: 'test-results/remote-qr.png' })
+    await snap(operator, 'test-results/remote-qr.png')
     await operator.keyboard.press('Escape')
 
     // Rondes en slides, met een preview van de slide die in beeld staat.
@@ -110,7 +111,7 @@ test('de show bedienen met een telefoon via de QR-code', async () => {
     await expect(preview).toContainText(question)
     await expect(phone.locator('.step-text')).toHaveText(question)
     expect(await nextSlide.boundingBox()).toEqual(before)
-    await phone.screenshot({ path: 'test-results/remote-phone-question.png' })
+    await snap(phone, 'test-results/remote-phone-question.png')
     await phone.getByRole('button', { name: 'Volgende slide' }).click()
     await expect(macSlide).toHaveText('3')
     await expect(phone.locator('.step-text')).toHaveCount(0)
@@ -130,7 +131,7 @@ test('de show bedienen met een telefoon via de QR-code', async () => {
     await phone.getByRole('button', { name: 'Volgend fragment' }).click()
     await expect(frag(2)).toHaveClass(/on/)
     await expect(phone.getByText('Fragment 2 van 8')).toBeVisible()
-    await phone.screenshot({ path: 'test-results/remote-phone-fragment.png' })
+    await snap(phone, 'test-results/remote-phone-fragment.png')
     await phone.getByRole('button', { name: 'Vorig fragment' }).click()
     await expect(frag(1)).toHaveClass(/on/)
 
@@ -152,7 +153,7 @@ test('de show bedienen met een telefoon via de QR-code', async () => {
     await mac.getByRole('button', { name: /Ronde opnieuw/ }).click()
     await expect(macRound).toContainText('Ronde 2: muziek')
     await expect(phone.getByText('8 fragmenten', { exact: true })).toBeVisible()
-    await operator.screenshot({ path: 'test-results/remote-mac-controls.png' })
+    await snap(operator, 'test-results/remote-mac-controls.png')
 
     // Op de Mac dezelfde knoppen als op de telefoon.
     await mac.getByRole('button', { name: /Vorige ronde/ }).click()
@@ -172,12 +173,12 @@ test('de show bedienen met een telefoon via de QR-code', async () => {
     await expect(toolbar.getByRole('button', { name: /Geluid aan/ })).toBeVisible()
     await expect(phone.getByRole('button', { name: 'Beeld terug' })).toBeVisible()
     await expect(phone.getByRole('button', { name: 'Geluid aan' })).toBeVisible()
-    await phone.screenshot({ path: 'test-results/remote-phone-black.png' })
+    await snap(phone, 'test-results/remote-phone-black.png')
     await phone.getByRole('button', { name: 'Beeld terug' }).click()
     await phone.getByRole('button', { name: 'Geluid aan' }).click()
     await expect(toolbar.getByRole('button', { name: /Beeld op zwart/ })).toBeVisible()
     await expect(toolbar.getByRole('button', { name: /Geluid uit/ })).toBeVisible()
-    await phone.screenshot({ path: 'test-results/remote-phone.png' })
+    await snap(phone, 'test-results/remote-phone.png')
 
     // Het licht, via de plug-in MagicHome-licht; de demo-quiz stuurt het zelf niet aan.
     const light = phone.getByRole('region', { name: 'Licht' })
@@ -193,7 +194,7 @@ test('de show bedienen met een telefoon via de QR-code', async () => {
     await expect.poll(() => device.log.at(-1)).toBe('61 00 8a 3c 0f 36')
     await expect(light.locator('.current-label')).toHaveText('Rennend punt, rood, naar buiten')
     await light.scrollIntoViewIfNeeded()
-    await phone.screenshot({ path: 'test-results/remote-phone-light.png', fullPage: true })
+    await snap(phone, 'test-results/remote-phone-light.png', { fullPage: true })
     await light.getByRole('button', { name: 'Volg de show' }).click()
     await expect(light.getByRole('button', { name: 'Volg de show' })).toHaveCount(0)
 
@@ -204,7 +205,7 @@ test('de show bedienen met een telefoon via de QR-code', async () => {
     await expect.poll(() => device.log.at(-1)).toBe(command.color(0xff, 0, 0))
     await expect(light.getByText(/^Met de hand gekozen/)).toBeVisible()
     await expect(macLight.locator('.current-label')).toHaveText('Rood')
-    await operator.screenshot({ path: 'test-results/remote-mac-light.png' })
+    await snap(operator, 'test-results/remote-mac-light.png')
     await macLight.getByRole('button', { name: 'Volg de show' }).click()
     await expect(light.getByRole('button', { name: 'Volg de show' })).toHaveCount(0)
     await operator.keyboard.press('Escape')
@@ -212,7 +213,7 @@ test('de show bedienen met een telefoon via de QR-code', async () => {
     // Een tablet: de bediening links, het licht rechts.
     const tablet = await openRemote(app, url, TABLET)
     await expect(tablet.locator('h1')).toHaveText('Ronde 1: algemeen')
-    await tablet.screenshot({ path: 'test-results/remote-tablet.png' })
+    await snap(tablet, 'test-results/remote-tablet.png')
 
     // Een nieuwe code sluit beide buiten.
     await toolbar.getByRole('button', { name: 'Telefoon' }).click()

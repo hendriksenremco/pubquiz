@@ -100,7 +100,7 @@ function click(id: string) {
         <span class="frag-num mono">{{ i + 1 }}</span>
         <span class="frag-label">{{ f.label }}</span>
         <span v-if="f.answer" class="frag-answer">{{ f.answer }}</span>
-        <span v-if="playing?.fragmentId === f.id" class="frag-time mono">
+        <span v-if="playing?.fragmentId === f.id" class="frag-time mono" data-volatile>
           {{ remaining !== null ? `-${formatTime(remaining)}` : 'speelt…' }}
         </span>
         <span v-else-if="upcoming === f.id" class="frag-time frag-next">

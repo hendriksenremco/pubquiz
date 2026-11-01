@@ -126,3 +126,66 @@ export async function useWindowedScreens(operator: Page) {
     await choose(operator, box, 'Venster op deze laptop (om te testen)')
   }
 }
+
+/**
+ * Screenshot voor test-results/, dat bij elke run hetzelfde is zolang het scherm niet verandert.
+ * De CI vergelijkt deze screenshots tussen master en een pull request (scripts/screenshot-diff.sh).
+ *
+ * - Video's staan even stil op het eerste beeld en lopen daarna verder.
+ * - CSS-animaties staan uit (Playwright zet ze op hun eindstand).
+ * - Wat vanzelf verandert (tijdelijke paden, de QR-code, aftellers) is gemarkeerd met
+ *   `data-volatile` in de app en wordt afgedekt.
+ */
+export async function snap(
+  target: Page | Locator,
+  path: string,
+  options: { fullPage?: boolean } = {}
+) {
+  const page = 'page' in target ? target.page() : target
+  await page.evaluate(freezeVideos)
+  try {
+    await target.screenshot({
+      path,
+      ...options,
+      animations: 'disabled',
+      caret: 'hide',
+      mask: [page.locator('[data-volatile]')],
+      maskColor: '#3a4150'
+    })
+  } finally {
+    await page.evaluate(resumeVideos).catch(() => {})
+  }
+}
+
+type FrozenWindow = Window & { __pubquizFrozen?: HTMLVideoElement[] }
+
+/** Draait in de pagina: zet elke video op het eerste beeld en onthoudt welke speelden. */
+async function freezeVideos() {
+  const wait = (video: HTMLVideoElement, event: string) =>
+    new Promise<void>((done) => {
+      const timer = setTimeout(done, 2000)
+      video.addEventListener(event, () => (clearTimeout(timer), done()), { once: true })
+    })
+  const videos = Array.from(document.querySelectorAll('video'))
+  ;(window as FrozenWindow).__pubquizFrozen = videos.filter((v) => !v.paused)
+  await Promise.all(
+    videos.map(async (video) => {
+      video.pause()
+      if (!video.currentSrc) return
+      if (video.readyState < 2) await wait(video, 'loadeddata')
+      if (video.currentTime === 0) return
+      const seeked = wait(video, 'seeked')
+      video.currentTime = 0
+      await seeked
+    })
+  )
+  // Twee frames, zodat het stilgezette beeld echt getekend is.
+  await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)))
+}
+
+/** Draait in de pagina: laat de video's die speelden weer lopen. */
+function resumeVideos() {
+  const w = window as FrozenWindow
+  for (const video of w.__pubquizFrozen ?? []) void video.play().catch(() => {})
+  delete w.__pubquizFrozen
+}

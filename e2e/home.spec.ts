@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { cpSync, existsSync, readdirSync, readFileSync, rmSync } from 'fs'
 import { dirname, join } from 'path'
-import { copyFixture, launch, tempDir, tourFixture } from './helpers'
+import { copyFixture, launch, snap, tempDir, tourFixture } from './helpers'
 
 test('dashboard: leeg starten, recente quiz openen en terugkomen', async () => {
   const userData = tempDir('userdata')
@@ -10,7 +10,7 @@ test('dashboard: leeg starten, recente quiz openen en terugkomen', async () => {
     // Eerste keer: niets recents, dus de lege staat.
     let { app, operator } = await launch(userData)
     await expect(operator.getByRole('heading', { name: 'Maak je eerste pubquiz' })).toBeVisible()
-    await operator.screenshot({ path: 'test-results/home-empty.png' })
+    await snap(operator, 'test-results/home-empty.png')
     await app.close()
 
     // Quiz openen, dan via de home-knop naar het overzicht.
@@ -32,7 +32,7 @@ test('dashboard: leeg starten, recente quiz openen en terugkomen', async () => {
     )
     expect(forbidden).toBe(403)
     await operator.waitForTimeout(800) // cover en gloed laten laden voor de screenshot
-    await operator.screenshot({ path: 'test-results/home.png' })
+    await snap(operator, 'test-results/home.png')
 
     await operator.getByRole('button', { name: 'Naar show' }).click()
     await expect(operator.getByRole('dialog', { name: 'Show starten' })).toBeVisible()
@@ -60,7 +60,7 @@ test('dashboard: de rondleiding staat de eerste keer klaar, en komt niet terug a
     await expect(operator.locator('.hero-title')).toHaveText('Rondleiding')
     expect(existsSync(join(library, 'Rondleiding.pubquiz', 'quiz.json'))).toBe(true)
     await operator.waitForTimeout(800) // cover en gloed laten laden voor de screenshot
-    await operator.screenshot({ path: 'test-results/home-tour.png' })
+    await snap(operator, 'test-results/home-tour.png')
     await operator.locator('.hero-text').getByRole('button', { name: 'Bewerken' }).click()
     await expect(operator.locator('.topbar .name')).toHaveText('Rondleiding')
     await app.close()
@@ -108,7 +108,7 @@ test('dashboard: een verplaatste quiz is te herkennen en uit de lijst te halen',
     const card = operator.locator('.card')
     await expect(card).toHaveCount(1)
     await expect(card).toContainText('Niet gevonden')
-    await operator.screenshot({ path: 'test-results/home-missing.png' })
+    await snap(operator, 'test-results/home-missing.png')
 
     await card.getByRole('button', { name: 'Uit lijst' }).click()
     await expect(card).toHaveCount(0)
@@ -136,7 +136,7 @@ test('nieuwe quiz: alleen een naam, de app maakt zelf de map aan', async () => {
     await expect(dialog.getByLabel('Naam')).toBeFocused()
     await dialog.getByLabel('Naam').fill('Pubquiz november')
     await operator.waitForTimeout(300) // infaden afwachten voor de screenshot
-    await operator.screenshot({ path: 'test-results/new-quiz-dialog.png' })
+    await snap(operator, 'test-results/new-quiz-dialog.png')
     await dialog.getByLabel('Naam').press('Enter')
     await expect(operator.locator('.topbar .name')).toHaveText('Pubquiz november')
     expect(existsSync(join(library, 'Pubquiz november.pubquiz', 'quiz.json'))).toBe(true)
@@ -154,7 +154,7 @@ test('nieuwe quiz: alleen een naam, de app maakt zelf de map aan', async () => {
     await operator.locator('.popover-panel').getByRole('button', { name: 'Demo-pubquiz' }).click()
     await expect(dialog.getByLabel('Naam')).toHaveValue('Demo-pubquiz (nieuw)')
     await operator.waitForTimeout(300)
-    await operator.screenshot({ path: 'test-results/new-quiz-template.png' })
+    await snap(operator, 'test-results/new-quiz-template.png')
     await dialog.getByLabel('Naam').fill('Pubquiz december')
     await dialog.getByRole('button', { name: 'Maak quiz' }).click()
     await expect(operator.locator('.topbar .name')).toHaveText('Pubquiz december')

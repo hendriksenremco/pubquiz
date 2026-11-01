@@ -50,6 +50,7 @@ onBeforeUnmount(() => {
     <template v-if="qr && link?.url">
       <svg
         class="code"
+        data-volatile
         :viewBox="`0 0 ${qr.size} ${qr.size}`"
         shape-rendering="crispEdges"
         role="img"
@@ -61,7 +62,7 @@ onBeforeUnmount(() => {
       <p class="muted tip">
         Scan met de camera van een telefoon of tablet op hetzelfde wifi-netwerk.
       </p>
-      <p class="url mono" :title="link.url">{{ link.url }}</p>
+      <p class="url mono" data-volatile :title="link.url">{{ link.url }}</p>
       <div class="foot">
         <span class="devices" :class="{ on: link.devices > 0 }">
           <span class="dot" />{{ devices }}

@@ -61,7 +61,7 @@ async function create() {
         />
       </label>
       <p v-if="error" class="error" role="alert">{{ error }}</p>
-      <p v-else class="where faint">Wordt bewaard in {{ where }}</p>
+      <p v-else class="where faint" data-volatile>Wordt bewaard in {{ where }}</p>
 
       <template v-if="source">
         <p class="muted intro">
