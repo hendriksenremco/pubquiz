@@ -170,13 +170,19 @@ const MEDIA_EVENTS = ['pause', 'play', 'playing', 'seeking', 'seeked', 'timeupda
  * bijvoorbeeld een voorbeeld dat op `pause` reageert.
  */
 async function freezeVideos(events: string[]) {
+  const until = async (ready: () => boolean) => {
+    for (let i = 0; i < 100 && !ready(); i++) await new Promise((r) => setTimeout(r, 20))
+  }
+  // Een video die net play() kreeg, eerst echt laten starten: pauzeren breekt de belofte van
+  // play() af, en dan stopt bijvoorbeeld een voorbeeld in de mediabibliotheek.
+  const started = Array.from(document.querySelectorAll('video')).filter((v) => !v.paused)
+  await Promise.all(started.map((v) => until(() => v.readyState >= 3)))
+  await new Promise((r) => setTimeout(r, 50))
+
   const block = (e: Event) => {
     if (e.target instanceof HTMLVideoElement) e.stopImmediatePropagation()
   }
   for (const name of events) window.addEventListener(name, block, true)
-  const until = async (ready: () => boolean) => {
-    for (let i = 0; i < 100 && !ready(); i++) await new Promise((r) => setTimeout(r, 20))
-  }
   const videos = Array.from(document.querySelectorAll('video'))
   ;(window as FrozenWindow).__pubquizFrozen = {
     playing: videos.filter((v) => !v.paused),
