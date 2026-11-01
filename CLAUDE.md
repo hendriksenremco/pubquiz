@@ -18,10 +18,7 @@ Wat er nog moet gebeuren, staat als **issues** op GitHub (`gh issue list`). Hoe 
 - **Laatst samengevoegd (30 oktober):** #12 en #13. Kijk met `gh pr list --state all` wat er sindsdien is gebeurd.
   - #12: Ronde opnieuw, dezelfde knoppen op de Mac en de telefoon, en het licht in de werkbalk van de show.
   - #13: vier vragenkaarten per A4, met snijlijnen.
-- **README.md loopt achter.** Deze onderdelen staan er niet in:
-  - antwoordenrondes en afbeeldingenrondes;
-  - afdrukken;
-  - plug-ins en de afstandsbediening.
+- **README.md** is sinds 1 november 2026 Engels en voor ontwikkelaars: wat de app is, installeren, opbouw, bijdragen en releases. Houd hem bij als dat verandert.
 
 ## Werkafspraken
 
@@ -220,6 +217,6 @@ Nieuwe optionele koppelingen, zoals Spotify of YouTube, volgen hetzelfde patroon
 - `TODO.md`: hoe de issues en hun labels werken.
 - `MAGICHOME.md`: de controller, het protocol en wat we over het netwerk hebben geleerd.
 - `PLUGINS.md`: plan om plug-ins generieker te maken (goedgekeurd op 1 november 2026, issue #31).
-- `README.md`: gebruik en opbouw van de app. Loopt achter.
+- `README.md`: in het Engels, voor ontwikkelaars. De screenshots staan in `docs/`.
 - `~/Documents/pubquiz-site`: de site. Nuxt 4, branches `master` en `develop`. Pushen naar `develop` mag; een push naar `master` zet de site live (zie de CLAUDE.md van de site).
 - Het geheugen van Claude voor dit project, op de Mac van Remco: `~/.claude/projects/-Users-remcohendriksen-Documents-pubquiz/memory/`.
