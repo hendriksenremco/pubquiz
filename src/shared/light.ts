@@ -5,8 +5,13 @@
 import { z } from 'zod'
 import { effectInfo } from './light-effects'
 import { EFFECT_MAX, EFFECT_MIN, type MagicHomeState } from './magichome'
-import type { PluginData } from './plugins'
-import { activeRound } from './resolve'
+import {
+  definePlugin,
+  pluginData,
+  resolvePluginData,
+  setPluginData,
+  type HasPlugins
+} from './plugin'
 import type { Quiz, ShowState } from './types'
 
 export const LightSchema = z.discriminatedUnion('type', [
@@ -29,32 +34,29 @@ export interface LightStatus {
   manual: boolean
 }
 
-const PLUGIN = 'magichome'
-
-interface HasPlugins {
-  plugins?: PluginData
-}
+export const MAGICHOME = definePlugin({
+  id: 'magichome',
+  name: 'MagicHome-licht',
+  description:
+    'Ledstrips met een MagicHome-controller een kleur of effect geven, per ronde en per slide.',
+  /** Het adres van de controller, per Mac; leeg = nog niet ingesteld. */
+  config: z.object({ host: z.string().catch('').default('') }).catch({ host: '' }),
+  data: z.object({ light: LightSchema })
+})
 
 /** Het licht van een slide, ronde of quiz; iets ongeldigs telt als niets. */
 export function lightOf(holder: HasPlugins | null | undefined): Light | undefined {
-  const data = holder?.plugins?.[PLUGIN] as { light?: unknown } | undefined
-  const parsed = LightSchema.safeParse(data?.light)
-  return parsed.success ? parsed.data : undefined
+  return pluginData(MAGICHOME, holder)?.light
 }
 
 export function setLight(holder: HasPlugins, light: Light | undefined): void {
-  const { [PLUGIN]: _, ...rest } = holder.plugins ?? {}
-  const plugins = light ? { ...rest, [PLUGIN]: { light } } : rest
-  if (Object.keys(plugins).length) holder.plugins = plugins
-  else delete holder.plugins
+  setPluginData(MAGICHOME, holder, light ? { light } : undefined)
 }
 
 /** Welk licht er nu hoort; null = niets aan veranderen. Alleen tijdens de show. */
 export function resolveLight(quiz: Quiz, state: ShowState): Light | null {
   if (!state.live) return null
-  const round = activeRound(quiz, state)
-  const slide = round && state.slideIndex >= 0 ? round.slides[state.slideIndex] : undefined
-  return lightOf(slide) ?? lightOf(round) ?? lightOf(quiz) ?? null
+  return resolvePluginData(MAGICHOME, quiz, state)?.light ?? null
 }
 
 /** De lichten die de quiz gebruikt, elk één keer: eerst de standaard, dan per ronde en slide. */

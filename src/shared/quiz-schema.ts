@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { PluginDataSchema } from './plugins'
+import { PluginDataSchema } from './plugin'
 import { SCHEMA_VERSION } from './version'
 
 export { SCHEMA_VERSION }

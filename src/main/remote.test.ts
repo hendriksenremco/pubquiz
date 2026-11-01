@@ -7,6 +7,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createQuiz, createRound, createShowState, createSlide } from '@shared/factory'
 import type { RemoteView } from '@shared/remote'
 import type { ShowState } from '@shared/types'
+import type { PluginConfig } from '@shared/plugins'
 import type { PluginHost } from './plugins'
 import { lanAddress, RemotePlugin } from './remote'
 
@@ -32,12 +33,12 @@ async function setup(light: unknown = null) {
     mediaFile: (file: string) => join(dir, 'quiz', file),
     notify: vi.fn(),
     command: vi.fn(),
-    saveConfig: vi.fn((config: Record<string, unknown>) => plugin!.configure(config)),
+    saveConfig: vi.fn((config: PluginConfig<'remote'>) => plugin!.configure(config)),
     invoke: vi.fn(async (_id: string, action: string) =>
       action === 'status' ? light : { ok: true }
     ),
     changed: vi.fn()
-  } satisfies PluginHost
+  } satisfies PluginHost<PluginConfig<'remote'>>
   plugin = new RemotePlugin(host, { page: { dir }, host: '127.0.0.1', port: 0 })
   plugin.configure({})
   const link = (await plugin.invoke('link'))!

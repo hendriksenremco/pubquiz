@@ -7,6 +7,7 @@ import { z } from 'zod'
 import type { ShowCommand } from './ipc'
 import { LightSchema, quizLights, type Light, type LightStatus } from './light'
 import { adjacentFragment } from './autoplay'
+import { definePlugin } from './plugin'
 import {
   activeRound,
   adjacentRound,
@@ -20,6 +21,15 @@ import {
   type StepTarget
 } from './resolve'
 import type { Quiz, Round, ShowState, Slide } from './types'
+
+export const REMOTE = definePlugin({
+  id: 'remote',
+  name: 'Afstandsbediening',
+  description:
+    'De show bedienen met een telefoon of tablet op hetzelfde wifi-netwerk, via een QR-code.',
+  /** De geheime sleutel uit de QR-code; te kort of ontbreekt = main maakt een nieuwe. */
+  config: z.object({ key: z.string().min(20).optional().catch(undefined) }).catch({})
+})
 
 /** Wat de telefoon toont. */
 export interface RemoteView {

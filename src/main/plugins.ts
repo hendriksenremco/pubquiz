@@ -1,7 +1,7 @@
 import { app } from 'electron'
 import { join } from 'path'
 import type { ShowCommand } from '@shared/ipc'
-import type { PluginId, PluginSettings } from '@shared/plugins'
+import { configOf, type PluginConfig, type PluginId, type PluginSettings } from '@shared/plugins'
 import type { Notice, Quiz, ShowState } from '@shared/types'
 import { MagicHomePlugin } from './magichome'
 import { RemotePlugin, type RemoteOptions } from './remote'
@@ -9,10 +9,10 @@ import { RemotePlugin, type RemoteOptions } from './remote'
 export type Notify = (level: Notice['level'], message: string) => void
 
 /** Wat de app een plug-in in main geeft. */
-export interface PluginHost {
+export interface PluginHost<Config = Record<string, unknown>> {
   notify: Notify
   /** Bewaart zijn eigen instellingen voor deze Mac; daarna volgt configure. */
-  saveConfig(config: Record<string, unknown>): void
+  saveConfig(config: Config): void
   /** Een opdracht aan de show, zoals een knop in de app hem geeft. */
   command(command: ShowCommand): void
   /** Waar een bestand uit de geopende quiz staat; null = geen quiz, of buiten de quizmap. */
@@ -24,9 +24,9 @@ export interface PluginHost {
 }
 
 /** Wat een plug-in in main doet. De app maakt hem aan zodra hij aangezet wordt. */
-export interface MainPlugin {
-  /** Zijn instellingen voor deze Mac; ook bij elke wijziging. */
-  configure(config: Record<string, unknown>): void
+export interface MainPlugin<Config = Record<string, unknown>> {
+  /** Zijn instellingen voor deze Mac, gecontroleerd met zijn definitie; ook bij elke wijziging. */
+  configure(config: Config): void
   /** Na elke wijziging van de quiz of de show. */
   update(quiz: Quiz | null, state: ShowState): void
   /** Een vraag vanuit een venster, bv. "test de verbinding". */
@@ -37,7 +37,11 @@ export interface MainPlugin {
   stop(): void
 }
 
-const FACTORIES: Record<PluginId, (host: PluginHost) => MainPlugin> = {
+type Factories = {
+  [Id in PluginId]: (host: PluginHost<PluginConfig<Id>>) => MainPlugin<PluginConfig<Id>>
+}
+
+const FACTORIES: Factories = {
   magichome: (host) => new MagicHomePlugin(host.notify, host.changed),
   remote: (host) => new RemotePlugin(host, remoteOptions())
 }
@@ -58,7 +62,7 @@ function remoteOptions(): RemoteOptions {
 
 /** De plug-ins die aan staan. */
 export class Plugins {
-  private running = new Map<PluginId, MainPlugin>()
+  private running = new Map<PluginId, MainPlugin<never>>()
 
   constructor(
     private readonly host: Omit<PluginHost, 'saveConfig' | 'invoke' | 'changed'> & {
@@ -77,10 +81,11 @@ export class Plugins {
         continue
       }
       if (!plugin) {
-        plugin = FACTORIES[id](this.hostFor(id))
+        plugin = this.create(id)
         this.running.set(id, plugin)
       }
-      plugin.configure(setting.config)
+      // De config hoort bij dit id; TypeScript kan dat over de lus heen niet volgen.
+      ;(plugin as MainPlugin<PluginConfig<typeof id>>).configure(configOf(settings, id))
       plugin.update(quiz, state)
     }
   }
@@ -98,10 +103,14 @@ export class Plugins {
     this.running.clear()
   }
 
-  private hostFor(id: PluginId): PluginHost {
+  private create<Id extends PluginId>(id: Id): MainPlugin<never> {
+    return FACTORIES[id](this.hostFor(id))
+  }
+
+  private hostFor<Id extends PluginId>(id: Id): PluginHost<PluginConfig<Id>> {
     return {
       notify: this.host.notify,
-      saveConfig: (config) => this.host.saveConfig(id, config),
+      saveConfig: (config) => this.host.saveConfig(id, { ...config }),
       command: this.host.command,
       mediaFile: this.host.mediaFile,
       invoke: (other, action, payload) => this.invoke(other, action, payload),

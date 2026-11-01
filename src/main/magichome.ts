@@ -18,6 +18,7 @@ import {
   type MagicHomeState
 } from '@shared/magichome'
 import type { Quiz, ShowState } from '@shared/types'
+import type { PluginConfig } from '@shared/plugins'
 import type { MainPlugin, Notify } from './plugins'
 
 const TIMEOUT_MS = 2000
@@ -35,7 +36,7 @@ const GAP_MS = 50
  * Buiten de show kan de editor een licht als voorbeeld laten zien; daarna gaat de controller terug
  * naar hoe hij was. Tijdens de show kan de afstandsbediening met de hand een licht kiezen.
  */
-export class MagicHomePlugin implements MainPlugin {
+export class MagicHomePlugin implements MainPlugin<PluginConfig<'magichome'>> {
   private address: MagicHomeAddress | null = null
   private link: Link | null = null
   /** Het licht van de show zelf (slide ⊕ ronde ⊕ quiz); null = de show stuurt het niet aan. */
@@ -63,8 +64,8 @@ export class MagicHomePlugin implements MainPlugin {
     private readonly onChange: () => void = () => {}
   ) {}
 
-  configure(config: Record<string, unknown>): void {
-    const address = parseAddress(typeof config.host === 'string' ? config.host : '')
+  configure(config: PluginConfig<'magichome'>): void {
+    const address = parseAddress(config.host)
     if (JSON.stringify(address) === JSON.stringify(this.address)) return
     this.address = address
     this.link?.close()
