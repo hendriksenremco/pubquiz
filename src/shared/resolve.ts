@@ -246,13 +246,6 @@ export function slideNumber(round: Round, slide: Slide): number | null {
   return index === -1 ? null : index + 1
 }
 
-/** Korte tekst voor een slide in een lijst, bv. tijdens de show. */
-export function slideText(round: Round, slide: Slide): string {
-  if (slide.layout === 'image')
-    return `Afbeelding ${slideNumber(round, slide)}${slide.title ? `: ${slide.title}` : ''}`
-  return slide.title || slide.body || '(leeg)'
-}
-
 /**
  * Wat vorige en volgende bedienen (← →, een presenter-clicker, de afstandsbediening): in een
  * antwoordenronde de antwoorden, in een ronde met fragmenten de fragmenten, anders de slides.
