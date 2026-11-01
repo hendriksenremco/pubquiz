@@ -10,12 +10,14 @@ import MediaPicker from '../../components/MediaPicker.vue'
 import PluginSlot from '../../plugins/PluginSlot.vue'
 import { locale } from '../../lib/locale'
 import { useSession } from '../../stores/session'
+import { ROUND_MESSAGES } from './editor-messages'
 
 /** Paneel rechts voor de ronde zelf: schermen, muziek, fragmenten, loop en antwoorden. */
 const props = defineProps<{ round: Round }>()
 const emit = defineEmits<{ duplicate: []; remove: [] }>()
 const session = useSession()
 const quiz = computed(() => session.quiz!)
+const t = ROUND_MESSAGES.in(locale)
 
 /** Lijsten in de volgorde van de quiz houden, zodat ze overal hetzelfde lezen. */
 function toggled(list: string[], order: string[], id: string, on: boolean): string[] {
@@ -47,10 +49,10 @@ const bgMode = computed<BgMode>(() => {
   return replacing.value || typeof bg === 'object' ? 'replace' : bg
 })
 const BG_OPTIONS: { value: BgMode; label: string; hint: string }[] = [
-  { value: 'continue', label: 'Gewoon', hint: 'Speelt door, alleen zachter tijdens een fragment' },
-  { value: 'duck', label: 'Zachter', hint: 'De hele ronde op het lagere volume' },
-  { value: 'pause', label: 'Pauze', hint: 'Stil, na de ronde speelt hij verder' },
-  { value: 'replace', label: 'Andere', hint: 'Een eigen loop tijdens deze ronde' }
+  { value: 'continue', label: t('bgContinue'), hint: t('bgContinueHint') },
+  { value: 'duck', label: t('bgDuck'), hint: t('bgDuckHint') },
+  { value: 'pause', label: t('bgPause'), hint: t('bgPauseHint') },
+  { value: 'replace', label: t('bgReplace'), hint: t('bgReplaceHint') }
 ]
 function chooseBackground(mode: BgMode) {
   replacing.value = mode === 'replace'
@@ -72,7 +74,7 @@ function numberFrom(event: Event, fallback: number): number {
 }
 
 function renumber() {
-  props.round.fragments.forEach((f, i) => (f.label = `Fragment ${i + 1}`))
+  props.round.fragments.forEach((f, i) => (f.label = t('fragmentName', { number: i + 1 })))
 }
 
 // ── Slides die vanzelf wisselen ──────────────────────────────────────────────
@@ -123,7 +125,7 @@ function setAnswersFor(roundId: string, on: boolean) {
 <template>
   <div class="round-settings">
     <div v-if="quiz.screens.length" class="inspector-group">
-      <span class="label">Schermen in deze ronde</span>
+      <span class="label">{{ t('screens') }}</span>
       <div v-for="slot in quiz.screens" :key="slot.id" class="inspector-row">
         <span class="row-label">{{ slot.name }}</span>
         <ContentChip
@@ -140,12 +142,12 @@ function setAnswersFor(roundId: string, on: boolean) {
     </div>
 
     <div class="inspector-group">
-      <span class="label">Achtergrondmuziek</span>
+      <span class="label">{{ t('background') }}</span>
       <p v-if="!quiz.background" class="muted small">
-        Geen achtergrondmuziek. Die kies je bij Quiz-instellingen.
+        {{ t('noBackground') }}
       </p>
       <template v-else>
-        <div class="segmented" role="group" aria-label="Achtergrondmuziek">
+        <div class="segmented" role="group" :aria-label="t('background')">
           <button
             v-for="o in BG_OPTIONS"
             :key="o.value"
@@ -163,8 +165,8 @@ function setAnswersFor(roundId: string, on: boolean) {
           v-model="replaceAsset"
           :kinds="['audio']"
           size="sm"
-          placeholder="Kies muziek voor deze ronde…"
-          aria-label="Muziek voor deze ronde"
+          :placeholder="t('bgChoose')"
+          :aria-label="t('bgAsset')"
         />
       </template>
     </div>
@@ -172,10 +174,10 @@ function setAnswersFor(roundId: string, on: boolean) {
     <PluginSlot name="roundSettings" :round="round" />
 
     <div v-if="round.fragments.length" class="inspector-group">
-      <span class="label">Fragmenten</span>
+      <span class="label">{{ t('fragments') }}</span>
       <div v-if="quiz.screens.length" class="inspector-row">
-        <span class="row-label">Nummer op</span>
-        <div class="checks" role="group" aria-label="Fragmentnummer in beeld op">
+        <span class="row-label">{{ t('numberOn') }}</span>
+        <div class="checks" role="group" :aria-label="t('numberOnLabel')">
           <label v-for="slot in quiz.screens" :key="slot.id">
             <input
               type="checkbox"
@@ -187,7 +189,7 @@ function setAnswersFor(roundId: string, on: boolean) {
         </div>
       </div>
       <div class="inspector-row">
-        <span class="row-label">In de reeks</span>
+        <span class="row-label">{{ t('inSeries') }}</span>
         <span class="inline">
           <input
             :value="round.autoplay.gapSeconds"
@@ -195,33 +197,33 @@ function setAnswersFor(roundId: string, on: boolean) {
             min="0"
             step="1"
             class="input input-sm short"
-            aria-label="Pauze tussen fragmenten in seconden"
+            :aria-label="t('gapLabel')"
             @change="round.autoplay.gapSeconds = numberFrom($event, 0)"
           />
-          <span class="muted">s ertussen</span>
+          <span class="muted">{{ t('gapUnit') }}</span>
         </span>
       </div>
       <label class="check-line">
         <input v-model="round.autoplay.countdownOnScreen" type="checkbox" />
-        Aftellen tussen fragmenten in beeld
+        {{ t('countdown') }}
       </label>
       <button class="btn btn-ghost btn-sm renumber" @click="renumber">
-        Namen hernummeren: Fragment 1, 2, …
+        {{ t('renumber') }}
       </button>
     </div>
 
     <div v-if="loopable" class="inspector-group">
-      <span class="label">Slides</span>
+      <span class="label">{{ t('slides') }}</span>
       <label class="check-line">
         <input
           type="checkbox"
           :checked="!!round.slideLoopSeconds"
           @change="setLoop(($event.target as HTMLInputElement).checked)"
         />
-        Vanzelf wisselen
+        {{ t('loop') }}
       </label>
       <div v-if="round.slideLoopSeconds" class="inspector-row">
-        <span class="row-label">Elke</span>
+        <span class="row-label">{{ t('every') }}</span>
         <span class="inline">
           <input
             :value="round.slideLoopSeconds"
@@ -229,23 +231,23 @@ function setAnswersFor(roundId: string, on: boolean) {
             min="1"
             step="1"
             class="input input-sm short"
-            aria-label="Seconden per slide"
+            :aria-label="t('loopLabel')"
             @change="setLoopSeconds"
           />
-          <span class="muted">seconden</span>
+          <span class="muted">{{ t('seconds') }}</span>
         </span>
       </div>
     </div>
 
     <div v-if="answerSources.length" class="inspector-group answers">
-      <span class="label">Antwoorden</span>
+      <span class="label">{{ t('answers') }}</span>
       <label class="check-line">
         <input
           type="checkbox"
           :checked="answersOn"
           @change="setAnswersOn(($event.target as HTMLInputElement).checked)"
         />
-        Antwoorden van andere rondes langslopen
+        {{ t('answersOn') }}
       </label>
       <label
         v-for="r in answersOn ? answerSources : []"
@@ -263,12 +265,11 @@ function setAnswersFor(roundId: string, on: boolean) {
         </span>
       </label>
       <p v-if="answersOn && missingAnswers" class="warn small">
-        Nog {{ missingAnswers }} zonder antwoord. Vul het in bij de vraag, de afbeelding of het
-        fragment zelf.
+        {{ t('missingAnswers', { count: missingAnswers }) }}
       </p>
       <div v-if="chosenSources.length && quiz.screens.length" class="inspector-row">
-        <span class="row-label">In beeld op</span>
-        <div class="checks" role="group" aria-label="Antwoorden in beeld op">
+        <span class="row-label">{{ t('shownOn') }}</span>
+        <div class="checks" role="group" :aria-label="t('answersShownOn')">
           <label v-for="slot in quiz.screens" :key="slot.id">
             <input
               type="checkbox"
@@ -283,11 +284,11 @@ function setAnswersFor(roundId: string, on: boolean) {
 
     <footer class="foot">
       <button class="btn btn-ghost btn-sm" @click="emit('duplicate')">
-        <Icon name="copy" :size="14" /> Dupliceer ronde
+        <Icon name="copy" :size="14" /> {{ t('duplicate') }}
       </button>
       <span class="grow" />
       <button class="btn btn-ghost btn-sm btn-danger" @click="emit('remove')">
-        <Icon name="trash" :size="14" /> Verwijder ronde
+        <Icon name="trash" :size="14" /> {{ t('remove') }}
       </button>
     </footer>
   </div>

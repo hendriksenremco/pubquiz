@@ -1,11 +1,17 @@
 import { describe, expect, it } from 'vitest'
 import { placeholders, type MessageBook } from '@shared/i18n'
-import { FRAGMENT_MESSAGES, PRINT_MESSAGES, SLIDE_MESSAGES } from './editor-messages'
+import {
+  FRAGMENT_MESSAGES,
+  PRINT_MESSAGES,
+  ROUND_MESSAGES,
+  SLIDE_MESSAGES
+} from './editor-messages'
 
 const BOOKS: Record<string, MessageBook<string>> = {
   PRINT_MESSAGES,
   FRAGMENT_MESSAGES,
-  SLIDE_MESSAGES
+  SLIDE_MESSAGES,
+  ROUND_MESSAGES
 }
 
 describe('teksten van de editor', () => {
@@ -30,5 +36,11 @@ describe('teksten van de editor', () => {
   it('noemt een afbeeldingsslide met zijn nummer', () => {
     expect(SLIDE_MESSAGES.in('nl')('kindImage', { number: 3 })).toBe('Afbeelding 3')
     expect(SLIDE_MESSAGES.in('en')('kindImage', { number: 3 })).toBe('Picture 3')
+  })
+
+  it('noemt nieuwe vragen en fragmenten met hun nummer', () => {
+    expect(ROUND_MESSAGES.in('nl')('newQuestion', { number: 4 })).toBe('Vraag 4')
+    expect(ROUND_MESSAGES.in('nl')('fragmentName', { number: 2 })).toBe('Fragment 2')
+    expect(ROUND_MESSAGES.in('en')('fragmentName', { number: 2 })).toBe('Clip 2')
   })
 })
