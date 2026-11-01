@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createFragment, createQuiz, createRound, createShowState, createSlide } from './factory'
-import { quizLights, setLight, type Light } from './light'
+import type { Light } from './light'
 import { remoteCommand, remoteView, RemoteActionSchema } from './remote'
 import type { ShowState } from './types'
 
@@ -35,8 +35,7 @@ describe('remoteView', () => {
     const { quiz, first, live } = setup()
     const view = remoteView(
       quiz,
-      live({ activeRoundId: first.id, lastRoundId: first.id, slideIndex: 1 }),
-      null
+      live({ activeRoundId: first.id, lastRoundId: first.id, slideIndex: 1 })
     )
     expect(view).toMatchObject({
       quiz: 'Kroegquiz',
@@ -57,13 +56,13 @@ describe('remoteView', () => {
       screens: true,
       blackout: false,
       muted: false,
-      light: null
+      plugins: []
     })
   })
 
   it('tussen twee rondes: geen stappen, en de vorige is de ronde van net', () => {
     const { quiz, first, live } = setup()
-    const view = remoteView(quiz, live({ lastRoundId: first.id }), null)
+    const view = remoteView(quiz, live({ lastRoundId: first.id }))
     expect(view).toMatchObject({
       round: null,
       step: null,
@@ -77,7 +76,7 @@ describe('remoteView', () => {
   it('in een muziekronde bladeren vorige en volgende door de fragmenten', () => {
     const { quiz, music, live } = setup()
     const round = { activeRoundId: music.id, slideIndex: 0 }
-    expect(remoteView(quiz, live(round), null).step).toMatchObject({
+    expect(remoteView(quiz, live(round)).step).toMatchObject({
       target: 'fragments',
       label: '3 fragmenten',
       text: null,
@@ -90,7 +89,7 @@ describe('remoteView', () => {
       lastFragmentId: second.id,
       fragment: { key: 'k', roundId: music.id, fragmentId: second.id, startedAt: 0, duration: 10 }
     })
-    expect(remoteView(quiz, playing, null)).toMatchObject({
+    expect(remoteView(quiz, playing)).toMatchObject({
       step: { label: 'Fragment 2 van 3', text: 'Liedje 2', playing: true, prev: true, next: true },
       screen: { slide: { layout: 'title', title: 'Ronde 2' } }
     })
@@ -101,8 +100,7 @@ describe('remoteView', () => {
     const at = (index: number, revealed: boolean) =>
       remoteView(
         quiz,
-        live({ activeRoundId: answers.id, answer: { roundId: answers.id, index, revealed } }),
-        null
+        live({ activeRoundId: answers.id, answer: { roundId: answers.id, index, revealed } })
       ).step
     expect(at(0, false)).toMatchObject({
       target: 'answers',
@@ -128,8 +126,7 @@ describe('remoteView', () => {
         slideIndex: 0,
         blackout: [beamer],
         backgroundEnabled: false
-      }),
-      null
+      })
     )
     expect(view).toMatchObject({
       blackout: true,
@@ -138,21 +135,17 @@ describe('remoteView', () => {
     })
   })
 
-  it('geeft het licht met de lichten uit de quiz, als de plug-in aan staat', () => {
-    const { quiz, first, live } = setup()
-    setLight(quiz, RED)
-    setLight(first, PARTY)
-    setLight(first.slides[1], RED)
-    expect(quizLights(quiz)).toEqual([RED, PARTY])
-    expect(remoteView(quiz, live(), { light: PARTY, manual: true }).light).toEqual({
-      light: PARTY,
-      manual: true,
-      quiz: [RED, PARTY]
-    })
+  it('geeft de plug-ins voor de telefoon door, maar niet zonder quiz', () => {
+    const { quiz, live } = setup()
+    const plugins = [
+      { id: 'magichome' as const, status: { light: PARTY, manual: true, quiz: [RED, PARTY] } }
+    ]
+    expect(remoteView(quiz, live(), plugins).plugins).toEqual(plugins)
+    expect(remoteView(null, live(), plugins).plugins).toEqual([])
   })
 
   it('zonder quiz', () => {
-    expect(remoteView(null, createShowState(), null)).toMatchObject({
+    expect(remoteView(null, createShowState())).toMatchObject({
       quiz: null,
       live: false,
       rounds: 0,
@@ -193,7 +186,9 @@ describe('remoteCommand', () => {
       type: 'blackout',
       on: true
     })
-    expect(remoteCommand(quiz, state, { type: 'light', light: RED })).toBeNull()
+    expect(
+      remoteCommand(quiz, state, { type: 'plugin', id: 'magichome', action: 'choose', input: RED })
+    ).toBeNull()
   })
 
   it('geluid aan of uit is een stand, geen wissel', () => {
@@ -210,10 +205,15 @@ describe('remoteCommand', () => {
   it('weigert onbekende acties', () => {
     expect(RemoteActionSchema.safeParse({ type: 'stopShow' }).success).toBe(false)
     expect(RemoteActionSchema.safeParse({ type: 'slide', direction: 'next' }).success).toBe(false)
+    expect(RemoteActionSchema.safeParse({ type: 'light', light: null }).success).toBe(false)
+    expect(RemoteActionSchema.safeParse({ type: 'plugin', id: 'magichome' }).success).toBe(false)
     expect(
-      RemoteActionSchema.safeParse({ type: 'light', light: { type: 'color', color: 'red' } })
-        .success
-    ).toBe(false)
-    expect(RemoteActionSchema.safeParse({ type: 'light', light: null }).success).toBe(true)
+      RemoteActionSchema.safeParse({
+        type: 'plugin',
+        id: 'magichome',
+        action: 'choose',
+        input: null
+      }).success
+    ).toBe(true)
   })
 })

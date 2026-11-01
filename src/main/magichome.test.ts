@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { createQuiz, createRound, createShowState, createSlide } from '@shared/factory'
-import { setLight } from '@shared/light'
+import { quizLights, setLight } from '@shared/light'
 import type { ShowState } from '@shared/types'
 import { command, fakeController } from '../../e2e/fake-magichome'
 import { MagicHomePlugin } from './magichome'
@@ -128,20 +128,21 @@ describe('MagicHomePlugin', () => {
       plugin.update(quiz, state())
       await vi.waitFor(() => expect(device.log).toEqual([ON, RED]))
       expect(await plugin.actions.choose(blue)).toEqual({ ok: true })
-      expect(status()).toEqual({ light: blue, manual: true })
+      expect(status()).toMatchObject({ light: blue, manual: true })
       await vi.waitFor(() => expect(device.log.at(-1)).toBe(command.color(0, 0, 0xff)))
-      expect(status()).toEqual({ light: blue, manual: true })
+      expect(status()).toMatchObject({ light: blue, manual: true })
 
       // Zelfde licht van de show (bv. de muziek gaat uit): blauw blijft.
       plugin.update(quiz, state({ backgroundEnabled: false }))
-      expect(status()).toEqual({ light: blue, manual: true })
+      expect(status()).toMatchObject({ light: blue, manual: true })
 
       // De volgende slide heeft een eigen effect: de show neemt het weer over.
       plugin.update(quiz, state({ slideIndex: 1 }))
       await vi.waitFor(() => expect(device.log.at(-1)).toBe(FLASH))
       expect(status()).toEqual({
         light: { type: 'effect', effect: 1, speed: 50 },
-        manual: false
+        manual: false,
+        quiz: quizLights(quiz)
       })
 
       // Terug naar de show: het licht van de slide.

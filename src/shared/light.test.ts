@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import { createQuiz, createRound, createShowState, createSlide } from './factory'
-import { lightLabel, lightOf, quizUsesLight, resolveLight, setLight, type Light } from './light'
+import {
+  lightLabel,
+  lightOf,
+  quizLights,
+  quizUsesLight,
+  resolveLight,
+  setLight,
+  type Light
+} from './light'
 import { QuizSchema } from './quiz-schema'
 import type { ShowState } from './types'
 
@@ -79,5 +87,18 @@ describe('lightLabel', () => {
       'Rennend punt, rood, naar buiten'
     )
     expect(lightLabel({ type: 'off' })).toBe('Uit')
+  })
+})
+
+describe('quizLights', () => {
+  it('geeft elk licht van de quiz één keer: eerst de standaard, dan rondes en slides', () => {
+    const quiz = createQuiz('Test')
+    const round = createRound('normal', 1)
+    round.slides = [createSlide('question', 'Vraag 1')]
+    quiz.rounds = [round]
+    setLight(quiz, RED)
+    setLight(round, PARTY)
+    setLight(round.slides[0], RED)
+    expect(quizLights(quiz)).toEqual([RED, PARTY])
   })
 })

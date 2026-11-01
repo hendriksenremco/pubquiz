@@ -40,6 +40,8 @@ export interface LightStatus {
   light: Light | null
   /** Met de hand gekozen (afstandsbediening), tot de show zelf een ander licht kiest. */
   manual: boolean
+  /** De lichten die de geopende quiz gebruikt, om snel uit te kiezen (zie quizLights). */
+  quiz: Light[]
 }
 
 export const MAGICHOME = definePlugin({
@@ -58,7 +60,9 @@ export const MAGICHOME = definePlugin({
     preview: action<MagicHomeResult>()(LightSchema.nullable()),
     /** Vraagt alleen de toestand op van de controller op dit adres; het licht verandert niet. */
     probe: action<MagicHomeProbe>()(z.string())
-  }
+  },
+  /** Een telefoon mag alleen het licht kiezen; geen voorbeeld en geen ander adres proberen. */
+  remoteActions: ['choose']
 })
 
 /** Het licht van een slide, ronde of quiz; iets ongeldigs telt als niets. */

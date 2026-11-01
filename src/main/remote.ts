@@ -18,11 +18,13 @@ import {
   remoteCommand,
   remoteView,
   type RemoteAction,
+  type RemotePlugin as RemotePluginView,
   type RemoteResult,
   type RemoteView
 } from '@shared/remote'
 import type { Quiz, ShowState } from '@shared/types'
-import type { PluginConfig } from '@shared/plugins'
+import { parseAction } from '@shared/plugin'
+import { PLUGINS, type PluginConfig, type PluginId } from '@shared/plugins'
 import type { ActionHandlers, MainPlugin, PluginHost } from './plugins'
 import { mimeType } from './range'
 
@@ -48,11 +50,17 @@ export interface RemoteOptions {
 
 type RemoteConfig = PluginConfig<'remote'>
 
+/** Plug-ins met knoppen op de telefoon: die iets in `remoteActions` hebben staan. */
+const PHONE_PLUGINS = (
+  PLUGINS as readonly { id: PluginId; remoteActions?: readonly string[] }[]
+).filter((p) => p.remoteActions?.length)
+
 /**
  * Plug-in Afstandsbediening: een webserver op het lokale netwerk met de pagina voor de telefoon
  * (src/renderer/remote.html), de toestand van de show als server-sent events en een adres voor
  * de knoppen. Alleen wie de sleutel uit de QR-code heeft, mag iets; een nieuwe code sluit alle
- * telefoons buiten. Het licht loopt via de plug-in MagicHome-licht, als die aan staat.
+ * telefoons buiten. Andere plug-ins kunnen knoppen op de telefoon hebben (`remoteActions`); deze
+ * plug-in kent ze niet bij naam.
  */
 export class RemotePlugin implements MainPlugin<'remote'> {
   private config: RemoteConfig = {}
@@ -108,7 +116,7 @@ export class RemotePlugin implements MainPlugin<'remote'> {
     this.schedule()
   }
 
-  /** Bv. het licht met de hand gekozen op de Mac. */
+  /** Een andere plug-in heeft een nieuwe status, bv. het licht met de hand gekozen op de Mac. */
   statusChanged(): void {
     this.schedule()
   }
@@ -218,15 +226,22 @@ export class RemotePlugin implements MainPlugin<'remote'> {
       return reply(res, 401, { ok: false, error: 'Scan de QR-code opnieuw' })
     const parsed = RemoteActionSchema.safeParse(parseJson(await readBody(req)))
     if (!parsed.success) return reply(res, 400, { ok: false, error: 'Onbekende opdracht' })
+    if (parsed.data.type === 'plugin' && !phoneAction(parsed.data)) {
+      return reply(res, 403, { ok: false, error: 'Dat kan niet vanaf de telefoon' })
+    }
     const result = await this.perform(parsed.data)
     reply(res, result.ok ? 200 : 409, result)
   }
 
   private async perform(action: RemoteAction): Promise<RemoteResult> {
     if (!this.state.live) return { ok: false, error: 'Start eerst de show op de Mac' }
-    if (action.type === 'light') {
-      const result = await this.host.act('magichome', 'choose', action.light)
-      return result ?? { ok: false, error: 'Het licht staat uit op de Mac' }
+    if (action.type === 'plugin') {
+      const result = await this.host.remoteAct(action.id as PluginId, action.action, action.input)
+      if (result === null) {
+        const name = PLUGINS.find((p) => p.id === action.id)?.name ?? 'Deze plug-in'
+        return { ok: false, error: `${name} staat uit op de Mac` }
+      }
+      return pluginResult(result)
     }
     const command = this.quiz && remoteCommand(this.quiz, this.state, action)
     if (command) this.host.command(command)
@@ -240,7 +255,11 @@ export class RemotePlugin implements MainPlugin<'remote'> {
   }
 
   private view(): RemoteView {
-    return remoteView(this.quiz, this.state, this.host.status('magichome'))
+    const plugins = PHONE_PLUGINS.flatMap(({ id }) => {
+      const status = this.host.status(id)
+      return status === null ? [] : [{ id, status } as RemotePluginView]
+    })
+    return remoteView(this.quiz, this.state, plugins)
   }
 
   /** De telefoons bijwerken; één keer voor alles wat tegelijk verandert. */
@@ -292,6 +311,21 @@ export function lanAddress(
   )
   candidates.sort((a, b) => a.rank - b.rank)
   return candidates[0]?.address ?? null
+}
+
+/** Bestaat de plug-in, mag de telefoon deze actie en klopt de invoer? Main controleert het nog eens. */
+function phoneAction(action: Extract<RemoteAction, { type: 'plugin' }>): boolean {
+  const definition = PLUGINS.find((p) => p.id === action.id)
+  return !!definition && parseAction(definition, action.action, action.input, 'remote') !== null
+}
+
+/** Wat een plug-in teruggeeft, voor de telefoon: alleen een fout met uitleg telt als fout. */
+function pluginResult(result: unknown): RemoteResult {
+  if (typeof result === 'object' && result && 'ok' in result && result.ok === false) {
+    const error = 'error' in result && typeof result.error === 'string' ? result.error : null
+    return { ok: false, error: error ?? 'Dat lukte niet' }
+  }
+  return { ok: true }
 }
 
 const isPrivate = (ip: string) => /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(ip)

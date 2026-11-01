@@ -36,7 +36,8 @@ async function setup(light: unknown = null) {
     saveConfig: vi.fn((config: PluginConfig<'remote'>) => plugin!.configure(config)),
     publish: vi.fn(),
     status: vi.fn((): any => light),
-    act: vi.fn(async (): Promise<any> => ({ ok: true }))
+    act: vi.fn(async (): Promise<any> => ({ ok: true })),
+    remoteAct: vi.fn(async (): Promise<unknown> => ({ ok: true }))
   } satisfies PluginHost<'remote'>
   plugin = new RemotePlugin(host, { page: { dir }, host: '127.0.0.1', port: 0 })
   plugin.configure({})
@@ -186,31 +187,69 @@ describe('RemotePlugin', () => {
     expect((await act('geen json')).status).toBe(400)
   })
 
-  it('kiest het licht via MagicHome, en meldt als die uit staat', async () => {
+  it('geeft een actie van een plug-in door aan main, en meldt als die uit staat', async () => {
     const red = { type: 'color', color: '#ff0000' }
-    const on = await setup({ light: null, manual: false })
+    const choose = { type: 'plugin', id: 'magichome', action: 'choose', input: red }
+    const on = await setup({ light: null, manual: false, quiz: [] })
     on.plugin.update(on.quiz, on.live())
-    expect((await on.act({ type: 'light', light: red })).status).toBe(200)
-    expect(on.host.act).toHaveBeenCalledWith('magichome', 'choose', red)
+    expect((await on.act(choose)).status).toBe(200)
+    expect(on.host.remoteAct).toHaveBeenCalledWith('magichome', 'choose', red)
+    on.host.remoteAct.mockResolvedValueOnce({ ok: false, error: 'Geen controller' })
+    expect(await (await on.act(choose)).json()).toEqual({ ok: false, error: 'Geen controller' })
     on.plugin.stop()
 
     const off = await setup()
-    off.host.act.mockResolvedValue(null)
+    off.host.remoteAct.mockResolvedValue(null)
     off.plugin.update(off.quiz, off.live())
-    const result = await off.act({ type: 'light', light: red })
-    expect(await result.json()).toEqual({ ok: false, error: 'Het licht staat uit op de Mac' })
+    const result = await off.act(choose)
+    expect(await result.json()).toEqual({ ok: false, error: 'MagicHome-licht staat uit op de Mac' })
+  })
+
+  it('weigert een actie die de telefoon niet mag', async () => {
+    const { host, plugin, quiz, live, act } = await setup({ light: null, manual: false, quiz: [] })
+    plugin.update(quiz, live())
+    const red = { type: 'color', color: '#ff0000' }
+    for (const body of [
+      { type: 'plugin', id: 'magichome', action: 'probe', input: '192.168.1.10' },
+      { type: 'plugin', id: 'magichome', action: 'preview', input: red },
+      {
+        type: 'plugin',
+        id: 'magichome',
+        action: 'choose',
+        input: { type: 'color', color: 'rood' }
+      },
+      { type: 'plugin', id: 'remote', action: 'renew', input: undefined },
+      { type: 'plugin', id: 'onbekend', action: 'choose', input: red }
+    ]) {
+      const refused = await act(body)
+      expect(refused.status).toBe(403)
+      expect(await refused.json()).toEqual({ ok: false, error: 'Dat kan niet vanaf de telefoon' })
+    }
+    expect(host.remoteAct).not.toHaveBeenCalled()
   })
 
   it('toont meteen een licht dat op de Mac met de hand gekozen is', async () => {
     const red = { type: 'color', color: '#ff0000' }
-    const status: { light: unknown; manual: boolean } = { light: null, manual: false }
+    const status = { light: null as unknown, manual: false, quiz: [] }
     const { plugin, quiz, live, api } = await setup(status)
     plugin.update(quiz, live())
     const events = await subscribe(api('/api/events'))
-    expect(await events.next()).toMatchObject({ light: { light: null, manual: false } })
+    expect(await events.next()).toMatchObject({
+      plugins: [{ id: 'magichome', status: { light: null, manual: false } }]
+    })
     Object.assign(status, { light: red, manual: true })
     plugin.statusChanged()
-    expect(await events.next()).toMatchObject({ light: { light: red, manual: true } })
+    expect(await events.next()).toMatchObject({
+      plugins: [{ id: 'magichome', status: { light: red, manual: true } }]
+    })
+    await events.cancel()
+  })
+
+  it('zonder plug-ins met knoppen voor de telefoon is de lijst leeg', async () => {
+    const { plugin, quiz, live, api } = await setup()
+    plugin.update(quiz, live())
+    const events = await subscribe(api('/api/events'))
+    expect(await events.next()).toMatchObject({ plugins: [] })
     await events.cancel()
   })
 
@@ -243,7 +282,8 @@ describe('RemotePlugin tijdens het ontwikkelen', () => {
       mediaFile: vi.fn(),
       publish: vi.fn(),
       status: vi.fn(() => null),
-      act: vi.fn(async () => null)
+      act: vi.fn(async () => null),
+      remoteAct: vi.fn(async () => null)
     }
     plugin = new RemotePlugin(host, { page: { devServer }, host: '127.0.0.1', port: 0 })
     try {

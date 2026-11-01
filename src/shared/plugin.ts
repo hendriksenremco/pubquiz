@@ -59,6 +59,11 @@ export interface PluginDefinition<
   status: TypeOnly<Status>
   /** Wat de vensters de plug-in kunnen vragen; main weigert een onbekende actie of foute invoer. */
   actions: Actions
+  /**
+   * De acties die de telefoon (plug-in Afstandsbediening) mag vragen; main weigert de rest. Een
+   * plug-in met zulke acties krijgt een eigen plek op de telefoon (src/renderer/src/plugins/phone.ts).
+   */
+  remoteActions?: readonly (keyof Actions & string)[]
 }
 
 /** Geeft de definitie terug zoals hij is, maar TypeScript onthoudt het id, de schema's en de types. */
@@ -74,16 +79,29 @@ export function definePlugin<
   return definition
 }
 
+/** Wie een actie vraagt: de app op de Mac, of een telefoon via de afstandsbediening. */
+export type ActionSource = 'app' | 'remote'
+
+/** Mag de telefoon deze actie vragen? Alleen wat in `remoteActions` staat. */
+export function remoteAllowed(
+  definition: { remoteActions?: readonly string[] },
+  name: string
+): boolean {
+  return definition.remoteActions?.includes(name) ?? false
+}
+
 /**
  * Controleert een actie met de definitie: de invoer zoals zod hem teruggeeft, of null als de actie
- * niet bestaat of de invoer niet klopt.
+ * niet bestaat, de invoer niet klopt, of de telefoon hem vraagt terwijl dat niet mag.
  */
 export function parseAction(
-  definition: { actions: PluginActions },
+  definition: { actions: PluginActions; remoteActions?: readonly string[] },
   name: string,
-  input: unknown
+  input: unknown,
+  source: ActionSource = 'app'
 ): { input: unknown } | null {
   if (!Object.hasOwn(definition.actions, name)) return null
+  if (source === 'remote' && !remoteAllowed(definition, name)) return null
   const parsed = definition.actions[name].input.safeParse(input)
   return parsed.success ? { input: parsed.data } : null
 }

@@ -1,6 +1,6 @@
 # Plug-ins generieker maken: voorstel
 
-Stand op 1 november 2026. Goedgekeurd (issue #31), met keuze B voor de knoppen. Stap 1 en 2 zijn gebouwd; de rest volgt in eigen pull requests.
+Stand op 1 november 2026. Goedgekeurd (issue #31), met keuze B voor de knoppen. Stap 1, 2 en 3 zijn gebouwd; stap 4 volgt pas bij Spotify of YouTube.
 
 ## Hoe het nu zit
 
@@ -90,6 +90,8 @@ Daarmee wordt de afstandsbediening een gewone plug-in die van de andere niets we
 - `RemoteAction` krijgt `{ type: 'plugin', id, action }` in plaats van `light`; main controleert de actie met het schema van die plug-in.
 - `RemoteApp.vue` toont een `PluginSlot name="liveControls"` in plaats van `LightPanel`.
 
+Gebouwd als: `RemoteView.plugins` en de actie `{ type: 'plugin', id, action, input }`. Een definitie noemt in `remoteActions` wat de telefoon mag (MagicHome: alleen `choose`); de afstandsbediening en main weigeren de rest (`parseAction(…, 'remote')`, `PluginHost.remoteAct`). De MCP-koppeling roept geen acties van plug-ins aan. De telefoon heeft een eigen lijst, `PHONE_PLUGINS` in `src/renderer/src/plugins/phone.ts`, zodat hij niet alle onderdelen van de app laadt. Het onderdeel krijgt `status`, `disabled` en `act`. Bij MagicHome is dat `PhoneLight`, met hetzelfde `LightPanel` als onder Licht in de werkbalk; de lichten van de quiz zitten nu in de status zelf.
+
 ### 4. Geheimen (pas bij Spotify)
 
 - `PluginHost` krijgt `secret.get/set(name)`, met `safeStorage` en een eigen bestand in `userData`. Niet in `settings.json`, niet in de quiz.
@@ -108,7 +110,7 @@ Elke stap is een eigen pull request, zonder verschil in beeld (behalve stap 3 op
 
 1. `definePlugin` en de generieke hulpjes voor quizgegevens; `light.ts` en de config van beide plug-ins erop overzetten. **Klaar.** De acties (`actions`, met `remoteActions` voor wat de telefoon en de AI mogen) komen in stap 2 en 3.
 2. Status duwen (`publish`, `IPC.pluginStatus`, de store); de timers in `LiveLight.vue` en `RemoteQr.vue` weg. **Klaar.** Het adres in de QR-code (ander netwerk) controleert main nu zelf elke 3 seconden.
-3. De afstandsbediening los van MagicHome: `plugins` in `RemoteView`, de actie `plugin`, `PluginSlot` op de telefoon.
+3. De afstandsbediening los van MagicHome: `plugins` in `RemoteView`, de actie `plugin`, `remoteActions`, een eigen onderdeel per plug-in op de telefoon. **Klaar.**
 4. Pas bij Spotify of YouTube: geheimen, en eventueel een eigen venster.
 
 Wat **niet** verandert: de plug-ins doen voor de gebruiker hetzelfde, `settings.json` en `quiz.json` houden hetzelfde formaat (dus geen migratie), en de e2e-tests voor MagicHome en de afstandsbediening blijven ongewijzigd slagen.

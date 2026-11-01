@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
 import { createQuiz, createRound, createShowState, createSlide } from './factory'
+import { MAGICHOME } from './light'
 import {
   action,
   definePlugin,
@@ -24,7 +25,8 @@ const PLAYLIST = definePlugin({
   actions: {
     play: action<{ ok: boolean }>()(z.object({ track: z.number().int() })),
     stop: action<null>()(z.undefined())
-  }
+  },
+  remoteActions: ['stop']
 })
 
 function setup() {
@@ -160,5 +162,31 @@ describe('parseAction', () => {
     expect(parseAction(PLAYLIST, 'toString', undefined)).toBeNull()
     expect(parseAction(PLAYLIST, 'play', { track: 'drie' })).toBeNull()
     expect(parseAction(PLAYLIST, 'stop', { track: 1 })).toBeNull()
+  })
+
+  it('weigert vanaf de telefoon wat niet in remoteActions staat', () => {
+    expect(parseAction(PLAYLIST, 'stop', undefined, 'remote')).toEqual({ input: undefined })
+    expect(parseAction(PLAYLIST, 'play', { track: 3 }, 'remote')).toBeNull()
+    expect(parseAction(PLAYLIST, 'play', { track: 3 }, 'app')).toEqual({ input: { track: 3 } })
+  })
+
+  it('zonder remoteActions mag de telefoon niets', () => {
+    const quiet = definePlugin({
+      id: 'stil',
+      name: '',
+      description: '',
+      config: z.object({}),
+      status: typeOnly<null>(),
+      actions: { go: action<null>()(z.undefined()) }
+    })
+    expect(parseAction(quiet, 'go', undefined, 'remote')).toBeNull()
+    expect(parseAction(quiet, 'go', undefined)).toEqual({ input: undefined })
+  })
+
+  it('de telefoon mag bij MagicHome alleen het licht kiezen', () => {
+    const red = { type: 'color', color: '#ff0000' }
+    expect(parseAction(MAGICHOME, 'choose', red, 'remote')).toEqual({ input: red })
+    expect(parseAction(MAGICHOME, 'preview', red, 'remote')).toBeNull()
+    expect(parseAction(MAGICHOME, 'probe', '10.0.0.1', 'remote')).toBeNull()
   })
 })

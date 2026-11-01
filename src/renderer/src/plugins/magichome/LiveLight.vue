@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { quizLights, type Light } from '@shared/light'
-import type { RemoteLight } from '@shared/remote'
+import type { Light } from '@shared/light'
 import Popover from '../../components/Popover.vue'
 import { useSession } from '../../stores/session'
 import LightDot from './LightDot.vue'
@@ -15,9 +14,6 @@ const api = window.pubquiz
 const session = useSession()
 
 const status = computed(() => session.statusOf('magichome'))
-const light = computed<RemoteLight | null>(() =>
-  status.value && session.quiz ? { ...status.value, quiz: quizLights(session.quiz) } : null
-)
 
 async function choose(choice: Light | null) {
   await api.pluginAct('magichome', 'choose', choice ? { ...choice } : null)
@@ -36,7 +32,7 @@ async function choose(choice: Light | null) {
         <LightDot :light="status?.light" class="light-mark" /> Licht
       </button>
     </template>
-    <LightPanel v-if="light" class="panel" :light="light" :disabled="false" @choose="choose" />
+    <LightPanel v-if="status" class="panel" :light="status" :disabled="false" @choose="choose" />
   </Popover>
 </template>
 

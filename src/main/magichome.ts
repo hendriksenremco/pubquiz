@@ -1,5 +1,12 @@
 import { connect, type Socket } from 'net'
-import { resolveLight, sameLight, stateLight, type Light, type LightStatus } from '@shared/light'
+import {
+  quizLights,
+  resolveLight,
+  sameLight,
+  stateLight,
+  type Light,
+  type LightStatus
+} from '@shared/light'
 import {
   lightMessages,
   parseAddress,
@@ -47,6 +54,8 @@ export class MagicHomePlugin implements MainPlugin<'magichome'> {
   private idle: Promise<void> = Promise.resolve()
   private failing = false
   private live = false
+  /** De lichten van de geopende quiz, voor de status. */
+  private quizLights: Light[] = []
   /** Hoe het licht was voor het voorbeeld begon; null = geen voorbeeld bezig. */
   private before: Promise<Light> | null = null
   private restoring: Promise<void> = Promise.resolve()
@@ -88,6 +97,7 @@ export class MagicHomePlugin implements MainPlugin<'magichome'> {
       this.manual = null
     }
     this.showLight = light
+    this.quizLights = quiz ? quizLights(quiz) : []
     this.want(this.manual?.light ?? light)
     this.publishStatus()
   }
@@ -129,7 +139,11 @@ export class MagicHomePlugin implements MainPlugin<'magichome'> {
 
   /** Alleen wat de plug-in weet; dit vraagt de controller niets. */
   private publishStatus(): void {
-    this.publish({ light: this.manual?.light ?? this.showLight, manual: !!this.manual })
+    this.publish({
+      light: this.manual?.light ?? this.showLight,
+      manual: !!this.manual,
+      quiz: this.quizLights
+    })
   }
 
   /** Stuurt dit licht, of laat het licht zoals het is (null). */

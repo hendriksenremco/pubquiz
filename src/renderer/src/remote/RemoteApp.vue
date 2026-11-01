@@ -4,13 +4,13 @@ import { STEP_NAMES } from '@shared/resolve'
 import Icon from '../components/Icon.vue'
 import SlideView from '../components/SlideView.vue'
 import { ASSET_URL } from '../lib/media'
-import LightPanel from '../plugins/magichome/LightPanel.vue'
+import { PHONE_PLUGINS } from '../plugins/phone'
 import { connect, imageUrl, link, send, toast, view } from './connection'
 
 /**
  * De afstandsbediening op een telefoon of tablet: de slide die in beeld staat, vorige en volgende
  * (zoals ← → op de Mac: slides, fragmenten of antwoorden), rondes, beeld op zwart en geluid, en
- * het licht als de plug-in MagicHome-licht aan staat. Volgt de show op de Mac; buiten de show
+ * daaronder de plug-ins met knoppen voor de telefoon (bv. het licht; zie plugins/phone.ts). Volgt de show op de Mac; buiten de show
  * staat alles stil. Dezelfde knoppen staan in de show op de Mac (ShowLive en de werkbalk).
  */
 const live = computed(() => !!view.value?.live && link.value === 'open')
@@ -18,6 +18,16 @@ const round = computed(() => view.value?.round ?? null)
 const step = computed(() => view.value?.step ?? null)
 const screen = computed(() => view.value?.screen ?? null)
 provide(ASSET_URL, imageUrl)
+
+const plugins = computed(() =>
+  (view.value?.plugins ?? []).flatMap((p) => {
+    const component = PHONE_PLUGINS[p.id]
+    if (!component) return []
+    const act = (action: string, input: unknown) =>
+      send({ type: 'plugin', id: p.id, action, input })
+    return [{ ...p, component, act }]
+  })
+)
 
 const stepNames = computed(() =>
   step.value ? STEP_NAMES[step.value.target] : ['Vorige', 'Volgende']
@@ -164,11 +174,14 @@ onMounted(connect)
       </section>
     </main>
 
-    <LightPanel
-      v-if="view?.light"
-      :light="view.light"
+    <component
+      :is="p.component"
+      v-for="p in plugins"
+      :key="p.id"
+      class="plugin"
+      :status="p.status"
       :disabled="!live"
-      @choose="send({ type: 'light', light: $event })"
+      :act="p.act"
     />
 
     <p v-if="toast" class="toast" role="alert">{{ toast }}</p>
@@ -503,7 +516,7 @@ button:disabled {
     grid-column: 1 / -1;
   }
 
-  .remote > :deep(.light-panel) {
+  .remote > :deep(.plugin) {
     grid-column: 2;
     grid-row: 2 / span 2;
   }
