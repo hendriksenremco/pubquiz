@@ -117,7 +117,6 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
       <section>
         <div class="section-head">
           <h3>{{ t('screens') }}</h3>
-          <span class="count">{{ quiz.screens.length }}</span>
         </div>
         <div class="screens">
           <div v-for="slot in quiz.screens" :key="slot.id" class="screen tile">
@@ -214,17 +213,7 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
           </div>
 
           <div class="tile channels">
-            <div class="tile-head">
-              <span class="tile-title grow">{{ t('channels') }}</span>
-              <button
-                class="btn btn-ghost btn-sm btn-icon"
-                :aria-label="t('addChannel')"
-                :title="t('addChannel')"
-                @click="addChannel"
-              >
-                <Icon name="plus" />
-              </button>
-            </div>
+            <span class="tile-title tile-head">{{ t('channels') }}</span>
             <div v-for="c in quiz.channels" :key="c.id" class="channel">
               <input v-model="c.name" class="quiet channel-name" :aria-label="t('channelName')" />
               <input
@@ -240,11 +229,15 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
               <button
                 class="btn btn-ghost btn-sm btn-icon del"
                 :aria-label="t('removeChannel')"
+                :title="t('removeChannel')"
                 @click="removeChannel(c.id)"
               >
-                <Icon name="x" :size="14" />
+                <Icon name="trash" :size="14" />
               </button>
             </div>
+            <button class="btn btn-ghost btn-sm add-channel" @click="addChannel">
+              <Icon name="plus" :size="14" /> {{ t('addChannel') }}
+            </button>
           </div>
         </div>
       </section>
@@ -331,10 +324,6 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
 
 .remove-screen {
   color: var(--muted);
-}
-
-.remove-screen:hover {
-  color: var(--live);
 }
 
 .body {
@@ -488,9 +477,13 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
 }
 
 .tile-head {
-  display: flex;
-  align-items: center;
   margin-bottom: 6px;
+}
+
+.add-channel {
+  align-self: flex-start;
+  margin-top: 6px;
+  color: var(--muted);
 }
 
 .channel {
