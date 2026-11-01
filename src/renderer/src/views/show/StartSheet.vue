@@ -333,7 +333,7 @@ const savedAt = computed(() =>
           <div class="group-head">
             <span class="label grow">{{ t('screens') }}</span>
             <button class="btn btn-ghost btn-sm" @click="api.identifyDisplays()">
-              {{ t('identify') }}
+              <Icon name="monitor" :size="14" /> {{ t('identify') }}
             </button>
           </div>
           <template v-for="slot in quiz.screens" :key="slot.id">
@@ -352,7 +352,7 @@ const savedAt = computed(() =>
                 {{ t('airplayScreenHint', { name: pendingAirPlay(slot.id)! }) }}
               </span>
               <button class="btn btn-ghost btn-sm" @click="api.openAirPlaySettings('screen')">
-                {{ t('openDisplays') }}
+                <Icon name="monitor" :size="14" /> {{ t('openDisplays') }}
               </button>
             </div>
             <div v-if="hasSound(slot.id)" class="line sub">
@@ -383,7 +383,7 @@ const savedAt = computed(() =>
               @update:model-value="setAudio(c.id, $event!)"
             />
             <button class="btn btn-ghost btn-sm" @click="api.testTone(c.id)">
-              {{ t('testTone') }}
+              <Icon name="volume" :size="14" /> {{ t('testTone') }}
             </button>
           </div>
           <div v-if="airplaySpeakers.length" class="note airplay-hint">
@@ -393,7 +393,7 @@ const savedAt = computed(() =>
               }}
             </span>
             <button class="btn btn-ghost btn-sm" @click="api.openAirPlaySettings('audio')">
-              {{ t('openSound') }}
+              <Icon name="volume" :size="14" /> {{ t('openSound') }}
             </button>
           </div>
         </div>
@@ -509,15 +509,9 @@ h2 {
   padding: 10px 12px 10px 28px;
   border-radius: var(--radius);
   background: var(--surface-1);
-  font-size: 12px;
-}
-
-.problems .error {
-  color: var(--live);
-}
-
-.problems .warning {
+  /* Rood is alleen voor live: fouten en waarschuwingen zijn allebei geel; fouten staan bovenaan. */
   color: var(--warn);
+  font-size: 12px;
 }
 
 .foot {
