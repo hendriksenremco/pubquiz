@@ -4,7 +4,9 @@ import { moveById, renumberSlides } from '@shared/order'
 import { slideNumber } from '@shared/resolve'
 import type { Round, Slide } from '@shared/types'
 import SlideView from '../../components/SlideView.vue'
+import { locale } from '../../lib/locale'
 import { useSession } from '../../stores/session'
+import { SLIDE_MESSAGES } from './editor-messages'
 
 /**
  * De slides van een ronde als lijst: links wat de zaal ziet, rechts de tekst om meteen te typen.
@@ -14,11 +16,12 @@ const props = defineProps<{ round: Round; selectedId: string | null }>()
 const emit = defineEmits<{ select: [id: string] }>()
 const session = useSession()
 const quiz = computed(() => session.quiz!)
+const t = SLIDE_MESSAGES.in(locale)
 
 function kind(round: Round, s: Slide): string {
-  if (s.layout === 'title') return 'Titel'
-  if (s.layout === 'number') return 'Nummer'
-  return `Afbeelding ${slideNumber(round, s)}`
+  if (s.layout === 'title') return t('kindTitle')
+  if (s.layout === 'number') return t('kindNumber')
+  return t('kindImage', { number: slideNumber(round, s) ?? '' })
 }
 
 // Op volgorde slepen aan de miniatuur, zodat tekst selecteren in de velden gewoon blijft werken.
@@ -76,7 +79,7 @@ const lineAt = (id: string, after: boolean) =>
         type="button"
         class="thumb"
         :class="{ video: typeof s.backdrop !== 'object' }"
-        :aria-label="`Kies ${s.title || kind(round, s)}`"
+        :aria-label="t('choose', { name: s.title || kind(round, s) })"
         draggable="true"
         @dragstart="onDragStart($event, s.id)"
         @dragend="onDragEnd"
@@ -90,17 +93,17 @@ const lineAt = (id: string, after: boolean) =>
             <input
               v-model="s.title"
               class="quiet kicker-input"
-              aria-label="Kop"
-              placeholder="Vraag"
+              :aria-label="t('heading')"
+              :placeholder="t('questionPlaceholder')"
             />
-            <span v-if="s.numberOnly" class="note">alleen het nummer in beeld</span>
+            <span v-if="s.numberOnly" class="note">{{ t('numberOnlyNote') }}</span>
           </span>
           <textarea
             v-model="s.body"
             class="quiet main"
             rows="1"
-            aria-label="Vraag"
-            :placeholder="s.numberOnly ? 'Vraagtekst, alleen voor jou en de pdf' : 'Vraagtekst'"
+            :aria-label="t('question')"
+            :placeholder="s.numberOnly ? t('questionTextPrivate') : t('questionText')"
           />
         </template>
         <template v-else>
@@ -109,25 +112,25 @@ const lineAt = (id: string, after: boolean) =>
             v-model="s.title"
             class="quiet main"
             :class="{ strong: s.layout !== 'image' }"
-            :aria-label="s.layout === 'image' ? 'Bijschrift' : 'Titel'"
-            :placeholder="s.layout === 'image' ? 'Bijschrift (mag leeg)' : 'Titel'"
+            :aria-label="s.layout === 'image' ? t('caption') : t('title')"
+            :placeholder="s.layout === 'image' ? t('captionPlaceholder') : t('title')"
           />
           <textarea
             v-if="s.layout !== 'image'"
             v-model="s.body"
             class="quiet sub"
             rows="1"
-            aria-label="Ondertitel"
-            placeholder="Ondertitel"
+            :aria-label="t('subtitle')"
+            :placeholder="t('subtitle')"
           />
         </template>
         <label v-if="s.layout !== 'title'" class="answer">
-          <span>Antwoord</span>
+          <span>{{ t('answer') }}</span>
           <input
             v-model="s.answer"
             class="quiet"
-            aria-label="Antwoord"
-            placeholder="Voor de antwoordenronde"
+            :aria-label="t('answer')"
+            :placeholder="t('answerPlaceholder')"
           />
         </label>
       </div>
