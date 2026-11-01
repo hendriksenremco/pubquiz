@@ -11,8 +11,11 @@ import {
 import Icon from '../../components/Icon.vue'
 import { vFill } from '../../lib/fill'
 import { percent } from '../../lib/format'
+import { locale } from '../../lib/locale'
 import { useSession } from '../../stores/session'
+import { MIXER_MESSAGES } from './live-messages'
 
+const t = MIXER_MESSAGES.in(locale)
 const api = window.pubquiz
 const session = useSession()
 const quiz = computed(() => session.quiz!)
@@ -21,11 +24,11 @@ const background = computed(() => resolveAudio(quiz.value, session.state).backgr
 const backgroundName = computed(() => findAsset(quiz.value, background.value?.assetId)?.name)
 const backgroundStatus = computed(() => {
   const bg = background.value
-  if (!bg) return { text: 'Geen', cls: '' }
-  if (!session.state.backgroundEnabled) return { text: 'Uit', cls: 'pill-live' }
-  if (!bg.playing) return { text: 'Gepauzeerd (ronde)', cls: 'pill-warn' }
-  if (bg.ducked) return { text: 'Zachter', cls: 'pill-accent' }
-  return { text: 'Speelt', cls: 'pill-ok' }
+  if (!bg) return { text: t('none'), cls: '' }
+  if (!session.state.backgroundEnabled) return { text: t('off'), cls: 'pill-live' }
+  if (!bg.playing) return { text: t('pausedByRound'), cls: 'pill-warn' }
+  if (bg.ducked) return { text: t('ducked'), cls: 'pill-accent' }
+  return { text: t('playing'), cls: 'pill-ok' }
 })
 
 function setVolume(id: string, event: Event) {
@@ -45,22 +48,25 @@ const soundScreens = computed(() =>
       const choice = session.hardware.screenSound[slot.id]
       return {
         slot,
-        status: !sound ? 'Stil' : sound.ducked ? 'Zachter' : null,
+        status: !sound ? t('silent') : sound.ducked ? t('ducked') : null,
+        ducked: !!sound?.ducked,
         device:
           choice?.label ??
-          (target?.kind === 'display' ? `Speakers van ${target.label}` : 'Systeemstandaard')
+          (target?.kind === 'display'
+            ? t('speakersOf', { name: target.label })
+            : t('systemDefault'))
       }
     })
 )
 </script>
 
 <template>
-  <section class="mixer" aria-label="Geluid">
-    <span class="label">Geluid</span>
+  <section class="mixer" :aria-label="t('sound')">
+    <span class="label">{{ t('sound') }}</span>
     <div class="stack">
       <div class="bg">
         <div class="row">
-          <span class="label grow">Achtergrond</span>
+          <span class="label grow">{{ t('background') }}</span>
           <span class="pill" :class="backgroundStatus.cls">{{ backgroundStatus.text }}</span>
         </div>
         <div v-if="backgroundName" class="bg-name">{{ backgroundName }}</div>
@@ -69,7 +75,7 @@ const soundScreens = computed(() =>
           class="btn btn-sm"
           @click="api.command({ type: 'toggleBackground' })"
         >
-          {{ session.state.backgroundEnabled ? 'Zet uit' : 'Zet aan' }}
+          {{ session.state.backgroundEnabled ? t('turnOff') : t('turnOn') }}
         </button>
       </div>
 
@@ -77,7 +83,7 @@ const soundScreens = computed(() =>
         v-for="c in quiz.channels"
         :key="c.id"
         class="channel"
-        :title="session.hardware.audio[c.id]?.label ?? 'Systeemstandaard'"
+        :title="session.hardware.audio[c.id]?.label ?? t('systemDefault')"
       >
         <div class="row">
           <span class="label grow">{{ c.name }}</span>
@@ -105,7 +111,7 @@ const soundScreens = computed(() =>
         <div class="row">
           <Icon name="monitor" :size="14" class="faint" />
           <span class="label grow">{{ s.slot.name }}</span>
-          <span v-if="s.status" class="pill" :class="{ 'pill-accent': s.status === 'Zachter' }">{{
+          <span v-if="s.status" class="pill" :class="{ 'pill-accent': s.ducked }">{{
             s.status
           }}</span>
           <span class="mono muted pct">{{ percent(screenVolume(session.state, s.slot.id)) }}</span>
@@ -117,7 +123,7 @@ const soundScreens = computed(() =>
           max="1"
           step="0.01"
           :value="screenVolume(session.state, s.slot.id)"
-          :aria-label="`Videogeluid ${s.slot.name}`"
+          :aria-label="t('videoSound', { name: s.slot.name })"
           @input="setVolume(s.slot.id, $event)"
         />
       </div>

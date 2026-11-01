@@ -4,12 +4,15 @@ import { adjacentFragment, autoplayCountdown } from '@shared/autoplay'
 import type { AutoplayAction, ShowCommand } from '@shared/ipc'
 import type { Round } from '@shared/types'
 import { formatTime } from '../../lib/format'
+import { locale } from '../../lib/locale'
 import { useNow } from '../../lib/use-now'
 import FragmentWave from './FragmentWave.vue'
 import { useSession } from '../../stores/session'
+import { FRAGMENT_PAD_MESSAGES } from './live-messages'
 
 /** `arrows`: ← → bladeren hier door de fragmenten. */
 const props = defineProps<{ round: Round; arrows: boolean }>()
+const t = FRAGMENT_PAD_MESSAGES.in(locale)
 const api = window.pubquiz
 const session = useSession()
 const send = (command: ShowCommand) => api.command(command)
@@ -34,10 +37,13 @@ const status = computed(() => {
   const a = ap.value
   if (a.status === 'idle' || a.roundId !== props.round.id) return null
   if (a.status === 'playing')
-    return `Reeks: fragment ${a.index + 1}${a.holdAfter ? ' (stopt hierna)' : ''}`
+    return t(a.holdAfter ? 'sequenceLast' : 'sequencePlaying', { number: a.index + 1 })
   if (a.status === 'gap')
-    return `Reeks: fragment ${a.nextIndex + 1} over ${autoplayCountdown(a, now.value)} s`
-  return `Reeks gepauzeerd, volgende: fragment ${a.nextIndex + 1}`
+    return t('sequenceGap', {
+      number: a.nextIndex + 1,
+      seconds: autoplayCountdown(a, now.value) ?? 0
+    })
+  return t('sequencePaused', { number: a.nextIndex + 1 })
 })
 
 function autoplay(action: AutoplayAction) {
@@ -53,11 +59,11 @@ function click(id: string) {
 <template>
   <section class="card pad">
     <header class="card-head">
-      <h3 class="grow">Fragmenten</h3>
+      <h3 class="grow">{{ t('title') }}</h3>
       <span v-if="status" class="pill pill-accent">{{ status }}</span>
       <template v-if="ap.status === 'idle'">
         <button class="btn btn-primary btn-sm" @click="autoplay('start')">
-          ▶ Speel reeks <span class="kbd">A</span>
+          ▶ {{ t('playSequence') }} <span class="kbd">A</span>
         </button>
       </template>
       <template v-else>
@@ -66,22 +72,24 @@ function click(id: string) {
           class="btn btn-sm"
           @click="autoplay('resume')"
         >
-          Hervat <span class="kbd">A</span>
+          {{ t('resume') }} <span class="kbd">A</span>
         </button>
         <button v-else class="btn btn-sm" @click="autoplay('pause')">
-          Pauze <span class="kbd">A</span>
+          {{ t('pause') }} <span class="kbd">A</span>
         </button>
         <button class="btn btn-sm" @click="autoplay('skip')">
-          Volgende <span class="kbd">S</span>
+          {{ t('next') }} <span class="kbd">S</span>
         </button>
-        <button class="btn btn-sm btn-danger" @click="autoplay('stop')">Stop reeks</button>
+        <button class="btn btn-sm btn-danger" @click="autoplay('stop')">
+          {{ t('stopSequence') }}
+        </button>
       </template>
       <button
         class="btn btn-ghost btn-sm"
-        title="Gespeeld-markeringen wissen"
+        :title="t('resetHint')"
         @click="send({ type: 'resetPlayed' })"
       >
-        Reset
+        {{ t('reset') }}
       </button>
     </header>
 
@@ -101,12 +109,14 @@ function click(id: string) {
         <span class="frag-label">{{ f.label }}</span>
         <span v-if="f.answer" class="frag-answer">{{ f.answer }}</span>
         <span v-if="playing?.fragmentId === f.id" class="frag-time mono" data-volatile>
-          {{ remaining !== null ? `-${formatTime(remaining)}` : 'speelt…' }}
+          {{ remaining !== null ? `-${formatTime(remaining)}` : t('playing') }}
         </span>
         <span v-else-if="upcoming === f.id" class="frag-time frag-next">
-          Volgende <span class="kbd">→</span>
+          {{ t('next') }} <span class="kbd">→</span>
         </span>
-        <span v-else-if="session.state.played.includes(f.id)" class="frag-time">✓ gespeeld</span>
+        <span v-else-if="session.state.played.includes(f.id)" class="frag-time">{{
+          t('played')
+        }}</span>
         <FragmentWave
           class="frag-wave"
           :fragment="f"
