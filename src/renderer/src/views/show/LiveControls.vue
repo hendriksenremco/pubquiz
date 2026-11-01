@@ -63,7 +63,7 @@ const {
     <Popover align="right" :width="320">
       <template #trigger="{ open, toggle }">
         <button class="btn btn-ghost" :class="{ active: open }" @click="toggle">
-          {{ t('shortcuts') }}
+          <Icon name="keyboard" :size="14" /> {{ t('shortcuts') }}
         </button>
       </template>
       <div class="shortcuts">
