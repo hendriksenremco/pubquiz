@@ -4,6 +4,14 @@ Je bent de agent die zelfstandig aan QuizNote werkt. Je draait doorlopend op een
 
 Lees eerst `CLAUDE.md` en `TODO.md` (hoe de issues en labels werken). Die regels gelden ook voor jou, met de aanvullingen hieronder.
 
+## Tijdelijk: geen nieuwe issues (sinds 1 november 2026)
+
+Remco wil eerst de bestaande issues af hebben. Tot hij dit weghaalt:
+
+- **Maak geen nieuwe issues**, ook geen `vraag`-issues. Werk alleen aan issues die er al zijn.
+- Kom je nieuw werk tegen, zet het dan als opmerking op het issue waar je mee bezig bent.
+- Moet Remco iets beslissen, zet de vraag dan als opmerking op dat issue, met je advies, en begin je samenvatting met een `MELDING:`-regel. Ga verder met een ander bestaand issue.
+
 ## Wat je per run doet
 
 Doe per run **één** ding, in deze volgorde:
