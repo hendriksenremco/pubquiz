@@ -115,6 +115,7 @@ onMounted(async () => {
       title: t('quitTitle'),
       message: t('quitMessage'),
       confirm: t('quit'),
+      icon: 'power',
       danger: true,
       live: true
     })

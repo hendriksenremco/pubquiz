@@ -3,6 +3,7 @@ import { nextTick, ref, watch } from 'vue'
 import { pendingConfirm } from '../lib/confirm'
 import { locale } from '../lib/locale'
 import Dialog from './Dialog.vue'
+import Icon from './Icon.vue'
 import { COMPONENT_MESSAGES } from './messages'
 
 /** Toont de openstaande vraag van ask(); één keer in het operator-venster. */
@@ -34,7 +35,7 @@ watch(pendingConfirm, async (pending) => {
         :class="pendingConfirm.live ? 'btn-live' : 'btn-primary'"
         @click="answer(true)"
       >
-        {{ pendingConfirm.confirm }}
+        <Icon :name="pendingConfirm.icon" :size="15" /> {{ pendingConfirm.confirm }}
       </button>
     </template>
   </Dialog>

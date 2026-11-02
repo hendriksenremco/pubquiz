@@ -5,7 +5,6 @@ const PATHS = {
   images:
     'M3 7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM7 21h12a2 2 0 0 0 2-2V9M3 14l4-4 4 4 2-2 4 4',
   plus: 'M12 5v14M5 12h14',
-  more: 'M5 12h.01M12 12h.01M19 12h.01',
   play: 'M8 5.5v13l11-6.5z',
   stop: 'M7 7h10v10H7z',
   pause: 'M7.5 6h3v12h-3zM13.5 6h3v12h-3z',
@@ -58,7 +57,7 @@ withDefaults(defineProps<{ name: IconName; size?: number }>(), { size: 16 })
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    :stroke-width="name === 'more' ? 3.2 : 1.8"
+    stroke-width="1.8"
     stroke-linecap="round"
     stroke-linejoin="round"
     aria-hidden="true"
