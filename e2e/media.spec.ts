@@ -221,7 +221,7 @@ test('toont een bestand groot als voorbeeld en bladert verder', async () => {
   await expect(dialog.locator('.transport .time').last()).toHaveText('0:30')
   await operator.waitForTimeout(300)
   await snap(operator, 'test-results/media-preview-sound.png')
-  await dialog.getByRole('button', { name: 'Sluit', exact: true }).click()
+  await dialog.getByRole('button', { name: 'Sluit' }).click()
   await expect(dialog).toHaveCount(0)
 
   // De knop staat ook bij elk geluid in de lijst.
