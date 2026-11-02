@@ -267,7 +267,7 @@ export const MIXER_MESSAGES = defineMessages(
       none: 'None',
       off: 'Off',
       pausedByRound: 'Paused (round)',
-      ducked: 'Quieter',
+      ducked: 'Softer',
       playing: 'Playing',
       silent: 'Silent',
       turnOff: 'Music off',

@@ -94,7 +94,7 @@ export const FRAGMENT_MESSAGES = defineMessages(
       seconds: 's',
       moveUp: 'Move up',
       moveDown: 'Move down',
-      remove: 'Delete fragment'
+      remove: 'Delete clip'
     }
   }
 )
@@ -264,7 +264,7 @@ export const ROUND_MESSAGES = defineMessages(
       slideTitle: 'Title',
       slideNumber: 'Number',
       slideStandings: 'Scoreboard',
-      newStandings: 'Standings',
+      newStandings: 'Scoreboard',
       tabStandings: 'Scoreboard',
       slideImage: 'Picture',
       notes: 'Notes',
@@ -294,7 +294,7 @@ export const ROUND_MESSAGES = defineMessages(
       bgAsset: 'Music for this round',
       numberOn: 'Number on',
       numberOnLabel: 'Clip number on screen on',
-      inSeries: 'In a row',
+      inSeries: 'In the sequence',
       gapLabel: 'Pause between clips in seconds',
       gapUnit: 's in between',
       countdown: 'Count down between clips on screen',

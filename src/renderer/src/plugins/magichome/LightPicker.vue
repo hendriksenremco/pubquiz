@@ -32,7 +32,7 @@ import { LIGHT_PICKER_MESSAGES } from './messages'
  * Veld dat openklapt tot een keuze voor het licht: een kleur, een effect, uit, of niets eigens
  * (undefined). Wat "niets eigens" betekent, hangt van de plek af: zoals de ronde, de standaard, of
  * het licht niet aansturen. `fallback`: wat er dan brandt, voor het bolletje in het veld.
- * Met "Voorbeeld op de lamp" laat de controller zien wat je kiest zolang het paneel open is.
+ * Met "Voorbeeld op het licht" laat de controller zien wat je kiest zolang het paneel open is.
  */
 const props = withDefaults(
   defineProps<{

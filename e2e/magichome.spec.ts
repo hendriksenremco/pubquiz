@@ -67,7 +67,7 @@ test('licht per ronde en per slide via de plug-in MagicHome', async () => {
     await operator.getByRole('tab', { name: 'Ronde' }).click()
     await operator.getByRole('button', { name: 'Licht in deze ronde' }).click()
     const panel = operator.locator('.popover-panel')
-    await panel.getByRole('checkbox', { name: 'Voorbeeld op de lamp' }).check()
+    await panel.getByRole('checkbox', { name: 'Voorbeeld op het licht' }).check()
     await panel.getByRole('button', { name: 'Kleur', exact: true }).click()
     await expect.poll(() => device.log).toEqual(RED)
     await panel.getByRole('button', { name: 'Blauw', exact: true }).click()

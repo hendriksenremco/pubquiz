@@ -43,8 +43,8 @@ export const LIGHT_PICKER_MESSAGES = defineMessages(
     customColor: 'Eigen kleur',
     customColorCode: 'Eigen kleurcode',
     speed: 'Snelheid',
-    previewOnLamp: 'Voorbeeld op de lamp',
-    liveFollowsShow: 'Tijdens de show volgt de lamp de show.',
+    previewOnLamp: 'Voorbeeld op het licht',
+    liveFollowsShow: 'Tijdens de show volgt het licht de show.',
     noAddress: 'Vul eerst het adres van de controller in bij Instellingen.',
     /** De tooltip van het veld, bv. "Licht in deze ronde: Rood". */
     title: '{label}: {value}',
@@ -60,8 +60,8 @@ export const LIGHT_PICKER_MESSAGES = defineMessages(
       customColor: 'Custom colour',
       customColorCode: 'Custom colour code',
       speed: 'Speed',
-      previewOnLamp: 'Preview on the lamp',
-      liveFollowsShow: 'During the show, the lamp follows the show.',
+      previewOnLamp: 'Preview on the lights',
+      liveFollowsShow: 'During the show, the lights follow the show.',
       noAddress: 'First enter the address of the controller in Settings.',
       title: '{label}: {value}',
       titleInherited: '{label}: {value} ({fallback})'
