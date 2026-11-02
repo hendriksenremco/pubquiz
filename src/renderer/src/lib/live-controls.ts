@@ -80,6 +80,7 @@ export function useLiveControls() {
       title: t('stopTitle'),
       message: t('stopMessage'),
       confirm: t('stopShow'),
+      icon: 'power',
       danger: true,
       live: true
     })

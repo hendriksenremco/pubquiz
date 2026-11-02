@@ -240,7 +240,9 @@ onBeforeUnmount(() => {
               <Icon name="right" />
             </button>
           </div>
-          <button class="btn" @click="close">{{ t('close') }} <span class="kbd">esc</span></button>
+          <button class="btn" @click="close">
+            <Icon name="x" :size="15" /> {{ t('close') }} <span class="kbd">esc</span>
+          </button>
         </footer>
       </div>
     </div>

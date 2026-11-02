@@ -1,10 +1,13 @@
 import { shallowRef } from 'vue'
+import type { IconName } from '../components/Icon.vue'
 
 export interface ConfirmOptions {
   title: string
   message?: string
   /** Tekst op de knop die het doet, bv. "Verwijder". */
   confirm: string
+  /** Het icoon op die knop: hetzelfde als op de knop die de vraag opent. */
+  icon: IconName
   /** Niet terug te draaien: de focus staat op Annuleer. */
   danger?: boolean
   /** Over de show die live is (stoppen, afsluiten): rode knop. Rood is alleen voor live. */

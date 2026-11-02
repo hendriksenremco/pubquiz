@@ -50,6 +50,7 @@ async function removeScreen(id: string) {
     title: t('removeScreenTitle', { name: slot.name }),
     message: t('removeScreenMessage'),
     confirm: t('remove'),
+    icon: 'trash',
     danger: true
   })
   if (!ok) return

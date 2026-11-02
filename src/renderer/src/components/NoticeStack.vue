@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { locale } from '../lib/locale'
 import { useSession } from '../stores/session'
+import Icon from './Icon.vue'
 import { COMPONENT_MESSAGES } from './messages'
 
 const session = useSession()
@@ -16,7 +17,7 @@ const t = COMPONENT_MESSAGES.in(locale)
         :aria-label="t('close')"
         @click="session.dismiss(n.id)"
       >
-        ×
+        <Icon name="x" :size="14" />
       </button>
     </div>
   </TransitionGroup>

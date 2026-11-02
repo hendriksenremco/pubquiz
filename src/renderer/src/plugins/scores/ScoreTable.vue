@@ -45,6 +45,7 @@ async function remove(teamId: string, name: string) {
     title: t('removeTeamTitle', { name }),
     message: t('removeTeamMessage'),
     confirm: t('remove'),
+    icon: 'trash',
     danger: true
   })
   if (ok) removeTeam(quiz.value, teamId)
@@ -55,6 +56,7 @@ async function clear() {
     title: t('clearTitle'),
     message: t('clearMessage'),
     confirm: t('clear'),
+    icon: 'trash',
     danger: true
   })
   if (ok) clearPoints(quiz.value)

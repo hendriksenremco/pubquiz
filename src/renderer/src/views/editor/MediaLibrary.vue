@@ -112,7 +112,8 @@ async function removeFolder() {
   const ok = await ask({
     title: t('removeFolderTitle', { name: f.name }),
     message: t('removeFolderMessage'),
-    confirm: t('removeFolder')
+    confirm: t('removeFolder'),
+    icon: 'trash'
   })
   if (!ok) return
   deleteFolder(quiz.value, f.id)
