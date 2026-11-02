@@ -48,6 +48,32 @@ test('dashboard: leeg starten, recente quiz openen en terugkomen', async () => {
   }
 })
 
+test('in het Engels: het dashboard en de werkbalk', async () => {
+  const userData = tempDir('userdata')
+  const quizDir = copyFixture()
+  const env = { PUBQUIZ_LOCALE: 'en' }
+  try {
+    let { app, operator } = await launch(userData, undefined, env)
+    await expect(operator.getByRole('heading', { name: 'Make your first pub quiz' })).toBeVisible()
+    await expect(operator.getByRole('button', { name: 'New quiz…' })).toBeVisible()
+    await expect(operator.getByRole('button', { name: 'Settings' })).toBeVisible()
+    await operator.screenshot({ path: 'test-results/home-empty-en.png' })
+    await app.close()
+    ;({ app, operator } = await launch(userData, quizDir, env))
+    await expect(operator.locator('.topbar .name')).toHaveText('Demo-pubquiz')
+    await expect(operator.getByRole('button', { name: 'Print' })).toBeVisible()
+    await operator.screenshot({ path: 'test-results/editor-en.png' })
+    await operator.getByRole('button', { name: 'Quizzes' }).click()
+    await expect(operator.locator('.hero .kicker')).toHaveText('Last opened')
+    await expect(operator.locator('.hero-meta')).toContainText('4 rounds and 2 screens')
+    await expect(operator.locator('.hero-text').getByRole('button', { name: 'Edit' })).toBeVisible()
+    await app.close()
+  } finally {
+    rmSync(userData, { recursive: true, force: true })
+    rmSync(dirname(quizDir), { recursive: true, force: true })
+  }
+})
+
 test('dashboard: de rondleiding staat de eerste keer klaar, en komt niet terug als je hem weghaalt', async () => {
   const userData = tempDir('userdata')
   const library = join(userData, 'Pubquiz')
