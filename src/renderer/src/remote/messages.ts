@@ -24,7 +24,7 @@ export const REMOTE_MESSAGES = defineMessages(
     lastRound: 'Dit was de laatste ronde',
     onScreen: 'In beeld',
     playing: 'Speelt',
-    preview: 'Preview van de slide',
+    preview: 'Voorbeeld van de slide',
     noSlide: 'Geen slide in beeld',
     prev: 'Vorige',
     next: 'Volgende',

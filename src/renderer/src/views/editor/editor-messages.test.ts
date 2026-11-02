@@ -35,7 +35,7 @@ describe('teksten van de editor', () => {
 
   it('maakt de knop om een pdf op te slaan', () => {
     expect(PRINT_MESSAGES.in('nl')('saveDoc', { title: 'Nakijkformulier' })).toBe(
-      'Nakijkformulier opslaan'
+      'Sla Nakijkformulier op'
     )
     expect(PRINT_MESSAGES.in('nl')('chosen', { chosen: 2, total: 5 })).toBe('2 van 5')
   })

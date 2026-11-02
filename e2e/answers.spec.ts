@@ -135,7 +135,7 @@ test('live: eerst de vraag, afbeelding of het fragment, dan het antwoord', async
   await expect(number).toHaveText('1', { timeout: 3_000 })
   // Pauzeren met L: hij blijft staan.
   await operator.keyboard.press('l')
-  await expect(operator.getByRole('button', { name: /Loop verder/ })).toBeVisible()
+  await expect(operator.getByRole('button', { name: /Hervat loop/ })).toBeVisible()
   const paused = await number.textContent()
   await operator.waitForTimeout(1_600)
   await expect(number).toHaveText(paused!)
