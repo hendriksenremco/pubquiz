@@ -7,6 +7,7 @@ import {
   copyFixture,
   launch,
   openStart,
+  snap,
   startShow,
   tempDir,
   useWindowedScreens,
@@ -95,7 +96,7 @@ test('een afbeeldingenronde vul je in één keer met een map uit Media', async (
     )
     .toBe(1)
   await operator.waitForTimeout(400)
-  await operator.screenshot({ path: 'test-results/pictures-editor.png' })
+  await snap(operator, 'test-results/pictures-editor.png')
 })
 
 test('een antwoordenronde loopt vragen, afbeeldingen en fragmenten langs', async () => {
@@ -106,7 +107,7 @@ test('een antwoordenronde loopt vragen, afbeeldingen en fragmenten langs', async
   await expect(sources.filter({ hasText: 'Ronde 1: algemeen' })).toContainText('2 vragen')
   await expect(sources.filter({ hasText: 'Ronde 5: afbeeldingen' })).toContainText('3 afbeeldingen')
   await operator.waitForTimeout(300)
-  await operator.screenshot({ path: 'test-results/answers-editor.png' })
+  await snap(operator, 'test-results/answers-editor.png')
 })
 
 test('live: eerst de vraag, afbeelding of het fragment, dan het antwoord', async () => {
@@ -122,7 +123,7 @@ test('live: eerst de vraag, afbeelding of het fragment, dan het antwoord', async
   await expect(beamer.locator('.slide.layout-question .number')).toHaveText('1')
   await expect(beamer.locator('.slide .body')).toHaveCount(0)
   await beamer.waitForTimeout(500)
-  await beamer.screenshot({ path: 'test-results/question-number-only.png' })
+  await snap(beamer, 'test-results/question-number-only.png')
 
   // De afbeeldingenronde zelf: → naar de eerste afbeelding, daarna gaat de loop vanzelf rond.
   await operator.locator('.rounds .round').nth(4).click()
@@ -152,7 +153,7 @@ test('live: eerst de vraag, afbeelding of het fragment, dan het antwoord', async
   await expect(beamer.locator('.overlay .ov-context')).toHaveText('Ronde 1: algemeen, vraag 1')
   await expect(tv.locator('.overlay')).toHaveCount(0)
   await beamer.waitForTimeout(700)
-  await beamer.screenshot({ path: 'test-results/answers-question.png' })
+  await snap(beamer, 'test-results/answers-question.png')
 
   // Fragment 1 van ronde 2: speelt opnieuw met zijn nummer, dan het antwoord in het midden.
   const tiles = operator.locator('.answers .frag')
@@ -174,13 +175,13 @@ test('live: eerst de vraag, afbeelding of het fragment, dan het antwoord', async
     /foto-3\.png/
   )
   await beamer.waitForTimeout(700)
-  await beamer.screenshot({ path: 'test-results/answers-picture.png' })
+  await snap(beamer, 'test-results/answers-picture.png')
 
   // Alleen wat echt in beeld is geweest staat op gedaan.
   await expect(tiles.nth(0)).toContainText('gedaan')
   await expect(tiles.nth(1)).not.toContainText('gedaan')
   await operator.waitForTimeout(400)
-  await operator.screenshot({ path: 'test-results/answers-live.png' })
+  await snap(operator, 'test-results/answers-live.png')
 
   await operator.locator('.answers').getByRole('button', { name: 'Stop', exact: true }).click()
   await expect(beamer.locator('.overlay')).toHaveCount(0)

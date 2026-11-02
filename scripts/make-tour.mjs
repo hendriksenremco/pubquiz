@@ -393,7 +393,7 @@ ffmpeg(FILE.breakLoop, [
   '-f',
   'lavfi',
   '-i',
-  'life=size=320x180:rate=15:mold=10:ratio=0.1:life_color=#ffa53d:death_color=#1a1208',
+  'life=size=320x180:rate=15:mold=10:ratio=0.1:seed=1:life_color=#ffa53d:death_color=#1a1208',
   '-t',
   '20',
   '-vf',

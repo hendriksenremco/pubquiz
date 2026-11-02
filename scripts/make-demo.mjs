@@ -69,7 +69,7 @@ ffmpeg('pause-loop.mp4', [
   '-f',
   'lavfi',
   '-i',
-  'life=size=320x180:rate=15:mold=10:ratio=0.1:life_color=#ff7a1a:death_color=#20120a',
+  'life=size=320x180:rate=15:mold=10:ratio=0.1:seed=1:life_color=#ff7a1a:death_color=#20120a',
   '-t',
   '8',
   '-vf',

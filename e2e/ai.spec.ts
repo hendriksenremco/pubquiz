@@ -7,6 +7,7 @@ import {
   confirmIn,
   launch,
   openStart,
+  snap,
   startShow,
   tempDir,
   tourFixture,
@@ -146,7 +147,7 @@ test('een AI maakt een quiz met vragen, muziek, plaatjes, een pauze en antwoorde
     })
     .toBe(2)
   await operator.waitForTimeout(600)
-  await operator.screenshot({ path: 'test-results/ai-music-round.png' })
+  await snap(operator, 'test-results/ai-music-round.png')
 
   // Aanpassen terwijl hij open staat: de editor laat het meteen zien.
   await operator.locator('.sidebar .round').first().click()
@@ -213,7 +214,7 @@ test('vanaf het dashboard koppel je QuizNote in één keer aan Claude Desktop', 
   await dialog.getByRole('button', { name: 'Koppel aan Claude Desktop' }).click()
   await expect(dialog.locator('.ok')).toContainText('Gekoppeld')
   await operator.waitForTimeout(300)
-  await operator.screenshot({ path: 'test-results/ai-dialog.png' })
+  await snap(operator, 'test-results/ai-dialog.png')
 
   // De andere instellingen van Claude blijven staan.
   const config = JSON.parse(readFileSync(claudeConfig, 'utf8'))

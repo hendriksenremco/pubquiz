@@ -1,7 +1,7 @@
 import { expect, test, type ElectronApplication, type Page } from '@playwright/test'
 import { readFileSync, rmSync } from 'fs'
 import { dirname, join } from 'path'
-import { copyFixture, launch, tempDir } from './helpers'
+import { copyFixture, launch, snap, tempDir } from './helpers'
 
 // Slides van een ronde op volgorde zetten door ze te slepen, zoals in Keynote.
 
@@ -50,7 +50,7 @@ test('zet slides op volgorde door de miniatuur te slepen', async () => {
   await operator.mouse.move(last.x + 40, last.y + last.height - 8, { steps: 8 })
   await expect(items.nth(2)).toHaveClass(/drop-after/)
   await expect(items.nth(0)).toHaveClass(/lifted/)
-  await operator.screenshot({ path: 'test-results/slides-drag.png' })
+  await snap(operator, 'test-results/slides-drag.png')
   await operator.mouse.up()
   await expect.poll(savedSlides).toEqual(['number: 1', 'question: Vraag 2', 'title: Ronde 1'])
   await expect(operator.locator('.slide-list .lifted, .slide-list [class*="drop-"]')).toHaveCount(0)
