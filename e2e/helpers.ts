@@ -144,25 +144,28 @@ export async function clearNotices(page: Page) {
  * Screenshot voor test-results/, dat bij elke run hetzelfde is zolang het scherm niet verandert.
  * De CI vergelijkt deze screenshots tussen master en een pull request (scripts/screenshot-diff.sh).
  *
- * - Video's staan even stil op het eerste beeld en lopen daarna verder.
+ * - Video's staan even stil op het eerste beeld en lopen daarna verder. Zolang staat er een canvas
+ *   met dat beeld op hun plek: een verborgen venster tekent een gezocht videobeeld niet altijd.
  * - CSS-animaties staan uit (Playwright zet ze op hun eindstand).
  * - Wat vanzelf verandert (tijdelijke paden, de QR-code, aftellers) is gemarkeerd met
- *   `data-volatile` in de app en wordt afgedekt.
+ *   `data-volatile` in de app en wordt afgedekt. Wat alleen in een test wisselt
+ *   (het adres van een nep-apparaat, "Bewerkt zojuist"), geef je mee als `mask`.
  */
 export async function snap(
   target: Page | Locator,
   path: string,
-  options: { fullPage?: boolean } = {}
+  options: { fullPage?: boolean; mask?: Locator[] } = {}
 ) {
+  const { mask = [], ...screenshot } = options
   const page = 'page' in target ? target.page() : target
   await page.evaluate(freezeVideos, MEDIA_EVENTS)
   try {
     await target.screenshot({
       path,
-      ...options,
+      ...screenshot,
       animations: 'disabled',
       caret: 'hide',
-      mask: [page.locator('[data-volatile]')],
+      mask: [page.locator('[data-volatile]'), ...mask],
       maskColor: '#3a4150'
     })
   } finally {
@@ -171,7 +174,11 @@ export async function snap(
 }
 
 type FrozenWindow = Window & {
-  __pubquizFrozen?: { playing: HTMLVideoElement[]; block: (e: Event) => void }
+  __pubquizFrozen?: {
+    playing: HTMLVideoElement[]
+    block: (e: Event) => void
+    painted: { video: HTMLVideoElement; canvas: HTMLCanvasElement; display: string }[]
+  }
 }
 
 /** Media-events die de app niet mag zien terwijl een video voor de screenshot stilstaat. */
@@ -197,10 +204,12 @@ async function freezeVideos(events: string[]) {
   }
   for (const name of events) window.addEventListener(name, block, true)
   const videos = Array.from(document.querySelectorAll('video'))
-  ;(window as FrozenWindow).__pubquizFrozen = {
+  const frozen = {
     playing: videos.filter((v) => !v.paused),
-    block
+    block,
+    painted: [] as NonNullable<FrozenWindow['__pubquizFrozen']>['painted']
   }
+  ;(window as FrozenWindow).__pubquizFrozen = frozen
   await Promise.all(
     videos.map(async (video) => {
       video.pause()
@@ -222,6 +231,25 @@ async function freezeVideos(events: string[]) {
       await until(() => !video.seeking && video.readyState >= 2)
     })
   )
+  // Het beeld op een canvas, op dezelfde plek in de pagina: drawImage pakt het gezochte beeld,
+  // ook als het venster het nog niet op het scherm heeft gezet.
+  const copied =
+    'display position top right bottom left width height margin object-fit object-position ' +
+    'opacity filter border-radius z-index transform'
+  for (const video of videos) {
+    if (video.readyState < 2 || !video.videoWidth) continue
+    const canvas = document.createElement('canvas')
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+    canvas.getContext('2d')?.drawImage(video, 0, 0)
+    const computed = getComputedStyle(video)
+    for (const name of copied.split(' ')) {
+      canvas.style.setProperty(name, computed.getPropertyValue(name))
+    }
+    video.before(canvas)
+    frozen.painted.push({ video, canvas, display: video.style.display })
+    video.style.display = 'none'
+  }
   // Twee frames, zodat het stilgezette beeld echt getekend is.
   await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)))
 }
@@ -232,6 +260,10 @@ async function resumeVideos(events: string[]) {
   const frozen = w.__pubquizFrozen
   if (!frozen) return
   delete w.__pubquizFrozen
+  for (const { video, canvas, display } of frozen.painted) {
+    video.style.display = display
+    canvas.remove()
+  }
   await Promise.all(frozen.playing.map((video) => video.play().catch(() => {})))
   for (const name of events) window.removeEventListener(name, frozen.block, true)
 }

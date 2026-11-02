@@ -36,6 +36,11 @@ list() { [ -d "$1" ] && find "$1" -maxdepth 1 -name '*.png' -exec basename {} \;
 mapfile -t base_files < <(list "$base")
 mapfile -t pr_files < <(list "$pr")
 
+# Zonder screenshots van master (geen runner, of de job faalde) valt er niets te vergelijken: dan
+# zou elk scherm "nieuw" heten.
+no_base=
+[ -n "${base_files[0]:-}" ] || no_base=1
+
 changed=()
 added=()
 removed=()
@@ -48,7 +53,7 @@ side_by_side() {
 }
 
 for name in "${pr_files[@]}"; do
-  [ -n "$name" ] || continue
+  [ -n "$name" ] && [ -z "$no_base" ] || continue
   if [ ! -f "$base/$name" ]; then
     added+=("$name")
     cp "$pr/$name" "$out/$name"
@@ -99,6 +104,8 @@ total=${#pr_files[@]}
   echo
   if [ "$total" -eq 0 ]; then
     echo 'Deze pull request heeft geen screenshots opgeleverd. Kijk in de e2e-tests wat er misging.'
+  elif [ -n "$no_base" ]; then
+    echo "Niet vergeleken: de job \"Screenshots van master\" heeft geen screenshots opgeleverd. Draai de CI opnieuw."
   elif [ ${#changed[@]} -eq 0 ] && [ ${#added[@]} -eq 0 ] && [ ${#removed[@]} -eq 0 ]; then
     echo "Geen verschillen met master in de $total screenshots."
   else

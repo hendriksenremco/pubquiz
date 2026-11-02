@@ -92,6 +92,8 @@ test('licht per ronde en per slide via de plug-in MagicHome', async () => {
       .click()
     await expect.poll(last).toEqual(RUNNING)
     await operator.waitForTimeout(200)
+    // Hoe ver de lijst gescrold is, hangt af van wanneer Playwright de knop in beeld haalde.
+    await panel.locator('.groups').evaluate((el) => (el.scrollTop = 0))
     await snap(operator, 'test-results/magichome-effect.png')
     await operator.keyboard.press('Escape')
     await expect.poll(last).toEqual(GREEN)
