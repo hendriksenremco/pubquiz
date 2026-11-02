@@ -133,7 +133,7 @@ export const SLIDE_MESSAGES = defineMessages(
     onAnswer: 'Bij antwoord',
     answerImage: 'Afbeelding bij het antwoord',
     backdrop: 'Achtergrond',
-    screens: 'Schermen',
+    shownOn: 'In beeld op',
     onScreens: 'Op welke schermen',
     moveUp: 'Omhoog',
     moveDown: 'Omlaag',
@@ -172,7 +172,7 @@ export const SLIDE_MESSAGES = defineMessages(
       onAnswer: 'With the answer',
       answerImage: 'Picture with the answer',
       backdrop: 'Background',
-      screens: 'Screens',
+      shownOn: 'Shown on',
       onScreens: 'On which screens',
       moveUp: 'Move up',
       moveDown: 'Move down',
@@ -311,8 +311,8 @@ export const ROUND_MESSAGES = defineMessages(
       answersOn: 'Go through the answers of other rounds',
       missingAnswers:
         '{count} still without an answer. Fill it in with the question, the picture or the clip itself.',
-      shownOn: 'On screen on',
-      answersShownOn: 'Answers on screen on',
+      shownOn: 'Shown on',
+      answersShownOn: 'Answers shown on',
       duplicate: 'Duplicate round',
       remove: 'Delete round'
     }
@@ -385,7 +385,7 @@ export const MEDIA_MESSAGES = defineMessages(
     title: 'Media',
     all: 'Alles',
     videos: "Video's",
-    images: 'Beelden',
+    images: 'Afbeeldingen',
     audio: 'Geluid',
     newFolder: 'Nieuwe map',
     newFolderNumber: 'Nieuwe map {number}',
