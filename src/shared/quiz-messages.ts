@@ -40,7 +40,7 @@ export const USAGE_MESSAGES = defineMessages(
     screenDefault: 'Standaard van scherm "{name}"',
     background: 'Achtergrondmuziek',
     roundScreen: 'Ronde "{title}": scherm',
-    roundBackground: 'Ronde "{title}": achtergrond',
+    roundBackground: 'Ronde "{title}": achtergrondmuziek',
     roundFragment: 'Ronde "{title}": fragment',
     roundSlide: 'Ronde "{title}": slide',
     roundAnswer: 'Ronde "{title}": bij een antwoord'
@@ -50,7 +50,7 @@ export const USAGE_MESSAGES = defineMessages(
       screenDefault: 'Default for screen "{name}"',
       background: 'Background music',
       roundScreen: 'Round "{title}": screen',
-      roundBackground: 'Round "{title}": background',
+      roundBackground: 'Round "{title}": background music',
       roundFragment: 'Round "{title}": clip',
       roundSlide: 'Round "{title}": slide',
       roundAnswer: 'Round "{title}": with an answer'

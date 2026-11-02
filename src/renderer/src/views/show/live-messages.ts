@@ -247,7 +247,7 @@ export const FRAGMENT_PAD_MESSAGES = defineMessages(
 export const MIXER_MESSAGES = defineMessages(
   {
     sound: 'Geluid',
-    background: 'Achtergrond',
+    background: 'Achtergrondmuziek',
     none: 'Geen',
     off: 'Uit',
     pausedByRound: 'Gepauzeerd (ronde)',
@@ -263,7 +263,7 @@ export const MIXER_MESSAGES = defineMessages(
   {
     en: {
       sound: 'Sound',
-      background: 'Background',
+      background: 'Background music',
       none: 'None',
       off: 'Off',
       pausedByRound: 'Paused (round)',
