@@ -3,7 +3,7 @@ import { readFileSync } from 'fs'
 import { createServer, type Server } from 'http'
 import type { AddressInfo } from 'net'
 import { join } from 'path'
-import { launch, tempDir } from './helpers'
+import { launch, snap, tempDir } from './helpers'
 
 /** Doet zich voor als PostHog en onthoudt elk event; er gaat niets naar de echte dienst. */
 async function fakePostHog(): Promise<{ server: Server; url: string; events: string[] }> {
@@ -42,10 +42,7 @@ test('meten: de vraag bij de eerste start, en niets zonder toestemming', async (
     let { app, operator } = await launch(userData, undefined, env)
     let question = operator.getByRole('dialog', { name: 'Help QuizNote beter maken?' })
     await expect(question).toBeVisible()
-    await operator.screenshot({
-      path: 'test-results/analytics-question.png',
-      animations: 'disabled'
-    })
+    await snap(operator, 'test-results/analytics-question.png')
     await operator.keyboard.press('Escape')
     await expect(question).toBeHidden()
     await app.close()
@@ -65,10 +62,7 @@ test('meten: de vraag bij de eerste start, en niets zonder toestemming', async (
     await expect(operator.getByRole('dialog', { name: /beter maken\?/ })).toHaveCount(0)
     const toggle = settings.getByRole('checkbox', { name: /Help QuizNote beter maken/ })
     await expect(toggle).not.toBeChecked()
-    await operator.screenshot({
-      path: 'test-results/analytics-settings.png',
-      animations: 'disabled'
-    })
+    await snap(operator, 'test-results/analytics-settings.png')
     expect(events).toEqual([])
 
     // Alsnog aanzetten bij Instellingen; pas bij de volgende start telt er iets.

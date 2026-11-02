@@ -6,6 +6,7 @@ import {
   copyFixture,
   launch,
   openStart,
+  snap,
   startShow,
   tempDir,
   useWindowedScreens,
@@ -68,7 +69,7 @@ test('teams en punten per ronde bij Quiz-instellingen, via de plug-in Tussenstan
       .poll(() => saved()?.teams.map((t: { name: string }) => t.name))
       .toEqual(['De Slimmeriken', 'Quizzly Bears', 'Team 3'])
     await operator.waitForTimeout(300)
-    await table.screenshot({ path: 'test-results/scores-table.png' })
+    await snap(table, 'test-results/scores-table.png')
 
     // Een team weghalen, met zijn punten.
     await table.getByRole('button', { name: 'Verwijder team' }).nth(1).click()
@@ -134,7 +135,7 @@ test('een slide Tussenstand toont de stand op het scherm', async () => {
     // Een titelslide met de markering van de plug-in (na de gekozen slide, of achteraan).
     await addSlide.click()
     await expect(operator.locator('.menu-item', { hasText: 'Tussenstand' })).toBeVisible()
-    await operator.screenshot({ path: 'test-results/round-add-slide.png' })
+    await snap(operator, 'test-results/round-add-slide.png')
     await operator.locator('.menu-item', { hasText: 'Tussenstand' }).click()
     await expect
       .poll(() => savedSlides().filter((s: unknown[]) => s[2]))
@@ -145,7 +146,7 @@ test('een slide Tussenstand toont de stand op het scherm', async () => {
     await expect(thumb).toContainText('Tussenstand')
     await expect(thumb.locator('.standing')).toHaveCount(4)
     await operator.waitForTimeout(300)
-    await operator.screenshot({ path: 'test-results/scores-slide-editor.png' })
+    await snap(operator, 'test-results/scores-slide-editor.png')
 
     await openStart(operator)
     await useWindowedScreens(operator)
@@ -168,7 +169,7 @@ test('een slide Tussenstand toont de stand op het scherm', async () => {
     await expect(rows.locator('.total')).toHaveText(['14', '13,5', '12', '12'])
     await expect(beamer.locator('.slide .eyebrow-big')).toHaveText('Tussenstand')
     await beamer.waitForTimeout(700)
-    await beamer.screenshot({ path: 'test-results/scores-slide.png' })
+    await snap(beamer, 'test-results/scores-slide.png')
   } finally {
     await app.close()
     rmSync(userData, { recursive: true, force: true })
@@ -219,7 +220,7 @@ test('punten invullen tijdens de show, voor de ronde die nu loopt', async () => 
     await expect(pad.locator('td.total')).toHaveText(['8.5', '7'])
     await expect.poll(saved).toEqual({ [one.id]: { t0: 8.5, t1: 7 } })
     await operator.waitForTimeout(300)
-    await operator.screenshot({ path: 'test-results/scores-live.png' })
+    await snap(operator, 'test-results/scores-live.png')
 
     // In de pauze vul je geen punten in.
     await operator.locator('.rounds .round', { hasText: 'Pauze' }).click()
