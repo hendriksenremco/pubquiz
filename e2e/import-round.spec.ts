@@ -155,8 +155,9 @@ test('meldt een fout rondebestand en verandert niets', async () => {
   await chooseFile(path)
   await operator.getByRole('button', { name: 'Importeer ronde…' }).click()
   await expect(
-    operator.locator('.notice', { hasText: 'Dit is geen rondebestand van QuizNote' })
+    operator.locator('.notice.error', { hasText: 'Dit is geen rondebestand van QuizNote' })
   ).toBeVisible()
+  await operator.screenshot({ path: 'test-results/notice-error.png' })
   expect(savedQuiz().rounds).toHaveLength(rounds)
 })
 
