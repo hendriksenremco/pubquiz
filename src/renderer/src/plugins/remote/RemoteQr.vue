@@ -64,6 +64,9 @@ const devices = computed(() => {
           <Icon name="restart" :size="14" /> {{ t('newCode') }}
         </button>
       </div>
+      <p class="muted tip">
+        {{ t('openWifi') }}
+      </p>
     </template>
     <p v-else-if="link" class="muted tip">
       {{ t('noNetwork') }}
