@@ -1,7 +1,7 @@
 import { expect, test, type ElectronApplication, type Page } from '@playwright/test'
 import { copyFileSync, existsSync, readFileSync, rmSync, writeFileSync } from 'fs'
 import { dirname, join } from 'path'
-import { confirmIn, copyFixture, launch, snap, tempDir } from './helpers'
+import { clearNotices, confirmIn, copyFixture, launch, snap, tempDir } from './helpers'
 
 let app: ElectronApplication
 let operator: Page
@@ -97,6 +97,7 @@ test('maakt het antwoordformulier, de antwoorden en de vragenkaarten als pdf', a
 })
 
 test('acties staan zichtbaar in beeld, niet achter drie stippen', async () => {
+  await clearNotices(operator)
   await operator.getByRole('button', { name: 'Quiz-instellingen' }).click()
   for (const name of ['Nieuwe quiz op basis van deze', 'Exporteer als zip', 'Toon in Finder']) {
     await expect(operator.getByRole('button', { name })).toBeVisible()
