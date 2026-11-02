@@ -149,7 +149,8 @@ export async function clearNotices(page: Page) {
  * - CSS-animaties staan uit (Playwright zet ze op hun eindstand).
  * - Wat vanzelf verandert (tijdelijke paden, de QR-code, aftellers) is gemarkeerd met
  *   `data-volatile` in de app en wordt afgedekt. Wat alleen in een test wisselt
- *   (het adres van een nep-apparaat, "Bewerkt zojuist"), geef je mee als `mask`.
+ *   (het adres van een nep-apparaat, "Bewerkt zojuist"), geef je mee als `mask`. Wat verborgen
+ *   is, krijgt geen vlak: `:visible`.
  */
 export async function snap(
   target: Page | Locator,
@@ -165,7 +166,7 @@ export async function snap(
       ...screenshot,
       animations: 'disabled',
       caret: 'hide',
-      mask: [page.locator('[data-volatile]'), ...mask],
+      mask: [page.locator('[data-volatile]:visible'), ...mask],
       maskColor: '#3a4150'
     })
   } finally {
