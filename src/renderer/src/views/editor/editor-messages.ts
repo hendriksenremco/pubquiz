@@ -16,7 +16,7 @@ export const PRINT_MESSAGES = defineMessages(
     cardsTitle: 'Vragenkaarten',
     cardsHint:
       'Voor jou: per ronde de vragen met antwoord, vier ansichtkaarten per A4 om te knippen',
-    save: 'Opslaan…',
+    save: 'Sla op…',
     saveDoc: '{title} opslaan',
     busy: 'Bezig…'
   },
@@ -324,7 +324,7 @@ export const EDITOR_MESSAGES = defineMessages(
   {
     rounds: 'Rondes',
     untitled: 'Naamloze ronde',
-    addRound: 'Ronde toevoegen',
+    addRound: 'Voeg ronde toe',
     presetNormal: 'Gewone ronde',
     presetNormalHint: 'Vragen met slides',
     presetMusic: 'Muziekronde',
@@ -453,7 +453,7 @@ export const SETUP_MESSAGES = defineMessages(
     removeScreenMessage: 'Wat rondes voor dit scherm hebben ingesteld, vervalt ook.',
     remove: 'Verwijder',
     shows: 'Toont',
-    addScreen: 'Scherm toevoegen',
+    addScreen: 'Voeg scherm toe',
     sound: 'Geluid',
     listen: 'Luister',
     stop: 'Stop',
@@ -466,7 +466,7 @@ export const SETUP_MESSAGES = defineMessages(
     via: 'Via',
     backgroundChannel: 'Kanaal van de achtergrondmuziek',
     channels: 'Audiokanalen',
-    addChannel: 'Kanaal toevoegen',
+    addChannel: 'Voeg kanaal toe',
     newChannel: 'Kanaal {number}',
     channelName: 'Naam van het kanaal',
     removeChannel: 'Verwijder kanaal',

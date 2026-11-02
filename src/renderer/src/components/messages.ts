@@ -7,7 +7,7 @@ import { defineMessages } from '@shared/i18n'
 export const COMPONENT_MESSAGES = defineMessages(
   {
     cancel: 'Annuleer',
-    close: 'Sluiten',
+    close: 'Sluit',
     choose: 'Kies…',
     chooseMedia: 'Kies media…',
     import: 'Importeer…',

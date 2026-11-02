@@ -90,7 +90,10 @@ test('dashboard: de rondleiding staat de eerste keer klaar, en komt niet terug a
     await snap(operator, 'test-results/home-tour.png', {
       mask: [operator.locator('.hero-meta')]
     })
-    await operator.locator('.hero-text').getByRole('button', { name: 'Bewerken' }).click()
+    await operator
+      .locator('.hero-text')
+      .getByRole('button', { name: 'Bewerk', exact: true })
+      .click()
     await expect(operator.locator('.topbar .name')).toHaveText('Rondleiding')
     await app.close()
 

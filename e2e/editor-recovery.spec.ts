@@ -16,7 +16,7 @@ test('wijzigingen in de editor worden automatisch opgeslagen', async () => {
   const quizDir = copyFixture()
   const { app, operator } = await launch(userData, quizDir)
   try {
-    await operator.getByRole('button', { name: 'Ronde toevoegen' }).click()
+    await operator.getByRole('button', { name: 'Voeg ronde toe' }).click()
     await operator.getByRole('button', { name: /^Muziekronde/ }).click()
     await operator.locator('#round-title').fill('Ronde 5: jaren 80')
 

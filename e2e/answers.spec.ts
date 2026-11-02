@@ -51,7 +51,7 @@ test.afterAll(async () => {
 })
 
 const addRound = async (preset: string) => {
-  await operator.getByRole('button', { name: 'Ronde toevoegen' }).click()
+  await operator.getByRole('button', { name: 'Voeg ronde toe' }).click()
   await operator.locator('.menu-item', { hasText: preset }).click()
 }
 

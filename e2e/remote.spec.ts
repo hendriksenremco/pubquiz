@@ -75,7 +75,7 @@ test('de show bedienen met een telefoon via de QR-code', async () => {
     // De nep-controller krijgt elke run een andere poort.
     await snap(operator, 'test-results/remote-settings.png', { mask: [address] })
     await settings.getByRole('button', { name: 'Klaar' }).click()
-    await operator.getByRole('button', { name: 'Bewerken' }).click()
+    await operator.getByRole('button', { name: 'Bewerk', exact: true }).click()
 
     await openStart(operator)
     await useWindowedScreens(operator)

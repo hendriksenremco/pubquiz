@@ -338,7 +338,7 @@ test('stoppen en afsluiten vragen het eerst, in een venster van de app', async (
     for (const w of BrowserWindow.getAllWindows()) w.webContents.send('pq:confirm-quit')
   })
   const quit = operator.getByRole('dialog', { name: 'De show loopt nog' })
-  await expect(quit.getByRole('button', { name: 'Afsluiten' })).toBeVisible()
+  await expect(quit.getByRole('button', { name: 'Sluit af' })).toBeVisible()
   await operator.keyboard.press('Escape')
   await expect(quit).toHaveCount(0)
   await expect(operator.locator('.live')).toBeVisible()

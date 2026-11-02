@@ -11,7 +11,7 @@ export const HOME_MESSAGES = defineMessages(
     screensMany: '{count} schermen',
     contents: '{rounds} en {screens}',
     edited: 'Bewerkt {when}',
-    edit: 'Bewerken',
+    edit: 'Bewerk',
     startShow: 'Start show',
     firstTitle: 'Maak je eerste pubquiz',
     firstText:
