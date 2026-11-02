@@ -113,13 +113,39 @@ export const SETTINGS_MESSAGES = defineMessages(
   {
     title: 'Instellingen',
     plugins: 'Plug-ins',
+    privacy: 'Privacy',
+    analyticsName: 'Help QuizNote beter maken',
     done: 'Klaar'
   },
   {
     en: {
       title: 'Settings',
       plugins: 'Plug-ins',
+      privacy: 'Privacy',
+      analyticsName: 'Help make QuizNote better',
       done: 'Done'
+    }
+  }
+)
+
+/** De vraag bij de eerste start en de uitleg bij Instellingen: anoniem meten (issue #40). */
+export const ANALYTICS_MESSAGES = defineMessages(
+  {
+    title: 'Help QuizNote beter maken?',
+    explain:
+      'QuizNote meet dan anoniem de versie, je type Mac, gestarte shows (aantallen rondes, schermen en kanalen, en welke plug-ins) en fouten, maar nooit de inhoud van je quiz, bestandsnamen, media of IP-adressen.',
+    later: 'Je kunt dit altijd wijzigen bij Instellingen.',
+    no: 'Niet meten',
+    yes: 'Meten'
+  },
+  {
+    en: {
+      title: 'Help make QuizNote better?',
+      explain:
+        'QuizNote then anonymously measures the version, your type of Mac, shows started (numbers of rounds, screens and channels, and which plug-ins) and errors, but never the content of your quiz, file names, media or IP addresses.',
+      later: 'You can change this at any time in Settings.',
+      no: "Don't measure",
+      yes: 'Measure'
     }
   }
 )

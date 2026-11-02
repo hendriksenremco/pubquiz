@@ -25,6 +25,8 @@ export interface AnalyticsOptions {
   identity: () => string | null
   /** Vast bij elk event: versie, macOS-versie, processor. */
   base: Record<string, unknown>
+  /** Voor tests: een nep-server in plaats van PostHog. */
+  host?: string
   /** Voor tests. */
   fetch?: typeof fetch
   now?: () => number
@@ -126,7 +128,7 @@ export class Analytics {
     if (!this.queue.length) return
     const batch = this.queue.slice()
     try {
-      const response = await this.fetch(`${POSTHOG_HOST}/batch/`, {
+      const response = await this.fetch(`${this.options.host ?? POSTHOG_HOST}/batch/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ api_key: POSTHOG_KEY, batch }),

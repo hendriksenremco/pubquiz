@@ -544,8 +544,14 @@ export class AppController {
   /** Toestemming voor anoniem meten, gegeven of ingetrokken. */
   setAnalytics(consent: boolean): void {
     if (!this.analytics) return
+    const firstAnswer = this.settings.analyticsConsent === null
     this.settings.setAnalytics(consent)
     if (!consent) this.analytics.clear()
+    else if (firstAnswer) {
+      // Bij het starten was er nog geen toestemming; deze eerste start telt nu alsnog.
+      this.analytics.capture('app_started')
+      void this.analytics.flush()
+    }
   }
 
   setPlugin(id: PluginId, setting: PluginSetting): void {

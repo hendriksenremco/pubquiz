@@ -208,6 +208,12 @@ Plug-ins zijn optionele extra's. Je zet ze per Mac aan of uit bij Instellingen (
 
 Nieuwe optionele koppelingen, zoals Spotify of YouTube, volgen hetzelfde patroon.
 
+## Anoniem meten (issue #40)
+
+- PostHog, alleen met toestemming: `src/main/analytics.ts` (versturen en wachtrij), `src/shared/analytics.ts` (sleutel, `quizShape`, `scrub`). Nooit quizinhoud, bestandsnamen, media of IP-adressen.
+- De vraag staat in `AnalyticsDialog.vue`: bij de eerste start, nooit als er een show loopt of hervat kan worden. Wegklikken is geen antwoord: er wordt niets gemeten en de vraag komt de volgende start terug. De schakelaar staat bij Instellingen.
+- Meten gebeurt alleen in de gebouwde app, en nooit in e2e-tests (`PUBQUIZ_USER_DATA`). Alleen `e2e/analytics.spec.ts` zet `PUBQUIZ_ANALYTICS_URL`, met een eigen nep-server.
+
 ## AI-koppeling (MCP)
 
 - `src/mcp/server.ts` wordt `out/main/mcp.js`.
