@@ -144,7 +144,7 @@ function remove() {
       </div>
       <PluginSlot name="slideInspector" :round="round" :slide="slide" />
       <div v-if="screens.length > 1" class="inspector-row">
-        <span class="row-label">{{ t('screens') }}</span>
+        <span class="row-label">{{ t('shownOn') }}</span>
         <div class="checks" role="group" :aria-label="t('onScreens')">
           <label v-for="s in screens" :key="s.id">
             <input type="checkbox" :checked="targets(s.id)" @change="toggleTarget(s.id)" />
