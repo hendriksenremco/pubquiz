@@ -167,9 +167,11 @@ app.on('window-all-closed', () => app.quit())
 
 /**
  * Anoniem meten (issue #40) alleen in de gebouwde app: niet tijdens het ontwikkelen en nooit in
- * tests (die zetten PUBQUIZ_USER_DATA). PUBQUIZ_NO_ANALYTICS zet het ook uit.
+ * tests (die zetten PUBQUIZ_USER_DATA). PUBQUIZ_NO_ANALYTICS zet het ook uit. De e2e-test van de
+ * toestemming zet PUBQUIZ_ANALYTICS_URL: dan gaat alles naar zijn eigen nep-server.
  */
 function measuring(): boolean {
+  if (process.env['PUBQUIZ_ANALYTICS_URL']) return true
   return (
     app.isPackaged &&
     !headless &&
@@ -182,6 +184,7 @@ function createAnalytics(settings: Settings): Analytics {
   const analytics = new Analytics({
     dir: app.getPath('userData'),
     identity: () => settings.analyticsId,
+    host: process.env['PUBQUIZ_ANALYTICS_URL'],
     base: {
       app_version: app.getVersion(),
       os_version: process.getSystemVersion(),

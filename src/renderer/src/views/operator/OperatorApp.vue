@@ -13,6 +13,7 @@ import ShowLive from '../show/ShowLive.vue'
 import StartSheet from '../show/StartSheet.vue'
 import HomeView from './HomeView.vue'
 import AiDialog from './AiDialog.vue'
+import AnalyticsDialog from './AnalyticsDialog.vue'
 import NewQuizDialog from './NewQuizDialog.vue'
 import SettingsDialog from './SettingsDialog.vue'
 import { OPERATOR_MESSAGES } from './operator-messages'
@@ -53,6 +54,8 @@ async function open(path?: string, openIn: 'edit' | 'show' = 'edit') {
 const newQuiz = ref<{ source: { path: string; title: string } | null } | null>(null)
 const aiOpen = ref(false)
 const settingsOpen = ref(false)
+/** De vraag over meten; nooit als er een show loopt of hervat kan worden. */
+const askAnalytics = ref(false)
 
 function create() {
   session.flush()
@@ -102,6 +105,7 @@ const actions: Record<MenuAction, () => void> = {
 onMounted(async () => {
   await session.init({ editable: true })
   if (session.live) mode.value = 'show'
+  askAnalytics.value = session.analytics === null && !session.live && !session.recovery
   api.onMenu((action) => actions[action]())
   api.onRoundFiles(() => void importRoundFiles())
   void importRoundFiles()
@@ -212,6 +216,7 @@ watch(
     <NewQuizDialog v-if="newQuiz" :source="newQuiz.source" @close="newQuiz = null" />
     <AiDialog v-if="aiOpen" @close="aiOpen = false" />
     <SettingsDialog v-if="settingsOpen" @close="settingsOpen = false" />
+    <AnalyticsDialog v-if="askAnalytics" @close="askAnalytics = false" />
     <ConfirmHost />
     <NoticeStack />
   </div>
