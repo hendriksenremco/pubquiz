@@ -195,10 +195,11 @@ onBeforeUnmount(() => {
           >
             <Icon :name="paused ? 'play' : 'pause'" :size="15" />
           </button>
-          <span class="time mono">{{ formatTime(current) }}</span>
+          <span class="time mono" data-volatile>{{ formatTime(current) }}</span>
           <input
             v-fill
             class="scrub"
+            data-volatile
             type="range"
             min="0"
             :max="length ?? 1"
