@@ -95,8 +95,8 @@ test('de show bedienen met een telefoon via de QR-code', async () => {
     await snap(operator, 'test-results/remote-qr.png')
     await operator.keyboard.press('Escape')
 
-    // Rondes en slides, met een preview van de slide die in beeld staat.
-    const preview = phone.getByLabel('Preview van de slide')
+    // Rondes en slides, met een voorbeeld van de slide die in beeld staat.
+    const preview = phone.getByLabel('Voorbeeld van de slide')
     await expect(phone.locator('h1')).toHaveText('Hierna: Ronde 1: algemeen')
     await expect(phone.getByRole('button', { name: 'Volgende', exact: true })).toBeDisabled()
     await phone.getByRole('button', { name: /Volgende ronde/ }).click()

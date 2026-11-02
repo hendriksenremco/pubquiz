@@ -76,7 +76,7 @@ test('maakt het antwoordformulier, de antwoorden en de vragenkaarten als pdf', a
   await operator.waitForTimeout(200)
   await snap(operator, 'test-results/print-page.png')
 
-  await dialog.getByRole('button', { name: 'Antwoordformulier opslaan' }).click()
+  await dialog.getByRole('button', { name: 'Sla Antwoordformulier op' }).click()
   const sheet = await saved('Demo-pubquiz – antwoordformulier.pdf')
   // A4, tot vier rondes per blad: de drie rondes van de demo passen op één.
   expect(pageSizeMm(sheet)).toEqual([210, 297])
@@ -84,13 +84,13 @@ test('maakt het antwoordformulier, de antwoorden en de vragenkaarten als pdf', a
   await expect(operator.locator('.notice')).toContainText('Opgeslagen')
 
   // Nakijkformulier: dezelfde indeling, dus ook één A4.
-  await dialog.getByRole('button', { name: 'Nakijkformulier opslaan' }).click()
+  await dialog.getByRole('button', { name: 'Sla Nakijkformulier op' }).click()
   const key = await saved('Demo-pubquiz – nakijkformulier.pdf')
   expect(pageSizeMm(key)).toEqual([210, 297])
   expect(pageCount(key)).toBe(1)
 
   // Vragenkaarten: een ansichtkaart per ronde, vier op een liggende A4; de drie passen op één.
-  await dialog.getByRole('button', { name: 'Vragenkaarten opslaan' }).click()
+  await dialog.getByRole('button', { name: 'Sla Vragenkaarten op' }).click()
   const cards = await saved('Demo-pubquiz – vragenkaarten.pdf')
   expect(pageSizeMm(cards)).toEqual([297, 210])
   expect(pageCount(cards)).toBe(1)

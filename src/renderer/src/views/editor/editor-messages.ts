@@ -17,7 +17,7 @@ export const PRINT_MESSAGES = defineMessages(
     cardsHint:
       'Voor jou: per ronde de vragen met antwoord, vier ansichtkaarten per A4 om te knippen',
     save: 'Sla op…',
-    saveDoc: '{title} opslaan',
+    saveDoc: 'Sla {title} op',
     busy: 'Bezig…'
   },
   {
@@ -344,7 +344,7 @@ export const EDITOR_MESSAGES = defineMessages(
     addedOne: '1 bestand toegevoegd aan Media',
     addedMany: '{count} bestanden toegevoegd aan Media',
     importRounds: 'Importeer ronde…',
-    importRoundsHint: 'Ronde importeren uit een rondebestand',
+    importRoundsHint: 'Importeer een ronde uit een rondebestand',
     importedOne: 'Ronde “{title}” geïmporteerd uit {file}',
     importedMany: '{count} rondes geïmporteerd uit {file}'
   },
