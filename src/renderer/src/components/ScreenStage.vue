@@ -383,10 +383,9 @@ onBeforeUnmount(() => {
   min-width: 22cqh;
   padding: 2.5cqh 3.5cqh;
   border-radius: 3cqh;
-  background: rgba(0, 0, 0, 0.72);
+  background: rgba(0, 0, 0, 0.82);
   color: #fff;
   font-family: var(--font);
-  backdrop-filter: blur(1cqh);
 }
 
 .ov-wave {

@@ -254,8 +254,7 @@ onBeforeUnmount(() => {
   display: grid;
   place-items: center;
   padding: 32px;
-  background: rgba(6, 9, 16, 0.8);
-  backdrop-filter: blur(16px);
+  background: rgba(6, 9, 16, 0.92);
   animation: fade 0.14s ease;
 }
 
