@@ -328,7 +328,7 @@ export const EDITOR_MESSAGES = defineMessages(
     presetNormal: 'Gewone ronde',
     presetNormalHint: 'Vragen met slides',
     presetMusic: 'Muziekronde',
-    presetMusicHint: 'Fragmenten, achtergrond pauzeert',
+    presetMusicHint: 'Fragmenten, achtergrondmuziek pauzeert',
     presetPictures: 'Afbeeldingenronde',
     presetPicturesHint: 'Een reeks afbeeldingen, genummerd in beeld',
     presetBreak: 'Pauze',
@@ -471,7 +471,7 @@ export const SETUP_MESSAGES = defineMessages(
     channelName: 'Naam van het kanaal',
     removeChannel: 'Verwijder kanaal',
     channelInUse:
-      'Dit kanaal wordt nog {count}× gebruikt. Zet de achtergrond en fragmenten eerst op een ander kanaal.',
+      'Dit kanaal wordt nog {count}× gebruikt. Zet de achtergrondmuziek en fragmenten eerst op een ander kanaal.',
     noChannel: 'Voeg eerst een audiokanaal toe.',
     show: 'Tijdens de show',
     timer: 'Aftellen',
