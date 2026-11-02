@@ -312,21 +312,11 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
         <span class="name grow">{{ a.name }}</span>
         <span v-if="findAssetUsages(quiz, a.id).length" class="used">{{ t('used') }}</span>
         <span class="meta mono">{{ formatTime(a.duration) }}</span>
-        <button
-          class="btn btn-ghost btn-sm btn-icon sound-look"
-          :aria-label="t('preview')"
-          :title="t('preview')"
-          @click="previewId = a.id"
-        >
-          <Icon name="eye" :size="14" />
+        <button class="btn btn-ghost btn-sm sound-look" @click="previewId = a.id">
+          <Icon name="eye" :size="14" /> {{ t('preview') }}
         </button>
-        <button
-          class="btn btn-ghost btn-sm btn-icon sound-remove"
-          :aria-label="t('removeFromQuiz')"
-          :title="t('removeFromQuiz')"
-          @click="remove(a)"
-        >
-          <Icon name="trash" :size="14" />
+        <button class="btn btn-ghost btn-sm sound-remove" @click="remove(a)">
+          <Icon name="trash" :size="14" /> {{ t('removeFromQuiz') }}
         </button>
       </div>
     </section>
