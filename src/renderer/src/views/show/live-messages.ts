@@ -315,14 +315,13 @@ export const START_MESSAGES = defineMessages(
     screenSpeakersMissing: 'Speakers van het scherm (niet gevonden)',
     laptop: '{name}, {width}×{height} (laptop)',
     display: '{name}, {width}×{height}',
-    fileMissing: 'Bestand ontbreekt: {name}',
+    fileMissing: '{name}: bestand ontbreekt',
     displayMissing: '{name}: display niet aangesloten',
     screenOff: '{name} staat uit',
-    soundMissing:
-      '{name}: geluidsuitgang niet gevonden, het videogeluid gaat naar de systeemstandaard',
+    soundMissing: '{name}: uitgang niet gevonden, het videogeluid gaat naar de systeemstandaard',
     noSpeakers:
       '{name}: geen speakers bij dit scherm, het videogeluid gaat naar de systeemstandaard',
-    outputMissing: '{name}: uitgang niet gevonden, de systeemstandaard wordt gebruikt',
+    outputMissing: '{name}: uitgang niet gevonden, het geluid gaat naar de systeemstandaard',
     answersScreen: '{round}: kies bij Antwoorden op welk scherm ze in beeld komen',
     noRounds: 'De quiz heeft nog geen rondes'
   },
@@ -361,12 +360,12 @@ export const START_MESSAGES = defineMessages(
       screenSpeakersMissing: 'Screen speakers (not found)',
       laptop: '{name}, {width}×{height} (laptop)',
       display: '{name}, {width}×{height}',
-      fileMissing: 'File missing: {name}',
+      fileMissing: '{name}: file missing',
       displayMissing: '{name}: display not connected',
       screenOff: '{name} is off',
-      soundMissing: '{name}: sound output not found, the video sound goes to the system default',
+      soundMissing: '{name}: output not found, the video sound goes to the system default',
       noSpeakers: '{name}: no speakers on this screen, the video sound goes to the system default',
-      outputMissing: '{name}: output not found, using the system default',
+      outputMissing: '{name}: output not found, the sound goes to the system default',
       answersScreen: '{round}: under Answers, choose which screen shows them',
       noRounds: 'The quiz has no rounds yet'
     }

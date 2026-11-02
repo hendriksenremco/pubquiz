@@ -64,7 +64,7 @@ test('opent de rondleiding en start de show zonder ontbrekende bestanden', async
 
   await openStart(operator)
   await useWindowedScreens(operator)
-  await expect(operator.getByText(/Bestand ontbreekt/)).toHaveCount(0)
+  await expect(operator.getByText(/bestand ontbreekt/i)).toHaveCount(0)
   await startShow(operator)
   await expect(operator.locator('.live')).toBeVisible()
   const beamer = await windowFor('screen/beamer')
