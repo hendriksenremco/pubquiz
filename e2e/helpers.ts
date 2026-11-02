@@ -194,8 +194,20 @@ async function freezeVideos(events: string[]) {
     videos.map(async (video) => {
       video.pause()
       if (!video.currentSrc) return
-      await until(() => video.readyState >= 2)
-      if (video.currentTime !== 0) video.currentTime = 0
+      // Niet wachten op beeld vóór het zoeken: een tegeltje met preload="metadata" laadt dat pas
+      // als het zoekt, en begint op #t=1.
+      await until(() => video.readyState >= 1)
+      if (video.currentTime !== 0) {
+        // Klaar met zoeken wil nog niet zeggen dat het beeld op het scherm staat; dat meldt
+        // alleen de frame-callback. Die komt niet altijd in een verborgen venster, dus met een
+        // grens.
+        const shown = new Promise<void>((done) => {
+          video.requestVideoFrameCallback(() => done())
+          setTimeout(done, 1000)
+        })
+        video.currentTime = 0
+        await shown
+      }
       await until(() => !video.seeking && video.readyState >= 2)
     })
   )

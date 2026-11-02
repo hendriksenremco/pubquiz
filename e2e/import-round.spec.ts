@@ -4,7 +4,7 @@ import { createServer, type Server } from 'http'
 import type { AddressInfo } from 'net'
 import { dirname, join } from 'path'
 import { writeZip } from '../src/main/zip'
-import { copyFixture, launch, tempDir } from './helpers'
+import { copyFixture, launch, snap, tempDir } from './helpers'
 
 let app: ElectronApplication
 let operator: Page
@@ -123,7 +123,7 @@ test('importeert een rondebestand na de gekozen ronde', async () => {
   const titles = await operator.locator('.sidebar .round-title').allTextContents()
   expect(titles[1]).toBe('Aardrijkskunde')
   await expect(operator.locator('.sidebar .round.on .round-title')).toHaveText('Aardrijkskunde')
-  await operator.screenshot({ path: 'test-results/import-round.png' })
+  await snap(operator, 'test-results/import-round.png')
 
   await expect
     .poll(() => savedQuiz().rounds.map((r: { title: string }) => r.title))
@@ -152,6 +152,12 @@ test('meldt een fout rondebestand en verandert niets', async () => {
   const path = join(files, 'kapot.quiznoteronde')
   writeFileSync(path, 'geen zip')
   const rounds = savedQuiz().rounds.length
+  // Een melding van de vorige test verdwijnt na een paar seconden; weg ermee, dan staat er altijd
+  // hetzelfde op de screenshot.
+  for (const close of await operator.locator('.notice button').all()) {
+    await close.click({ timeout: 1000 }).catch(() => {})
+  }
+  await expect(operator.locator('.notice')).toHaveCount(0)
   await chooseFile(path)
   await operator.getByRole('button', { name: 'Importeer ronde…' }).click()
   const notice = operator.locator('.notice.error', {
@@ -160,7 +166,7 @@ test('meldt een fout rondebestand en verandert niets', async () => {
   await expect(notice).toBeVisible()
   // Wacht tot de melding helemaal is ingeschoven, anders staat hij nog onzichtbaar op de foto.
   await expect(notice).not.toHaveClass(/notice-enter/)
-  await operator.screenshot({ path: 'test-results/notice-error.png' })
+  await snap(operator, 'test-results/notice-error.png')
   expect(savedQuiz().rounds).toHaveLength(rounds)
 })
 

@@ -311,8 +311,8 @@ test('telt af met T op de schermen met het fragmentnummer, en stopt met nog een 
   const button = operator.getByRole('button', { name: /Stop aftellen/ })
   await expect(button).toBeVisible()
   await beamer.waitForTimeout(700) // infaden afwachten voor de screenshot
-  await beamer.screenshot({ path: 'test-results/screen-timer.png' })
-  await operator.locator('.topbar').screenshot({ path: 'test-results/show-bar-timer.png' })
+  await snap(beamer, 'test-results/screen-timer.png')
+  await snap(operator.locator('.topbar'), 'test-results/show-bar-timer.png')
 
   await operator.keyboard.press('t')
   await expect(beamer.locator('.overlay')).toHaveCount(0)
