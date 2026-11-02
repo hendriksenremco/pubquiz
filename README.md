@@ -10,7 +10,7 @@ QuizNote is a macOS app for building a pub quiz and running it live. One laptop 
 
 ![QuizNote during a show](docs/screenshot-show.png)
 
-The app is in Dutch for now, and only for macOS (Apple Silicon and Intel). Downloads and more information: [quiznote.app](https://quiznote.app).
+The app is in Dutch and English (it follows the macOS language; release 0.1.0 is Dutch only), and only for macOS (Apple Silicon and Intel). Downloads and more information: [quiznote.app](https://quiznote.app).
 
 ## What's in the app
 
@@ -81,7 +81,7 @@ The old working name "Pubquiz" still appears in the code: the repo, the fixtures
 
 1. **Open an issue first** for anything bigger than a small fix, so we can agree on the approach.
 2. **Branch from `master`.** The branches are `master` and `develop`; there is no `main`.
-3. **Commit messages in English.** Text in the app and code comments are in Dutch. Text in the app is moving to per-part dictionaries (`defineMessages` in `src/shared/i18n.ts`); English stays off until everything is translated (issue #53).
+3. **Commit messages in English.** Text in the app and code comments are in Dutch. Text in the app is moving to per-part dictionaries (`defineMessages` in `src/shared/i18n.ts`); the app follows the macOS language: Dutch, otherwise English. New text needs both.
 4. **Before a pull request:** `pnpm typecheck`, `pnpm test`, the e2e tests if you can (macOS), and `npx prettier --check` on the files you changed.
 5. **Open a pull request to `master`.** The CI (`.github/workflows/ci.yml`) runs on macOS: typecheck, unit tests, e2e tests and an unsigned dmg. The e2e screenshots are uploaded as the `test-results` artifact. A job that compares them with `master` and posts the differences as a comment is on its way (#28).
 6. **Remco reviews and merges.** By contributing, you agree that your contribution may be used in QuizNote (see [LICENSE](LICENSE)).

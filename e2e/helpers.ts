@@ -57,6 +57,8 @@ export async function launch(
       ...(process.env['PUBQUIZ_HEADED'] ? {} : { PUBQUIZ_HEADLESS: '1' }),
       // Geen rondleiding op het dashboard, behalve in de test die erom gaat.
       PUBQUIZ_TOUR: '',
+      // De tests kijken naar Nederlandse teksten, ook op een Mac in het Engels (zoals de CI).
+      PUBQUIZ_LOCALE: 'nl',
       ...extraEnv
     } as Record<string, string>
   })

@@ -149,7 +149,7 @@ fixtures/      demo.pubquiz (werk van Remco!), rondleiding.pubquiz en tour.pubqu
 **Talen** (issue #53)
 
 - `src/shared/i18n.ts`: een klein eigen woordenboek. Elk onderdeel heeft zijn teksten in `defineMessages`: Nederlands is de bron, Engels moet dezelfde sleutels hebben (typecheck).
-- De app kiest de taal van macOS (`appLocale()` in `src/main/locale.ts`), maar alleen uit `ACTIVE_LOCALES`. Engels gaat pas aan als alles vertaald is. `PUBQUIZ_LOCALE=en` dwingt Engels af.
+- De app kiest de taal van macOS (`appLocale()` in `src/main/locale.ts`), uit `ACTIVE_LOCALES`: Nederlands en Engels (sinds 2 november 2026; release 0.1.0 is nog alleen Nederlands). Een andere taal van macOS wordt Engels. `PUBQUIZ_LOCALE` dwingt een taal af; `launch()` in de e2e-tests zet hem op `nl`, want de CI-Mac is Engels. Een test in `e2e/home.spec.ts` opent de app in het Engels.
 - Al vertaald: de telefoon (`src/renderer/src/remote/messages.ts`); hij neemt de taal van de Mac over via `RemoteView.locale`.
 - Teksten die main en shared maken (vorige/volgende, "Slide 2 van 5", foutmeldingen voor de telefoon) staan in `src/shared/show-messages.ts`; geef de `Locale` mee.
 - Vensters op de Mac kennen de taal via `?locale=` in hun adres (`loadRoute`); in de renderer lees je hem uit `src/renderer/src/lib/locale.ts`. Al vertaald: wat er over de slide heen op een scherm staat (`SCREEN_MESSAGES`), en naam en uitleg van plug-ins (`text` in de definitie).
