@@ -639,7 +639,7 @@ const quiz = {
       title: L('Welkom', 'Welcome'),
       hostNotes: L(
         'Alleen jij ziet deze notities. Blader met → door de slides en start ronde 1 met Enter. ' +
-          'In de mixer rechts zet je het volume per uitgang.',
+          'Onder Geluid rechts zet je het volume per uitgang.',
         'Only you can see these notes. Press → to go through the slides and Return to start ' +
           'round 1. Under Sound on the right you set the volume of each output.'
       ),
@@ -879,8 +879,8 @@ const quiz = {
       screens: { beamer: { type: 'video', assetId: 'klokslagen', volume: 1 } },
       background: 'pause',
       hostNotes: L(
-        'Het geluid van deze video komt uit de speakers van de beamer; kies die bij Show ' +
-          'starten. Druk op → voor de vraag: die staat over de video heen. ' +
+        'Het geluid van deze video komt uit de speakers van de beamer; kies die bij Start ' +
+          'show. Druk op → voor de vraag: die staat over de video heen. ' +
           'Heeft een standaardvideo geluid, dan zet je dat per ronde uit bij Geluid van de video.',
         "The sound of this video comes from the projector's speakers; choose them at Start " +
           'show. Press → for the question: it appears on top of the video. ' +
