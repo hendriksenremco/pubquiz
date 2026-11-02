@@ -146,6 +146,8 @@ export async function clearNotices(page: Page) {
  *
  * - Video's staan even stil op het eerste beeld en lopen daarna verder. Zolang staat er een canvas
  *   met dat beeld op hun plek: een verborgen venster tekent een gezocht videobeeld niet altijd.
+ * - Afbeeldingen staan zolang ook op een canvas: de browser schaalt een afbeelding niet elke keer
+ *   even scherp, en dan verschillen de randen van bijvoorbeeld een logo.
  * - CSS-animaties staan uit (Playwright zet ze op hun eindstand).
  * - Wat vanzelf verandert (tijdelijke paden, de QR-code, aftellers) is gemarkeerd met
  *   `data-volatile` in de app en wordt afgedekt. Wat alleen in een test wisselt
@@ -178,7 +180,7 @@ type FrozenWindow = Window & {
   __pubquizFrozen?: {
     playing: HTMLVideoElement[]
     block: (e: Event) => void
-    painted: { video: HTMLVideoElement; canvas: HTMLCanvasElement; display: string }[]
+    painted: { element: HTMLElement; canvas: HTMLCanvasElement; display: string }[]
   }
 }
 
@@ -186,9 +188,9 @@ type FrozenWindow = Window & {
 const MEDIA_EVENTS = ['pause', 'play', 'playing', 'seeking', 'seeked', 'timeupdate', 'waiting']
 
 /**
- * Draait in de pagina: zet elke video op het eerste beeld en onthoudt welke speelden. De app
- * merkt er niets van: de media-events worden op `window` afgevangen (capture), anders stopt
- * bijvoorbeeld een voorbeeld dat op `pause` reageert.
+ * Draait in de pagina: zet elke video op het eerste beeld, onthoudt welke speelden en zet video's
+ * en afbeeldingen op een canvas. De app merkt er niets van: de media-events worden op `window`
+ * afgevangen (capture), anders stopt bijvoorbeeld een voorbeeld dat op `pause` reageert.
  */
 async function freezeVideos(events: string[]) {
   const until = async (ready: () => boolean) => {
@@ -237,19 +239,31 @@ async function freezeVideos(events: string[]) {
   const copied =
     'display position top right bottom left width height margin object-fit object-position ' +
     'opacity filter border-radius z-index transform'
-  for (const video of videos) {
-    if (video.readyState < 2 || !video.videoWidth) continue
+  const paint = (element: HTMLVideoElement | HTMLImageElement, width: number, height: number) => {
     const canvas = document.createElement('canvas')
-    canvas.width = video.videoWidth
-    canvas.height = video.videoHeight
-    canvas.getContext('2d')?.drawImage(video, 0, 0)
-    const computed = getComputedStyle(video)
+    canvas.width = width
+    canvas.height = height
+    canvas.getContext('2d')?.drawImage(element, 0, 0)
+    const computed = getComputedStyle(element)
     for (const name of copied.split(' ')) {
       canvas.style.setProperty(name, computed.getPropertyValue(name))
     }
-    video.before(canvas)
-    frozen.painted.push({ video, canvas, display: video.style.display })
-    video.style.display = 'none'
+    element.before(canvas)
+    frozen.painted.push({ element, canvas, display: element.style.display })
+    element.style.display = 'none'
+  }
+  for (const video of videos) {
+    if (video.readyState >= 2 && video.videoWidth) {
+      paint(video, video.videoWidth, video.videoHeight)
+    }
+  }
+  // Wat toch wordt afgedekt (de QR-code) blijft staan, anders verdwijnt het masker.
+  const images = Array.from(document.querySelectorAll('img')).filter(
+    (img) => !img.closest('[data-volatile]')
+  )
+  await Promise.all(images.map((img) => img.decode().catch(() => {})))
+  for (const img of images) {
+    if (img.naturalWidth) paint(img, img.naturalWidth, img.naturalHeight)
   }
   // Twee frames, zodat het stilgezette beeld echt getekend is.
   await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)))
@@ -261,8 +275,8 @@ async function resumeVideos(events: string[]) {
   const frozen = w.__pubquizFrozen
   if (!frozen) return
   delete w.__pubquizFrozen
-  for (const { video, canvas, display } of frozen.painted) {
-    video.style.display = display
+  for (const { element, canvas, display } of frozen.painted) {
+    element.style.display = display
     canvas.remove()
   }
   await Promise.all(frozen.playing.map((video) => video.play().catch(() => {})))
