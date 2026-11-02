@@ -7,7 +7,7 @@ import { defineMessages } from '@shared/i18n'
 export const LIGHT_PANEL_MESSAGES = defineMessages(
   {
     light: 'Licht',
-    chooseByHand: 'Het licht met de hand kiezen',
+    chooseByHand: 'Kies het licht met de hand',
     followShow: 'Volg de show',
     manual: 'Met de hand gekozen, tot de show een ander licht kiest',
     following: 'Volgt de show',

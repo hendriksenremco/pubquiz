@@ -231,7 +231,7 @@ export const ROUND_MESSAGES = defineMessages(
     gapLabel: 'Pauze tussen fragmenten in seconden',
     gapUnit: 's ertussen',
     countdown: 'Aftellen tussen fragmenten in beeld',
-    renumber: 'Namen hernummeren: Fragment 1, 2, …',
+    renumber: 'Hernummer namen: Fragment 1, 2, …',
     loop: 'Vanzelf wisselen',
     every: 'Elke',
     loopLabel: 'Seconden per slide',
