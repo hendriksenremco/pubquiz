@@ -45,7 +45,7 @@ export const NEW_QUIZ_MESSAGES = defineMessages(
       "Schermen, audiokanalen, achtergrondmuziek en alle video's en afbeeldingen gaan altijd mee.",
     rounds: 'Rondes',
     roundsHint: 'Titels, slides, en per ronde het beeld en de muziek',
-    fragments: 'Geluidsfragmenten',
+    fragments: 'Fragmenten',
     fragmentsHint: 'De liedjes in die rondes; meestal kies je die opnieuw',
     cancel: 'Annuleer',
     create: 'Maak quiz'
@@ -59,10 +59,10 @@ export const NEW_QUIZ_MESSAGES = defineMessages(
       namePlaceholder: 'For example: Pub quiz November',
       savedIn: 'Saved in {folder}',
       alwaysCopied:
-        'Screens, audio channels, background music and all videos and images are always copied.',
+        'Screens, audio channels, background music and all videos and pictures are always copied.',
       rounds: 'Rounds',
       roundsHint: 'Titles, slides, and the picture and music for each round',
-      fragments: 'Sound clips',
+      fragments: 'Clips',
       fragmentsHint: 'The songs in those rounds; usually you pick new ones',
       cancel: 'Cancel',
       create: 'Create quiz'
