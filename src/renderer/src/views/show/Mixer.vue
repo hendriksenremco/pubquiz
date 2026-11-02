@@ -25,7 +25,7 @@ const backgroundName = computed(() => findAsset(quiz.value, background.value?.as
 const backgroundStatus = computed(() => {
   const bg = background.value
   if (!bg) return { text: t('none'), cls: '' }
-  if (!session.state.backgroundEnabled) return { text: t('off'), cls: 'pill-live' }
+  if (!session.state.backgroundEnabled) return { text: t('off'), cls: '' }
   if (!bg.playing) return { text: t('pausedByRound'), cls: 'pill-warn' }
   if (bg.ducked) return { text: t('ducked'), cls: 'pill-accent' }
   return { text: t('playing'), cls: 'pill-ok' }
