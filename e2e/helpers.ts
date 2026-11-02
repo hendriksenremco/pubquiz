@@ -130,6 +130,17 @@ export async function useWindowedScreens(operator: Page) {
 }
 
 /**
+ * Sluit alle meldingen. Ze verdwijnen vanzelf na een paar seconden, dus zonder dit staan ze soms
+ * wel en soms niet op een screenshot.
+ */
+export async function clearNotices(page: Page) {
+  for (const close of await page.locator('.notice button').all()) {
+    await close.click({ timeout: 1000 }).catch(() => {})
+  }
+  await expect(page.locator('.notice')).toHaveCount(0)
+}
+
+/**
  * Screenshot voor test-results/, dat bij elke run hetzelfde is zolang het scherm niet verandert.
  * De CI vergelijkt deze screenshots tussen master en een pull request (scripts/screenshot-diff.sh).
  *

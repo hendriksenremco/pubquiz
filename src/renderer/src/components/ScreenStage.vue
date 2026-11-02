@@ -305,8 +305,8 @@ onBeforeUnmount(() => {
           <!-- Aftellen na een vraag (T): de seconden groot, de balk loopt leeg. -->
           <template v-else-if="resolved.overlay.kind === 'timer'">
             <div class="ov-label">{{ t('timeLeft') }}</div>
-            <div class="ov-number">{{ resolved.overlay.seconds }}</div>
-            <div class="ov-bar">
+            <div class="ov-number" data-volatile>{{ resolved.overlay.seconds }}</div>
+            <div class="ov-bar" data-volatile>
               <span :style="{ transform: `scaleX(${resolved.overlay.remaining})` }" />
             </div>
           </template>

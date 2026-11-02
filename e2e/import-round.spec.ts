@@ -4,7 +4,7 @@ import { createServer, type Server } from 'http'
 import type { AddressInfo } from 'net'
 import { dirname, join } from 'path'
 import { writeZip } from '../src/main/zip'
-import { copyFixture, launch, snap, tempDir } from './helpers'
+import { clearNotices, copyFixture, launch, snap, tempDir } from './helpers'
 
 let app: ElectronApplication
 let operator: Page
@@ -152,12 +152,7 @@ test('meldt een fout rondebestand en verandert niets', async () => {
   const path = join(files, 'kapot.quiznoteronde')
   writeFileSync(path, 'geen zip')
   const rounds = savedQuiz().rounds.length
-  // Een melding van de vorige test verdwijnt na een paar seconden; weg ermee, dan staat er altijd
-  // hetzelfde op de screenshot.
-  for (const close of await operator.locator('.notice button').all()) {
-    await close.click({ timeout: 1000 }).catch(() => {})
-  }
-  await expect(operator.locator('.notice')).toHaveCount(0)
+  await clearNotices(operator)
   await chooseFile(path)
   await operator.getByRole('button', { name: 'Importeer ronde…' }).click()
   const notice = operator.locator('.notice.error', {
