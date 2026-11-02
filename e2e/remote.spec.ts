@@ -91,6 +91,7 @@ test('de show bedienen met een telefoon via de QR-code', async () => {
     const phone = await openRemote(app, url, PHONE)
     await expect(phone.locator('.status')).toHaveText('Live')
     await expect(qr.getByText('1 apparaat verbonden')).toBeVisible()
+    await expect(qr.getByText('Op een open wifi-netwerk')).toBeVisible()
     await snap(operator, 'test-results/remote-qr.png')
     await operator.keyboard.press('Escape')
 

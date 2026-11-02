@@ -15,6 +15,8 @@ export const REMOTE_QR_MESSAGES = defineMessages(
     devices: '{count} apparaten verbonden',
     newCode: 'Nieuwe code',
     newCodeTitle: 'Telefoons met de oude code kunnen dan niets meer',
+    openWifi:
+      'Op een open wifi-netwerk kan iemand anders meekijken; klik op Nieuwe code als er iets vreemds gebeurt.',
     noNetwork:
       'Geen netwerk gevonden. Verbind deze Mac met het wifi-netwerk waar je telefoon op zit.'
   },
@@ -29,6 +31,8 @@ export const REMOTE_QR_MESSAGES = defineMessages(
       devices: '{count} devices connected',
       newCode: 'New code',
       newCodeTitle: 'Phones with the old code can no longer do anything',
+      openWifi:
+        'On an open Wi-Fi network someone else can listen in; click New code if anything odd happens.',
       noNetwork: 'No network found. Connect this Mac to the Wi-Fi network your phone is on.'
     }
   }

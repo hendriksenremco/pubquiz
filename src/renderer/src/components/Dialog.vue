@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted } from 'vue'
 
-/** Eenvoudig modaal venster; sluit met Escape of door naast het venster te klikken. */
+/**
+ * Eenvoudig modaal venster; sluit met Escape of door naast het venster te klikken. Past de inhoud
+ * niet in het venster, dan scrolt alleen de inhoud: titel en knoppen blijven in beeld.
+ */
 defineProps<{ title: string }>()
 const emit = defineEmits<{ close: [] }>()
 
@@ -17,7 +20,9 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
     <div class="backdrop" @pointerdown.self="emit('close')">
       <div class="dialog" role="dialog" aria-modal="true" :aria-label="title">
         <h3 class="dialog-title">{{ title }}</h3>
-        <slot />
+        <div class="dialog-body">
+          <slot />
+        </div>
         <div class="dialog-actions">
           <slot name="actions" />
         </div>
@@ -43,6 +48,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
   flex-direction: column;
   gap: 14px;
   width: min(480px, 100%);
+  max-height: calc(100vh - 48px);
   padding: 22px 22px 18px;
   border-radius: var(--radius-xl);
   background: var(--surface-2);
@@ -54,6 +60,17 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
 .dialog-title {
   font-size: 19px;
   line-height: 1.25;
+}
+
+.dialog-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
+  /* Ruimte voor de focusrand van een veld, die het scrollen anders zou afsnijden. */
+  margin: -3px;
+  padding: 3px;
+  overflow-y: auto;
 }
 
 .dialog-actions {
