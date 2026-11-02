@@ -72,7 +72,8 @@ test('de show bedienen met een telefoon via de QR-code', async () => {
     await address.fill(device.host)
     await address.press('Enter')
     await expect(settings.locator('.light-status')).toHaveText('Verbonden. Nu: Groen.')
-    await snap(operator, 'test-results/remote-settings.png')
+    // De nep-controller krijgt elke run een andere poort.
+    await snap(operator, 'test-results/remote-settings.png', { mask: [address] })
     await settings.getByRole('button', { name: 'Klaar' }).click()
     await operator.getByRole('button', { name: 'Bewerken' }).click()
 

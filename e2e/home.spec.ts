@@ -86,7 +86,10 @@ test('dashboard: de rondleiding staat de eerste keer klaar, en komt niet terug a
     await expect(operator.locator('.hero-title')).toHaveText('Rondleiding')
     expect(existsSync(join(library, 'Rondleiding.quiznote', 'quiz.json'))).toBe(true)
     await operator.waitForTimeout(800) // cover en gloed laten laden voor de screenshot
-    await snap(operator, 'test-results/home-tour.png')
+    // "Bewerkt zojuist" of "1 minuut geleden": dat hangt af van hoe lang de test al loopt.
+    await snap(operator, 'test-results/home-tour.png', {
+      mask: [operator.locator('.hero-meta')]
+    })
     await operator.locator('.hero-text').getByRole('button', { name: 'Bewerken' }).click()
     await expect(operator.locator('.topbar .name')).toHaveText('Rondleiding')
     await app.close()
