@@ -45,13 +45,13 @@ test('teams en punten per ronde bij Quiz-instellingen, via de plug-in Tussenstan
     const dialog = operator.getByRole('dialog', { name: 'Instellingen' })
     await dialog.getByRole('checkbox', { name: /Tussenstand/ }).check()
     await dialog.getByRole('button', { name: 'Klaar' }).click()
-    await operator.getByRole('button', { name: 'Bewerken' }).click()
+    await operator.getByRole('button', { name: 'Bewerk', exact: true }).click()
     await operator.getByRole('button', { name: 'Quiz-instellingen' }).click()
 
     await expect(table).toContainText('Nog geen teams')
-    await table.getByRole('button', { name: 'Team toevoegen' }).click()
-    await table.getByRole('button', { name: 'Team toevoegen' }).click()
-    await table.getByRole('button', { name: 'Team toevoegen' }).click()
+    await table.getByRole('button', { name: 'Voeg team toe' }).click()
+    await table.getByRole('button', { name: 'Voeg team toe' }).click()
+    await table.getByRole('button', { name: 'Voeg team toe' }).click()
     const names = table.getByLabel('Naam van het team')
     await expect(names).toHaveCount(3)
     await names.nth(0).fill('De Slimmeriken')
@@ -93,10 +93,10 @@ test('teams en punten per ronde bij Quiz-instellingen, via de plug-in Tussenstan
     await expect.poll(() => JSON.stringify(saved())).not.toContain('Quizzly')
 
     // Punten wissen: de teams blijven.
-    await table.getByRole('button', { name: 'Punten wissen' }).click()
-    await confirmIn(operator, 'Wissen')
+    await table.getByRole('button', { name: 'Wis punten' }).click()
+    await confirmIn(operator, 'Wis')
     await expect(table.locator('td.total')).toHaveText(['0', '0'])
-    await expect(table.getByRole('button', { name: 'Punten wissen' })).toHaveCount(0)
+    await expect(table.getByRole('button', { name: 'Wis punten' })).toHaveCount(0)
     await expect.poll(() => saved()?.points).toEqual({})
   } finally {
     await app.close()
@@ -144,7 +144,7 @@ test('een slide Tussenstand toont de stand op het scherm', async () => {
     const dialog = operator.getByRole('dialog', { name: 'Instellingen' })
     await dialog.getByRole('checkbox', { name: /Tussenstand/ }).check()
     await dialog.getByRole('button', { name: 'Klaar' }).click()
-    await operator.getByRole('button', { name: 'Bewerken' }).click()
+    await operator.getByRole('button', { name: 'Bewerk', exact: true }).click()
     await operator.locator('.sidebar .round').first().click()
 
     // Een titelslide met de markering van de plug-in (na de gekozen slide, of achteraan).
@@ -219,7 +219,7 @@ test('punten invullen tijdens de show, voor de ronde die nu loopt', async () => 
     const dialog = operator.getByRole('dialog', { name: 'Instellingen' })
     await dialog.getByRole('checkbox', { name: /Tussenstand/ }).check()
     await dialog.getByRole('button', { name: 'Klaar' }).click()
-    await operator.getByRole('button', { name: 'Bewerken' }).click()
+    await operator.getByRole('button', { name: 'Bewerk', exact: true }).click()
 
     await openStart(operator)
     await useWindowedScreens(operator)

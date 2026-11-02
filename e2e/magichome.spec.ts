@@ -29,7 +29,7 @@ async function setPlugin(operator: Page, on: boolean, host?: string) {
     await snap(operator, 'test-results/magichome-settings.png')
   }
   await dialog.getByRole('button', { name: 'Klaar' }).click()
-  await operator.getByRole('button', { name: 'Bewerken' }).click()
+  await operator.getByRole('button', { name: 'Bewerk', exact: true }).click()
 }
 
 async function selectSlide(operator: Page, index: number) {

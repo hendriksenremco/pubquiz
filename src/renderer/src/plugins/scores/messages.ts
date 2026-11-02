@@ -9,16 +9,16 @@ export const SCORE_TABLE_MESSAGES = defineMessages(
     empty: 'Nog geen teams. Voeg ze toe en vul na elke ronde de punten in.',
     teamName: 'Naam van het team',
     newTeam: 'Team {number}',
-    addTeam: 'Team toevoegen',
+    addTeam: 'Voeg team toe',
     removeTeam: 'Verwijder team',
     removeTeamTitle: 'Team “{name}” verwijderen?',
     removeTeamMessage: 'De punten van dit team verdwijnen ook.',
     remove: 'Verwijder',
     points: 'Punten van {team} in {round}',
-    clearPoints: 'Punten wissen',
+    clearPoints: 'Wis punten',
     clearTitle: 'Alle punten wissen?',
     clearMessage: 'De teams blijven staan. Handig voor een nieuwe avond met dezelfde quiz.',
-    clear: 'Wissen'
+    clear: 'Wis'
   },
   {
     en: {

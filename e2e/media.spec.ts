@@ -55,7 +55,7 @@ async function expectPanelOnTop(page: Page) {
 }
 
 test('menu’s vallen niet buiten het venster en liggen bovenop', async () => {
-  await operator.getByRole('button', { name: 'Ronde toevoegen' }).click()
+  await operator.getByRole('button', { name: 'Voeg ronde toe' }).click()
   await expectPanelOnTop(operator)
   await operator.keyboard.press('Escape')
 
@@ -221,7 +221,7 @@ test('toont een bestand groot als voorbeeld en bladert verder', async () => {
   await expect(dialog.locator('.transport .time').last()).toHaveText('0:30')
   await operator.waitForTimeout(300)
   await snap(operator, 'test-results/media-preview-sound.png')
-  await dialog.getByRole('button', { name: 'Sluiten' }).click()
+  await dialog.getByRole('button', { name: 'Sluit', exact: true }).click()
   await expect(dialog).toHaveCount(0)
 
   // De knop staat ook bij elk geluid in de lijst.
@@ -234,7 +234,7 @@ test('toont een bestand groot als voorbeeld en bladert verder', async () => {
 })
 
 test('voegt een hele Media-map als fragmenten toe aan een ronde', async () => {
-  await operator.getByRole('button', { name: 'Ronde toevoegen' }).click()
+  await operator.getByRole('button', { name: 'Voeg ronde toe' }).click()
   await operator.getByRole('button', { name: /^Muziekronde/ }).click()
   await operator.locator('.add-bar').getByRole('button', { name: 'Fragmenten' }).click()
   await operator

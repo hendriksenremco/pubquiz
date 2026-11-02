@@ -13,7 +13,7 @@ export const OPERATOR_MESSAGES = defineMessages(
     settings: 'Instellingen',
     quitTitle: 'De show loopt nog',
     quitMessage: 'Wil je echt afsluiten? De schermen gaan uit en de muziek stopt.',
-    quit: 'Afsluiten'
+    quit: 'Sluit af'
   },
   {
     en: {

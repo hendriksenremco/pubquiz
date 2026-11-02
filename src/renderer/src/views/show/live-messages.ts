@@ -45,7 +45,7 @@ export const LIVE_MESSAGES = defineMessages(
       '{seconds} seconden aftellen op de schermen, met een zacht signaal aan het eind (T)',
     timerOffHint: 'Het aftellen stoppen (T)',
     shortcuts: 'Sneltoetsen',
-    edit: 'Bewerken',
+    edit: 'Bewerk',
     stopShow: 'Stop show',
     stopTitle: 'Show stoppen?',
     stopMessage: 'De schermen gaan uit en de muziek stopt.',
