@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { encode } from 'uqr'
+import Icon from '../../components/Icon.vue'
 import { locale } from '../../lib/locale'
 import { useSession } from '../../stores/session'
 import { REMOTE_QR_MESSAGES } from './messages'
@@ -42,6 +43,7 @@ const devices = computed(() => {
     <template v-if="qr && link?.url">
       <svg
         class="code"
+        data-volatile
         :viewBox="`0 0 ${qr.size} ${qr.size}`"
         shape-rendering="crispEdges"
         role="img"
@@ -53,13 +55,13 @@ const devices = computed(() => {
       <p class="muted tip">
         {{ t('scan') }}
       </p>
-      <p class="url mono" :title="link.url">{{ link.url }}</p>
+      <p class="url mono" data-volatile :title="link.url">{{ link.url }}</p>
       <div class="foot">
         <span class="devices" :class="{ on: link.devices > 0 }">
           <span class="dot" />{{ devices }}
         </span>
         <button class="btn btn-ghost btn-sm" :title="t('newCodeTitle')" @click="renew">
-          {{ t('newCode') }}
+          <Icon name="restart" :size="14" /> {{ t('newCode') }}
         </button>
       </div>
     </template>

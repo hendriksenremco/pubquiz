@@ -6,15 +6,15 @@
  * andere taal moet dezelfde sleutels hebben (anders faalt de typecheck). In een tekst staat een
  * waarde als `{naam}`.
  *
- * De app kiest de taal van macOS (`pickLocale`), maar alleen uit `ACTIVE_LOCALES`. Engels komt
- * daar pas bij als alles vertaald is; tot dan is de app overal Nederlands.
+ * De app kiest de taal van macOS (`pickLocale`), maar alleen uit `ACTIVE_LOCALES`. Een nieuwe taal
+ * komt daar pas bij als alles vertaald is.
  */
 
 export const LOCALES = ['nl', 'en'] as const
 export type Locale = (typeof LOCALES)[number]
 
 /** Talen die de app al kiest. Een half vertaalde app is erger dan een Nederlandse. */
-export const ACTIVE_LOCALES: readonly Locale[] = ['nl']
+export const ACTIVE_LOCALES: readonly Locale[] = ['nl', 'en']
 
 export const isLocale = (value: unknown): value is Locale =>
   typeof value === 'string' && (LOCALES as readonly string[]).includes(value)

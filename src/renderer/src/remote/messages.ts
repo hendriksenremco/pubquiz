@@ -37,7 +37,9 @@ export const REMOTE_MESSAGES = defineMessages(
     blackoutOn: 'Beeld op zwart',
     blackoutOff: 'Beeld terug',
     muteOn: 'Geluid uit',
-    muteOff: 'Geluid aan'
+    muteOff: 'Geluid aan',
+    timerOn: 'Aftellen',
+    timerOff: 'Stop aftellen'
   },
   {
     en: {
@@ -72,7 +74,9 @@ export const REMOTE_MESSAGES = defineMessages(
       blackoutOn: 'Black out',
       blackoutOff: 'Screens back',
       muteOn: 'Mute',
-      muteOff: 'Unmute'
+      muteOff: 'Unmute',
+      timerOn: 'Countdown',
+      timerOff: 'Stop countdown'
     }
   }
 )

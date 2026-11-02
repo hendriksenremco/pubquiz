@@ -91,7 +91,7 @@ function reveal(q: RecentQuiz) {
               <Icon name="pencil" /> {{ t('edit') }}
             </button>
             <button class="btn btn-lg" @click="emit('open', latest.path, 'show')">
-              <Icon name="play" :size="14" /> {{ t('toShow') }}
+              <Icon name="play" :size="13" /> {{ t('startShow') }}
             </button>
           </div>
         </div>
@@ -104,7 +104,7 @@ function reveal(q: RecentQuiz) {
         </p>
         <div class="actions">
           <button class="btn btn-primary btn-lg" @click="emit('create')">
-            <Icon name="plus" /> {{ t('newQuiz') }}
+            <Icon name="plus" /> {{ t('newQuizDialog') }}
           </button>
           <button class="btn btn-lg" @click="emit('ai')">
             <Icon name="spark" /> {{ t('withAi') }}
@@ -113,7 +113,7 @@ function reveal(q: RecentQuiz) {
             <Icon name="folder" /> {{ t('openQuiz') }}
           </button>
           <button class="btn btn-ghost btn-lg" @click="api.importZip()">
-            <Icon name="upload" /> {{ t('importZip') }}
+            <Icon name="download" /> {{ t('importZip') }}
           </button>
         </div>
       </div>
@@ -122,13 +122,12 @@ function reveal(q: RecentQuiz) {
     <section v-if="latest" class="body">
       <div class="section-head">
         <h3>{{ t('quizzes') }}</h3>
-        <span class="count">{{ quizzes.length }}</span>
         <span class="grow" />
         <button class="btn btn-ghost btn-sm" @click="api.openQuiz()">
-          <Icon name="folder" :size="14" /> {{ t('open') }}
+          <Icon name="folder" :size="14" /> {{ t('openQuiz') }}
         </button>
         <button class="btn btn-ghost btn-sm" @click="api.importZip()">
-          <Icon name="upload" :size="14" /> {{ t('importZip') }}
+          <Icon name="download" :size="14" /> {{ t('importZip') }}
         </button>
       </div>
 

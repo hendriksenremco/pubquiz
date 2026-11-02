@@ -117,8 +117,9 @@ function copy() {
   font-size: 13px;
 }
 
+/* Rood is alleen voor live: een fout is geel. */
 .error {
-  color: var(--live);
+  color: var(--warn);
   font-size: 12px;
 }
 

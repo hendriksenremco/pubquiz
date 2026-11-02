@@ -53,7 +53,7 @@ async function importNew() {
       </button>
     </template>
     <button type="button" class="cell add" @click="importNew">
-      <span class="cell-thumb add-thumb"><Icon name="upload" /></span>
+      <span class="cell-thumb add-thumb"><Icon name="download" /></span>
       <span class="cell-name">{{ t('import') }}</span>
     </button>
   </div>

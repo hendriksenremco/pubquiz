@@ -15,6 +15,8 @@ import {
 import { PLUGIN_OFF, PLUGINS, type PluginId, type PluginSetting } from '@shared/plugins'
 import { QuizSchema } from '@shared/quiz-schema'
 import { findRound } from '@shared/resolve'
+import { ROUND_FILE_EXT, type RoundImport } from '@shared/round-file'
+import { ROUND_LINK_ORIGIN, roundLinkSource } from '@shared/round-link'
 import type { TemplateOptions } from '@shared/template'
 import type { HardwareMapping, Notice, Quiz, ShowState } from '@shared/types'
 import { AirPlayBrowser } from './airplay'
@@ -30,17 +32,20 @@ import {
   importMediaFiles,
   importZip,
   isQuizDir,
+  quizBaseName,
   readQuiz,
   summarizeQuiz,
   writeQuiz
 } from './quiz-files'
 import { appLocale } from './locale'
 import { locateMedia } from './media-path'
-import { DIALOG_MESSAGES, errorText, NOTICE_MESSAGES } from './messages'
+import { DIALOG_MESSAGES, errorText, NoticeError, NOTICE_MESSAGES, TOUR_MESSAGES } from './messages'
 import { renderFormPdf } from './pdf'
 import { Plugins } from './plugins'
 import { SaveQueue } from './save-queue'
 import { Settings, type RecoveryData } from './settings'
+import { readRoundFile } from './round-file'
+import { downloadRoundFile } from './round-link'
 import { ShowController } from './show'
 import { headless } from './windows'
 
@@ -60,12 +65,16 @@ export class AppController {
   private saveTimer: ReturnType<typeof setTimeout> | null = null
   private recoveryTimer: ReturnType<typeof setTimeout> | null = null
   private recovery: RecoveryData | null = null
+  /** Rondebestanden uit Finder die de editor nog moet importeren (zie `openRoundFile`). */
+  private roundFiles: string[] = []
 
   readonly screens = new ScreenWindows(() => this.operator)
   readonly airplay = new AirPlayBrowser((devices) => this.broadcast(IPC.airplay, [devices]))
   readonly show = new ShowController({
     quiz: () => this.quiz,
-    publish: (state) => this.onState(state)
+    publish: (state) => this.onState(state),
+    timerEnded: (channelId) =>
+      this.audio?.webContents.send(IPC.audioCommand, { type: 'timerEnd', channelId })
   })
   readonly plugins = new Plugins({
     notify: (level, message) => this.notify(level, message),
@@ -84,10 +93,12 @@ export class AppController {
 
   constructor(
     private readonly settings: Settings,
-    /** Waar nieuwe en geïmporteerde quizzen komen (standaard Documenten/Pubquizzen). */
+    /** Waar nieuwe en geïmporteerde quizzen komen (standaard Documenten/QuizNote). */
     readonly libraryDir: string,
     /** Anoniem meten; null = uit voor deze build (ontwikkelen en tests). */
-    readonly analytics: Analytics | null = null
+    readonly analytics: Analytics | null = null,
+    /** Oudere bibliotheekmappen (Documenten/Pubquizzen): alleen nog lezen, er komt niets nieuws in. */
+    readonly legacyLibraryDirs: readonly string[] = []
   ) {
     this.screens.watch((change, display) => this.onDisplayChange(change, display))
     this.plugins.apply(settings.plugins, null, this.show.current)
@@ -191,7 +202,7 @@ export class AppController {
   }
 
   /**
-   * Nieuwe quiz in de bibliotheekmap (Documenten/Pubquizzen); de map krijgt de naam van de quiz.
+   * Nieuwe quiz in de bibliotheekmap (Documenten/QuizNote); de map krijgt de naam van de quiz.
    * Geeft een foutmelding voor in het dialoogvenster terug, of null als het gelukt is.
    */
   async createNamedQuiz(
@@ -247,7 +258,7 @@ export class AppController {
     await this.flushSave()
     const result = await dialog.showSaveDialog(this.operator!, {
       title: this.dialogText('exportZipTitle'),
-      defaultPath: `${basename(this.quizDir, QUIZ_EXT)}.zip`,
+      defaultPath: `${quizBaseName(this.quizDir)}.zip`,
       filters: [{ name: 'Zip', extensions: ['zip'] }]
     })
     if (result.canceled || !result.filePath) return
@@ -320,12 +331,12 @@ export class AppController {
   }
 
   /**
-   * Eerste start: de meegeleverde rondleiding naar de bibliotheek kopiëren en op het dashboard
-   * zetten. Eén keer: wie hem uit de lijst haalt, krijgt hem niet terug.
+   * Eerste start: de meegeleverde rondleiding (in de taal van de app) naar de bibliotheek kopiëren
+   * en op het dashboard zetten. Eén keer: wie hem uit de lijst haalt, krijgt hem niet terug.
    */
   async installTour(source: string | null): Promise<void> {
     if (!source || this.settings.tourDir !== null || !(await isQuizDir(source))) return
-    const target = join(this.libraryDir, `Rondleiding${QUIZ_EXT}`)
+    const target = join(this.libraryDir, `${TOUR_MESSAGES.in(appLocale())('folder')}${QUIZ_EXT}`)
     try {
       if (!(await isQuizDir(target))) {
         await fs.mkdir(this.libraryDir, { recursive: true })
@@ -344,6 +355,73 @@ export class AppController {
 
   removeRecent(path: string): void {
     this.settings.removeRecent(path)
+  }
+
+  /** Ronde importeren… in de editor (issue #99): leest een rondebestand voor de werkkopie `input`. */
+  async importRounds(input: unknown, at: number, path?: string): Promise<RoundImport | null> {
+    const parsed = QuizSchema.safeParse(input)
+    if (!this.quizDir || !parsed.success || !Number.isInteger(at)) return null
+    let source = path
+    if (!source) {
+      const result = await dialog.showOpenDialog(this.operator!, {
+        title: this.dialogText('importRoundsTitle'),
+        filters: [
+          { name: this.dialogText('roundFileFilter'), extensions: [ROUND_FILE_EXT.slice(1)] }
+        ],
+        properties: ['openFile']
+      })
+      if (result.canceled || !result.filePaths[0]) return null
+      source = result.filePaths[0]
+    }
+    try {
+      return await readRoundFile(source, this.quizDir, parsed.data, at, appLocale())
+    } catch (err) {
+      this.notify('error', this.t('importFailed', { error: this.failed(err) }))
+      return null
+    }
+  }
+
+  /**
+   * Een rondebestand uit Finder (dubbelklik): de editor importeert het in de open quiz. Is er geen
+   * quiz open, dan vraagt de app eerst in welke. De editor haalt het op met `takeRoundFiles`.
+   */
+  async openRoundFile(path: string): Promise<void> {
+    if (!this.quizDir) {
+      const result = await dialog.showOpenDialog(this.operator!, {
+        title: this.dialogText('importRoundsTitle'),
+        message: this.dialogText('chooseQuizForRound', { file: basename(path) }),
+        buttonLabel: this.dialogText('openButton'),
+        defaultPath: this.libraryDir,
+        properties: ['openDirectory', 'openFile', 'treatPackageAsDirectory']
+      })
+      const dir = result.filePaths[0]
+      if (result.canceled || !dir) return
+      await this.openQuiz(dir)
+      if (!this.quizDir) return
+    }
+    this.roundFiles.push(path)
+    this.operator?.webContents.send(IPC.roundFiles)
+  }
+
+  /**
+   * De link vanaf de site: `quiznote://ronde?url=https://quiznote.app/…`. Haalt het rondebestand
+   * op en importeert het daarna net als een bestand uit Finder. Andere adressen weigert hij.
+   */
+  async openRoundLink(link: string): Promise<void> {
+    try {
+      const origin = process.env['PUBQUIZ_ROUND_LINK_ORIGIN'] || ROUND_LINK_ORIGIN
+      const source = roundLinkSource(link, origin)
+      if (!source) throw new NoticeError('badRoundLink')
+      await this.openRoundFile(await downloadRoundFile(source, origin))
+    } catch (err) {
+      this.notify('error', this.failed(err))
+    }
+  }
+
+  takeRoundFiles(): string[] {
+    const files = this.roundFiles
+    this.roundFiles = []
+    return files
   }
 
   async importMedia(paths: string[] | undefined) {
@@ -382,7 +460,7 @@ export class AppController {
       if (result.canceled) return { assets: [], skipped: [], folders: [] }
       sources = result.filePaths
     }
-    const result = await importMediaFiles(this.quizDir, sources)
+    const result = await importMediaFiles(this.quizDir, sources, appLocale())
     if (result.skipped.length > 0) {
       this.notify('warning', this.t('notImported', { files: result.skipped.join(', ') }))
     }
@@ -466,8 +544,14 @@ export class AppController {
   /** Toestemming voor anoniem meten, gegeven of ingetrokken. */
   setAnalytics(consent: boolean): void {
     if (!this.analytics) return
+    const firstAnswer = this.settings.analyticsConsent === null
     this.settings.setAnalytics(consent)
     if (!consent) this.analytics.clear()
+    else if (firstAnswer) {
+      // Bij het starten was er nog geen toestemming; deze eerste start telt nu alsnog.
+      this.analytics.capture('app_started')
+      void this.analytics.flush()
+    }
   }
 
   setPlugin(id: PluginId, setting: PluginSetting): void {

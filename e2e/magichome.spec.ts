@@ -7,6 +7,7 @@ import {
   copyFixture,
   launch,
   openStart,
+  snap,
   startShow,
   tempDir,
   useWindowedScreens
@@ -19,12 +20,13 @@ async function setPlugin(operator: Page, on: boolean, host?: string) {
   const dialog = operator.getByRole('dialog', { name: 'Instellingen' })
   await dialog.getByRole('checkbox', { name: /MagicHome-licht/ }).setChecked(on)
   if (host) {
+    await expect(dialog.getByText('Adres van de controller', { exact: true })).toBeVisible()
     const address = dialog.getByLabel('IP-adres van de MagicHome-controller')
     await address.fill(host)
     await address.press('Enter')
     // Testen vraagt alleen de toestand op.
     await expect(dialog.locator('.light-status')).toHaveText('Verbonden. Nu: Groen.')
-    await operator.screenshot({ path: 'test-results/magichome-settings.png' })
+    await snap(operator, 'test-results/magichome-settings.png')
   }
   await dialog.getByRole('button', { name: 'Klaar' }).click()
   await operator.getByRole('button', { name: 'Bewerken' }).click()
@@ -90,7 +92,7 @@ test('licht per ronde en per slide via de plug-in MagicHome', async () => {
       .click()
     await expect.poll(last).toEqual(RUNNING)
     await operator.waitForTimeout(200)
-    await operator.screenshot({ path: 'test-results/magichome-effect.png' })
+    await snap(operator, 'test-results/magichome-effect.png')
     await operator.keyboard.press('Escape')
     await expect.poll(last).toEqual(GREEN)
     await expect(slideLight).toContainText('Rennend punt, rood, naar buiten')
@@ -105,12 +107,12 @@ test('licht per ronde en per slide via de plug-in MagicHome', async () => {
         { light: { type: 'effect', effect: 39, speed: 60 } }
       ])
 
-    // Show starten: het adres staat er al, en is getest.
+    // Start show: het adres staat er al, en is getest.
     const sheet = await openStart(operator)
     await expect(sheet.getByLabel('IP-adres van de MagicHome-controller')).toHaveValue(device.host)
     await expect(sheet.locator('.light-status')).toHaveText('Verbonden. Nu: Groen.')
     await useWindowedScreens(operator)
-    await operator.screenshot({ path: 'test-results/magichome-start.png' })
+    await snap(operator, 'test-results/magichome-start.png')
     const before = device.log.length
     await startShow(operator)
 

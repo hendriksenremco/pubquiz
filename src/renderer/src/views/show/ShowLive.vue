@@ -7,6 +7,7 @@ import ScreenStage from '../../components/ScreenStage.vue'
 import { useLiveControls } from '../../lib/live-controls'
 import { locale } from '../../lib/locale'
 import { useNow } from '../../lib/use-now'
+import PluginSlot from '../../plugins/PluginSlot.vue'
 import { useSession } from '../../stores/session'
 import AnswersPad from './AnswersPad.vue'
 import FragmentPad from './FragmentPad.vue'
@@ -36,7 +37,8 @@ const {
   toggleBlackout,
   toggleSound,
   toggleAutoplay,
-  toggleLoop
+  toggleLoop,
+  toggleTimer
 } = useLiveControls()
 
 // Slide-loop: de timer loopt in main; hier alleen tonen en pauzeren.
@@ -73,7 +75,8 @@ const KEYS: Record<string, () => void> = {
   s: () => send({ type: 'autoplay', action: 'skip' }),
   b: () => toggleBlackout(),
   m: toggleSound,
-  l: toggleLoop
+  l: toggleLoop,
+  t: toggleTimer
 }
 
 function onKey(event: KeyboardEvent) {
@@ -134,7 +137,12 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
               :class="{ active: state.blackout.includes(slot.id) }"
               @click="toggleBlackout(slot.id)"
             >
-              {{ t('black') }}
+              <template v-if="state.blackout.includes(slot.id)">
+                <Icon name="monitor" :size="14" /> {{ t('blackoutOff') }}
+              </template>
+              <template v-else>
+                <Icon name="screen-off" :size="14" /> {{ t('blackoutOn') }}
+              </template>
             </button>
           </figcaption>
         </figure>
@@ -144,8 +152,9 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
         <div class="section-row">
           <span class="label grow">{{ t('slides') }}</span>
           <template v-if="loopText">
-            <span class="muted loop">{{ loopText }}</span>
+            <span class="muted loop" data-volatile>{{ loopText }}</span>
             <button class="btn btn-ghost btn-sm" @click="toggleLoop">
+              <Icon :name="state.loopPaused ? 'play' : 'pause'" :size="14" />
               {{ state.loopPaused ? t('loopResume') : t('loopPause') }} <span class="kbd">L</span>
             </button>
           </template>
@@ -178,6 +187,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
         :round="round"
         :arrows="arrows === 'fragments'"
       />
+      <PluginSlot v-if="round" name="liveRound" :round="round" />
     </main>
 
     <aside class="side scroll">

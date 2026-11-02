@@ -10,6 +10,7 @@ import type {
   PluginSettings,
   PluginStatuses
 } from './plugins'
+import type { RoundImport } from './round-file'
 import type { TemplateOptions } from './template'
 import type { DisplayInfo, HardwareMapping, MediaAsset, Notice, Quiz, ShowState } from './types'
 
@@ -37,6 +38,8 @@ export type ShowCommand =
   /** Antwoordenronde: volgende/vorige stap, of stoppen. */
   | { type: 'answers'; action: 'next' | 'prev' | 'stop' }
   | { type: 'answerAt'; index: number }
+  /** Aftellen over de slide heen (T); loopt het al, dan stopt het. */
+  | { type: 'timer' }
   /** Slide-loop van de ronde pauzeren of laten doorgaan. */
   | { type: 'slideLoop'; paused: boolean }
   /** `id`: een audiokanaal of een scherm (videogeluid). */
@@ -53,7 +56,10 @@ export type AudioEngineEvent =
   | { type: 'error'; message: string; key?: string }
 
 /** Opdrachten van main aan de audio-engine die niet uit de show-state volgen. */
-export type AudioEngineCommand = { type: 'testTone'; channelId: string }
+export type AudioEngineCommand =
+  | { type: 'testTone'; channelId: string }
+  /** Zacht signaal: het aftellen (T) is voorbij. */
+  | { type: 'timerEnd'; channelId: string }
 
 export interface Snapshot {
   quiz: Quiz | null
@@ -140,6 +146,18 @@ export interface PubquizApi {
   removeRecent(path: string): Promise<void>
   updateQuiz(quiz: Quiz): void
   importMedia(paths?: string[]): Promise<ImportResult>
+  /**
+   * Leest een rondebestand (zonder pad: main vraagt welk) en kopieert zijn media naar de quiz.
+   * `quiz` is de werkkopie van de editor, `at` de plek voor de rondes. Null bij annuleren of een
+   * fout; die meldt main zelf.
+   */
+  importRounds(quiz: Quiz, at: number, path?: string): Promise<RoundImport | null>
+  /**
+   * Rondebestanden die in Finder geopend zijn (dubbelklik) en nog in de editor moeten; main
+   * vergeet ze zodra ze opgehaald zijn. `onRoundFiles` zegt dat er nieuwe wachten.
+   */
+  takeRoundFiles(): Promise<string[]>
+  onRoundFiles(cb: () => void): () => void
   pathForFile(file: File): string
 
   command(command: ShowCommand): void
@@ -199,6 +217,9 @@ export const IPC = {
   removeRecent: 'pq:remove-recent',
   updateQuiz: 'pq:update-quiz',
   importMedia: 'pq:import-media',
+  importRounds: 'pq:import-rounds',
+  takeRoundFiles: 'pq:take-round-files',
+  roundFiles: 'pq:round-files',
   command: 'pq:command',
   startShow: 'pq:start-show',
   stopShow: 'pq:stop-show',

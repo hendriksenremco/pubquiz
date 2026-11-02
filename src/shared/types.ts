@@ -43,6 +43,14 @@ export interface PlayingFragment {
   duration: number | null
 }
 
+/** Aftellen na een vraag (T): loopt tot `until`, en hoort bij één ronde. */
+export interface TimerState {
+  roundId: string
+  /** Hoe lang het aftellen duurt, voor de balk. */
+  seconds: number
+  until: number
+}
+
 /** Live-toestand van de show; main is de bron van waarheid, renderers spiegelen hem. */
 export interface ShowState {
   live: boolean
@@ -64,6 +72,8 @@ export interface ShowState {
   loopUntil: number | null
   /** Door de host gepauzeerd; geldt tot de volgende ronde. */
   loopPaused: boolean
+  /** Aftellen (T) dat nu loopt; null = er wordt niet afgeteld. */
+  timer: TimerState | null
   /** Screen-slot ids die op zwart staan. */
   blackout: string[]
   backgroundEnabled: boolean

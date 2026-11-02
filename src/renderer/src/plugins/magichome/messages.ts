@@ -39,6 +39,7 @@ export const LIGHT_PICKER_MESSAGES = defineMessages(
     color: 'Kleur',
     effect: 'Effect',
     off: 'Uit',
+    pluginOff: 'De plug-in staat uit',
     customColor: 'Eigen kleur',
     customColorCode: 'Eigen kleurcode',
     speed: 'Snelheid',
@@ -55,6 +56,7 @@ export const LIGHT_PICKER_MESSAGES = defineMessages(
       color: 'Colour',
       effect: 'Effect',
       off: 'Off',
+      pluginOff: 'The plug-in is off',
       customColor: 'Custom colour',
       customColorCode: 'Custom colour code',
       speed: 'Speed',
@@ -67,7 +69,7 @@ export const LIGHT_PICKER_MESSAGES = defineMessages(
   }
 )
 
-/** Het licht op zijn plekken in de app: bij de quiz, een ronde, een slide en bij Show starten. */
+/** Het licht op zijn plekken in de app: bij de quiz, een ronde, een slide en bij Start show. */
 export const LIGHT_PLACE_MESSAGES = defineMessages(
   {
     light: 'Licht',
@@ -102,6 +104,8 @@ export const LIGHT_PLACE_MESSAGES = defineMessages(
 /** Het adres van de controller met de testknop (ControllerAddress). */
 export const CONTROLLER_MESSAGES = defineMessages(
   {
+    /** De kop boven het veld bij Instellingen; zo heet het ook in "Vul eerst het adres … in". */
+    address: 'Adres van de controller',
     placeholder: 'IP-adres van de controller',
     ariaLabel: 'IP-adres van de MagicHome-controller',
     test: 'Test',
@@ -112,6 +116,7 @@ export const CONTROLLER_MESSAGES = defineMessages(
   },
   {
     en: {
+      address: 'Controller address',
       placeholder: 'IP address of the controller',
       ariaLabel: 'IP address of the MagicHome controller',
       test: 'Test',

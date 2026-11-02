@@ -10,14 +10,20 @@ const demo = migrateQuiz(freshDemoQuiz())
 function setup(quiz: Quiz = demo) {
   let now = 1_000
   const published: ShowState[] = []
+  const signals: string[] = []
   const show = new ShowController(
-    { quiz: () => quiz, publish: (s) => published.push(structuredClone(s)) },
+    {
+      quiz: () => quiz,
+      publish: (s) => published.push(structuredClone(s)),
+      timerEnded: (channelId) => signals.push(channelId)
+    },
     () => now
   )
   show.start()
   return {
     show,
     published,
+    signals,
     get state() {
       return show.current
     },
@@ -321,6 +327,57 @@ describe('ShowController', () => {
       t.show.handle({ type: 'endRound' })
       expect(t.state.loopUntil).toBeNull()
       expect(t.state.loopPaused).toBe(false)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('telt af met T, stopt met nog een keer T en geeft aan het eind een signaal', () => {
+    vi.useFakeTimers()
+    try {
+      const quiz: Quiz = structuredClone(demo)
+      quiz.timerSeconds = 20
+      quiz.rounds[1].timerSeconds = 10
+      const t = setup(quiz)
+      active = t.show
+      const wait = (ms: number) => {
+        t.advance(ms)
+        vi.advanceTimersByTime(ms)
+      }
+
+      // Buiten een ronde telt er niets af.
+      t.show.handle({ type: 'timer' })
+      expect(t.state.timer).toBeNull()
+
+      // Ronde 1 volgt de quiz: 20 seconden, op alle schermen (geen fragmentschermen).
+      t.show.handle({ type: 'startRound', roundId: 'r1' })
+      t.show.handle({ type: 'timer' })
+      expect(t.state.timer).toMatchObject({ roundId: 'r1', seconds: 20 })
+      expect(resolveScreen(quiz, t.state, 'beamer', 1_000 + 5_500).overlay).toEqual({
+        kind: 'timer',
+        seconds: 15,
+        remaining: 0.725
+      })
+      wait(19_900)
+      expect(t.state.timer).not.toBeNull()
+      wait(200)
+      expect(t.state.timer).toBeNull()
+      expect(t.signals).toEqual(['fragmenten'])
+      expect(resolveScreen(quiz, t.state, 'beamer').overlay).toBeNull()
+
+      // Nog een keer T stopt het, zonder signaal.
+      t.show.handle({ type: 'timer' })
+      t.show.handle({ type: 'timer' })
+      expect(t.state.timer).toBeNull()
+
+      // Ronde 2 wijkt af: 10 seconden. Een andere ronde stopt het aftellen.
+      t.show.handle({ type: 'startRound', roundId: 'r2' })
+      t.show.handle({ type: 'timer' })
+      expect(t.state.timer?.seconds).toBe(10)
+      t.show.handle({ type: 'endRound' })
+      expect(t.state.timer).toBeNull()
+      wait(20_000)
+      expect(t.signals).toEqual(['fragmenten'])
     } finally {
       vi.useRealTimers()
     }

@@ -5,8 +5,10 @@ export interface ConfirmOptions {
   message?: string
   /** Tekst op de knop die het doet, bv. "Verwijder". */
   confirm: string
-  /** Niet terug te draaien: rode knop, en de focus staat op Annuleer. */
+  /** Niet terug te draaien: de focus staat op Annuleer. */
   danger?: boolean
+  /** Over de show die live is (stoppen, afsluiten): rode knop. Rood is alleen voor live. */
+  live?: boolean
 }
 
 interface Pending extends ConfirmOptions {

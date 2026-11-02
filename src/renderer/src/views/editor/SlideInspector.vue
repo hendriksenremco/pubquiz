@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { renumberSlides } from '@shared/order'
 import type { Round, Slide } from '@shared/types'
 import BackdropPicker from '../../components/BackdropPicker.vue'
 import Icon from '../../components/Icon.vue'
@@ -54,6 +55,8 @@ function move(delta: number) {
   if (to < 0 || to >= props.round.slides.length) return
   props.round.slides.splice(index.value, 1)
   props.round.slides.splice(to, 0, props.slide)
+  // Net als na slepen in de lijst: "Vraag 3" krijgt het nummer van zijn nieuwe plek.
+  renumberSlides(props.round)
 }
 
 function remove() {
@@ -141,7 +144,7 @@ function remove() {
       </div>
       <PluginSlot name="slideInspector" :round="round" :slide="slide" />
       <div v-if="screens.length > 1" class="inspector-row">
-        <span class="row-label">{{ t('on') }}</span>
+        <span class="row-label">{{ t('screens') }}</span>
         <div class="checks" role="group" :aria-label="t('onScreens')">
           <label v-for="s in screens" :key="s.id">
             <input type="checkbox" :checked="targets(s.id)" @change="toggleTarget(s.id)" />
@@ -163,7 +166,7 @@ function remove() {
         <Icon name="right" :size="14" class="turn" /> {{ t('moveDown') }}
       </button>
       <span class="grow" />
-      <button class="btn btn-ghost btn-sm btn-danger" @click="remove">
+      <button class="btn btn-ghost btn-sm" @click="remove">
         <Icon name="trash" :size="14" /> {{ t('remove') }}
       </button>
     </footer>

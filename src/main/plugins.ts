@@ -79,7 +79,9 @@ type Factories = {
 
 const FACTORIES: Factories = {
   magichome: (host) => new MagicHomePlugin(host.notify, host.publish, appLocale()),
-  remote: (host) => new RemotePlugin(host, remoteOptions())
+  remote: (host) => new RemotePlugin(host, remoteOptions()),
+  // De tussenstand staat in de quiz en wordt in de vensters getoond; main hoeft er niets voor te doen.
+  scores: () => ({ configure() {}, update() {}, actions: {}, stop() {} })
 }
 
 /**

@@ -52,6 +52,11 @@ Wat er nog moet gebeuren, staat als **issues** op GitHub (`gh issue list`). Hoe 
 - Raad bij diensten (hosting, mail, analytics) de beste oplossing aan, wel een die goedkoop begint. Een lage prijs is geen reden om een mindere oplossing aan te raden.
 - Een productie-deploy van de site, of iets anders dat openbaar wordt, doet Remco zelf. Of hij geeft er eerst toestemming voor.
 
+**Statusdashboard bijwerken**
+
+- Werk het statusdashboard bij als laatste stap na elke afgeronde taak: een samengevoegde pull request, een gesloten issue, een release of een deploy.
+- Het stappenplan staat in `docs/dashboard-bijwerken.md`. Je hebt er de Artifact-tools van claude.ai voor nodig.
+
 ## Niet doen
 
 - **Start nooit `pnpm dev` of `pnpm start` om iets te bekijken.** Remco heeft de app vaak zelf open, met `fixtures/demo.pubquiz`. Bekijk wijzigingen onzichtbaar, met de e2e-helpers en screenshots.
@@ -98,13 +103,15 @@ src/renderer/  Vue 3 en Pinia; index.html voor de app, remote.html voor de telef
 src/mcp/       MCP-server, wordt out/main/mcp.js
 e2e/           Playwright-tests van de gebouwde app
 scripts/       make-demo, make-tour (de rondleiding), install-app
-fixtures/      demo.pubquiz (werk van Remco!) en rondleiding.pubquiz (gemaakt door pnpm tour)
+fixtures/      demo.pubquiz (werk van Remco!), rondleiding.pubquiz en tour.pubquiz (gemaakt door pnpm tour)
 ```
 
 **Quizbestanden**
 
-- Een quiz is een map `<naam>.pubquiz` met `quiz.json` en `media/`. Nieuwe quizzen komen in `Documenten/Pubquizzen`.
+- Een quiz is een map `<naam>.quiznote` met `quiz.json` en `media/`. Nieuwe quizzen komen in `Documenten/QuizNote`.
+- Tot issue #43 was dat `<naam>.pubquiz` in `Documenten/Pubquizzen`. De app blijft die openen (`hasQuizExtension` en `quizBaseName` in `src/main/quiz-files.ts`) en de AI-koppeling ziet ook de oude map. De fixtures in `fixtures/` heten nog `.pubquiz`; de rondleiding in de app (`pnpm tour:build`) heet `.quiznote`.
 - Het formaat staat in `src/shared/quiz-schema.ts`, met `SCHEMA_VERSION` in `version.ts`. Hoog je die op, schrijf dan een migratie in `migrate.ts`.
+- Een rondebestand (`.quiznoteronde`, issue #99) is een zip met `ronde.json` en `media/`, om rondes in een quiz te importeren: Importeer ronde… in de editor, slepen op de editor, of dubbelklikken in Finder (`openRoundFile` in de controller; zonder open quiz vraagt de app in welke), of de link `quiznote://ronde?url=…` vanaf de site (`openRoundLink`; alleen bestanden van `https://quiznote.app`, tests zetten `PUBQUIZ_ROUND_LINK_ORIGIN`). Het formaat staat in `docs/rondebestand.md`; de zip leest `src/main/zip.ts`, zonder `ditto`.
 
 **Standaard ⊕ ronde ⊕ slide**
 
@@ -137,21 +144,24 @@ fixtures/      demo.pubquiz (werk van Remco!) en rondleiding.pubquiz (gemaakt do
 
 - `src/renderer/src/lib/live-controls.ts` deelt de bediening tussen de werkbalk, de sneltoetsen en `ShowLive.vue`.
 - `stepTarget` bepaalt waar ← → doorheen gaan: de antwoorden, de fragmenten of de slides.
+- Aftellen (T, knop "Aftellen" op de Mac en de telefoon, issue #105): `state.timer` in main, over de slide heen op de schermen met het fragmentnummer (of alle schermen, `timerScreens`), met een zacht signaal op het fragmentenkanaal aan het eind. De tijd is ronde ⊕ quiz ⊕ 30 s (`timerSeconds` in `resolve.ts`).
 
 **Talen** (issue #53)
 
 - `src/shared/i18n.ts`: een klein eigen woordenboek. Elk onderdeel heeft zijn teksten in `defineMessages`: Nederlands is de bron, Engels moet dezelfde sleutels hebben (typecheck).
-- De app kiest de taal van macOS (`appLocale()` in `src/main/locale.ts`), maar alleen uit `ACTIVE_LOCALES`. Engels gaat pas aan als alles vertaald is. `PUBQUIZ_LOCALE=en` dwingt Engels af.
+- De app kiest de taal van macOS (`appLocale()` in `src/main/locale.ts`), uit `ACTIVE_LOCALES`: Nederlands en Engels (sinds 2 november 2026; release 0.1.0 is nog alleen Nederlands). Een andere taal van macOS wordt Engels. `PUBQUIZ_LOCALE` dwingt een taal af; `launch()` in de e2e-tests zet hem op `nl`, want de CI-Mac is Engels. Een test in `e2e/home.spec.ts` opent de app in het Engels.
 - Al vertaald: de telefoon (`src/renderer/src/remote/messages.ts`); hij neemt de taal van de Mac over via `RemoteView.locale`.
 - Teksten die main en shared maken (vorige/volgende, "Slide 2 van 5", foutmeldingen voor de telefoon) staan in `src/shared/show-messages.ts`; geef de `Locale` mee.
 - Vensters op de Mac kennen de taal via `?locale=` in hun adres (`loadRoute`); in de renderer lees je hem uit `src/renderer/src/lib/locale.ts`. Al vertaald: wat er over de slide heen op een scherm staat (`SCREEN_MESSAGES`), en naam en uitleg van plug-ins (`text` in de definitie).
 - Het licht: de namen van kleuren en effecten staan in `src/shared/light-messages.ts` (`lightLabel`, `effectLabel` en `groupName` krijgen de `Locale` mee); het paneel om het licht met de hand te kiezen in `plugins/magichome/messages.ts`. Een onderdeel op de telefoon krijgt de taal als `locale` in `PhoneProps`.
+- De rondleiding: `scripts/make-tour.mjs --locale en` maakt de Engelse (`Tour.quiznote` in de app), met eigen teksten en bestandsnamen maar dezelfde id's. De app neemt hem mee en zet bij de eerste start die in de taal van de Mac klaar (`TOUR_MESSAGES` in `src/main/messages.ts`).
 - De pdf's: de teksten op de formulieren en vragenkaarten, hun bestandsnamen en de samenvatting per ronde ("2 vragen") staan in `src/shared/form-messages.ts` (`formFileName` en `itemSummary` krijgen de `Locale` mee).
 - De werkbalk van de app en de dialogen Nieuwe quiz, Met je AI… en Instellingen: `src/renderer/src/views/operator/operator-messages.ts`; de algemene onderdelen (keuzelijsten, media kiezen en bekijken, achtergrond van een slide) in `src/renderer/src/components/messages.ts`. "Vraag" op een slide met alleen het nummer staat in `SCREEN_MESSAGES`; `SlideView` krijgt op de telefoon de taal als `locale` mee.
 - De editor: de lijst met rondes (EditorView), Media, Quiz-instellingen, Afdrukken, de fragmenten, de slides (lijst en inspector) en de ronde zelf (RoundEditor, RoundSettings) in `src/renderer/src/views/editor/editor-messages.ts`.
 - De show op de Mac (ShowLive, de werkbalk, de sneltoetsen, antwoorden, fragmenten en geluid): `src/renderer/src/views/show/live-messages.ts`. De knoppen heten hetzelfde als op de telefoon; een test bewaakt dat.
 - Namen die de app zelf geeft (Beamer, Zaal, Fragmenten, Ronde 1, Pauze, Vraag 2) en de plekken waar een bestand gebruikt wordt (`findAssetUsages`) staan in `src/shared/quiz-messages.ts`. Ze komen in het quizbestand, in de taal van de Mac waarop de quiz gemaakt is; `fragmentChannel` vindt het kanaal voor fragmenten in beide talen.
 - Wat main zelf zegt: het menu, de dialogen om te openen en op te slaan, de meldingen en de fouten van de MagicHome-controller staan in `src/main/messages.ts`. Een fout die de gebruiker te zien krijgt, gooi je als `NoticeError`; `errorText` vertaalt hem.
+- Waarom een quiz.json niet opent (`QuizFormatError`) staat in `FORMAT_MESSAGES` in `src/shared/quiz-messages.ts`; `errorText` vertaalt ook die. De meldingen van de audio-engine staan in `src/renderer/src/audio/messages.ts`.
 
 **Rondesoorten**
 
@@ -189,7 +199,20 @@ Plug-ins zijn optionele extra's. Je zet ze per Mac aan of uit bij Instellingen (
 - De telefoon krijgt alleen een `RemoteView` uit `src/shared/remote.ts`, via server-sent events. Hij stuurt `RemoteAction`s terug.
 - Tests gebruiken `PUBQUIZ_REMOTE_HOST=127.0.0.1` en `PUBQUIZ_REMOTE_PORT=0`.
 
+**Tussenstand** (`scores`, issue #107)
+
+- Teams en hun punten per ronde, met de hand ingevuld in een tabel bij Quiz-instellingen (`ScoreTable.vue`). Antwoordenrondes krijgen geen kolom, en rondes zonder vragen of fragmenten (een pauze, `hasAnswers`) ook niet, tenzij er al punten in staan (issue #116).
+- De gegevens staan op de quiz onder `plugins.scores`; de hulpjes en `standings` staan in `src/shared/scores.ts`. Main doet er niets mee.
+- De stand op een slide: een titelslide met `plugins.scores.standings` (Slide → Tussenstand in de editor, `createStandingsSlide`). `useStandings()` in `src/renderer/src/plugins/scores/standings.ts` geeft `SlideView` de stand, zolang de plug-in aan staat; anders, en op de telefoon, is het een gewone titelslide.
+- Punten invullen tijdens de show: `ScorePad.vue` in het midden van de show (`PluginSlot` `liveRound`), voor de ronde die loopt of, bij een antwoordenronde, de rondes die je nakijkt (`roundsToScore`). Alleen op de Mac; de telefoon kent het niet.
+
 Nieuwe optionele koppelingen, zoals Spotify of YouTube, volgen hetzelfde patroon.
+
+## Anoniem meten (issue #40)
+
+- PostHog, alleen met toestemming: `src/main/analytics.ts` (versturen en wachtrij), `src/shared/analytics.ts` (sleutel, `quizShape`, `scrub`). Nooit quizinhoud, bestandsnamen, media of IP-adressen.
+- De vraag staat in `AnalyticsDialog.vue`: bij de eerste start, nooit als er een show loopt of hervat kan worden. Wegklikken is geen antwoord: er wordt niets gemeten en de vraag komt de volgende start terug. De schakelaar staat bij Instellingen.
+- Meten gebeurt alleen in de gebouwde app, en nooit in e2e-tests (`PUBQUIZ_USER_DATA`). Alleen `e2e/analytics.spec.ts` zet `PUBQUIZ_ANALYTICS_URL`, met een eigen nep-server.
 
 ## AI-koppeling (MCP)
 
@@ -208,11 +231,11 @@ Nieuwe optionele koppelingen, zoals Spotify of YouTube, volgen hetzelfde patroon
 - **Vorige naam:** Quizmeister. Die viel af omdat quizmeister.nl een Nederlands pubquizbedrijf is.
 - **Oude werknaam:** "Pubquiz". Die staat nog in de code:
   - de repo en `name` in `package.json`;
-  - de extensie `.pubquiz` en de map `Documenten/Pubquizzen`;
   - `window.pubquiz` en `PubquizApi`;
-  - de omgevingsvariabelen `PUBQUIZ_*`.
+  - de omgevingsvariabelen `PUBQUIZ_*`;
+  - de fixtures (`fixtures/demo.pubquiz`).
 
-  Of dat vóór de release verandert, is een open vraag (issue #43). "pubquiz" blijft gewoon het woord voor een quiz.
+  Quizbestanden heten sinds issue #43 `.quiznote`; de interne namen blijven zo. "pubquiz" blijft gewoon het woord voor een quiz.
 
 - **Huisstijl:** nachtblauw met één amber accent (`#ffa53d`), koppen in Bricolage Grotesque. De tokens staan in `src/renderer/src/styles/base.css`.
 - **Logo en icoon:** het icoon is de Q uit het woordmerk, in amber op nachtblauw. De bestanden worden gemaakt in de site-repo met `brand/quiznote/bron/maak.py`. De app-iconen staan in `build/` en `resources/`.
@@ -229,6 +252,7 @@ Nieuwe optionele koppelingen, zoals Spotify of YouTube, volgen hetzelfde patroon
 ## Agent en CI
 
 - **CI:** elke pull request naar `master` draait op macOS in GitHub Actions (`.github/workflows/ci.yml`): typecheck, unit-tests, e2e-tests en een ongesigneerde dmg.
+- **Screenshots:** de CI draait de e2e-tests ook op `master` en vergelijkt de screenshots (`scripts/screenshot-diff.sh`). De verschillen, in amber, komen als één commentaar op de pull request; de plaatjes staan op de branch `pr-screenshots`. Kleine verschillen tellen niet; bijstellen met `FUZZ` en `MIN_PIXELS`.
 - **Agent:** op de thuisserver werkt doorlopend een Claude-sessie zelf aan de issues met het label `claude`: is een run klaar, dan begint de volgende. Hoe en wat staat in `agent/`. Zijn pull requests hebben het label `agent`, zijn vragen aan Remco zijn issues met het label `vraag`.
 
 ## Meer
@@ -236,6 +260,8 @@ Nieuwe optionele koppelingen, zoals Spotify of YouTube, volgen hetzelfde patroon
 - `TODO.md`: hoe de issues en hun labels werken.
 - `MAGICHOME.md`: de controller, het protocol en wat we over het netwerk hebben geleerd.
 - `PLUGINS.md`: plan om plug-ins generieker te maken (goedgekeurd op 1 november 2026, issue #31).
+- `docs/dashboard-bijwerken.md`: hoe je het statusdashboard bijwerkt (issue #94).
+- `docs/rondebestand.md`: het formaat van een rondebestand (issue #99).
 - `README.md`: in het Engels, voor ontwikkelaars. De screenshots staan in `docs/`.
 - `~/Documents/pubquiz-site`: de site. Nuxt 4, branches `master` en `develop`. Pushen naar `develop` mag; een push naar `master` zet de site live (zie de CLAUDE.md van de site).
 - Het geheugen van Claude voor dit project, op de Mac van Remco: `~/.claude/projects/-Users-remcohendriksen-Documents-pubquiz/memory/`.

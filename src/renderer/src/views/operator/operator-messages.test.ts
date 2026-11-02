@@ -3,6 +3,7 @@ import { placeholders, type MessageBook } from '@shared/i18n'
 import { COMPONENT_MESSAGES } from '../../components/messages'
 import {
   AI_MESSAGES,
+  ANALYTICS_MESSAGES,
   NEW_QUIZ_MESSAGES,
   OPERATOR_MESSAGES,
   SETTINGS_MESSAGES
@@ -13,6 +14,7 @@ const BOOKS: Record<string, MessageBook<string>> = {
   NEW_QUIZ_MESSAGES,
   AI_MESSAGES,
   SETTINGS_MESSAGES,
+  ANALYTICS_MESSAGES,
   COMPONENT_MESSAGES
 }
 

@@ -5,6 +5,8 @@ import { IPC, type AudioEngineEvent, type ShowCommand } from '@shared/ipc'
 import type { TemplateOptions } from '@shared/template'
 import type { FormOptions } from '@shared/forms'
 import type { PluginId, PluginSetting } from '@shared/plugins'
+import { isRoundFile } from '@shared/round-file'
+import { isRoundLink, ROUND_LINK_SCHEME } from '@shared/round-link'
 import type { HardwareMapping, Quiz } from '@shared/types'
 import { aboutPanelOptions } from './about'
 import { AgentBridge, aiSetup, connectClaude, handleAgent } from './agent'
@@ -13,9 +15,9 @@ import { AppController } from './controller'
 import { handleMediaProtocol, registerMediaScheme } from './media-protocol'
 import { appLocale } from './locale'
 import { buildMenu } from './menu'
-import { NOTICE_MESSAGES } from './messages'
+import { NOTICE_MESSAGES, TOUR_MESSAGES } from './messages'
 import { configurePermissions } from './permissions'
-import { QUIZ_EXT } from './quiz-files'
+import { hasQuizExtension, LEGACY_QUIZ_EXT, QUIZ_EXT } from './quiz-files'
 import { adoptSettings, Settings } from './settings'
 import { createAudioWindow, createOperatorWindow, headless } from './windows'
 
@@ -25,31 +27,45 @@ registerMediaScheme()
 if (process.env['PUBQUIZ_USER_DATA']) app.setPath('userData', process.env['PUBQUIZ_USER_DATA'])
 if (process.env['PUBQUIZ_MUTE']) app.commandLine.appendSwitch('mute-audio')
 
-// macOS kan een .pubquiz openen vóór `ready`; bewaar het pad tot de controller er is.
-let pendingOpen: string | null =
-  process.argv.find((arg) => arg.endsWith(QUIZ_EXT) || arg.endsWith(`${QUIZ_EXT}/`)) ?? null
+// macOS kan een quiz (.quiznote of .pubquiz) openen vóór `ready`; bewaar het pad tot de controller er is.
+let pendingOpen: string | null = process.argv.find(hasQuizExtension) ?? null
+// Net zo voor rondebestanden en links vanaf de site (issue #99); die wachten tot het venster er is.
+const pendingRounds: string[] = process.argv.filter(isRoundFile)
 let controller: AppController | null = null
 let bridge: AgentBridge | null = null
 let quitConfirmed = false
 
 app.on('open-file', (event, path) => {
   event.preventDefault()
-  if (controller) void controller.openQuiz(path)
+  if (isRoundFile(path)) {
+    if (controller?.operator) void controller.openRoundFile(path)
+    else pendingRounds.push(path)
+  } else if (controller) void controller.openQuiz(path)
   else pendingOpen = path
+})
+
+// Een link `quiznote://ronde?url=…` vanaf de site (issue #99).
+app.on('open-url', (event, url) => {
+  event.preventDefault()
+  if (!isRoundLink(url)) return
+  if (controller?.operator) void controller.openRoundLink(url)
+  else pendingRounds.push(url)
 })
 
 if (!app.requestSingleInstanceLock()) app.quit()
 
 /**
- * De meegeleverde rondleiding: in de app (electron-builder extraResources), of tijdens het
- * ontwikkelen die uit `pnpm tour`. PUBQUIZ_TOUR: voor tests; leeg = geen rondleiding.
+ * De meegeleverde rondleiding in de taal van de app: in de app (electron-builder extraResources),
+ * of tijdens het ontwikkelen die uit `pnpm tour`. PUBQUIZ_TOUR: voor tests; leeg = geen rondleiding.
  */
 function tourSource(): string | null {
   const override = process.env['PUBQUIZ_TOUR']
   if (override !== undefined) return override || null
+  const folder = TOUR_MESSAGES.in(appLocale())('folder')
   return app.isPackaged
-    ? join(process.resourcesPath, 'Rondleiding.pubquiz')
-    : join(__dirname, '../../fixtures/rondleiding.pubquiz')
+    ? join(process.resourcesPath, `${folder}${QUIZ_EXT}`)
+    : // `pnpm tour` maakt de rondleiding nog met de oude extensie, net als fixtures/demo.pubquiz.
+      join(__dirname, `../../fixtures/${folder.toLowerCase()}${LEGACY_QUIZ_EXT}`)
 }
 
 app.whenReady().then(async () => {
@@ -59,6 +75,8 @@ app.whenReady().then(async () => {
   // haalt het icoon uit build/icon.icns.
   else if (!app.isPackaged) app.dock?.setIcon(join(__dirname, '../../resources/icon.png'))
   configurePermissions(session.defaultSession, process.env['ELECTRON_RENDERER_URL'])
+  // Links vanaf de site. Alleen de gebouwde app: anders registreert macOS de kale Electron-binary.
+  if (app.isPackaged && !headless) app.setAsDefaultProtocolClient(ROUND_LINK_SCHEME)
 
   // De app heette eerst Pubquiz en daarna even Quizmeister; zijn instellingen verhuizen één keer mee.
   if (!process.env['PUBQUIZ_USER_DATA']) {
@@ -72,9 +90,13 @@ app.whenReady().then(async () => {
   // PUBQUIZ_LIBRARY: voor tests, zodat er niets in Documenten belandt.
   // Niet "Pubquiz": macOS negeert hoofdletters, dus dat zou dezelfde map zijn als de broncode in
   // Documenten/pubquiz, en nieuwe quizzen zouden dan in de repo (en in de build) belanden.
-  const library = process.env['PUBQUIZ_LIBRARY'] ?? join(app.getPath('documents'), 'Pubquizzen')
+  // Tot issue #43 was het Documenten/Pubquizzen; de quizzen daar blijven gewoon in de lijst staan.
+  const library = process.env['PUBQUIZ_LIBRARY'] ?? join(app.getPath('documents'), 'QuizNote')
+  const legacyLibraries = process.env['PUBQUIZ_LIBRARY']
+    ? []
+    : [join(app.getPath('documents'), 'Pubquizzen')]
   const analytics = measuring() ? createAnalytics(settings) : null
-  const ctl = new AppController(settings, library, analytics)
+  const ctl = new AppController(settings, library, analytics, legacyLibraries)
   controller = ctl
   handleMediaProtocol({ current: () => ctl.mediaRoot, isRecent: (dir) => ctl.isRecent(dir) })
   registerIpc(ctl)
@@ -116,6 +138,11 @@ app.whenReady().then(async () => {
     quitConfirmed = true
     operator.close()
   })
+  operator.webContents.once('did-finish-load', async () => {
+    for (const item of pendingRounds.splice(0)) {
+      await (isRoundLink(item) ? ctl.openRoundLink(item) : ctl.openRoundFile(item))
+    }
+  })
   operator.on('closed', () => {
     ctl.operator = null
     app.quit()
@@ -140,9 +167,11 @@ app.on('window-all-closed', () => app.quit())
 
 /**
  * Anoniem meten (issue #40) alleen in de gebouwde app: niet tijdens het ontwikkelen en nooit in
- * tests (die zetten PUBQUIZ_USER_DATA). PUBQUIZ_NO_ANALYTICS zet het ook uit.
+ * tests (die zetten PUBQUIZ_USER_DATA). PUBQUIZ_NO_ANALYTICS zet het ook uit. De e2e-test van de
+ * toestemming zet PUBQUIZ_ANALYTICS_URL: dan gaat alles naar zijn eigen nep-server.
  */
 function measuring(): boolean {
+  if (process.env['PUBQUIZ_ANALYTICS_URL']) return true
   return (
     app.isPackaged &&
     !headless &&
@@ -155,6 +184,7 @@ function createAnalytics(settings: Settings): Analytics {
   const analytics = new Analytics({
     dir: app.getPath('userData'),
     identity: () => settings.analyticsId,
+    host: process.env['PUBQUIZ_ANALYTICS_URL'],
     base: {
       app_version: app.getVersion(),
       os_version: process.getSystemVersion(),
@@ -213,6 +243,10 @@ function registerIpc(ctl: AppController): void {
   ipcMain.on(IPC.copyText, (_e, text: string) => clipboard.writeText(text))
   ipcMain.handle(IPC.removeRecent, (_e, path: string) => ctl.removeRecent(path))
   ipcMain.handle(IPC.importMedia, (_e, paths?: string[]) => ctl.importMedia(paths))
+  ipcMain.handle(IPC.importRounds, (_e, quiz: unknown, at: number, path?: string) =>
+    ctl.importRounds(quiz, at, path)
+  )
+  ipcMain.handle(IPC.takeRoundFiles, () => ctl.takeRoundFiles())
   ipcMain.on(IPC.updateQuiz, (e, quiz: Quiz) => ctl.updateQuiz(quiz, e.sender.id))
 
   ipcMain.on(IPC.command, (_e, command: ShowCommand) => ctl.show.handle(command))

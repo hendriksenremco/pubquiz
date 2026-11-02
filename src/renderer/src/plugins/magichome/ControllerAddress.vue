@@ -2,13 +2,14 @@
 import { computed, onMounted, ref } from 'vue'
 import { effectName, lightLabel } from '@shared/light'
 import type { MagicHomeProbe } from '@shared/magichome'
+import Icon from '../../components/Icon.vue'
 import { locale } from '../../lib/locale'
 import { useControllerHost } from './controller'
 import { CONTROLLER_MESSAGES } from './messages'
 
 /**
  * Het IP-adres van de controller met een testknop. Testen vraagt alleen de toestand op, dus het
- * licht verandert niet. `autotest`: meteen testen, bv. bij Show starten.
+ * licht verandert niet. `autotest`: meteen testen, bv. bij Start show.
  */
 const props = defineProps<{ autotest?: boolean }>()
 const api = window.pubquiz
@@ -66,7 +67,7 @@ onMounted(() => {
         @keydown.enter="change($event.target as HTMLInputElement)"
       />
       <button class="btn btn-ghost btn-sm" :disabled="!host || testing" @click="test">
-        {{ testing ? t('testing') : t('test') }}
+        <Icon name="check" :size="14" /> {{ testing ? t('testing') : t('test') }}
       </button>
     </div>
     <p v-if="!host" class="status">{{ t('noAddress') }}</p>

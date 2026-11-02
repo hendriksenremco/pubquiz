@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref } from 'vue'
 import Dialog from '../../components/Dialog.vue'
+import Icon from '../../components/Icon.vue'
 import { locale } from '../../lib/locale'
 import { useSession } from '../../stores/session'
 import { NEW_QUIZ_MESSAGES } from './operator-messages'
@@ -64,7 +65,7 @@ async function create() {
         />
       </label>
       <p v-if="error" class="error" role="alert">{{ error }}</p>
-      <p v-else class="where faint">{{ t('savedIn', { folder: where }) }}</p>
+      <p v-else class="where faint" data-volatile>{{ t('savedIn', { folder: where }) }}</p>
 
       <template v-if="source">
         <p class="muted intro">{{ t('alwaysCopied') }}</p>
@@ -88,7 +89,7 @@ async function create() {
     <template #actions>
       <button class="btn btn-ghost" @click="emit('close')">{{ t('cancel') }}</button>
       <button class="btn btn-primary" :disabled="busy || !name.trim()" @click="create">
-        {{ t('create') }}
+        <Icon name="plus" :size="14" /> {{ t('create') }}
       </button>
     </template>
   </Dialog>
@@ -112,8 +113,9 @@ async function create() {
   font-size: 12px;
 }
 
+/* Rood is alleen voor live: een fout is geel. */
 .error {
-  color: var(--live);
+  color: var(--warn);
 }
 
 .intro {

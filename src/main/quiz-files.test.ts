@@ -9,8 +9,10 @@ import {
   exportZip,
   findMissingMedia,
   folderNameFor,
+  hasQuizExtension,
   importMediaFiles,
   importZip,
+  quizBaseName,
   readQuiz,
   writeQuiz
 } from './quiz-files'
@@ -24,11 +26,27 @@ function temp(): string {
 afterEach(() => dirs.splice(0).forEach((d) => rmSync(d, { recursive: true, force: true })))
 
 describe('quiz-bestanden', () => {
-  it('maakt een .pubquiz-map met geldige quiz.json', async () => {
+  it('maakt een .quiznote-map met geldige quiz.json', async () => {
     const { dir, quiz } = await createQuizDir(join(temp(), 'Vrijdag'))
-    expect(basename(dir)).toBe('Vrijdag.pubquiz')
+    expect(basename(dir)).toBe('Vrijdag.quiznote')
     expect(quiz.title).toBe('Vrijdag')
     expect(await readQuiz(dir)).toEqual(quiz)
+  })
+
+  it('herkent quizmappen met de nieuwe en de oude extensie', () => {
+    expect(hasQuizExtension('/q/Vrijdag.quiznote')).toBe(true)
+    expect(hasQuizExtension('/q/Vrijdag.pubquiz/')).toBe(true)
+    expect(hasQuizExtension('/q/Vrijdag.quiznoteronde')).toBe(false)
+    expect(hasQuizExtension('/q/Vrijdag')).toBe(false)
+    expect(quizBaseName('/q/Vrijdag.quiznote')).toBe('Vrijdag')
+    expect(quizBaseName('/q/Oktober.pubquiz/')).toBe('Oktober')
+    expect(quizBaseName('/q/Los')).toBe('Los')
+  })
+
+  it('laat een oude .pubquiz-map zijn naam houden', async () => {
+    const { dir, quiz } = await createQuizDir(join(temp(), 'Oud.pubquiz'))
+    expect(basename(dir)).toBe('Oud.pubquiz')
+    expect(quiz.title).toBe('Oud')
   })
 
   it('maakt een veilige mapnaam van de naam van de quiz', () => {
@@ -56,7 +74,7 @@ describe('quiz-bestanden', () => {
       rounds: true,
       fragments: false
     })
-    expect(basename(dir)).toBe('November.pubquiz')
+    expect(basename(dir)).toBe('November.quiznote')
     expect(quiz.title).toBe('November')
     expect(await readQuiz(dir)).toEqual(quiz)
     expect(readdirSync(join(dir, 'media')).sort()).toEqual(
@@ -133,10 +151,10 @@ describe('quiz-bestanden', () => {
 
     const dest = temp()
     const imported = await importZip(zip, dest)
-    expect(basename(imported)).toBe('Zip test.pubquiz')
+    expect(basename(imported)).toBe('Zip test.quiznote')
     expect(await readQuiz(imported)).toEqual(quiz)
 
     const again = await importZip(zip, dest)
-    expect(basename(again)).toBe('Zip test 2.pubquiz')
+    expect(basename(again)).toBe('Zip test 2.quiznote')
   })
 })

@@ -11,16 +11,33 @@ import { migrateQuiz } from '@shared/migrate'
 import { quizFromTemplate, type TemplateOptions } from '@shared/template'
 import type { MediaAsset, Quiz } from '@shared/types'
 import { readJson, writeJson } from './json-store'
-import { NoticeError } from './messages'
+import { NoticeError, NOTICE_MESSAGES } from './messages'
 
 const run = promisify(execFile)
 
-export const QUIZ_EXT = '.pubquiz'
+/** Extensie van nieuwe quizzen (issue #43). */
+export const QUIZ_EXT = '.quiznote'
+/** De oude werknaam: zulke quizzen blijven gewoon open te maken. */
+export const LEGACY_QUIZ_EXT = '.pubquiz'
+const QUIZ_EXTS = [QUIZ_EXT, LEGACY_QUIZ_EXT]
 const QUIZ_FILE = 'quiz.json'
 const MEDIA_DIR = 'media'
 
+/** Heeft het pad de extensie van een quiz, nieuw of oud (ook met een `/` erachter)? */
+export function hasQuizExtension(path: string): boolean {
+  const trimmed = path.replace(/\/+$/, '')
+  return QUIZ_EXTS.some((ext) => trimmed.endsWith(ext))
+}
+
+/** Naam van een quizmap zonder extensie: `Vrijdag.quiznote` en `Vrijdag.pubquiz` worden `Vrijdag`. */
+export function quizBaseName(path: string): string {
+  const name = basename(path.replace(/\/+$/, ''))
+  const ext = QUIZ_EXTS.find((e) => name.endsWith(e))
+  return ext ? name.slice(0, -ext.length) : name
+}
+
 export function withQuizExtension(path: string): string {
-  return path.endsWith(QUIZ_EXT) ? path : path + QUIZ_EXT
+  return hasQuizExtension(path) ? path : path + QUIZ_EXT
 }
 
 export async function isQuizDir(path: string): Promise<boolean> {
@@ -58,7 +75,7 @@ async function makeQuizDir(path: string): Promise<string> {
     () => true,
     () => false
   )
-  if (exists) throw new NoticeError('quizExists', { name: basename(dir, QUIZ_EXT) })
+  if (exists) throw new NoticeError('quizExists', { name: quizBaseName(dir) })
   await fs.mkdir(join(dir, MEDIA_DIR), { recursive: true })
   return dir
 }
@@ -69,7 +86,7 @@ export async function createQuizDir(
   locale: Locale = 'nl'
 ): Promise<{ dir: string; quiz: Quiz }> {
   const dir = await makeQuizDir(path)
-  const quiz = createQuiz(title ?? basename(dir, QUIZ_EXT), locale)
+  const quiz = createQuiz(title ?? quizBaseName(dir), locale)
   await writeQuiz(dir, quiz)
   return { dir, quiz }
 }
@@ -86,7 +103,7 @@ export async function createQuizFromTemplate(
 ): Promise<{ dir: string; quiz: Quiz }> {
   const original = await readQuiz(source)
   const dir = await makeQuizDir(path)
-  const quiz = quizFromTemplate(original, title ?? basename(dir, QUIZ_EXT), options)
+  const quiz = quizFromTemplate(original, title ?? quizBaseName(dir), options)
   await Promise.all(
     quiz.assets.map((asset) =>
       fs
@@ -104,7 +121,7 @@ export async function summarizeQuiz(dir: string): Promise<Omit<RecentQuiz, 'tour
   const missing: Omit<RecentQuiz, 'tour'> = {
     path: dir,
     exists: false,
-    title: basename(dir, QUIZ_EXT),
+    title: quizBaseName(dir),
     rounds: 0,
     screens: 0,
     modifiedAt: null,
@@ -193,9 +210,14 @@ async function listMediaFiles(root: string): Promise<string[]> {
  * Kopieert bestanden naar `media/` onder een content-hash-naam (ASCII, dedupliceert,
  * geen NFC/NFD- of hoofdletterproblemen op USB-sticks). De oorspronkelijke naam blijft in `name`.
  * Een map wordt in z'n geheel geïmporteerd (niet-media erin wordt stil overgeslagen) en komt
- * in `folders` terug, zodat de renderer er een quizmap van kan maken.
+ * in `folders` terug, zodat de renderer er een quizmap van kan maken. `locale` is de taal van wat
+ * er in `skipped` staat.
  */
-export async function importMediaFiles(dir: string, paths: string[]): Promise<ImportResult> {
+export async function importMediaFiles(
+  dir: string,
+  paths: string[],
+  locale: Locale = 'nl'
+): Promise<ImportResult> {
   const result: ImportResult = { assets: [], skipped: [], folders: [] }
   await fs.mkdir(join(dir, MEDIA_DIR), { recursive: true })
 
@@ -210,7 +232,10 @@ export async function importMediaFiles(dir: string, paths: string[]): Promise<Im
         assetIds.push(asset.id)
       }
       if (assetIds.length) result.folders.push({ name: basename(source), assetIds })
-      else result.skipped.push(`${basename(source)} (geen media)`)
+      else
+        result.skipped.push(
+          NOTICE_MESSAGES.in(locale)('folderWithoutMedia', { name: basename(source) })
+        )
       continue
     }
     const asset = stat?.isFile() ? await importOne(dir, source) : null
@@ -227,14 +252,16 @@ export async function exportZip(dir: string, target: string): Promise<void> {
 
 /** Pakt een zip uit naast `destParent` en geeft het pad van de quizmap terug. */
 export async function importZip(zip: string, destParent: string): Promise<string> {
-  const staging = join(destParent, `.pubquiz-import-${Date.now()}`)
+  const staging = join(destParent, `.quiznote-import-${Date.now()}`)
   await fs.mkdir(staging, { recursive: true })
   try {
     await run('ditto', ['-x', '-k', zip, staging])
     const found = await findQuizDir(staging)
     if (!found) throw new NoticeError('noQuizInZip')
 
-    let target = join(destParent, withQuizExtension(basename(found, QUIZ_EXT)))
+    // Een geïmporteerde quiz krijgt de nieuwe extensie, ook als hij nog .pubquiz heette.
+    const name = quizBaseName(found)
+    let target = join(destParent, `${name}${QUIZ_EXT}`)
     for (
       let n = 2;
       await fs.access(target).then(
@@ -243,7 +270,7 @@ export async function importZip(zip: string, destParent: string): Promise<string
       );
       n++
     ) {
-      target = join(destParent, `${basename(found, QUIZ_EXT)} ${n}${QUIZ_EXT}`)
+      target = join(destParent, `${name} ${n}${QUIZ_EXT}`)
     }
     await fs.rename(found, target)
     return target

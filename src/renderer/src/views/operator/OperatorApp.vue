@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import type { MenuAction } from '@shared/ipc'
 import ConfirmHost from '../../components/ConfirmHost.vue'
 import Icon from '../../components/Icon.vue'
@@ -13,6 +13,7 @@ import ShowLive from '../show/ShowLive.vue'
 import StartSheet from '../show/StartSheet.vue'
 import HomeView from './HomeView.vue'
 import AiDialog from './AiDialog.vue'
+import AnalyticsDialog from './AnalyticsDialog.vue'
 import NewQuizDialog from './NewQuizDialog.vue'
 import SettingsDialog from './SettingsDialog.vue'
 import { OPERATOR_MESSAGES } from './operator-messages'
@@ -29,6 +30,16 @@ const starting = ref(false)
 const title = computed(() => session.quiz?.title || t('untitled'))
 
 const home = ref<InstanceType<typeof HomeView> | null>(null)
+const editor = ref<InstanceType<typeof EditorView> | null>(null)
+
+/** Rondebestanden uit Finder (issue #99): main heeft de quiz al geopend; de editor importeert. */
+async function importRoundFiles() {
+  const paths = await api.takeRoundFiles()
+  if (!paths.length || !session.quiz) return
+  mode.value = 'edit'
+  await nextTick()
+  for (const path of paths) await editor.value?.importRounds(path)
+}
 
 async function open(path?: string, openIn: 'edit' | 'show' = 'edit') {
   session.flush()
@@ -43,6 +54,8 @@ async function open(path?: string, openIn: 'edit' | 'show' = 'edit') {
 const newQuiz = ref<{ source: { path: string; title: string } | null } | null>(null)
 const aiOpen = ref(false)
 const settingsOpen = ref(false)
+/** De vraag over meten; nooit als er een show loopt of hervat kan worden. */
+const askAnalytics = ref(false)
 
 function create() {
   session.flush()
@@ -92,14 +105,18 @@ const actions: Record<MenuAction, () => void> = {
 onMounted(async () => {
   await session.init({ editable: true })
   if (session.live) mode.value = 'show'
+  askAnalytics.value = session.analytics === null && !session.live && !session.recovery
   api.onMenu((action) => actions[action]())
+  api.onRoundFiles(() => void importRoundFiles())
+  void importRoundFiles()
   // Afsluiten (⌘Q of het venster dicht) terwijl de show loopt.
   api.onConfirmQuit(async () => {
     const ok = await ask({
       title: t('quitTitle'),
       message: t('quitMessage'),
       confirm: t('quit'),
-      danger: true
+      danger: true,
+      live: true
     })
     if (ok) api.quitConfirmed()
   })
@@ -152,7 +169,7 @@ watch(
         <LiveControls v-if="session.live && mode === 'show'" @edit="mode = 'edit'" />
         <div v-else class="actions">
           <button v-if="session.live" class="btn btn-primary" @click="mode = 'show'">
-            {{ t('toShow') }}
+            <Icon name="right" :size="15" /> {{ t('toShow') }}
           </button>
           <template v-else>
             <button
@@ -187,13 +204,19 @@ watch(
         @ai="aiOpen = true"
       />
       <ShowLive v-else-if="session.live && mode === 'show'" />
-      <EditorView v-else v-model:page="page" @create-from-current="createFromCurrent" />
+      <EditorView
+        v-else
+        ref="editor"
+        v-model:page="page"
+        @create-from-current="createFromCurrent"
+      />
     </main>
 
     <StartSheet v-if="starting && session.quiz && !session.live" @close="starting = false" />
     <NewQuizDialog v-if="newQuiz" :source="newQuiz.source" @close="newQuiz = null" />
     <AiDialog v-if="aiOpen" @close="aiOpen = false" />
     <SettingsDialog v-if="settingsOpen" @close="settingsOpen = false" />
+    <AnalyticsDialog v-if="askAnalytics" @close="askAnalytics = false" />
     <ConfirmHost />
     <NoticeStack />
   </div>

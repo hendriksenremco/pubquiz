@@ -49,12 +49,10 @@ const t = COMPONENT_MESSAGES.in(locale)
   user-select: text;
 }
 
-.notice.warning {
-  border-left-color: var(--warn);
-}
-
+/* Rood is alleen voor live: een fout is geel, net als een waarschuwing. */
+.notice.warning,
 .notice.error {
-  border-left-color: var(--live);
+  border-left-color: var(--warn);
 }
 
 .msg {

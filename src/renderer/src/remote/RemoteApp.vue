@@ -9,7 +9,7 @@ import { connect, imageUrl, link, locale, send, t, toast, view } from './connect
 
 /**
  * De afstandsbediening op een telefoon of tablet: de slide die in beeld staat, vorige en volgende
- * (zoals ← → op de Mac: slides, fragmenten of antwoorden), rondes, beeld op zwart en geluid, en
+ * (zoals ← → op de Mac: slides, fragmenten of antwoorden), rondes, aftellen, beeld op zwart en geluid, en
  * daaronder de plug-ins met knoppen voor de telefoon (bv. het licht; zie plugins/phone.ts). Volgt de show op de Mac; buiten de show
  * staat alles stil. Dezelfde knoppen staan in de show op de Mac (ShowLive en de werkbalk).
  */
@@ -161,6 +161,15 @@ onMounted(connect)
       </section>
 
       <section class="pair">
+        <button
+          class="tile toggle wide"
+          :class="{ active: view?.timer }"
+          :disabled="!live || (!round && !view?.timer)"
+          @click="send({ type: 'timer', on: !view?.timer })"
+        >
+          <Icon :name="view?.timer ? 'stop' : 'timer'" :size="22" />
+          <span class="tile-label">{{ view?.timer ? t('timerOff') : t('timerOn') }}</span>
+        </button>
         <button
           class="tile toggle"
           :class="{ alert: view?.blackout }"
@@ -487,6 +496,16 @@ button:disabled {
   justify-content: flex-start;
   align-items: center;
   gap: 10px;
+}
+
+.tile.wide {
+  grid-column: 1 / -1;
+}
+
+.toggle.active,
+.toggle.active:active:not(:disabled) {
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 
 .toggle.alert,

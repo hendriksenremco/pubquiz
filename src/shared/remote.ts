@@ -68,6 +68,8 @@ export interface RemoteView {
   screens: boolean
   blackout: boolean
   muted: boolean
+  /** Het aftellen (T) loopt. */
+  timer: boolean
   /** Plug-ins die aan staan en knoppen op de telefoon hebben (`remoteActions`), met hun status. */
   plugins: RemotePlugin[]
 }
@@ -98,6 +100,8 @@ export const RemoteActionSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('step'), direction: z.enum(['next', 'prev']) }),
   z.object({ type: z.literal('blackout'), on: z.boolean() }),
   z.object({ type: z.literal('mute'), on: z.boolean() }),
+  /** Aftellen (T) starten of stoppen; alleen in een ronde. */
+  z.object({ type: z.literal('timer'), on: z.boolean() }),
   /**
    * Een actie van een plug-in, bv. het licht kiezen. Main controleert hem met de definitie van die
    * plug-in, en alleen wat in zijn `remoteActions` staat, mag.
@@ -147,6 +151,7 @@ export function remoteView(
     screens: !!quiz?.screens.length,
     blackout: !!quiz && allBlack(quiz, state),
     muted: !state.backgroundEnabled,
+    timer: state.timer !== null,
     plugins: quiz ? plugins : []
   }
 }
@@ -174,6 +179,9 @@ export function remoteCommand(
     case 'mute':
       if (action.on) return { type: 'stopAll' }
       return state.backgroundEnabled ? null : { type: 'toggleBackground' }
+    case 'timer':
+      if (action.on === (state.timer !== null)) return null
+      return action.on && !activeRound(quiz, state) ? null : { type: 'timer' }
     case 'plugin':
       return null
   }

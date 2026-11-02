@@ -16,7 +16,7 @@ export const PRINT_MESSAGES = defineMessages(
     cardsTitle: 'Vragenkaarten',
     cardsHint:
       'Voor jou: per ronde de vragen met antwoord, vier ansichtkaarten per A4 om te knippen',
-    save: 'Opslaan',
+    save: 'Opslaan…',
     saveDoc: '{title} opslaan',
     busy: 'Bezig…'
   },
@@ -34,7 +34,7 @@ export const PRINT_MESSAGES = defineMessages(
       keyHint: 'The same layout with the answers filled in: lay it next to a team’s sheet',
       cardsTitle: 'Question cards',
       cardsHint: 'For you: the questions and answers per round, four postcards per A4 to cut out',
-      save: 'Save',
+      save: 'Save…',
       saveDoc: 'Save {title}',
       busy: 'Saving…'
     }
@@ -49,7 +49,7 @@ export const FRAGMENT_MESSAGES = defineMessages(
     stop: 'Stop',
     name: 'Naam',
     answer: 'Antwoord',
-    answerPlaceholder: 'Antwoord, voor de antwoordenronde',
+    answerPlaceholder: 'Voor de antwoordenronde',
     fileMissing: 'Bestand ontbreekt',
     playing: 'Wat er speelt',
     start: 'Begin',
@@ -67,7 +67,7 @@ export const FRAGMENT_MESSAGES = defineMessages(
     seconds: 's',
     moveUp: 'Omhoog',
     moveDown: 'Omlaag',
-    remove: 'Verwijder'
+    remove: 'Verwijder fragment'
   },
   {
     en: {
@@ -76,7 +76,7 @@ export const FRAGMENT_MESSAGES = defineMessages(
       stop: 'Stop',
       name: 'Name',
       answer: 'Answer',
-      answerPlaceholder: 'Answer, for the answers round',
+      answerPlaceholder: 'For the answers round',
       fileMissing: 'File missing',
       playing: 'What plays',
       start: 'Start',
@@ -94,7 +94,7 @@ export const FRAGMENT_MESSAGES = defineMessages(
       seconds: 's',
       moveUp: 'Move up',
       moveDown: 'Move down',
-      remove: 'Delete'
+      remove: 'Delete fragment'
     }
   }
 )
@@ -104,6 +104,7 @@ export const SLIDE_MESSAGES = defineMessages(
   {
     kindTitle: 'Titel',
     kindNumber: 'Nummer',
+    kindStandings: 'Tussenstand',
     kindImage: 'Afbeelding {number}',
     choose: 'Kies {name}',
     heading: 'Kop',
@@ -132,16 +133,17 @@ export const SLIDE_MESSAGES = defineMessages(
     onAnswer: 'Bij antwoord',
     answerImage: 'Afbeelding bij het antwoord',
     backdrop: 'Achtergrond',
-    on: 'Op',
+    screens: 'Schermen',
     onScreens: 'Op welke schermen',
     moveUp: 'Omhoog',
     moveDown: 'Omlaag',
-    remove: 'Verwijder'
+    remove: 'Verwijder slide'
   },
   {
     en: {
       kindTitle: 'Title',
       kindNumber: 'Number',
+      kindStandings: 'Scoreboard',
       kindImage: 'Picture {number}',
       choose: 'Select {name}',
       heading: 'Heading',
@@ -170,11 +172,11 @@ export const SLIDE_MESSAGES = defineMessages(
       onAnswer: 'With the answer',
       answerImage: 'Picture with the answer',
       backdrop: 'Background',
-      on: 'On',
+      screens: 'Screens',
       onScreens: 'On which screens',
       moveUp: 'Move up',
       moveDown: 'Move down',
-      remove: 'Delete'
+      remove: 'Delete slide'
     }
   }
 )
@@ -194,8 +196,11 @@ export const ROUND_MESSAGES = defineMessages(
     fromMedia: 'Uit Media',
     slideTitle: 'Titel',
     slideNumber: 'Nummer',
+    slideStandings: 'Tussenstand',
+    newStandings: 'Tussenstand',
+    tabStandings: 'Tussenstand',
     slideImage: 'Afbeelding',
-    notes: 'Notities voor jou',
+    notes: 'Notities',
     notesPlaceholder: 'Alleen jij ziet dit, tijdens de ronde.',
     inspector: 'Instellingen',
     tabFragment: 'Fragment',
@@ -231,6 +236,10 @@ export const ROUND_MESSAGES = defineMessages(
     every: 'Elke',
     loopLabel: 'Seconden per slide',
     seconds: 'seconden',
+    timer: 'Aftellen',
+    timerLabel: 'Seconden aftellen met T in deze ronde',
+    timerUnit: 'seconden, met T in de show',
+    timerQuiz: 'Leeg: {seconds} seconden, zoals de quiz',
     answers: 'Antwoorden',
     answersOn: 'Antwoorden van andere rondes langslopen',
     missingAnswers:
@@ -254,8 +263,11 @@ export const ROUND_MESSAGES = defineMessages(
       fromMedia: 'From Media',
       slideTitle: 'Title',
       slideNumber: 'Number',
+      slideStandings: 'Scoreboard',
+      newStandings: 'Standings',
+      tabStandings: 'Scoreboard',
       slideImage: 'Picture',
-      notes: 'Notes for you',
+      notes: 'Notes',
       notesPlaceholder: 'Only you see this, during the round.',
       inspector: 'Settings',
       tabFragment: 'Clip',
@@ -291,6 +303,10 @@ export const ROUND_MESSAGES = defineMessages(
       every: 'Every',
       loopLabel: 'Seconds per slide',
       seconds: 'seconds',
+      timer: 'Countdown',
+      timerLabel: 'Seconds to count down with T in this round',
+      timerUnit: 'seconds, with T in the show',
+      timerQuiz: 'Empty: {seconds} seconds, like the quiz',
       answers: 'Answers',
       answersOn: 'Go through the answers of other rounds',
       missingAnswers:
@@ -309,7 +325,6 @@ export const EDITOR_MESSAGES = defineMessages(
     rounds: 'Rondes',
     untitled: 'Naamloze ronde',
     addRound: 'Ronde toevoegen',
-    round: 'Ronde',
     presetNormal: 'Gewone ronde',
     presetNormalHint: 'Vragen met slides',
     presetMusic: 'Muziekronde',
@@ -327,14 +342,17 @@ export const EDITOR_MESSAGES = defineMessages(
     remove: 'Verwijder',
     dropHere: 'Laat los om toe te voegen',
     addedOne: '1 bestand toegevoegd aan Media',
-    addedMany: '{count} bestanden toegevoegd aan Media'
+    addedMany: '{count} bestanden toegevoegd aan Media',
+    importRounds: 'Importeer ronde…',
+    importRoundsHint: 'Ronde importeren uit een rondebestand',
+    importedOne: 'Ronde “{title}” geïmporteerd uit {file}',
+    importedMany: '{count} rondes geïmporteerd uit {file}'
   },
   {
     en: {
       rounds: 'Rounds',
       untitled: 'Untitled round',
       addRound: 'Add round',
-      round: 'Round',
       presetNormal: 'Regular round',
       presetNormalHint: 'Questions with slides',
       presetMusic: 'Music round',
@@ -352,7 +370,11 @@ export const EDITOR_MESSAGES = defineMessages(
       remove: 'Delete',
       dropHere: 'Drop to add',
       addedOne: '1 file added to Media',
-      addedMany: '{count} files added to Media'
+      addedMany: '{count} files added to Media',
+      importRounds: 'Import round…',
+      importRoundsHint: 'Import a round from a round file',
+      importedOne: 'Round “{title}” imported from {file}',
+      importedMany: '{count} rounds imported from {file}'
     }
   }
 )
@@ -367,7 +389,7 @@ export const MEDIA_MESSAGES = defineMessages(
     audio: 'Geluid',
     newFolder: 'Nieuwe map',
     newFolderNumber: 'Nieuwe map {number}',
-    import: 'Importeer',
+    import: 'Importeer…',
     back: 'Terug naar Media (sleep een bestand hierheen om het uit de map te halen)',
     folderName: 'Naam van de map',
     removeFolder: 'Verwijder map',
@@ -396,7 +418,7 @@ export const MEDIA_MESSAGES = defineMessages(
       audio: 'Sound',
       newFolder: 'New folder',
       newFolderNumber: 'New folder {number}',
-      import: 'Import',
+      import: 'Import…',
       back: 'Back to Media (drag a file here to take it out of the folder)',
       folderName: 'Folder name',
       removeFolder: 'Delete folder',
@@ -437,6 +459,7 @@ export const SETUP_MESSAGES = defineMessages(
     stop: 'Stop',
     background: 'Achtergrondmuziek',
     chooseMusic: 'Kies muziek…',
+    removeBackground: 'Verwijder muziek',
     volume: 'Volume',
     duck: 'Bij fragment',
     duckHint: 'Zo zacht wordt de muziek tijdens een fragment',
@@ -450,9 +473,14 @@ export const SETUP_MESSAGES = defineMessages(
     channelInUse:
       'Dit kanaal wordt nog {count}× gebruikt. Zet de achtergrond en fragmenten eerst op een ander kanaal.',
     noChannel: 'Voeg eerst een audiokanaal toe.',
+    show: 'Tijdens de show',
+    timer: 'Aftellen',
+    timerLabel: 'Seconden aftellen met T',
+    timerUnit: 'seconden, met T in de show',
+    timerHint: 'Na een vraag. Een ronde kan een eigen tijd hebben.',
     file: 'Bestand',
-    createFromCurrent: 'Nieuwe quiz op basis van deze',
-    exportZip: 'Exporteer als zip',
+    createFromCurrent: 'Nieuwe quiz op basis van deze…',
+    exportZip: 'Exporteer als zip…',
     reveal: 'Toon in Finder'
   },
   {
@@ -472,6 +500,7 @@ export const SETUP_MESSAGES = defineMessages(
       stop: 'Stop',
       background: 'Background music',
       chooseMusic: 'Choose music…',
+      removeBackground: 'Remove music',
       volume: 'Volume',
       duck: 'During clip',
       duckHint: 'How soft the music gets while a clip plays',
@@ -485,9 +514,14 @@ export const SETUP_MESSAGES = defineMessages(
       channelInUse:
         'This channel is still used {count}×. Move the background music and clips to another channel first.',
       noChannel: 'Add an audio channel first.',
+      show: 'During the show',
+      timer: 'Countdown',
+      timerLabel: 'Seconds to count down with T',
+      timerUnit: 'seconds, with T in the show',
+      timerHint: 'After a question. A round can have its own time.',
       file: 'File',
-      createFromCurrent: 'New quiz based on this one',
-      exportZip: 'Export as zip',
+      createFromCurrent: 'New quiz based on this one…',
+      exportZip: 'Export as zip…',
       reveal: 'Show in Finder'
     }
   }

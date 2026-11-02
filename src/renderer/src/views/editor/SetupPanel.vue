@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { createChannel, createScreenSlot } from '@shared/factory'
-import { findAsset } from '@shared/resolve'
+import { DEFAULT_TIMER_SECONDS, findAsset } from '@shared/resolve'
 import type { Background } from '@shared/types'
 import ContentChip from '../../components/ContentChip.vue'
 import Icon from '../../components/Icon.vue'
@@ -22,6 +22,14 @@ const api = window.pubquiz
 const session = useSession()
 const t = SETUP_MESSAGES.in(locale)
 const quiz = computed(() => session.quiz!)
+
+/** Aftellen met T: hele seconden, minstens 1; leeg = de standaard. */
+function setTimer(event: Event) {
+  const raw = (event.target as HTMLInputElement).value.trim()
+  const value = Math.round(Number(raw))
+  if (raw === '') delete quiz.value.timerSeconds
+  else if (Number.isFinite(value) && value >= 1) quiz.value.timerSeconds = Math.min(value, 3600)
+}
 
 function exportZip() {
   session.flush()
@@ -109,7 +117,6 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
       <section>
         <div class="section-head">
           <h3>{{ t('screens') }}</h3>
-          <span class="count">{{ quiz.screens.length }}</span>
         </div>
         <div class="screens">
           <div v-for="slot in quiz.screens" :key="slot.id" class="screen tile">
@@ -198,7 +205,7 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
                   />
                   <span class="grow" />
                   <button class="btn btn-ghost btn-sm" @click="quiz.background = null">
-                    {{ t('remove') }}
+                    <Icon name="trash" :size="14" /> {{ t('removeBackground') }}
                   </button>
                 </div>
               </template>
@@ -206,17 +213,7 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
           </div>
 
           <div class="tile channels">
-            <div class="tile-head">
-              <span class="tile-title grow">{{ t('channels') }}</span>
-              <button
-                class="btn btn-ghost btn-sm btn-icon"
-                :aria-label="t('addChannel')"
-                :title="t('addChannel')"
-                @click="addChannel"
-              >
-                <Icon name="plus" />
-              </button>
-            </div>
+            <span class="tile-title tile-head">{{ t('channels') }}</span>
             <div v-for="c in quiz.channels" :key="c.id" class="channel">
               <input v-model="c.name" class="quiet channel-name" :aria-label="t('channelName')" />
               <input
@@ -232,12 +229,39 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
               <button
                 class="btn btn-ghost btn-sm btn-icon del"
                 :aria-label="t('removeChannel')"
+                :title="t('removeChannel')"
                 @click="removeChannel(c.id)"
               >
-                <Icon name="x" :size="14" />
+                <Icon name="trash" :size="14" />
               </button>
             </div>
+            <button class="btn btn-ghost btn-sm add-channel" @click="addChannel">
+              <Icon name="plus" :size="14" /> {{ t('addChannel') }}
+            </button>
           </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-head">
+          <h3>{{ t('show') }}</h3>
+        </div>
+        <div class="tile show-tile">
+          <span class="tile-title">{{ t('timer') }}</span>
+          <span class="timer-row">
+            <input
+              :value="quiz.timerSeconds ?? DEFAULT_TIMER_SECONDS"
+              type="number"
+              min="1"
+              max="3600"
+              step="1"
+              class="input input-sm timer-input"
+              :aria-label="t('timerLabel')"
+              @change="setTimer"
+            />
+            <span class="muted">{{ t('timerUnit') }}</span>
+          </span>
+          <span class="muted hint">{{ t('timerHint') }}</span>
         </div>
       </section>
 
@@ -270,6 +294,28 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
   letter-spacing: -0.02em;
 }
 
+.show-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 520px;
+  padding: 16px 18px;
+}
+
+.timer-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.timer-input {
+  width: 72px;
+}
+
+.hint {
+  font-size: 12px;
+}
+
 .quiz-actions {
   display: flex;
   flex-wrap: wrap;
@@ -278,10 +324,6 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
 
 .remove-screen {
   color: var(--muted);
-}
-
-.remove-screen:hover {
-  color: var(--live);
 }
 
 .body {
@@ -435,9 +477,13 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
 }
 
 .tile-head {
-  display: flex;
-  align-items: center;
   margin-bottom: 6px;
+}
+
+.add-channel {
+  align-self: flex-start;
+  margin-top: 6px;
+  color: var(--muted);
 }
 
 .channel {

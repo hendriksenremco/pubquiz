@@ -12,7 +12,6 @@ export const LIVE_MESSAGES = defineMessages(
     now: 'Nu',
     upNext: 'Hierna',
     betweenRounds: 'Tussen twee rondes',
-    black: 'Zwart',
     slides: 'Slides',
     noSlide: 'Geen slide',
     imageSlide: 'Afbeelding {number}',
@@ -40,6 +39,11 @@ export const LIVE_MESSAGES = defineMessages(
     muteOff: 'Geluid aan',
     muteOnHint: 'Fragment stopt en achtergrondmuziek gaat uit',
     muteOffHint: 'Achtergrondmuziek weer aan',
+    timerOn: 'Aftellen',
+    timerOff: 'Stop aftellen',
+    timerOnHint:
+      '{seconds} seconden aftellen op de schermen, met een zacht signaal aan het eind (T)',
+    timerOffHint: 'Het aftellen stoppen (T)',
     shortcuts: 'Sneltoetsen',
     edit: 'Bewerken',
     stopShow: 'Stop show',
@@ -59,7 +63,8 @@ export const LIVE_MESSAGES = defineMessages(
     keySkip: 'Volgende in de reeks',
     keyBlackout: 'Beeld op zwart of terug',
     keyMute: 'Geluid uit of aan',
-    keyLoop: 'Loop van de slides pauzeren of verder'
+    keyLoop: 'Loop van de slides pauzeren of verder',
+    keyTimer: 'Aftellen of stoppen'
   },
   {
     en: {
@@ -67,7 +72,6 @@ export const LIVE_MESSAGES = defineMessages(
       now: 'Now',
       upNext: 'Up next',
       betweenRounds: 'Between rounds',
-      black: 'Black',
       slides: 'Slides',
       noSlide: 'No slide',
       imageSlide: 'Picture {number}',
@@ -95,6 +99,10 @@ export const LIVE_MESSAGES = defineMessages(
       muteOff: 'Unmute',
       muteOnHint: 'The clip stops and the background music turns off',
       muteOffHint: 'Background music back on',
+      timerOn: 'Countdown',
+      timerOff: 'Stop countdown',
+      timerOnHint: 'Count down {seconds} seconds on the screens, with a soft chime at the end (T)',
+      timerOffHint: 'Stop the countdown (T)',
       shortcuts: 'Shortcuts',
       edit: 'Edit',
       stopShow: 'Stop show',
@@ -114,7 +122,8 @@ export const LIVE_MESSAGES = defineMessages(
       keySkip: 'Next in the sequence',
       keyBlackout: 'Black out or back',
       keyMute: 'Mute or unmute',
-      keyLoop: 'Pause or resume the slide loop'
+      keyLoop: 'Pause or resume the slide loop',
+      keyTimer: 'Start or stop the countdown'
     }
   }
 )
@@ -205,8 +214,8 @@ export const FRAGMENT_PAD_MESSAGES = defineMessages(
     pause: 'Pauze',
     next: 'Volgende',
     stopSequence: 'Stop reeks',
-    reset: 'Reset',
-    resetHint: 'Gespeeld-markeringen wissen',
+    reset: 'Fragmenten opnieuw',
+    resetHint: 'Alle fragmenten weer ongespeeld',
     sequencePlaying: 'Reeks: fragment {number}',
     sequenceLast: 'Reeks: fragment {number} (stopt hierna)',
     sequenceGap: 'Reeks: fragment {number} over {seconds} s',
@@ -222,8 +231,8 @@ export const FRAGMENT_PAD_MESSAGES = defineMessages(
       pause: 'Pause',
       next: 'Next',
       stopSequence: 'Stop sequence',
-      reset: 'Reset',
-      resetHint: 'Clear the played marks',
+      reset: 'Restart clips',
+      resetHint: 'All clips unplayed again',
       sequencePlaying: 'Sequence: clip {number}',
       sequenceLast: 'Sequence: clip {number} (stops after this)',
       sequenceGap: 'Sequence: clip {number} in {seconds} s',
@@ -245,8 +254,8 @@ export const MIXER_MESSAGES = defineMessages(
     ducked: 'Zachter',
     playing: 'Speelt',
     silent: 'Stil',
-    turnOff: 'Zet uit',
-    turnOn: 'Zet aan',
+    turnOff: 'Muziek uit',
+    turnOn: 'Muziek aan',
     systemDefault: 'Systeemstandaard',
     speakersOf: 'Speakers van {name}',
     videoSound: 'Videogeluid {name}'
@@ -261,8 +270,8 @@ export const MIXER_MESSAGES = defineMessages(
       ducked: 'Quieter',
       playing: 'Playing',
       silent: 'Silent',
-      turnOff: 'Turn off',
-      turnOn: 'Turn on',
+      turnOff: 'Music off',
+      turnOn: 'Music on',
       systemDefault: 'System default',
       speakersOf: '{name} speakers',
       videoSound: 'Video sound {name}'
@@ -270,10 +279,10 @@ export const MIXER_MESSAGES = defineMessages(
   }
 )
 
-/** Het venster Show starten (StartSheet): schermen en uitgangen koppelen en de controle. */
+/** Het venster Start show (StartSheet): schermen en uitgangen koppelen en de controle. */
 export const START_MESSAGES = defineMessages(
   {
-    title: 'Show starten',
+    title: 'Start show',
     recovery: 'De vorige show stopte onverwacht, om {time}.',
     recoveryAt: 'De vorige show stopte onverwacht, bij {round}, om {time}.',
     dismiss: 'Negeer',
@@ -306,14 +315,13 @@ export const START_MESSAGES = defineMessages(
     screenSpeakersMissing: 'Speakers van het scherm (niet gevonden)',
     laptop: '{name}, {width}×{height} (laptop)',
     display: '{name}, {width}×{height}',
-    fileMissing: 'Bestand ontbreekt: {name}',
+    fileMissing: '{name}: bestand ontbreekt',
     displayMissing: '{name}: display niet aangesloten',
     screenOff: '{name} staat uit',
-    soundMissing:
-      '{name}: geluidsuitgang niet gevonden, het videogeluid gaat naar de systeemstandaard',
+    soundMissing: '{name}: uitgang niet gevonden, het videogeluid gaat naar de systeemstandaard',
     noSpeakers:
       '{name}: geen speakers bij dit scherm, het videogeluid gaat naar de systeemstandaard',
-    outputMissing: '{name}: uitgang niet gevonden, de systeemstandaard wordt gebruikt',
+    outputMissing: '{name}: uitgang niet gevonden, het geluid gaat naar de systeemstandaard',
     answersScreen: '{round}: kies bij Antwoorden op welk scherm ze in beeld komen',
     noRounds: 'De quiz heeft nog geen rondes'
   },
@@ -352,12 +360,12 @@ export const START_MESSAGES = defineMessages(
       screenSpeakersMissing: 'Screen speakers (not found)',
       laptop: '{name}, {width}×{height} (laptop)',
       display: '{name}, {width}×{height}',
-      fileMissing: 'File missing: {name}',
+      fileMissing: '{name}: file missing',
       displayMissing: '{name}: display not connected',
       screenOff: '{name} is off',
-      soundMissing: '{name}: sound output not found, the video sound goes to the system default',
+      soundMissing: '{name}: output not found, the video sound goes to the system default',
       noSpeakers: '{name}: no speakers on this screen, the video sound goes to the system default',
-      outputMissing: '{name}: output not found, using the system default',
+      outputMissing: '{name}: output not found, the sound goes to the system default',
       answersScreen: '{round}: under Answers, choose which screen shows them',
       noRounds: 'The quiz has no rounds yet'
     }

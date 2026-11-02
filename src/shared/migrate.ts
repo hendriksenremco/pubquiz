@@ -1,3 +1,5 @@
+import type { Params } from './i18n'
+import { FORMAT_MESSAGES, type FormatProblem } from './quiz-messages'
 import { QuizSchema, SCHEMA_VERSION } from './quiz-schema'
 import type { Quiz } from './types'
 
@@ -48,26 +50,35 @@ const migrations: Record<number, Migration> = {
   }
 }
 
-export class QuizFormatError extends Error {}
+/**
+ * Een quiz.json die niet te openen is. `message` is Nederlands (voor logs); de app vertaalt de
+ * fout met `key` en `params` (`errorText` in `src/main/messages.ts`).
+ */
+export class QuizFormatError extends Error {
+  constructor(
+    readonly key: FormatProblem,
+    readonly params?: Params
+  ) {
+    super(FORMAT_MESSAGES.in('nl')(key, params))
+  }
+}
 
 export function migrateQuiz(input: unknown): Quiz {
   if (typeof input !== 'object' || input === null) {
-    throw new QuizFormatError('quiz.json bevat geen geldig object')
+    throw new QuizFormatError('notAnObject')
   }
   let raw = input as Record<string, unknown>
   let version = typeof raw.schemaVersion === 'number' ? raw.schemaVersion : NaN
 
   if (!Number.isInteger(version) || version < 1) {
-    throw new QuizFormatError('quiz.json mist een geldige schemaVersion')
+    throw new QuizFormatError('noSchemaVersion')
   }
   if (version > SCHEMA_VERSION) {
-    throw new QuizFormatError(
-      `Deze quiz is gemaakt met een nieuwere versie van de app (schema ${version}).`
-    )
+    throw new QuizFormatError('newerVersion', { version })
   }
   while (version < SCHEMA_VERSION) {
     const migrate = migrations[version]
-    if (!migrate) throw new QuizFormatError(`Geen migratie van schema ${version}`)
+    if (!migrate) throw new QuizFormatError('noMigration', { version })
     raw = { ...migrate(raw), schemaVersion: version + 1 }
     version++
   }
@@ -75,9 +86,10 @@ export function migrateQuiz(input: unknown): Quiz {
   const parsed = QuizSchema.safeParse(raw)
   if (!parsed.success) {
     const issue = parsed.error.issues[0]
-    throw new QuizFormatError(
-      `quiz.json is ongeldig bij "${issue?.path.join('.') || '(root)'}": ${issue?.message}`
-    )
+    throw new QuizFormatError('invalid', {
+      path: issue?.path.join('.') || '(root)',
+      error: issue?.message ?? ''
+    })
   }
   return parsed.data
 }

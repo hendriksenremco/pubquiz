@@ -3,9 +3,18 @@
  * Na "Einde ronde" (activeRoundId = null) valt alles vanzelf terug naar de standaard.
  */
 import type { ShowCommand } from './ipc'
-import type { Fragment, MediaAsset, Quiz, Round, ScreenContent, ShowState, Slide } from './types'
+import type {
+  Fragment,
+  MediaAsset,
+  Quiz,
+  Round,
+  ScreenContent,
+  ShowState,
+  Slide,
+  TimerState
+} from './types'
 import { autoplayCountdown } from './autoplay'
-import { answerSlides } from './factory'
+import { answerSlides, fragmentChannel } from './factory'
 import type { Locale } from './i18n'
 import { USAGE_MESSAGES } from './quiz-messages'
 import { CHECK_MESSAGES, STEP_MESSAGES } from './show-messages'
@@ -27,6 +36,8 @@ export type ScreenOverlay =
     }
   /** Pauze tussen twee fragmenten. `remaining`: deel van de pauze dat nog over is (1 → 0). */
   | { kind: 'countdown'; seconds: number; nextNumber: number; remaining: number }
+  /** Aftellen na een vraag (T). `remaining`: deel van de tijd dat nog over is (1 → 0). */
+  | { kind: 'timer'; seconds: number; remaining: number }
 
 export interface ResolvedScreen {
   content: ScreenContent
@@ -186,6 +197,38 @@ export function screenHasSound(quiz: Quiz, screenId: string): boolean {
   )
 }
 
+/** Standaardtijd van het aftellen (T), als de quiz er geen heeft. */
+export const DEFAULT_TIMER_SECONDS = 30
+
+/** Hoe lang het aftellen duurt: de ronde ⊕ de quiz ⊕ de standaard. */
+export function timerSeconds(quiz: Quiz, round: Round | null): number {
+  return round?.timerSeconds ?? quiz.timerSeconds ?? DEFAULT_TIMER_SECONDS
+}
+
+/**
+ * Waar het aftellen in beeld komt: op de schermen met het fragmentnummer, en als de ronde die
+ * niet heeft (een gewone vragenronde) op alle schermen.
+ */
+export function timerScreens(quiz: Quiz, round: Round): string[] {
+  return round.fragmentScreens.length ? round.fragmentScreens : quiz.screens.map((s) => s.id)
+}
+
+/** Kanaal voor het signaal aan het eind van het aftellen: dat van de fragmenten. */
+export function timerChannel(quiz: Quiz, round: Round | null): string | null {
+  const channelId = round?.fragments[0]?.channelId
+  if (channelId && quiz.channels.some((c) => c.id === channelId)) return channelId
+  return fragmentChannel(quiz)?.id ?? null
+}
+
+function timerOverlay(timer: TimerState, now: number): ScreenOverlay {
+  const leftMs = Math.max(0, timer.until - now)
+  return {
+    kind: 'timer',
+    seconds: Math.ceil(leftMs / 1000),
+    remaining: Math.min(1, leftMs / (timer.seconds * 1000))
+  }
+}
+
 function resolveOverlay(
   quiz: Quiz,
   round: Round,
@@ -193,6 +236,9 @@ function resolveOverlay(
   screenId: string,
   now: number
 ): ScreenOverlay | null {
+  if (state.timer?.roundId === round.id && timerScreens(quiz, round).includes(screenId)) {
+    return timerOverlay(state.timer, now)
+  }
   if (!round.fragmentScreens.includes(screenId)) return null
   if (state.answer?.roundId === round.id) return answerOverlay(quiz, round, state.answer)
   const ap = state.autoplay

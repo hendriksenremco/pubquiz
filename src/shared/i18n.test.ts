@@ -14,8 +14,10 @@ describe('pickLocale', () => {
     expect(pickLocale(['en-US', 'fr-FR'], ['nl'])).toBe('nl')
   })
 
-  it('is Nederlands zolang Engels niet af is', () => {
-    expect(pickLocale(['en-US'])).toBe('nl')
+  it('kiest standaard Nederlands of Engels, en anders Engels', () => {
+    expect(pickLocale(['nl-NL'])).toBe('nl')
+    expect(pickLocale(['en-US'])).toBe('en')
+    expect(pickLocale(['de-DE'])).toBe('en')
   })
 })
 
@@ -26,7 +28,7 @@ describe('localeFromQuery', () => {
   })
 
   it('valt terug op de taal van de browser', () => {
-    expect(localeFromQuery('', ['en-US'])).toBe('nl')
+    expect(localeFromQuery('', ['en-US'])).toBe('en')
     expect(localeFromQuery('?locale=de', ['nl-NL'])).toBe('nl')
   })
 })

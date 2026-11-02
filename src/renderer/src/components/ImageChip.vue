@@ -62,7 +62,7 @@ function clear(close: () => void) {
     <template #default="{ close }">
       <AssetGrid v-model="model" kind="image" @picked="close" />
       <button v-if="model" class="menu-item clear" @click="clear(close)">
-        <Icon name="x" /> Geen afbeelding
+        <Icon name="x" /> {{ t('noImage') }}
       </button>
     </template>
   </Popover>

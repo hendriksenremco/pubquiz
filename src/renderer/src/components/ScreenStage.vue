@@ -7,6 +7,7 @@ import { locale } from '../lib/locale'
 import { assetUrl } from '../lib/media'
 import { slideBackdrop } from '../lib/slide-backdrop'
 import { useNow } from '../lib/use-now'
+import { useStandings } from '../plugins/scores/standings'
 import { levelsOf, useWaveform } from '../lib/waveform'
 import SlideView from './SlideView.vue'
 import Waveform from './Waveform.vue'
@@ -29,11 +30,12 @@ const READY_TIMEOUT_MS = 2500
 
 const counting = computed(() => {
   const ap = props.state.autoplay
-  return ap.status === 'gap' || ap.status === 'paused'
+  return ap.status === 'gap' || ap.status === 'paused' || props.state.timer !== null
 })
 const now = useNow(200, () => counting.value)
 const resolved = computed(() => resolveScreen(props.quiz, props.state, props.screenId, now.value))
 const t = SCREEN_MESSAGES.in(locale)
+const standingsOf = useStandings()
 
 // ── Waveform bij het fragmentnummer ─────────────────────────────────────────
 
@@ -264,6 +266,7 @@ onBeforeUnmount(() => {
           :number="resolved.slideNumber"
           :quiz="quiz"
           :with-backdrop="false"
+          :standings="standingsOf(quiz, resolved.slide)"
         />
       </Transition>
 
@@ -299,13 +302,21 @@ onBeforeUnmount(() => {
             </div>
             <div class="ov-answer">{{ resolved.overlay.answer }}</div>
           </template>
+          <!-- Aftellen na een vraag (T): de seconden groot, de balk loopt leeg. -->
+          <template v-else-if="resolved.overlay.kind === 'timer'">
+            <div class="ov-label">{{ t('timeLeft') }}</div>
+            <div class="ov-number">{{ resolved.overlay.seconds }}</div>
+            <div class="ov-bar">
+              <span :style="{ transform: `scaleX(${resolved.overlay.remaining})` }" />
+            </div>
+          </template>
           <template v-else>
             <div class="ov-label">{{ t('next') }}</div>
             <div class="ov-number">{{ resolved.overlay.nextNumber }}</div>
-            <div class="ov-count">
+            <div class="ov-count" data-volatile>
               {{ t('inSeconds', { seconds: resolved.overlay.seconds }) }}
             </div>
-            <div class="ov-bar">
+            <div class="ov-bar" data-volatile>
               <span :style="{ transform: `scaleX(${resolved.overlay.remaining})` }" />
             </div>
           </template>

@@ -1,4 +1,6 @@
 import { defineMessages, type Locale, type Params } from '@shared/i18n'
+import { QuizFormatError } from '@shared/migrate'
+import { FORMAT_MESSAGES } from '@shared/quiz-messages'
 
 /**
  * Teksten die main zelf maakt (issue #53): het menu, de dialogen om te openen en op te slaan, en
@@ -51,7 +53,10 @@ export const DIALOG_MESSAGES = defineMessages(
     importMediaTitle: 'Media importeren',
     importMediaMessage: 'Kies bestanden of een hele map',
     importMediaButton: 'Importeer',
-    mediaFilter: 'Video, audio en afbeeldingen'
+    mediaFilter: 'Video, audio en afbeeldingen',
+    importRoundsTitle: 'Ronde importeren',
+    roundFileFilter: 'Rondebestand van QuizNote',
+    chooseQuizForRound: 'In welke quiz wil je “{file}” importeren?'
   },
   {
     en: {
@@ -64,7 +69,10 @@ export const DIALOG_MESSAGES = defineMessages(
       importMediaTitle: 'Import Media',
       importMediaMessage: 'Choose files or a whole folder',
       importMediaButton: 'Import',
-      mediaFilter: 'Video, audio and pictures'
+      mediaFilter: 'Video, audio and pictures',
+      importRoundsTitle: 'Import Round',
+      roundFileFilter: 'QuizNote round file',
+      chooseQuizForRound: 'Which quiz do you want to import “{file}” into?'
     }
   }
 )
@@ -96,7 +104,21 @@ export const NOTICE_MESSAGES = defineMessages(
     displayAdded: 'Display aangesloten: {name}',
     quizReady: 'Nieuwe quiz “{title}” staat klaar op het dashboard',
     remoteFailed: 'De afstandsbediening kon niet starten: {error}',
-    windowed: '{name} (venster)'
+    windowed: '{name} (venster)',
+    notRoundFile: 'Dit is geen rondebestand van QuizNote',
+    newerRoundFile: 'Dit rondebestand komt uit een nieuwere QuizNote. Werk de app bij.',
+    invalidRoundFile: 'Fout in het rondebestand: {error}',
+    unsafeRoundPath: 'Ongeldig pad in het rondebestand: {file}',
+    missingRoundMedia: 'Dit bestand ontbreekt in het rondebestand: {file}',
+    notAPicture: '{file} is geen afbeelding',
+    notAudio: '{file} is geen geluidsbestand',
+    noAudioChannel:
+      'Deze quiz heeft geen audiokanaal voor de liedjes. Voeg er een toe bij Quiz-instellingen.',
+    roundFileTooBig: 'Dit rondebestand is groter dan 1 GB',
+    badRoundLink: 'QuizNote opent alleen rondes van quiznote.app',
+    roundDownloadFailed: 'Het rondebestand ophalen is mislukt: {error}',
+    folderWithoutMedia: '{name} (geen media)',
+    formNotLoading: 'het formulier laadt niet'
   },
   {
     en: {
@@ -124,7 +146,20 @@ export const NOTICE_MESSAGES = defineMessages(
       displayAdded: 'Display connected: {name}',
       quizReady: 'New quiz “{title}” is ready on the dashboard',
       remoteFailed: 'The remote control could not start: {error}',
-      windowed: '{name} (window)'
+      windowed: '{name} (window)',
+      notRoundFile: 'This is not a QuizNote round file',
+      newerRoundFile: 'This round file comes from a newer QuizNote. Update the app.',
+      invalidRoundFile: 'Error in the round file: {error}',
+      unsafeRoundPath: 'Invalid path in the round file: {file}',
+      missingRoundMedia: 'This file is missing from the round file: {file}',
+      notAPicture: '{file} is not a picture',
+      notAudio: '{file} is not an audio file',
+      noAudioChannel: 'This quiz has no audio channel for the songs. Add one in Quiz settings.',
+      roundFileTooBig: 'This round file is larger than 1 GB',
+      badRoundLink: 'QuizNote only opens rounds from quiznote.app',
+      roundDownloadFailed: 'Could not download the round file: {error}',
+      folderWithoutMedia: '{name} (no media)',
+      formNotLoading: 'the form does not load'
     }
   }
 )
@@ -144,9 +179,10 @@ export class NoticeError extends Error {
   }
 }
 
-/** De tekst van een fout, vertaald als het een `NoticeError` is. */
+/** De tekst van een fout, vertaald als het een `NoticeError` of `QuizFormatError` is. */
 export function errorText(err: unknown, locale: Locale): string {
   if (err instanceof NoticeError) return NOTICE_MESSAGES.in(locale)(err.key, err.params)
+  if (err instanceof QuizFormatError) return FORMAT_MESSAGES.in(locale)(err.key, err.params)
   return err instanceof Error ? err.message : String(err)
 }
 
@@ -191,3 +227,9 @@ export const AI_ERRORS = defineMessages(
     }
   }
 )
+
+/**
+ * De map van de meegeleverde rondleiding: in de app (`pnpm tour:build`), tijdens het ontwikkelen
+ * in `fixtures/` (in kleine letters), en in de bibliotheek na de eerste start.
+ */
+export const TOUR_MESSAGES = defineMessages({ folder: 'Rondleiding' }, { en: { folder: 'Tour' } })

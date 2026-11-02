@@ -38,6 +38,8 @@ export const useSession = defineStore('session', () => {
   const pluginStatus = shallowRef<PluginStatuses>({})
   const notices = ref<Notice[]>([])
   const ready = ref(false)
+  /** Toestemming voor anoniem meten; null = nog niet gevraagd. */
+  const analytics = ref<boolean | null>(false)
 
   const live = computed(() => state.value.live)
 
@@ -184,6 +186,7 @@ export const useSession = defineStore('session', () => {
     airplay.value = snap.airplay
     plugins.value = snap.plugins
     pluginStatus.value = snap.pluginStatus
+    analytics.value = snap.analytics
 
     api.onQuiz((q, dir) => {
       applyRemoteQuiz(q, dir)
@@ -201,6 +204,11 @@ export const useSession = defineStore('session', () => {
     ready.value = true
   }
 
+  function setAnalytics(consent: boolean) {
+    analytics.value = consent
+    void api.setAnalytics(consent)
+  }
+
   return {
     quiz,
     quizDir,
@@ -214,6 +222,7 @@ export const useSession = defineStore('session', () => {
     airplay,
     plugins,
     pluginStatus,
+    analytics,
     notices,
     ready,
     live,
@@ -227,6 +236,7 @@ export const useSession = defineStore('session', () => {
     dismiss,
     pluginOn,
     statusOf,
-    setPlugin
+    setPlugin,
+    setAnalytics
   }
 })

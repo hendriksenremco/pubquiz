@@ -11,13 +11,16 @@ interface ScreenWindow {
   displayId: number | null
 }
 
+/** Een display zonder naam van macOS. */
+const displayName = (id: number) => NOTICE_MESSAGES.in(appLocale())('displayName', { id })
+
 export type DisplayChange = 'added' | 'removed' | 'changed'
 
 export function listDisplays(): DisplayInfo[] {
   const primary = screen.getPrimaryDisplay().id
   return screen.getAllDisplays().map((d) => ({
     id: d.id,
-    label: d.label || `Scherm ${d.id}`,
+    label: d.label || displayName(d.id),
     width: d.size.width,
     height: d.size.height,
     internal: d.internal,
@@ -109,7 +112,7 @@ export class ScreenWindows {
       })
       win.setAlwaysOnTop(true, 'screen-saver')
       win.once('ready-to-show', () => reveal(win, true))
-      const label = `${d.label || `Scherm ${d.id}`} · ${d.size.width}×${d.size.height}`
+      const label = `${d.label || displayName(d.id)} · ${d.size.width}×${d.size.height}`
       loadRoute(win, `/identify/${encodeURIComponent(label)}`)
       setTimeout(() => !win.isDestroyed() && win.destroy(), 4000)
     }

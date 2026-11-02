@@ -64,4 +64,21 @@ describe('renumberSlides', () => {
       'Vraag 4'
     ])
   })
+
+  it('houdt een standaardtitel in zijn eigen taal', () => {
+    const round = createRound('normal', 1)
+    round.slides = [
+      createSlide('question', 'Question 2'),
+      createSlide('question', 'Vraag 1'),
+      createSlide('question', 'Question'),
+      createSlide('question', 'Question 2b')
+    ]
+    renumberSlides(round)
+    expect(round.slides.map((s) => s.title)).toEqual([
+      'Question 1',
+      'Vraag 2',
+      'Question',
+      'Question 2b'
+    ])
+  })
 })

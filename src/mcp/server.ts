@@ -24,7 +24,7 @@ import { AGENT_PARAMS, type AgentTool } from '@shared/draft'
 const SOCKET =
   process.env['QUIZNOTE_SOCKET'] ??
   join(homedir(), 'Library', 'Application Support', 'QuizNote', 'mcp.sock')
-const BUNDLE_ID = 'com.gutsgusto.pubquiz'
+const BUNDLE_ID = 'app.quiznote'
 
 const TOOLS: Record<AgentTool, string> = {
   list_quizzes:

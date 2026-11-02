@@ -1,5 +1,6 @@
 import { BrowserWindow } from 'electron'
 import type { FormDoc, FormOptions } from '@shared/forms'
+import { NoticeError } from './messages'
 import { loadRoute, webPreferences } from './windows'
 
 const READY_TIMEOUT_MS = 15_000
@@ -43,7 +44,7 @@ export async function renderFormPdf(options: FormOptions): Promise<Buffer> {
     await loadRoute(win, `/print/${encodeURIComponent(JSON.stringify(options))}`)
     const ready = win.webContents.executeJavaScript('window.__pubquizPrintReady')
     const timeout = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('het formulier laadt niet')), READY_TIMEOUT_MS)
+      setTimeout(() => reject(new NoticeError('formNotLoading')), READY_TIMEOUT_MS)
     )
     await Promise.race([ready, timeout])
     // Marges hier en niet in CSS (@page): anders rekent Chromium met andere marges dan hij tekent.

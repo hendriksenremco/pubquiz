@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { createRound, newId, type RoundPreset } from '@shared/factory'
+import { addRounds, isRoundFile } from '@shared/round-file'
 import Icon from '../../components/Icon.vue'
 import Popover from '../../components/Popover.vue'
 import { ask } from '../../lib/confirm'
@@ -43,6 +44,26 @@ function addRound(preset: RoundPreset, close: () => void) {
   quiz.value.rounds.push(r)
   page.value = r.id
   close()
+}
+
+/**
+ * Ronde importeren…: de rondes uit een rondebestand komen na de gekozen ronde (issue #99). Zonder
+ * pad vraagt main welk bestand; met pad komt het uit Finder of van een drop.
+ */
+async function importRounds(path?: string) {
+  const index = quiz.value.rounds.findIndex((r) => r.id === selected.value)
+  const at = index >= 0 ? index + 1 : quiz.value.rounds.length
+  const result = await window.pubquiz.importRounds(JSON.parse(JSON.stringify(quiz.value)), at, path)
+  if (!result) return
+  const added = addRounds(quiz.value, result.drafts, result.assets, at, locale)
+  page.value = added[0].id
+  session.notify({
+    level: 'info',
+    message:
+      added.length === 1
+        ? t('importedOne', { title: added[0].title, file: result.file })
+        : t('importedMany', { count: added.length, file: result.file })
+  })
 }
 
 function duplicate(id: string) {
@@ -108,7 +129,10 @@ function onDragLeave(event: DragEvent) {
 async function onDrop(event: DragEvent) {
   dragDepth = 0
   fileDrag.value = false
-  const paths = pathsFromDrop(event)
+  const dropped = pathsFromDrop(event)
+  // Rondebestanden worden rondes; de rest gaat naar Media.
+  for (const path of dropped.filter(isRoundFile)) await importRounds(path)
+  const paths = dropped.filter((p) => !isRoundFile(p))
   if (!paths.length) return
   const added = await importFiles(paths)
   if (added.length) {
@@ -122,6 +146,8 @@ function onDropCapture() {
   dragDepth = 0
   fileDrag.value = false
 }
+
+defineExpose({ importRounds })
 </script>
 
 <template>
@@ -153,14 +179,9 @@ function onDropCapture() {
         </div>
         <Popover :width="250">
           <template #trigger="{ open, toggle }">
-            <button
-              class="nav-item add-round"
-              :class="{ active: open }"
-              :aria-label="t('addRound')"
-              @click="toggle"
-            >
+            <button class="nav-item add-round" :class="{ active: open }" @click="toggle">
               <Icon name="plus" :size="14" />
-              <span>{{ t('round') }}</span>
+              <span>{{ t('addRound') }}</span>
             </button>
           </template>
           <template #default="{ close }">
@@ -177,13 +198,16 @@ function onDropCapture() {
             </button>
           </template>
         </Popover>
+        <button class="nav-item add-round" :title="t('importRoundsHint')" @click="importRounds()">
+          <Icon name="download" :size="14" />
+          <span>{{ t('importRounds') }}</span>
+        </button>
       </div>
 
       <nav class="nav">
         <button class="nav-item" :class="{ on: selected === 'media' }" @click="page = 'media'">
           <Icon name="images" />
           <span class="grow">{{ t('media') }}</span>
-          <span class="badge">{{ quiz.assets.length }}</span>
         </button>
         <button class="nav-item" :class="{ on: selected === 'setup' }" @click="page = 'setup'">
           <Icon name="sliders" />
@@ -207,7 +231,7 @@ function onDropCapture() {
 
     <Transition name="fade">
       <div v-if="fileDrag" class="drop-overlay">
-        <Icon name="upload" :size="28" />
+        <Icon name="download" :size="28" />
         <span>{{ t('dropHere') }}</span>
       </div>
     </Transition>
@@ -271,12 +295,6 @@ function onDropCapture() {
   color: var(--accent);
 }
 
-.badge {
-  color: var(--faint);
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-}
-
 .rounds-head {
   padding: 4px 10px 6px;
 }
@@ -293,21 +311,19 @@ function onDropCapture() {
   padding-right: 4px;
 }
 
+/* Alleen het nummer: de achtergrond van de rij laat al zien welke ronde gekozen is. */
 .num {
-  display: grid;
-  place-items: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 6px;
-  background: var(--surface-3);
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 700;
+  flex: none;
+  width: 18px;
+  color: var(--faint);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .round.on .num {
-  background: var(--accent);
-  color: var(--accent-ink);
+  color: var(--muted);
 }
 
 .round-title {

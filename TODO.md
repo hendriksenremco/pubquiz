@@ -13,7 +13,8 @@ Sinds 1 november 2026 staan de taken als **issues** op GitHub, niet meer in dit 
 
 **Volgorde**
 
-- `prio-1`, `prio-2`, `prio-3`: in die volgorde; binnen een prioriteit het oudste issue eerst.
+- `prio-1`, `prio-2`, `prio-3`: in die volgorde; binnen een prioriteit het oudste issue eerst. Ook bij `doen` gaat het oudste voor.
+- Oudste eerst: `gh issue list --search "sort:created-asc"` zet het oudste bovenaan (zonder staat het nieuwste bovenaan).
 - `later`: pas na de eerste release.
 
 **Onderwerp:** `doorlopend`, `beslissing`, `release`, `kwaliteit`, `engels`, `site`, `beheer`, `juridisch`.

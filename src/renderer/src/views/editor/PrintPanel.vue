@@ -117,11 +117,6 @@ async function save(doc: FormDoc) {
   letter-spacing: -0.02em;
 }
 
-.head p {
-  margin-top: 6px;
-  font-size: 14px;
-}
-
 .empty {
   padding: 20px;
 }

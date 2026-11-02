@@ -4,12 +4,13 @@ import Dialog from '../../components/Dialog.vue'
 import { locale } from '../../lib/locale'
 import { RENDERER_PLUGINS } from '../../plugins'
 import { useSession } from '../../stores/session'
-import { SETTINGS_MESSAGES } from './operator-messages'
+import { ANALYTICS_MESSAGES, SETTINGS_MESSAGES } from './operator-messages'
 
 /** Instellingen van de app op deze Mac: welke plug-ins aan staan, met hun eigen instellingen. */
 const emit = defineEmits<{ close: [] }>()
 const session = useSession()
 const t = SETTINGS_MESSAGES.in(locale)
+const ta = ANALYTICS_MESSAGES.in(locale)
 
 const settingsOf = (id: PluginId) => RENDERER_PLUGINS.find((p) => p.id === id)?.slots.settings
 
@@ -39,6 +40,22 @@ function toggle(id: PluginId, enabled: boolean) {
           v-if="session.pluginOn(p.id) && settingsOf(p.id)"
           class="plugin-settings"
         />
+      </div>
+    </div>
+    <div class="group">
+      <span class="label">{{ t('privacy') }}</span>
+      <div class="plugin">
+        <label class="plugin-head">
+          <input
+            type="checkbox"
+            :checked="session.analytics === true"
+            @change="session.setAnalytics(($event.target as HTMLInputElement).checked)"
+          />
+          <span class="grow">
+            <span class="name">{{ t('analyticsName') }}</span>
+            <span class="muted description">{{ ta('explain') }}</span>
+          </span>
+        </label>
       </div>
     </div>
     <template #actions>

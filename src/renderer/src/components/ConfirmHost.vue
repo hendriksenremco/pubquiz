@@ -31,7 +31,7 @@ watch(pendingConfirm, async (pending) => {
       <button
         ref="confirm"
         class="btn"
-        :class="pendingConfirm.danger ? 'btn-live' : 'btn-primary'"
+        :class="pendingConfirm.live ? 'btn-live' : 'btn-primary'"
         @click="answer(true)"
       >
         {{ pendingConfirm.confirm }}
