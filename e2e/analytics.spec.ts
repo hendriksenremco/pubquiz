@@ -42,7 +42,10 @@ test('meten: de vraag bij de eerste start, en niets zonder toestemming', async (
     let { app, operator } = await launch(userData, undefined, env)
     let question = operator.getByRole('dialog', { name: 'Help QuizNote beter maken?' })
     await expect(question).toBeVisible()
-    await operator.screenshot({ path: 'test-results/analytics-question.png' })
+    await operator.screenshot({
+      path: 'test-results/analytics-question.png',
+      animations: 'disabled'
+    })
     await operator.keyboard.press('Escape')
     await expect(question).toBeHidden()
     await app.close()
@@ -62,7 +65,10 @@ test('meten: de vraag bij de eerste start, en niets zonder toestemming', async (
     await expect(operator.getByRole('dialog', { name: /beter maken\?/ })).toHaveCount(0)
     const toggle = settings.getByRole('checkbox', { name: /Help QuizNote beter maken/ })
     await expect(toggle).not.toBeChecked()
-    await operator.screenshot({ path: 'test-results/analytics-settings.png' })
+    await operator.screenshot({
+      path: 'test-results/analytics-settings.png',
+      animations: 'disabled'
+    })
     expect(events).toEqual([])
 
     // Alsnog aanzetten bij Instellingen; pas bij de volgende start telt er iets.
