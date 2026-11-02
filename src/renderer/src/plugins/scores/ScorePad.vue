@@ -74,10 +74,12 @@ th {
   text-align: left;
   white-space: nowrap;
 }
+/* De naam van een ronde past op één regel als er ruimte is; anders loopt hij door op de volgende. */
 th.round {
-  max-width: 120px;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  min-width: 80px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  vertical-align: bottom;
 }
 td {
   padding: 3px 8px;

@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Locator } from '@playwright/test'
 import { readFileSync, rmSync, writeFileSync } from 'fs'
 import { dirname, join } from 'path'
 import {
@@ -12,6 +12,20 @@ import {
   useWindowedScreens,
   windowFor
 } from './helpers'
+
+/** Er is ruimte genoeg in de tabel: de namen van de rondes zijn even hoog als de kop Totaal. */
+async function expectRoundNamesOnOneLine(table: Locator): Promise<void> {
+  const textHeight = (cell: Locator): Promise<number> =>
+    cell.evaluate((el) => {
+      const range = document.createRange()
+      range.selectNodeContents(el)
+      return range.getBoundingClientRect().height
+    })
+  const oneLine = await textHeight(table.locator('th.total'))
+  for (const cell of await table.locator('th.round').all()) {
+    expect(await textHeight(cell)).toBe(oneLine)
+  }
+}
 
 test('teams en punten per ronde bij Quiz-instellingen, via de plug-in Tussenstand', async () => {
   const userData = tempDir('userdata')
@@ -68,6 +82,7 @@ test('teams en punten per ronde bij Quiz-instellingen, via de plug-in Tussenstan
     await expect
       .poll(() => saved()?.teams.map((t: { name: string }) => t.name))
       .toEqual(['De Slimmeriken', 'Quizzly Bears', 'Team 3'])
+    await expectRoundNamesOnOneLine(table)
     await operator.waitForTimeout(300)
     await snap(table, 'test-results/scores-table.png')
 
@@ -219,6 +234,7 @@ test('punten invullen tijdens de show, voor de ronde die nu loopt', async () => 
     await points('Quizzly Bears').press('Tab')
     await expect(pad.locator('td.total')).toHaveText(['8.5', '7'])
     await expect.poll(saved).toEqual({ [one.id]: { t0: 8.5, t1: 7 } })
+    await expectRoundNamesOnOneLine(pad)
     await operator.waitForTimeout(300)
     await snap(operator, 'test-results/scores-live.png')
 
