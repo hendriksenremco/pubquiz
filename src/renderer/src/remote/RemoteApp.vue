@@ -108,18 +108,18 @@ onMounted(connect)
           <button
             class="key"
             :disabled="!live || !step?.prev"
-            :aria-label="stepNames[0]"
             @click="send({ type: 'step', direction: 'prev' })"
           >
-            <Icon name="left" :size="34" />
+            <Icon name="left" :size="30" />
+            {{ stepNames[0] }}
           </button>
           <button
             class="key primary"
             :disabled="!live || !step?.next"
-            :aria-label="stepNames[1]"
             @click="send({ type: 'step', direction: 'next' })"
           >
-            <Icon name="right" :size="34" />
+            <Icon name="right" :size="30" />
+            {{ stepNames[1] }}
           </button>
         </div>
         <p v-if="step?.text" class="step-text">{{ step.text }}</p>
@@ -433,9 +433,14 @@ button:disabled {
 
 .key {
   display: flex;
+  flex-direction: column;
+  gap: 6px;
   align-items: center;
   justify-content: center;
   height: 96px;
+  padding: 0 8px;
+  font-size: 14px;
+  font-weight: 600;
   border-radius: var(--radius-lg);
   background: var(--surface-3);
 }

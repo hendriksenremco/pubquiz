@@ -197,20 +197,20 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
           <button
             class="btn key"
             :disabled="!stepView?.prev"
-            :aria-label="stepNames[0]"
             :title="`${stepNames[0]} (←)`"
             @click="step('prev')"
           >
-            <Icon name="left" :size="26" />
+            <Icon name="left" :size="22" />
+            {{ stepNames[0] }}
           </button>
           <button
             class="btn btn-primary key"
             :disabled="!stepView?.next"
-            :aria-label="stepNames[1]"
             :title="`${stepNames[1]} (→)`"
             @click="step('next')"
           >
-            <Icon name="right" :size="26" />
+            <Icon name="right" :size="22" />
+            {{ stepNames[1] }}
           </button>
         </div>
         <div class="pair">
@@ -451,7 +451,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 }
 
 .key {
+  flex-direction: column;
+  gap: 4px;
   height: 64px;
+  min-width: 0;
+  padding: 0 6px;
   border-radius: var(--radius-lg);
 }
 
