@@ -1,7 +1,17 @@
 import { expect, test } from '@playwright/test'
 import { cpSync, existsSync, readdirSync, readFileSync, rmSync } from 'fs'
 import { dirname, join } from 'path'
-import { copyFixture, launch, snap, tempDir, tourFixture } from './helpers'
+import {
+  choose,
+  confirmIn,
+  copyFixture,
+  launch,
+  openStart,
+  snap,
+  startShow,
+  tempDir,
+  tourFixture
+} from './helpers'
 
 test('dashboard: leeg starten, recente quiz openen en terugkomen', async () => {
   const userData = tempDir('userdata')
@@ -69,6 +79,29 @@ test('in het Engels: het dashboard en de werkbalk', async () => {
     await expect(operator.locator('.hero-text').getByRole('button', { name: 'Edit' })).toBeVisible()
     await app.close()
   } finally {
+    rmSync(userData, { recursive: true, force: true })
+    rmSync(dirname(quizDir), { recursive: true, force: true })
+  }
+})
+
+test('in het Engels: het voorbeeld van een scherm op zwart', async () => {
+  const userData = tempDir('userdata')
+  const quizDir = copyFixture()
+  const { app, operator } = await launch(userData, quizDir, { PUBQUIZ_LOCALE: 'en' })
+  try {
+    const sheet = await openStart(operator)
+    for (const box of await sheet.locator('.screen .screen-target [role="combobox"]').all()) {
+      await choose(operator, box, 'Window on this laptop (for testing)')
+    }
+    await startShow(operator)
+    const controls = operator.locator('.live-controls')
+    await controls.getByRole('button', { name: /Black out/ }).click()
+    await expect(operator.locator('.blackout-badge').first()).toHaveText('Black')
+    await operator.getByRole('button', { name: 'Stop show' }).click()
+    await confirmIn(operator, 'Stop show')
+    await expect(operator.locator('.live')).toHaveCount(0)
+  } finally {
+    await app.close()
     rmSync(userData, { recursive: true, force: true })
     rmSync(dirname(quizDir), { recursive: true, force: true })
   }

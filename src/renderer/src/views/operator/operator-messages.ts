@@ -94,7 +94,7 @@ export const AI_MESSAGES = defineMessages(
       askFor: 'Ask your AI assistant, for example:',
       example: 'Make a pub quiz in QuizNote with six rounds about Italy.',
       explain:
-        "The quiz then appears here, with questions, answers and an answer round. An AI doesn't make music or photos itself: name a folder with your songs or photos, or add them afterwards.",
+        "The quiz then appears here, with questions, answers and an answers round. An AI doesn't make music or photos itself: name a folder with your songs or photos, or add them afterwards.",
       connected: 'Connected. Restart Claude Desktop if it was open.',
       connectOnce: 'Connect once, then just ask Claude.',
       connect: 'Connect to Claude Desktop',
