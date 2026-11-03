@@ -105,6 +105,8 @@ test('de show bedienen met een telefoon via de QR-code', async () => {
     await expect(phone.getByText('Slide 1 van 3')).toBeVisible()
     await expect(preview).toContainText('Algemene kennis')
     const nextSlide = phone.getByRole('button', { name: 'Volgende slide' })
+    // De naam staat op de knop zelf, niet alleen voor een schermlezer.
+    await expect(nextSlide).toHaveText('Volgende slide')
     const before = await nextSlide.boundingBox()
     await nextSlide.click()
     await expect(macSlide).toHaveText('2')
@@ -163,6 +165,7 @@ test('de show bedienen met een telefoon via de QR-code', async () => {
     await expect(phone.getByText('Slide 1 van 3')).toBeVisible()
     await expect(mac.getByText('Slide 1 van 3')).toBeVisible()
     await expect(mac.getByRole('button', { name: 'Vorige slide' })).toBeEnabled()
+    await expect(mac.getByRole('button', { name: 'Vorige slide' })).toHaveText('Vorige slide')
     await mac.getByRole('button', { name: 'Volgende slide' }).click()
     await expect(phone.getByText('Slide 2 van 3')).toBeVisible()
     await mac.getByRole('button', { name: 'Vorige slide' }).click()
