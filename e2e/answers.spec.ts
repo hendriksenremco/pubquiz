@@ -183,6 +183,12 @@ test('live: eerst de vraag, afbeelding of het fragment, dan het antwoord', async
   await operator.waitForTimeout(400)
   await snap(operator, 'test-results/answers-live.png')
 
+  // Vorige en volgende staan alleen in de zijbalk; het blok zegt wat → hierna doet.
+  await expect(operator.locator('.answers .next-step')).toContainText('Volgende afbeelding')
+  await expect(operator.locator('.answers').getByRole('button', { name: 'Vorige' })).toHaveCount(0)
+  await operator.getByRole('button', { name: 'Volgende stap' }).click()
+  await expect(operator.locator('.answers .next-step')).toContainText('Toon antwoord')
+
   await operator.locator('.answers').getByRole('button', { name: 'Stop', exact: true }).click()
   await expect(beamer.locator('.overlay')).toHaveCount(0)
 
