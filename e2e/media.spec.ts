@@ -171,7 +171,7 @@ test('toont een bestand groot als voorbeeld en bladert verder', async () => {
     .poll(() => dialog.locator('video').evaluate((v: HTMLVideoElement) => v.paused))
     .toBe(false)
   await expect(dialog.locator('.meta')).toContainText(/\d+ × \d+/)
-  await expect(dialog.locator('.usages')).toContainText('Standaard van scherm "Beamer"')
+  await expect(dialog.locator('.usages')).toContainText('Standaard van scherm “Beamer”')
   await expect(dialog.locator('.count')).toHaveText('1 van 3')
   await operator.waitForTimeout(700) // gloed laten infaden voor de screenshot
   await snap(operator, 'test-results/media-preview.png')

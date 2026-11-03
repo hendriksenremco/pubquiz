@@ -46,7 +46,7 @@ export const NEW_QUIZ_MESSAGES = defineMessages(
     rounds: 'Rondes',
     roundsHint: 'Titels, slides, en per ronde het beeld en de muziek',
     fragments: 'Fragmenten',
-    fragmentsHint: 'De liedjes in die rondes; meestal kies je die opnieuw',
+    fragmentsHint: 'De fragmenten in die rondes; meestal kies je die opnieuw',
     cancel: 'Annuleer',
     create: 'Maak quiz'
   },
@@ -63,7 +63,7 @@ export const NEW_QUIZ_MESSAGES = defineMessages(
       rounds: 'Rounds',
       roundsHint: 'Titles, slides, and the picture and music for each round',
       fragments: 'Clips',
-      fragmentsHint: 'The songs in those rounds; usually you pick new ones',
+      fragmentsHint: 'The clips in those rounds; usually you pick new ones',
       cancel: 'Cancel',
       create: 'Create quiz'
     }

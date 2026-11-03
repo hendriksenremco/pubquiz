@@ -378,10 +378,10 @@ describe('resolveAudio', () => {
 describe('referenties', () => {
   it('vindt waar een asset gebruikt wordt', () => {
     const quiz = makeQuiz()
-    expect(findAssetUsages(quiz, 'music')).toEqual(['Ronde "Muziek": scherm'])
+    expect(findAssetUsages(quiz, 'music')).toEqual(['Ronde “Muziek”: scherm'])
     expect(findAssetUsages(quiz, 'bg')).toEqual(['Achtergrondmuziek'])
     expect(findAssetUsages(quiz, 'loop2')).toEqual([])
-    expect(findAssetUsages(quiz, 'music', 'en')).toEqual(['Round "Muziek": screen'])
+    expect(findAssetUsages(quiz, 'music', 'en')).toEqual(['Round “Muziek”: screen'])
     expect(findAssetUsages(quiz, 'bg', 'en')).toEqual(['Background music'])
   })
 
@@ -391,14 +391,14 @@ describe('referenties', () => {
     quiz.assets = quiz.assets.filter((a) => a.id !== 'f2')
     quiz.channels = quiz.channels.filter((c) => c.id !== 'frag')
     expect(findBrokenReferences(quiz)).toEqual([
-      'Ronde "Muziek", Fragment 1: kanaal ontbreekt',
-      'Ronde "Muziek", Fragment 2: media ontbreekt',
-      'Ronde "Muziek", Fragment 2: kanaal ontbreekt'
+      'Ronde “Muziek”, Fragment 1: kanaal ontbreekt',
+      'Ronde “Muziek”, Fragment 2: media ontbreekt',
+      'Ronde “Muziek”, Fragment 2: kanaal ontbreekt'
     ])
     expect(findBrokenReferences(quiz, 'en')).toEqual([
-      'Round "Muziek", Fragment 1: channel missing',
-      'Round "Muziek", Fragment 2: media missing',
-      'Round "Muziek", Fragment 2: channel missing'
+      'Round “Muziek”, Fragment 1: channel missing',
+      'Round “Muziek”, Fragment 2: media missing',
+      'Round “Muziek”, Fragment 2: channel missing'
     ])
   })
 })

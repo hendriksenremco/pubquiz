@@ -33,9 +33,9 @@ describe('teksten van main', () => {
 describe('errorText', () => {
   it('vertaalt een NoticeError; zijn message blijft Nederlands', () => {
     const err = new NoticeError('quizExists', { name: 'Kroegquiz' })
-    expect(err.message).toBe('Er bestaat al een quiz met de naam "Kroegquiz"')
+    expect(err.message).toBe('Er bestaat al een quiz met de naam “Kroegquiz”')
     expect(errorText(err, 'nl')).toBe(err.message)
-    expect(errorText(err, 'en')).toBe('There is already a quiz called "Kroegquiz"')
+    expect(errorText(err, 'en')).toBe('There is already a quiz called “Kroegquiz”')
   })
 
   it('vertaalt een kapotte quiz.json', () => {
