@@ -118,9 +118,9 @@ export const CHECK_MESSAGES = defineMessages(
     mediaMissing: '{where}: media ontbreekt',
     channelMissing: '{where}: kanaal ontbreekt',
     backgroundChannelMissing: 'Achtergrondmuziek: audiokanaal ontbreekt',
-    screen: 'Scherm "{name}"',
+    screen: 'Scherm “{name}”',
     background: 'Achtergrondmuziek',
-    round: 'Ronde "{title}"',
+    round: 'Ronde “{title}”',
     slide: '{round}, slide',
     answerImage: '{where}, afbeelding bij antwoord'
   },
@@ -129,9 +129,9 @@ export const CHECK_MESSAGES = defineMessages(
       mediaMissing: '{where}: media missing',
       channelMissing: '{where}: channel missing',
       backgroundChannelMissing: 'Background music: audio channel missing',
-      screen: 'Screen "{name}"',
+      screen: 'Screen “{name}”',
       background: 'Background music',
-      round: 'Round "{title}"',
+      round: 'Round “{title}”',
       slide: '{round}, slide',
       answerImage: '{where}, picture with the answer'
     }

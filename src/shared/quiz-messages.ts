@@ -37,23 +37,23 @@ export const NAME_MESSAGES = defineMessages(
 /** Waar een bestand gebruikt wordt (`findAssetUsages` in `src/shared/resolve.ts`). */
 export const USAGE_MESSAGES = defineMessages(
   {
-    screenDefault: 'Standaard van scherm "{name}"',
+    screenDefault: 'Standaard van scherm “{name}”',
     background: 'Achtergrondmuziek',
-    roundScreen: 'Ronde "{title}": scherm',
-    roundBackground: 'Ronde "{title}": achtergrondmuziek',
-    roundFragment: 'Ronde "{title}": fragment',
-    roundSlide: 'Ronde "{title}": slide',
-    roundAnswer: 'Ronde "{title}": bij een antwoord'
+    roundScreen: 'Ronde “{title}”: scherm',
+    roundBackground: 'Ronde “{title}”: achtergrondmuziek',
+    roundFragment: 'Ronde “{title}”: fragment',
+    roundSlide: 'Ronde “{title}”: slide',
+    roundAnswer: 'Ronde “{title}”: bij een antwoord'
   },
   {
     en: {
-      screenDefault: 'Default for screen "{name}"',
+      screenDefault: 'Default for screen “{name}”',
       background: 'Background music',
-      roundScreen: 'Round "{title}": screen',
-      roundBackground: 'Round "{title}": background music',
-      roundFragment: 'Round "{title}": clip',
-      roundSlide: 'Round "{title}": slide',
-      roundAnswer: 'Round "{title}": with an answer'
+      roundScreen: 'Round “{title}”: screen',
+      roundBackground: 'Round “{title}”: background music',
+      roundFragment: 'Round “{title}”: clip',
+      roundSlide: 'Round “{title}”: slide',
+      roundAnswer: 'Round “{title}”: with an answer'
     }
   }
 )
@@ -65,7 +65,7 @@ export const FORMAT_MESSAGES = defineMessages(
     noSchemaVersion: 'quiz.json mist een geldige schemaVersion',
     newerVersion: 'Deze quiz is gemaakt met een nieuwere versie van de app (schema {version}).',
     noMigration: 'Geen migratie van schema {version}',
-    invalid: 'quiz.json is ongeldig bij "{path}": {error}'
+    invalid: 'quiz.json is ongeldig bij “{path}”: {error}'
   },
   {
     en: {
@@ -73,7 +73,7 @@ export const FORMAT_MESSAGES = defineMessages(
       noSchemaVersion: 'quiz.json has no valid schemaVersion',
       newerVersion: 'This quiz was made with a newer version of the app (schema {version}).',
       noMigration: 'No migration from schema {version}',
-      invalid: 'quiz.json is invalid at "{path}": {error}'
+      invalid: 'quiz.json is invalid at “{path}”: {error}'
     }
   }
 )
