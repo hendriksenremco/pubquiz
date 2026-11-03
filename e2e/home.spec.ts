@@ -104,7 +104,7 @@ test('dashboard: de rondleiding staat de eerste keer klaar, en komt niet terug a
     await expect(operator.locator('.hero-title')).toHaveText('Demo-pubquiz')
     const tour = operator.locator('.card', { hasText: 'Rondleiding' })
     await expect(tour).toHaveCount(1)
-    await tour.getByRole('button', { name: 'Uit lijst' }).click()
+    await tour.getByRole('button', { name: 'Verwijder uit lijst' }).click()
     await expect(tour).toHaveCount(0)
     await app.close()
 
@@ -142,7 +142,7 @@ test('dashboard: een verplaatste quiz is te herkennen en uit de lijst te halen',
     await expect(card).toContainText('Niet gevonden')
     await snap(operator, 'test-results/home-missing.png')
 
-    await card.getByRole('button', { name: 'Uit lijst' }).click()
+    await card.getByRole('button', { name: 'Verwijder uit lijst' }).click()
     await expect(card).toHaveCount(0)
   } finally {
     await app.close()

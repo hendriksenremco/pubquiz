@@ -29,7 +29,7 @@ export const HOME_MESSAGES = defineMessages(
     finder: 'Toon in Finder',
     notFound: 'Niet gevonden in {folder}',
     forgetHint: 'Verwijder uit deze lijst',
-    forget: 'Uit lijst'
+    forget: 'Verwijder uit lijst'
   },
   {
     en: {
@@ -58,7 +58,7 @@ export const HOME_MESSAGES = defineMessages(
       finder: 'Show in Finder',
       notFound: 'Not found in {folder}',
       forgetHint: 'Remove from this list',
-      forget: 'Remove'
+      forget: 'Remove from list'
     }
   }
 )
