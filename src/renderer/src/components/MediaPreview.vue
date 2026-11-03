@@ -230,14 +230,14 @@ onBeforeUnmount(() => {
           </div>
 
           <div v-if="items.length > 1" class="nav">
-            <button class="btn btn-ghost btn-icon" :aria-label="t('previous')" @click="step(-1)">
-              <Icon name="left" />
+            <button class="btn btn-ghost" @click="step(-1)">
+              <Icon name="left" /> {{ t('previous') }}
             </button>
             <span class="count mono">{{
               t('countOf', { index: index + 1, total: items.length })
             }}</span>
-            <button class="btn btn-ghost btn-icon" :aria-label="t('next')" @click="step(1)">
-              <Icon name="right" />
+            <button class="btn btn-ghost" @click="step(1)">
+              {{ t('next') }} <Icon name="right" />
             </button>
           </div>
           <button class="btn" @click="close">

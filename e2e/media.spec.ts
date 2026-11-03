@@ -205,6 +205,9 @@ test('toont een bestand groot als voorbeeld en bladert verder', async () => {
   await operator.locator('.tile-item .frame').first().click()
   await expect(dialog).toHaveAccessibleName('Voorbeeld: logo.png')
   await expect(dialog.locator('.meta')).toContainText(/Afbeelding.*\d+ × \d+/)
+  // De pijlen zeggen ook in tekst wat ze doen.
+  await expect(dialog.getByRole('button', { name: 'Vorige' })).toHaveText('Vorige')
+  await expect(dialog.getByRole('button', { name: 'Volgende' })).toHaveText('Volgende')
   await dialog.getByRole('button', { name: 'Volgende' }).click()
   await expect(dialog).toHaveAccessibleName('Voorbeeld: staand.png')
   await expect(dialog.locator('.meta')).toContainText('60 × 80')
