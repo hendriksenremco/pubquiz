@@ -69,6 +69,9 @@ test('opent de demo-quiz in de editor', async () => {
     )
     .toBe(0.5)
   await expect(operator.locator('.times input').first()).toHaveValue('0:00.5')
+  // De knoppen onder het fragment passen in de inspector, zonder horizontale schuifbalk.
+  const inspector = operator.locator('.inspector')
+  expect(await inspector.evaluate((el) => el.scrollWidth - el.clientWidth)).toBe(0)
   await snap(operator, 'test-results/editor-fragment-open.png')
 
   await operator.locator('.sidebar .round').first().click()
