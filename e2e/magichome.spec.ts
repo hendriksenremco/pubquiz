@@ -26,7 +26,8 @@ async function setPlugin(operator: Page, on: boolean, host?: string) {
     await address.press('Enter')
     // Testen vraagt alleen de toestand op.
     await expect(dialog.locator('.light-status')).toHaveText('Verbonden. Nu: Groen.')
-    await snap(operator, 'test-results/magichome-settings.png')
+    // Het adres bevat de willekeurige poort van de nep-controller.
+    await snap(operator, 'test-results/magichome-settings.png', { mask: [address] })
   }
   await dialog.getByRole('button', { name: 'Klaar' }).click()
   await operator.getByRole('button', { name: 'Bewerk', exact: true }).click()
@@ -114,7 +115,9 @@ test('licht per ronde en per slide via de plug-in MagicHome', async () => {
     await expect(sheet.getByLabel('IP-adres van de MagicHome-controller')).toHaveValue(device.host)
     await expect(sheet.locator('.light-status')).toHaveText('Verbonden. Nu: Groen.')
     await useWindowedScreens(operator)
-    await snap(operator, 'test-results/magichome-start.png')
+    await snap(operator, 'test-results/magichome-start.png', {
+      mask: [sheet.getByLabel('IP-adres van de MagicHome-controller')]
+    })
     const before = device.log.length
     await startShow(operator)
 
