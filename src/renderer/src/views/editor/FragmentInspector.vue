@@ -223,6 +223,7 @@ function remove() {
 
 .foot {
   display: flex;
+  flex-wrap: wrap;
   gap: 2px;
   margin: 0 -8px;
 }
