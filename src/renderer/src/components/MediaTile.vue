@@ -73,23 +73,7 @@ function onDragStart(event: DragEvent) {
       >
         <Icon :name="playing ? 'stop' : 'play'" :size="16" />
       </button>
-      <button
-        class="look"
-        :aria-label="t('preview')"
-        :title="t('preview')"
-        @click.stop="emit('preview')"
-      >
-        <Icon name="eye" :size="16" />
-      </button>
     </div>
-    <button
-      class="remove"
-      :aria-label="t('removeFromQuiz')"
-      :title="t('removeFromQuiz')"
-      @click="emit('remove')"
-    >
-      <Icon name="trash" :size="14" />
-    </button>
     <figcaption>
       <span class="name">{{ asset.name }}</span>
       <span class="meta">
@@ -97,6 +81,14 @@ function onDragStart(event: DragEvent) {
         <span v-if="used" class="used">{{ t('inUse') }}</span>
       </span>
     </figcaption>
+    <div class="actions">
+      <button class="btn btn-ghost btn-sm" @click="emit('preview')">
+        <Icon name="eye" :size="14" /> {{ t('preview') }}
+      </button>
+      <button class="btn btn-ghost btn-sm" @click="emit('remove')">
+        <Icon name="trash" :size="14" /> {{ t('removeFromQuiz') }}
+      </button>
+    </div>
   </figure>
 </template>
 
@@ -139,8 +131,7 @@ function onDragStart(event: DragEvent) {
   display: block;
 }
 
-.play,
-.look {
+.play {
   position: absolute;
   left: 10px;
   bottom: 10px;
@@ -155,36 +146,10 @@ function onDragStart(event: DragEvent) {
   cursor: pointer;
 }
 
-.look {
-  left: auto;
-  right: 10px;
-}
-
 .frame.playing .play,
-.play:hover,
-.look:hover {
+.play:hover {
   background: var(--accent);
   color: var(--accent-ink);
-}
-
-.remove {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  display: grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  border: 0;
-  border-radius: 8px;
-  background: rgba(15, 20, 32, 0.72);
-  color: var(--muted);
-  cursor: pointer;
-}
-
-.remove:hover {
-  background: var(--surface-3);
-  color: var(--text);
 }
 
 figcaption {
@@ -208,5 +173,21 @@ figcaption {
 
 .used {
   color: var(--accent);
+}
+
+/* Net als de knoppen bij een geluid in de lijst. */
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin-left: -8px;
+}
+
+.actions .btn {
+  color: var(--muted);
+}
+
+.actions .btn:hover {
+  color: var(--text);
 }
 </style>
