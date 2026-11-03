@@ -324,7 +324,7 @@ onBeforeUnmount(() => {
       </Transition>
     </div>
 
-    <div v-if="preview && resolved.blackout" class="blackout-badge">Zwart</div>
+    <div v-if="preview && resolved.blackout" class="blackout-badge">{{ t('blackout') }}</div>
   </div>
 </template>
 
