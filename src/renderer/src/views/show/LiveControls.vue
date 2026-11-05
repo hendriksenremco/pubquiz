@@ -103,6 +103,17 @@ const {
   background: var(--line-strong);
 }
 
+/* In een smal venster gaat de ruimte naar de naam van de quiz; de toetsen staan ook onder Sneltoetsen. */
+@media (max-width: 1200px) {
+  .btn .kbd {
+    display: none;
+  }
+
+  .live-controls :deep(.btn) {
+    padding: 0 8px;
+  }
+}
+
 .shortcuts {
   display: grid;
   grid-template-columns: auto 1fr;

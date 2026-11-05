@@ -127,7 +127,7 @@ test('wisselt scherm tijdens een ronde en valt daarna terug', async () => {
   const beamer = await windowFor('screen/beamer')
   await expect.poll(() => activeVideo(beamer)).toContain('default-loop.mp4')
   // Tijdens de show kun je niet per ongeluk naar het overzicht.
-  await expect(operator.getByRole('button', { name: 'Quizzen' })).toBeDisabled()
+  await expect(operator.getByRole('button', { name: 'Quizzen' })).toHaveCount(0)
 
   // Een slide met alleen een nummer zegt wat hij is, naast zijn plek in de lijst.
   await operator.locator('.rounds .round').nth(0).click()

@@ -153,15 +153,10 @@ watch(
     <header class="topbar">
       <div class="traffic-space" />
       <template v-if="session.quiz">
-        <button
-          class="btn btn-ghost back"
-          :disabled="session.live"
-          :title="session.live ? t('stopShowFirst') : undefined"
-          @click="goHome"
-        >
+        <button v-if="!session.live" class="btn btn-ghost back" @click="goHome">
           <Icon name="left" :size="15" /> {{ t('quizzes') }}
         </button>
-        <span class="name">{{ title }}</span>
+        <span class="name" :title="title">{{ title }}</span>
         <span v-if="session.live && mode === 'edit'" class="pill pill-live">
           <span class="dot" />{{ t('live') }}
         </span>
@@ -247,7 +242,9 @@ watch(
   -webkit-app-region: no-drag;
 }
 
+/* De vensterknoppen van macOS staan hier; in een smal venster mag dit niet krimpen. */
 .traffic-space {
+  flex-shrink: 0;
   width: 64px;
 }
 
@@ -258,7 +255,7 @@ watch(
   font-weight: 550;
 }
 
-.back:hover:not(:disabled) {
+.back:hover {
   color: var(--text);
 }
 
