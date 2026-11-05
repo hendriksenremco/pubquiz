@@ -97,6 +97,17 @@ function overflowing(page: Page): Promise<string[]> {
       ) {
         found.add(`tekst steekt uit: ${name(el)}`)
       }
+      // Inline tekst heeft geen eigen breedte: vergelijk hem met het element eromheen.
+      const parent = el.parentElement
+      if (
+        hasText &&
+        parent &&
+        !el.closest(allowed) &&
+        getComputedStyle(parent).overflowX === 'visible' &&
+        el.getBoundingClientRect().right > parent.getBoundingClientRect().right + 1
+      ) {
+        found.add(`tekst steekt uit: ${name(el)}`)
+      }
       if ((overflowX === 'auto' || overflowX === 'scroll') && el.scrollWidth > el.clientWidth + 1) {
         found.add(`schuifbalk: ${name(el).slice(0, 60)}`)
       }
