@@ -35,16 +35,13 @@ const groups = computed(() => {
   return list
 })
 
-const atEnd = computed(
-  () => !!answer.value?.revealed && answer.value.index >= items.value.length - 1
-)
+/** Wat → hierna doet; null aan het eind. De knoppen zelf staan in de zijbalk van de show. */
 const nextLabel = computed(() => {
   const a = answer.value
   if (!a) return t('start')
   if (!a.revealed) return t('reveal')
   const next = items.value[a.index + 1]
-  if (!next) return t('done')
-  return t(ANSWER_NOUNS[next.noun].next)
+  return next ? t(ANSWER_NOUNS[next.noun].next) : null
 })
 const status = computed(() => {
   const a = answer.value
@@ -91,20 +88,7 @@ const imageOf = (item: Item) => findAsset(session.quiz!, item.slide?.imageAssetI
         >{{ t('notShown') }}</span
       >
       <span v-else-if="status" class="pill pill-accent">{{ status }}</span>
-      <button
-        class="btn btn-sm"
-        :disabled="!answer"
-        @click="send({ type: 'answers', action: 'prev' })"
-      >
-        <Icon name="left" :size="14" /> {{ t('prev') }} <span class="kbd">←</span>
-      </button>
-      <button
-        class="btn btn-primary btn-sm"
-        :disabled="atEnd"
-        @click="send({ type: 'answers', action: 'next' })"
-      >
-        <Icon name="right" :size="14" /> {{ nextLabel }} <span class="kbd">→</span>
-      </button>
+      <span v-if="nextLabel" class="next-step"><span class="kbd">→</span> {{ nextLabel }}</span>
       <button
         v-if="answer"
         class="btn btn-sm"
@@ -151,6 +135,14 @@ const imageOf = (item: Item) => findAsset(session.quiz!, item.slide?.imageAssetI
 </template>
 
 <style scoped>
+.next-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
 .groups {
   display: flex;
   flex-direction: column;
