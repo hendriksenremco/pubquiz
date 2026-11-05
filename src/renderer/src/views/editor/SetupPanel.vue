@@ -124,13 +124,8 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
             <StagePreview :screen="slot" :caption="false" class="screen-preview" />
             <div class="screen-foot">
               <input v-model="slot.name" class="quiet screen-name" :aria-label="t('screenName')" />
-              <button
-                class="btn btn-ghost btn-sm btn-icon remove-screen"
-                :aria-label="t('removeScreen')"
-                :title="t('removeScreen')"
-                @click="removeScreen(slot.id)"
-              >
-                <Icon name="trash" :size="14" />
+              <button class="btn btn-ghost btn-sm remove-screen" @click="removeScreen(slot.id)">
+                <Icon name="trash" :size="14" /> {{ t('removeScreen') }}
               </button>
             </div>
             <ContentChip v-model="slot.default" :label="t('shows')" />
@@ -217,6 +212,9 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
             <span class="tile-title tile-head">{{ t('channels') }}</span>
             <div v-for="c in quiz.channels" :key="c.id" class="channel">
               <input v-model="c.name" class="quiet channel-name" :aria-label="t('channelName')" />
+              <button class="btn btn-ghost btn-sm del" @click="removeChannel(c.id)">
+                <Icon name="trash" :size="14" /> {{ t('removeChannel') }}
+              </button>
               <input
                 v-model.number="c.volume"
                 v-fill
@@ -224,17 +222,9 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
                 min="0"
                 max="1"
                 step="0.01"
-                class="grow"
+                class="channel-volume"
               />
               <span class="mono val">{{ percent(c.volume) }}</span>
-              <button
-                class="btn btn-ghost btn-sm btn-icon del"
-                :aria-label="t('removeChannel')"
-                :title="t('removeChannel')"
-                @click="removeChannel(c.id)"
-              >
-                <Icon name="trash" :size="14" />
-              </button>
             </div>
             <button class="btn btn-ghost btn-sm add-channel" @click="addChannel">
               <Icon name="plus" :size="14" /> {{ t('addChannel') }}
@@ -324,6 +314,7 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
 }
 
 .remove-screen {
+  flex: none;
   color: var(--muted);
 }
 
@@ -361,6 +352,7 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
 }
 
 .screen-name {
+  min-width: 0;
   font: 650 15px var(--display);
 }
 
@@ -476,7 +468,7 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
 .channels {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 10px;
   padding: 16px;
 }
 
@@ -490,17 +482,21 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
   color: var(--muted);
 }
 
+/* Naam en knop op de eerste regel, de schuifregelaar eronder: naast de knop is hij te kort. */
 .channel {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 12px;
-  min-height: 36px;
+  gap: 4px 12px;
 }
 
 .channel-name {
-  width: 120px;
-  flex: none;
   font-weight: 600;
+}
+
+.channel-volume {
+  width: 100%;
+  min-width: 0;
 }
 
 .del {

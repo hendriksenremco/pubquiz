@@ -104,13 +104,8 @@ async function clear() {
               </td>
               <td class="total mono">{{ totals.get(team.id) ?? 0 }}</td>
               <td class="del">
-                <button
-                  class="btn btn-ghost btn-sm btn-icon"
-                  :aria-label="t('removeTeam')"
-                  :title="t('removeTeam')"
-                  @click="remove(team.id, team.name)"
-                >
-                  <Icon name="trash" :size="14" />
+                <button class="btn btn-ghost btn-sm" @click="remove(team.id, team.name)">
+                  <Icon name="trash" :size="14" /> {{ t('removeTeam') }}
                 </button>
               </td>
             </tr>

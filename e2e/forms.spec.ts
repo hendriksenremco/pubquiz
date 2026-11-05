@@ -103,6 +103,7 @@ test('acties staan zichtbaar in beeld, niet achter drie stippen', async () => {
     await expect(operator.getByRole('button', { name })).toBeVisible()
   }
   await expect(operator.getByRole('button', { name: 'Verwijder scherm' })).toHaveCount(2)
+  await expect(operator.getByRole('button', { name: 'Verwijder kanaal' }).first()).toBeVisible()
   await operator.waitForTimeout(300)
   await snap(operator, 'test-results/quiz-actions.png')
 
