@@ -227,7 +227,8 @@ test('toont een bestand groot als voorbeeld en bladert verder', async () => {
   await expect
     .poll(() => dialog.locator('audio').evaluate((a: HTMLAudioElement) => a.paused))
     .toBe(false)
-  await expect(dialog.getByRole('button', { name: 'Pauzeer' })).toBeVisible()
+  // Ook de afspeelknop zegt in tekst wat hij doet.
+  await expect(dialog.getByRole('button', { name: 'Pauzeer' })).toHaveText('Pauzeer')
   await expect(dialog.locator('.transport .time').last()).toHaveText('0:30')
   await operator.waitForTimeout(300)
   await snap(operator, 'test-results/media-preview-sound.png')

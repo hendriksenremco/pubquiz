@@ -187,13 +187,9 @@ onBeforeUnmount(() => {
 
         <!-- Bij een afbeelding onzichtbaar maar op zijn plek: dan verspringt het beeld niet. -->
         <div class="transport" :class="{ idle: asset.kind === 'image' }">
-          <button
-            class="btn btn-icon toggle"
-            :aria-label="paused ? t('play') : t('pause')"
-            :disabled="asset.kind === 'image'"
-            @click="togglePlay"
-          >
+          <button class="btn toggle" :disabled="asset.kind === 'image'" @click="togglePlay">
             <Icon :name="paused ? 'play' : 'pause'" :size="15" />
+            {{ paused ? t('play') : t('pause') }}
           </button>
           <span class="time mono" data-volatile>{{ formatTime(current) }}</span>
           <input
@@ -285,10 +281,10 @@ onBeforeUnmount(() => {
   visibility: hidden;
 }
 
+/* Even breed bij Speel af en Pauzeer: dan verspringt de balk ernaast niet. */
 .toggle {
-  width: 36px;
+  min-width: 112px;
   height: 36px;
-  border-radius: 50%;
   background: var(--accent);
   color: var(--accent-ink);
 }
