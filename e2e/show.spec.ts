@@ -49,6 +49,12 @@ test('opent de demo-quiz in de editor', async () => {
   await operator.waitForTimeout(800) // previews laten laden voor de screenshot
   await snap(operator, 'test-results/editor-round.png')
 
+  // Luisteren heeft icoon en tekst, net als bij Media.
+  const track = operator.locator('.track').first()
+  await track.getByRole('button', { name: 'Luister' }).click()
+  await track.getByRole('button', { name: 'Stop' }).click()
+  await expect(track.getByRole('button', { name: 'Luister' })).toBeVisible()
+
   await operator.locator('.track').nth(2).click()
   await expect(operator.getByRole('tab', { name: 'Fragment' })).toHaveAttribute(
     'aria-selected',
@@ -81,6 +87,12 @@ test('opent de demo-quiz in de editor', async () => {
   await operator.getByRole('button', { name: 'Quiz-instellingen' }).click()
   await operator.waitForTimeout(800)
   await snap(operator, 'test-results/editor-setup.png')
+  const listen = operator.locator('.bg .art')
+  await expect(listen).toHaveText('Luister')
+  await listen.click()
+  await expect(listen).toHaveText('Stop')
+  await listen.click()
+  await expect(listen).toHaveText('Luister')
 
   await operator.getByRole('button', { name: /^Media/ }).click()
   await operator.waitForTimeout(500)
