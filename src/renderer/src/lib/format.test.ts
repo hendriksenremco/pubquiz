@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { placeholders } from '@shared/i18n'
-import { DATE_MESSAGES, formatTime, parseTime, relativeDate } from './format'
+import { DATE_MESSAGES, formatTime, oneLine, parseTime, relativeDate } from './format'
 
 describe('formatTime', () => {
   it('formatteert minuten en seconden', () => {
@@ -9,6 +9,17 @@ describe('formatTime', () => {
     expect(formatTime(75.5, 1)).toBe('1:15.5')
     expect(formatTime(5.25, 1)).toBe('0:05.3')
     expect(formatTime(undefined)).toBe('–')
+  })
+})
+
+describe('oneLine', () => {
+  it('maakt van regeleinden een spatie', () => {
+    expect(oneLine('Ronde 1\nalgemeen')).toBe('Ronde 1 algemeen')
+    expect(oneLine('Ronde 1 \r\n\n  algemeen')).toBe('Ronde 1 algemeen')
+  })
+
+  it('laat spaties staan, ook aan het eind tijdens het typen', () => {
+    expect(oneLine('Ronde  1 ')).toBe('Ronde  1 ')
   })
 })
 

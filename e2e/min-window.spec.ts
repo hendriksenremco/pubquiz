@@ -1,4 +1,4 @@
-import { expect, test, type ElectronApplication, type Page } from '@playwright/test'
+import { expect, test, type ElectronApplication, type Locator, type Page } from '@playwright/test'
 import { readFileSync, rmSync, writeFileSync } from 'fs'
 import { dirname, join } from 'path'
 import { fakeController } from './fake-magichome'
@@ -237,6 +237,35 @@ for (const locale of ['nl', 'en'] as const) {
   })
 }
 
+/** Een lange titel loopt door op een volgende regel: niets valt weg, ook niet opzij. */
+async function wholeTitle(field: Locator): Promise<void> {
+  const size = await field.evaluate((el) => ({
+    fits: el.scrollWidth <= el.clientWidth && el.scrollHeight <= el.clientHeight,
+    lines: el.clientHeight / parseFloat(getComputedStyle(el).lineHeight)
+  }))
+  expect.soft(size.fits).toBe(true)
+  expect.soft(size.lines).toBeGreaterThan(1.5)
+}
+
+test('een titel blijft één regel tekst, wat je ook typt of plakt', async () => {
+  const userData = tempDir('userdata')
+  const quizDir = copyFixture()
+  const { app, operator } = await launch(userData, quizDir)
+  try {
+    await operator.locator('.sidebar .round').first().click()
+    const field = operator.locator('#round-title')
+    await field.fill('Ronde 1\nalgemeen')
+    await expect(field).toHaveValue('Ronde 1 algemeen')
+    await field.press('Enter')
+    await expect(field).toHaveValue('Ronde 1 algemeen')
+    await expect(operator.locator('.sidebar .round.on .round-title')).toHaveText('Ronde 1 algemeen')
+  } finally {
+    await app.close()
+    rmSync(userData, { recursive: true, force: true })
+    rmSync(dirname(quizDir), { recursive: true, force: true })
+  }
+})
+
 test('lange namen en drie schermen passen in het kleinste venster', async () => {
   test.setTimeout(120_000)
   const labels = LABELS.nl
@@ -284,9 +313,11 @@ test('lange namen en drie schermen passen in het kleinste venster', async () => 
     await operator.getByRole('tab', { name: labels.round }).click()
     await check('round-settings')
     await operator.locator('.sidebar .round').nth(1).click()
+    await wholeTitle(operator.locator('#round-title'))
     await operator.locator('.track').first().click()
     await check('fragment')
     await operator.getByRole('button', { name: labels.setup }).click()
+    await wholeTitle(operator.locator('#quiz-title'))
     await check('setup')
     await operator.locator('.topbar').getByRole('button', { name: labels.print }).click()
     await check('print')

@@ -6,6 +6,7 @@ import { createStandingsSlide, isStandingsSlide } from '@shared/scores'
 import type { MediaAsset, Round, Slide } from '@shared/types'
 import Icon from '../../components/Icon.vue'
 import Popover from '../../components/Popover.vue'
+import TitleField from '../../components/TitleField.vue'
 import { locale } from '../../lib/locale'
 import { useMediaImport } from '../../lib/use-media-import'
 import { useSession } from '../../stores/session'
@@ -191,10 +192,10 @@ const empty = computed(() => !props.round.slides.length && !props.round.fragment
       @drop.prevent.stop="onDrop"
     >
       <div class="inner">
-        <input
+        <TitleField
           id="round-title"
           v-model="round.title"
-          class="quiet round-title"
+          class="round-title"
           :aria-label="t('roundTitle')"
         />
 

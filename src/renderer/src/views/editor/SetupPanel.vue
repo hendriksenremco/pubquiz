@@ -8,6 +8,7 @@ import Icon from '../../components/Icon.vue'
 import MediaPicker from '../../components/MediaPicker.vue'
 import Select from '../../components/Select.vue'
 import StagePreview from '../../components/StagePreview.vue'
+import TitleField from '../../components/TitleField.vue'
 import PluginSlot from '../../plugins/PluginSlot.vue'
 import { vFill } from '../../lib/fill'
 import { ask } from '../../lib/confirm'
@@ -108,10 +109,10 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
 <template>
   <div class="setup">
     <div class="body">
-      <input
+      <TitleField
         id="quiz-title"
         v-model="quiz.title"
-        class="quiet page-title"
+        class="page-title"
         :aria-label="t('quizName')"
       />
 
