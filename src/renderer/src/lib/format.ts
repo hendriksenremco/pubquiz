@@ -25,6 +25,11 @@ export function parseTime(text: string): number | undefined {
   return nums.length === 2 ? nums[0] * 60 + nums[1] : nums[0]
 }
 
+/** Maakt van tekst met regeleinden één regel: elk regeleinde wordt een spatie. */
+export function oneLine(text: string): string {
+  return text.replace(/[^\S\r\n]*[\r\n]+\s*/g, ' ')
+}
+
 export function percent(value: number): string {
   return `${Math.round(value * 100)}%`
 }
