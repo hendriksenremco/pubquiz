@@ -20,7 +20,10 @@ const LABELS = {
     round: 'Ronde',
     print: 'Afdrukken',
     edit: 'Bewerk',
-    windowed: 'Venster op deze laptop (om te testen)'
+    windowed: 'Venster op deze laptop (om te testen)',
+    folderName: 'Naam van de map',
+    moveTo: 'Verplaats naar',
+    newFolder: 'Nieuwe map'
   },
   en: {
     quizzes: 'Quizzes',
@@ -30,7 +33,10 @@ const LABELS = {
     round: 'Round',
     print: 'Print',
     edit: 'Edit',
-    windowed: 'Window on this laptop (for testing)'
+    windowed: 'Window on this laptop (for testing)',
+    folderName: 'Folder name',
+    moveTo: 'Move to',
+    newFolder: 'New folder'
   }
 } as const
 
@@ -266,7 +272,150 @@ test('een titel blijft één regel tekst, wat je ook typt of plakt', async () =>
   }
 })
 
-test('lange namen en drie schermen passen in het kleinste venster', async () => {
+for (const locale of ['nl', 'en'] as const) {
+  test(`lange namen en drie schermen passen in het kleinste venster, in het ${locale === 'nl' ? 'Nederlands' : 'Engels'}`, async () => {
+    test.setTimeout(120_000)
+    const labels = LABELS[locale]
+    const device = await fakeController()
+    const userData = tempDir('userdata')
+    const quizDir = copyFixture()
+    busyQuiz(userData, quizDir, device.host)
+
+    // Namen die de quizmaster zelf kiest: lang, en ook een lang woord dat niet kan afbreken.
+    const WORD = 'Muziekherkenningsfragmentenachtergrondgeluidenronde'
+    const file = join(quizDir, 'quiz.json')
+    const quiz = JSON.parse(readFileSync(file, 'utf8'))
+    quiz.title = 'De allerlangste pubquiz van het hele dorp en de wijde omgeving, editie 2026'
+    quiz.screens[0].name = 'Beamer boven de bar in de grote zaal achterin het café'
+    quiz.screens[1].name = WORD
+    quiz.screens.push({ ...quiz.screens[0], id: 'derde', name: 'Derde scherm bij de ingang' })
+    quiz.channels[0].name = WORD
+    quiz.channels[1].name = 'Fragmenten voor de muziekronde via de kleine speakers'
+    quiz.rounds[0].title = 'Ronde 1: algemene kennis, sport, geschiedenis en aardrijkskunde'
+    quiz.rounds[1].title = WORD
+    quiz.plugins.scores.teams[0].name = 'De Slimmeriken van de Tweede Tafel bij het Raam'
+    quiz.plugins.scores.teams[1].name = WORD
+    quiz.folders = [
+      ...(quiz.folders ?? []),
+      {
+        id: 'lange-map',
+        name: "Alle foto's en filmpjes voor de fotoronde over de geschiedenis van ons dorp"
+      },
+      // Zo lang dat hij in de balk bij het slepen echt op meer regels komt.
+      { id: 'lang-woord', name: WORD.repeat(3) }
+    ]
+    writeFileSync(file, JSON.stringify(quiz, null, 2))
+
+    const { app, operator } = await launch(userData, quizDir, {
+      PUBQUIZ_LOCALE: locale,
+      PUBQUIZ_REMOTE_HOST: '127.0.0.1',
+      PUBQUIZ_REMOTE_PORT: '0'
+    })
+
+    const check = async (screen: string) => {
+      await operator.waitForTimeout(400) // previews en overgangen laten uitlopen
+      expect.soft(await overflowing(operator), screen).toEqual([])
+      await snap(
+        operator,
+        `test-results/min-window-long-${locale === 'nl' ? '' : 'en-'}${screen}.png`,
+        {
+          mask: [operator.locator('input[aria-label*="MagicHome"]:visible')]
+        }
+      )
+    }
+
+    try {
+      await shrink(app, operator)
+      await expect(operator.locator('.topbar .name')).toBeVisible()
+
+      // De editor.
+      await operator.locator('.sidebar .round').first().click()
+      await check('slides')
+      await operator.getByRole('tab', { name: labels.round }).click()
+      await check('round-settings')
+      await operator.locator('.sidebar .round').nth(1).click()
+      await wholeTitle(operator.locator('#round-title'))
+      await operator.locator('.track').first().click()
+      await check('fragment')
+      await operator.getByRole('button', { name: labels.setup }).click()
+      await wholeTitle(operator.locator('#quiz-title'))
+      await check('setup')
+      await operator.getByRole('button', { name: /^Media/ }).click()
+      await check('media')
+      await operator.locator('.folder', { hasText: 'Alle foto' }).click()
+      await wholeTitle(operator.getByLabel(labels.folderName))
+      await check('media-folder')
+      await operator.locator('.crumb').click()
+      await operator.locator('.folder', { hasText: WORD }).click()
+      await wholeTitle(operator.getByLabel(labels.folderName))
+      await check('media-folder-word')
+
+      // Tijdens het slepen staan de lange mapnamen helemaal in de balk onderin.
+      await operator.locator('.crumb').click()
+      const sound = operator.locator('.sound').first()
+      await sound.scrollIntoViewIfNeeded()
+      const from = (await sound.boundingBox())!
+      await operator.mouse.move(from.x + 200, from.y + from.height / 2)
+      await operator.mouse.down()
+      await operator.mouse.move(from.x + 260, from.y - 40, { steps: 6 })
+      const dock = operator.getByRole('group', { name: labels.moveTo })
+      const longest = dock.locator('.dock-target', { hasText: WORD })
+      await expect(longest).toBeVisible()
+      await expect(dock).toBeInViewport({ ratio: 1 })
+      expect((await longest.boundingBox())!.height).toBeGreaterThan(40) // meer dan één regel
+      const clipped = await dock
+        .locator('.dock-target')
+        .evaluateAll((targets) =>
+          targets
+            .filter((el) => el.scrollWidth > el.clientWidth || el.scrollHeight > el.clientHeight)
+            .map((el) => el.textContent)
+        )
+      expect.soft(clipped).toEqual([])
+      await check('media-drag-dock')
+      // Terug naar het bestand zelf: loslaten verplaatst dan niets.
+      await operator.mouse.move(from.x + 200, from.y + from.height / 2, { steps: 6 })
+      await operator.mouse.up()
+      await expect(dock).toHaveCount(0)
+
+      await operator.locator('.topbar').getByRole('button', { name: labels.print }).click()
+      await check('print')
+      await operator.locator('.topbar').getByRole('button', { name: labels.print }).click()
+
+      // Het startscherm.
+      await operator.locator('.topbar').getByRole('button', { name: labels.quizzes }).click()
+      await check('home')
+      await operator.getByRole('button', { name: labels.edit, exact: true }).click()
+
+      // De show.
+      await operator.locator('.topbar').getByRole('button', { name: 'Start show' }).click()
+      const sheet = operator.getByRole('dialog', { name: 'Start show' })
+      for (const box of await sheet.locator('.screen .screen-target [role="combobox"]').all()) {
+        await choose(operator, box, labels.windowed)
+      }
+      await check('start')
+      await sheet.getByRole('button', { name: 'Start show' }).click()
+      await expect(operator.locator('.live')).toBeVisible()
+      await operator.locator('.rounds .round').first().click()
+      await expect(operator.locator('.topbar .name')).toBeVisible()
+      // Het derde scherm staat eronder, even groot als de andere, en de slides blijven in beeld.
+      const [first, , third] = await operator.locator('.live .screen').all()
+      expect((await third!.boundingBox())!.width).toBe((await first!.boundingBox())!.width)
+      await expect(operator.locator('.slides-section')).toBeInViewport({ ratio: 1 })
+      await check('show-slides')
+      await operator.locator('.rounds .round').nth(1).click()
+      await check('show-fragments')
+      await operator.locator('.rounds .round').last().click()
+      await check('show-answers')
+    } finally {
+      await app.close()
+      await device.close()
+      rmSync(userData, { recursive: true, force: true })
+      rmSync(dirname(quizDir), { recursive: true, force: true })
+    }
+  })
+}
+
+test('bij heel veel mappen blijft de balk bij het slepen in beeld en is elk doel te bereiken', async () => {
   test.setTimeout(120_000)
   const labels = LABELS.nl
   const device = await fakeController()
@@ -274,27 +423,14 @@ test('lange namen en drie schermen passen in het kleinste venster', async () => 
   const quizDir = copyFixture()
   busyQuiz(userData, quizDir, device.host)
 
-  // Namen die de quizmaster zelf kiest: lang, en ook een lang woord dat niet kan afbreken.
-  const WORD = 'Muziekherkenningsfragmentenachtergrondgeluidenronde'
   const file = join(quizDir, 'quiz.json')
   const quiz = JSON.parse(readFileSync(file, 'utf8'))
-  quiz.title = 'De allerlangste pubquiz van het hele dorp en de wijde omgeving, editie 2026'
-  quiz.screens[0].name = 'Beamer boven de bar in de grote zaal achterin het café'
-  quiz.screens[1].name = WORD
-  quiz.screens.push({ ...quiz.screens[0], id: 'derde', name: 'Derde scherm bij de ingang' })
-  quiz.channels[0].name = WORD
-  quiz.channels[1].name = 'Fragmenten voor de muziekronde via de kleine speakers'
-  quiz.rounds[0].title = 'Ronde 1: algemene kennis, sport, geschiedenis en aardrijkskunde'
-  quiz.rounds[1].title = WORD
-  quiz.plugins.scores.teams[0].name = 'De Slimmeriken van de Tweede Tafel bij het Raam'
-  quiz.plugins.scores.teams[1].name = WORD
   quiz.folders = [
     ...(quiz.folders ?? []),
-    {
-      id: 'lange-map',
-      name: "Alle foto's en filmpjes voor de fotoronde over de geschiedenis van ons dorp"
-    },
-    { id: 'lang-woord', name: WORD + WORD }
+    ...Array.from({ length: 40 }, (_, i) => ({
+      id: `map-${i}`,
+      name: `Foto's en filmpjes voor de fotoronde over het dorp, deel ${i + 1}`
+    }))
   ]
   writeFileSync(file, JSON.stringify(quiz, null, 2))
 
@@ -303,94 +439,33 @@ test('lange namen en drie schermen passen in het kleinste venster', async () => 
     PUBQUIZ_REMOTE_PORT: '0'
   })
 
-  const check = async (screen: string) => {
-    await operator.waitForTimeout(400) // previews en overgangen laten uitlopen
-    expect.soft(await overflowing(operator), screen).toEqual([])
-    await snap(operator, `test-results/min-window-long-${screen}.png`, {
-      mask: [operator.locator('input[aria-label*="MagicHome"]:visible')]
-    })
-  }
-
   try {
     await shrink(app, operator)
-    await expect(operator.locator('.topbar .name')).toBeVisible()
-
-    // De editor.
-    await operator.locator('.sidebar .round').first().click()
-    await check('slides')
-    await operator.getByRole('tab', { name: labels.round }).click()
-    await check('round-settings')
-    await operator.locator('.sidebar .round').nth(1).click()
-    await wholeTitle(operator.locator('#round-title'))
-    await operator.locator('.track').first().click()
-    await check('fragment')
-    await operator.getByRole('button', { name: labels.setup }).click()
-    await wholeTitle(operator.locator('#quiz-title'))
-    await check('setup')
     await operator.getByRole('button', { name: /^Media/ }).click()
-    await check('media')
-    await operator.locator('.folder', { hasText: 'Alle foto' }).click()
-    await wholeTitle(operator.getByLabel('Naam van de map'))
-    await check('media-folder')
-    await operator.locator('.crumb').click()
-    await operator.locator('.folder', { hasText: WORD }).click()
-    await wholeTitle(operator.getByLabel('Naam van de map'))
-    await check('media-folder-word')
-
-    // Tijdens het slepen staan de lange mapnamen helemaal in de balk onderin.
-    await operator.locator('.crumb').click()
     const sound = operator.locator('.sound').first()
     await sound.scrollIntoViewIfNeeded()
     const from = (await sound.boundingBox())!
     await operator.mouse.move(from.x + 200, from.y + from.height / 2)
     await operator.mouse.down()
     await operator.mouse.move(from.x + 260, from.y - 40, { steps: 6 })
-    const dock = operator.getByRole('group', { name: 'Verplaats naar' })
-    await expect(dock.locator('.dock-target', { hasText: WORD })).toBeVisible()
+
+    const dock = operator.getByRole('group', { name: labels.moveTo })
     await expect(dock).toBeInViewport({ ratio: 1 })
-    const clipped = await dock
-      .locator('.dock-target')
-      .evaluateAll((targets) =>
-        targets
-          .filter((el) => el.scrollWidth > el.clientWidth || el.scrollHeight > el.clientHeight)
-          .map((el) => el.textContent)
-      )
-    expect.soft(clipped).toEqual([])
-    await check('media-drag-dock')
-    // Terug naar het bestand zelf: loslaten verplaatst dan niets.
-    await operator.mouse.move(from.x + 200, from.y + from.height / 2, { steps: 6 })
+    expect((await dock.boundingBox())!.height).toBeLessThanOrEqual(HEIGHT / 2)
+    await operator.waitForTimeout(400) // de overgang van de balk laten uitlopen
+    await snap(operator, 'test-results/min-window-many-folders-drag-dock.png')
+
+    // Het laatste doel staat onderaan de balk: daarheen schuiven en erop mikken.
+    await dock.evaluate((el) => (el.scrollTop = el.scrollHeight))
+    const last = (await dock.locator('.dock-target').last().boundingBox())!
+    await operator.mouse.move(last.x + last.width / 2, last.y + last.height / 2, { steps: 6 })
+    await expect(dock.locator('.dock-target.drop')).toHaveText(labels.newFolder)
+
+    // Boven de balk loslaten: dan verplaatst er niets.
+    await operator.mouse.move(last.x + last.width / 2, 10, { steps: 6 })
+    await expect(dock.locator('.dock-target.drop')).toHaveCount(0)
     await operator.mouse.up()
     await expect(dock).toHaveCount(0)
-
-    await operator.locator('.topbar').getByRole('button', { name: labels.print }).click()
-    await check('print')
-    await operator.locator('.topbar').getByRole('button', { name: labels.print }).click()
-
-    // Het startscherm.
-    await operator.locator('.topbar').getByRole('button', { name: labels.quizzes }).click()
-    await check('home')
-    await operator.getByRole('button', { name: labels.edit, exact: true }).click()
-
-    // De show.
-    await operator.locator('.topbar').getByRole('button', { name: 'Start show' }).click()
-    const sheet = operator.getByRole('dialog', { name: 'Start show' })
-    for (const box of await sheet.locator('.screen .screen-target [role="combobox"]').all()) {
-      await choose(operator, box, labels.windowed)
-    }
-    await check('start')
-    await sheet.getByRole('button', { name: 'Start show' }).click()
-    await expect(operator.locator('.live')).toBeVisible()
-    await operator.locator('.rounds .round').first().click()
-    await expect(operator.locator('.topbar .name')).toBeVisible()
-    // Het derde scherm staat eronder, even groot als de andere, en de slides blijven in beeld.
-    const [first, , third] = await operator.locator('.live .screen').all()
-    expect((await third!.boundingBox())!.width).toBe((await first!.boundingBox())!.width)
-    await expect(operator.locator('.slides-section')).toBeInViewport({ ratio: 1 })
-    await check('show-slides')
-    await operator.locator('.rounds .round').nth(1).click()
-    await check('show-fragments')
-    await operator.locator('.rounds .round').last().click()
-    await check('show-answers')
   } finally {
     await app.close()
     await device.close()
