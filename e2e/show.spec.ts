@@ -126,7 +126,8 @@ test('wisselt scherm tijdens een ronde en valt daarna terug', async () => {
   await operator.locator('.rounds .round').nth(1).click()
   await expect(operator.locator('.now-title')).toHaveText('Ronde 2: muziek')
   await expect.poll(() => activeVideo(beamer)).toContain('music-loop.mp4')
-  await expect(beamer.locator('.slide .title')).toHaveText('Ronde 2')
+  // De titel van Ronde 1 kan nog aan het uitfaden zijn, dus er staan even twee slides.
+  await expect(beamer.locator('.slide .title', { hasText: 'Ronde 2' }).first()).toBeVisible()
   // De preview op de laptop volgt mee.
   await expect.poll(() => activeVideo(operator)).toContain('music-loop.mp4')
 
