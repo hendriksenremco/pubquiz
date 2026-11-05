@@ -3,7 +3,19 @@
 Bij elke release komt hier bovenaan een kop met het versienummer uit `package.json` en de datum.
 Een unit-test (`src/main/about.test.ts`) controleert dat de bovenste kop bij die versie hoort.
 
-## 0.1.0 (nog niet uitgebracht)
+## 0.2.0 (nog niet uitgebracht)
+
+- QuizNote spreekt Engels: de app volgt de taal van je Mac (Nederlands of Engels), en de rondleiding is er in beide talen.
+- Aftellen op de schermen: druk op T, of op de knop Aftellen op de Mac of je telefoon. De tijd stel je in per quiz of per ronde.
+- Rondes importeren uit een rondebestand (`.quiznoteronde`): met Importeer ronde… in de editor, door het bestand op de editor te slepen of door erop te dubbelklikken in Finder.
+- Nieuwe plug-in Tussenstand, standaard uit: teams en hun punten per ronde, de stand op een slide, en punten invullen tijdens de show.
+- Nieuwe quizzen heten `.quiznote` en staan in Documenten/QuizNote. Quizzen van 0.1.0 (`.pubquiz`) openen gewoon.
+- Anoniem meten, alleen als je dat goedvindt: de app vraagt het bij de eerste start, en je zet het aan of uit bij Instellingen. Nooit de inhoud van je quiz of je bestanden.
+- Een rustigere interface: knoppen met een icoon en tekst, overal dezelfde woorden, rood alleen voor wat live is en meldingen in geel.
+- Afstandsbediening: uitleg bij de QR-code over open wifi en over Nieuwe code.
+- Opgelost: wat je wijzigt terwijl de quiz wordt opgeslagen, blijft bewaard; een nieuwe preview blijft spelen als hij een andere onderbreekt.
+
+## 0.1.0 (31 oktober 2026)
 
 De eerste versie, alleen voor macOS en in het Nederlands.
 

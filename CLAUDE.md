@@ -12,7 +12,7 @@ Wat er nog moet gebeuren, staat als **issues** op GitHub (`gh issue list`). Hoe 
 
 ## Stand op 31 oktober 2026
 
-- **Versie:** 0.1.0, alleen voor macOS en alleen in het Nederlands.
+- **Versie:** 0.2.0 in `package.json`, nog niet uitgebracht (wat erin zit: `CHANGELOG.md`). De laatste release is 0.1.0: alleen macOS, alleen Nederlands. De tag voor een release zet Remco, of hij geeft er toestemming voor.
 - **Release:** 0.1.0 staat op GitHub Releases, gesigneerd en genotariseerd (`.github/workflows/release.yml`, bij een tag `v*`). Lokaal maakt `pnpm build:mac` een ongesigneerde dmg.
 - **Site:** live op https://quiznote.app (Firebase Hosting), met een downloadknop naar de nieuwste release. De site heeft een eigen repo: `~/Documents/pubquiz-site`, met een eigen CLAUDE.md.
 - **Laatst samengevoegd (30 oktober):** #12 en #13. Kijk met `gh pr list --state all` wat er sindsdien is gebeurd.

@@ -1,6 +1,6 @@
 # Maakt een release: bouwt QuizNote op macOS, signeert met de Developer ID van Remco,
 # notariseert bij Apple en zet de dmg op GitHub Releases.
-# Start met een tag (git tag v0.1.0 && git push origin v0.1.0) of met de hand.
+# Start met een tag (git tag v0.2.0 && git push origin v0.2.0) of met de hand.
 name: Release
 
 on:
@@ -79,5 +79,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           VERSION="v$(node -p "require('./package.json').version")"
-          gh release view "$VERSION" >/dev/null 2>&1 || gh release create "$VERSION" --title "QuizNote $VERSION" --notes "QuizNote $VERSION voor macOS (Apple Silicon en Intel)."
+          # De notities komen uit het deel van CHANGELOG.md bij deze versie.
+          {
+            echo "QuizNote $VERSION voor macOS (Apple Silicon en Intel)."
+            echo
+            awk -v v="${VERSION#v}" '$0 ~ "^## " { if (inside) exit; inside = index($0, "## " v " ") == 1 || $0 == "## " v; next } inside' CHANGELOG.md
+          } > "$RUNNER_TEMP/notes.md"
+          gh release view "$VERSION" >/dev/null 2>&1 || gh release create "$VERSION" --title "QuizNote $VERSION" --notes-file "$RUNNER_TEMP/notes.md"
           gh release upload "$VERSION" dist/QuizNote.dmg dist/QuizNote-*-mac.zip dist/latest-mac.yml --clobber

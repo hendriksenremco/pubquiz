@@ -128,7 +128,7 @@ async function call(tool: string, input: unknown): Promise<unknown> {
 
 async function main(): Promise<void> {
   const server = new Server(
-    { name: 'quiznote', version: '0.1.0' },
+    { name: 'quiznote', version: '0.2.0' },
     {
       capabilities: { tools: {} },
       instructions:
