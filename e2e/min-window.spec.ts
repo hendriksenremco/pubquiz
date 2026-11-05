@@ -466,6 +466,62 @@ test('bij heel veel mappen blijft de balk bij het slepen in beeld en is elk doel
     await expect(dock.locator('.dock-target.drop')).toHaveCount(0)
     await operator.mouse.up()
     await expect(dock).toHaveCount(0)
+
+    // Een plek waar de balk straks over een geluidsbestand komt te liggen, gemeten tijdens een
+    // eerste keer slepen vanaf de onderkant van de pagina.
+    const rows = operator.locator('.sound')
+    const count = await rows.count()
+    await rows.last().scrollIntoViewIfNeeded()
+    const bottom = (await rows.last().boundingBox())!
+    await operator.mouse.move(bottom.x + 200, bottom.y + bottom.height / 2)
+    await operator.mouse.down()
+    await operator.mouse.move(bottom.x + 206, bottom.y + bottom.height / 2, { steps: 3 })
+    await expect(dock).toBeVisible()
+    const spot = await dock.evaluate((el) => {
+      for (const target of el.querySelectorAll('.dock-target')) {
+        const r = target.getBoundingClientRect()
+        const [x, y] = [r.x + r.width / 2, r.y + r.height / 2]
+        const below = document.elementsFromPoint(x, y).find((e) => !el.contains(e))
+        if (below?.closest('.sound') && !below.closest('button')) {
+          return { x, y, name: target.textContent!.trim() }
+        }
+      }
+      return null
+    })
+    await operator.mouse.move(bottom.x + 200, 10, { steps: 6 })
+    await operator.mouse.up()
+    await expect(dock).toHaveCount(0)
+    expect(spot, 'de balk komt over een geluidsbestand te liggen').not.toBeNull()
+    const { x, y, name } = spot!
+    const target = dock.locator('.dock-target', { hasText: name })
+
+    // Het doel dat onder de muis verschijnt, licht niet op en loslaten verplaatst niets.
+    await operator.mouse.move(x, y)
+    await operator.mouse.down()
+    await operator.mouse.move(x + 3, y, { steps: 3 })
+    await expect(dock).toBeVisible()
+    await operator.waitForTimeout(300)
+    await operator.mouse.move(x + 6, y, { steps: 3 })
+    await operator.waitForTimeout(300)
+    await expect(dock.locator('.dock-target.drop')).toHaveCount(0)
+    await operator.mouse.up()
+    await expect(dock).toHaveCount(0)
+    await expect(rows).toHaveCount(count)
+
+    // Is de muis er een keer vanaf geweest, dan licht het doel wel op. Boven de balk loslaten
+    // verplaatst daarna niets.
+    await operator.mouse.move(x, y)
+    await operator.mouse.down()
+    await operator.mouse.move(x + 3, y, { steps: 3 })
+    await expect(dock).toBeVisible()
+    await operator.mouse.move(x, 10, { steps: 6 })
+    await operator.mouse.move(x, y, { steps: 6 })
+    await expect(target).toHaveClass(/\bdrop\b/)
+    await operator.mouse.move(x, 10, { steps: 6 })
+    await expect(dock.locator('.dock-target.drop')).toHaveCount(0)
+    await operator.mouse.up()
+    await expect(dock).toHaveCount(0)
+    await expect(rows).toHaveCount(count)
   } finally {
     await app.close()
     await device.close()

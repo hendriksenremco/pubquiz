@@ -146,29 +146,44 @@ function isAssetDrag(event: DragEvent) {
 
 let dragToken = 0
 
+/**
+ * Het doel in de balk dat onder de muis verscheen toen je begon te slepen. Daar heb je niet op
+ * gemikt: het licht niet op en loslaten doet niets, tot de muis er een keer vanaf is geweest.
+ */
+let targetUnderStart: string | null = null
+
+function dockTargetAt(x: number, y: number) {
+  const el = document.elementFromPoint(x, y)?.closest<HTMLElement>('.dock-target')
+  return el?.dataset.target ?? null
+}
+
 function onDragStart(event: DragEvent) {
   if (!isAssetDrag(event)) return
   const id = event.dataTransfer!.getData(ASSET_TYPE)
+  const { clientX, clientY } = event
   const rect = page.value!.getBoundingClientRect()
   const token = ++dragToken
   // Een tik later: de pagina aanpassen tijdens dragstart kan het slepen in Chromium afbreken.
-  setTimeout(() => {
+  setTimeout(async () => {
     if (token !== dragToken) return
     draggingId.value = id
     dockX.value = rect.left + rect.width / 2
     dockWidth.value = Math.min(rect.width, 900)
+    await nextTick()
+    if (token === dragToken) targetUnderStart = dockTargetAt(clientX, clientY)
   })
 }
 
 function endDrag() {
   dragToken++
+  targetUnderStart = null
   draggingId.value = null
   dropFolder.value = null
 }
 
 /** `target`: een map-id, 'root' (Media zelf) of 'new' (een nieuwe map). */
 function onTargetDragOver(event: DragEvent, target: string) {
-  if (!isAssetDrag(event)) return
+  if (!isAssetDrag(event) || target === targetUnderStart) return
   event.preventDefault()
   if (event.dataTransfer) event.dataTransfer.dropEffect = 'move'
   dropFolder.value = target
@@ -177,11 +192,13 @@ function onTargetDragOver(event: DragEvent, target: string) {
 /** Niet uitgaan als de muis alleen naar iets binnen het doel gaat (bv. het icoon). */
 function onTargetDragLeave(event: DragEvent, target: string) {
   const inside = (event.currentTarget as Node).contains(event.relatedTarget as Node | null)
-  if (dropFolder.value === target && !inside) dropFolder.value = null
+  if (inside) return
+  if (dropFolder.value === target) dropFolder.value = null
+  if (targetUnderStart === target) targetUnderStart = null
 }
 
 function onTargetDrop(event: DragEvent, target: string) {
-  const asset = draggedAsset(event)
+  const asset = target === targetUnderStart ? null : draggedAsset(event)
   endDrag()
   if (!asset) return
   event.preventDefault()
@@ -344,6 +361,7 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
           :key="t.key"
           class="dock-target"
           :class="{ drop: dropFolder === t.key }"
+          :data-target="t.key"
           @dragenter="onTargetDragOver($event, t.key)"
           @dragover="onTargetDragOver($event, t.key)"
           @dragleave="onTargetDragLeave($event, t.key)"
@@ -637,16 +655,14 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
   color: var(--accent-ink);
 }
 
+/* Alleen infaden: de doelen staan meteen op hun plek, zie targetUnderStart. */
 .dock-enter-active,
 .dock-leave-active {
-  transition:
-    opacity 0.15s ease,
-    transform 0.15s ease;
+  transition: opacity 0.15s ease;
 }
 
 .dock-enter-from,
 .dock-leave-to {
   opacity: 0;
-  transform: translateY(8px);
 }
 </style>
