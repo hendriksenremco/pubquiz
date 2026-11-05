@@ -134,7 +134,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
             <ScreenStage :quiz="quiz" :state="state" :screen-id="slot.id" preview />
           </div>
           <figcaption class="row">
-            <span class="grow screen-name">{{ slot.name }}</span>
+            <span class="grow screen-name" :title="slot.name">{{ slot.name }}</span>
             <button
               class="btn btn-ghost btn-sm"
               :class="{ active: state.blackout.includes(slot.id) }"
@@ -346,9 +346,10 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
   font-size: 22px;
 }
 
+/* Een raster: een derde scherm op de volgende regel is even groot als de andere. */
 .screens {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 16px;
 }
 
@@ -356,7 +357,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
   display: flex;
   flex-direction: column;
   gap: 6px;
-  flex: 1 1 220px;
+  min-width: 0;
   max-width: 560px;
   margin: 0;
 }
@@ -374,6 +375,9 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 
 .screen-name {
   font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .section-row {

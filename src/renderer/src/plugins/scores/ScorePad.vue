@@ -88,6 +88,7 @@ td {
 td.team {
   min-width: 180px;
   font-weight: 550;
+  overflow-wrap: anywhere;
 }
 .points {
   width: 64px;
