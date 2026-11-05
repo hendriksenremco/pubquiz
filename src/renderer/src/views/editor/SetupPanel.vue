@@ -124,13 +124,8 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
             <StagePreview :screen="slot" :caption="false" class="screen-preview" />
             <div class="screen-foot">
               <input v-model="slot.name" class="quiet screen-name" :aria-label="t('screenName')" />
-              <button
-                class="btn btn-ghost btn-sm btn-icon remove-screen"
-                :aria-label="t('removeScreen')"
-                :title="t('removeScreen')"
-                @click="removeScreen(slot.id)"
-              >
-                <Icon name="trash" :size="14" />
+              <button class="btn btn-ghost btn-sm remove-screen" @click="removeScreen(slot.id)">
+                <Icon name="trash" :size="14" /> {{ t('removeScreen') }}
               </button>
             </div>
             <ContentChip v-model="slot.default" :label="t('shows')" />
@@ -227,13 +222,8 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
                 class="grow"
               />
               <span class="mono val">{{ percent(c.volume) }}</span>
-              <button
-                class="btn btn-ghost btn-sm btn-icon del"
-                :aria-label="t('removeChannel')"
-                :title="t('removeChannel')"
-                @click="removeChannel(c.id)"
-              >
-                <Icon name="trash" :size="14" />
+              <button class="btn btn-ghost btn-sm del" @click="removeChannel(c.id)">
+                <Icon name="trash" :size="14" /> {{ t('removeChannel') }}
               </button>
             </div>
             <button class="btn btn-ghost btn-sm add-channel" @click="addChannel">
@@ -324,6 +314,7 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
 }
 
 .remove-screen {
+  flex: none;
   color: var(--muted);
 }
 
@@ -361,6 +352,7 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
 }
 
 .screen-name {
+  min-width: 0;
   font: 650 15px var(--display);
 }
 
@@ -504,6 +496,7 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
 }
 
 .del {
+  flex: none;
   color: var(--muted);
 }
 </style>
