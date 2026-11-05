@@ -60,7 +60,7 @@ test('een vraag kan alleen zijn nummer in beeld tonen', async () => {
   const question = operator.locator('.slide-list .item').nth(1)
   await question.locator('.thumb').click()
   await operator
-    .getByRole('group', { name: 'In beeld' })
+    .getByRole('group', { name: 'Op de slide', exact: true })
     .getByRole('button', { name: 'Alleen het nummer' })
     .click()
   await expect(question).toContainText('alleen het nummer in beeld')
