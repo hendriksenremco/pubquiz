@@ -131,9 +131,15 @@ function waitReady(i: number, layer: Layer): Promise<void> {
 watch(
   contentKey,
   async (key) => {
-    const current = layers[active.value]
-    if (current?.key === key) return
     const token = ++generation
+    const current = layers[active.value]
+    if (current?.key === key) {
+      // Terug naar wat al in beeld staat: wat nog laadt, mag niet alsnog infaden.
+      const pending = 1 - active.value
+      videos[pending]?.pause()
+      layers[pending] = null
+      return
+    }
     const target = current ? 1 - active.value : active.value
     const c = content.value
     const layer: Layer = {

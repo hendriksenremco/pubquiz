@@ -13,7 +13,7 @@ Een unit-test (`src/main/about.test.ts`) controleert dat de bovenste kop bij die
 - Anoniem meten, alleen als je dat goedvindt: de app vraagt het bij de eerste start, en je zet het aan of uit bij Instellingen. Nooit de inhoud van je quiz of je bestanden.
 - Een rustigere interface: knoppen met een icoon en tekst, overal dezelfde woorden, rood alleen voor wat live is en meldingen in geel.
 - Afstandsbediening: uitleg bij de QR-code over open wifi en over Nieuwe code.
-- Opgelost: wat je wijzigt terwijl de quiz wordt opgeslagen, blijft bewaard; een nieuwe preview blijft spelen als hij een andere onderbreekt.
+- Opgelost: wat je wijzigt terwijl de quiz wordt opgeslagen, blijft bewaard; een nieuwe preview blijft spelen als hij een andere onderbreekt; ga je snel terug terwijl een nieuwe video nog laadt, dan komt die video niet alsnog op het scherm.
 
 ## 0.1.0 (31 oktober 2026)
 
