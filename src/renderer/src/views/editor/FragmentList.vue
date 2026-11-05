@@ -57,14 +57,15 @@ function timing(f: Fragment) {
     >
       <button
         type="button"
-        class="play"
-        :class="{ playing: preview.playingId.value === f.id }"
+        class="btn btn-sm play"
+        :class="{ 'btn-primary': preview.playingId.value === f.id }"
         :aria-label="
           preview.playingId.value === f.id ? t('stop') : t('listenTo', { name: f.label })
         "
         @click.stop="play(f)"
       >
         <Icon :name="preview.playingId.value === f.id ? 'stop' : 'play'" :size="12" />
+        {{ preview.playingId.value === f.id ? t('stop') : t('listen') }}
       </button>
       <div class="text">
         <input
@@ -114,26 +115,10 @@ function timing(f: Fragment) {
   background: var(--surface-2);
 }
 
+/* Even breed bij Luister en Stop, zodat de rij niet verspringt. */
 .play {
   flex: none;
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  border: 0;
-  border-radius: 50%;
-  background: var(--surface-3);
-  color: var(--text);
-  cursor: pointer;
-}
-
-.play:hover {
-  background: var(--surface-4);
-}
-
-.play.playing {
-  background: var(--accent);
-  color: var(--accent-ink);
+  min-width: 76px;
 }
 
 .text {

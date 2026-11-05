@@ -152,7 +152,6 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
               class="art"
               :class="{ playing: preview.playingId.value === 'background' }"
               :disabled="!bgAsset"
-              :aria-label="preview.playingId.value === 'background' ? t('stop') : t('listen')"
               @click="preview.toggle('background', bgAsset)"
             >
               <Icon
@@ -161,6 +160,7 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
                 "
                 :size="22"
               />
+              {{ preview.playingId.value === 'background' ? t('stop') : t('listen') }}
             </button>
             <div class="bg-main">
               <span class="tile-title">{{ t('background') }}</span>
@@ -410,12 +410,15 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
   flex-shrink: 0;
   display: grid;
   place-items: center;
+  align-content: center;
+  gap: 6px;
   width: 112px;
   height: 112px;
   border: 0;
   border-radius: var(--radius-lg);
   background: var(--surface-3);
   color: var(--text);
+  font-size: 12px;
   cursor: pointer;
 }
 
