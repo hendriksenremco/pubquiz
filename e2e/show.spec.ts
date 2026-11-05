@@ -117,6 +117,12 @@ test('wisselt scherm tijdens een ronde en valt daarna terug', async () => {
   // Tijdens de show kun je niet per ongeluk naar het overzicht.
   await expect(operator.getByRole('button', { name: 'Quizzen' })).toBeDisabled()
 
+  // Een slide met alleen een nummer zegt wat hij is, naast zijn plek in de lijst.
+  await operator.locator('.rounds .round').nth(0).click()
+  const number = operator.locator('.slides-section .slide').nth(3)
+  await expect(number.locator('.slide-kind')).toHaveText('3')
+  await expect(number.locator('.slide-text')).toHaveText('Nummer 2')
+
   await operator.locator('.rounds .round').nth(1).click()
   await expect(operator.locator('.now-title')).toHaveText('Ronde 2: muziek')
   await expect.poll(() => activeVideo(beamer)).toContain('music-loop.mp4')

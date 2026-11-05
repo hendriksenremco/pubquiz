@@ -59,6 +59,9 @@ function slideText(round: Round, slide: Slide): string {
       ? t('imageSlideTitled', { number, title: slide.title })
       : t('imageSlide', { number })
   }
+  // Alleen een getal zegt niets naast de plek in de lijst; andere tekst blijft zoals hij is.
+  if (slide.layout === 'number' && /^\d+$/.test(slide.title ?? ''))
+    return t('numberSlide', { number: slide.title! })
   return slide.title || slide.body || t('emptySlide')
 }
 
