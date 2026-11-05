@@ -191,6 +191,11 @@ for (const locale of ['nl', 'en'] as const) {
       const [beamer, tv] = await operator.locator('.live .screen').all()
       expect((await beamer!.boundingBox())!.y).toBe((await tv!.boundingBox())!.y)
       await expect(operator.locator('.slides-section')).toBeInViewport({ ratio: 1 })
+      // De naam van de quiz past, en de vensterknoppen van macOS houden hun plek.
+      const name = operator.locator('.topbar .name')
+      await expect(name).toBeVisible()
+      expect(await name.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true)
+      expect((await operator.locator('.traffic-space').boundingBox())!.width).toBe(64)
       await check('show-slides')
       await operator.locator('.rounds .round').nth(1).click()
       await check('show-fragments')

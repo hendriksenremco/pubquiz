@@ -4,7 +4,6 @@ import { defineMessages } from '@shared/i18n'
 export const OPERATOR_MESSAGES = defineMessages(
   {
     untitled: 'Naamloze quiz',
-    stopShowFirst: 'Stop eerst de show',
     quizzes: 'Quizzen',
     live: 'Live',
     toShow: 'Naar de show',
@@ -18,7 +17,6 @@ export const OPERATOR_MESSAGES = defineMessages(
   {
     en: {
       untitled: 'Untitled quiz',
-      stopShowFirst: 'Stop the show first',
       quizzes: 'Quizzes',
       live: 'Live',
       toShow: 'Back to show',
