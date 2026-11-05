@@ -356,7 +356,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
   display: flex;
   flex-direction: column;
   gap: 6px;
-  flex: 1 1 280px;
+  flex: 1 1 220px;
   max-width: 560px;
   margin: 0;
 }
