@@ -97,7 +97,7 @@ A tag `v*` starts `.github/workflows/release.yml`. It builds a universal app on 
 Before a release, update the top heading of [CHANGELOG.md](CHANGELOG.md): a unit test checks that it matches the version in `package.json`.
 
 ```sh
-git tag v0.1.0 && git push origin v0.1.0
+git tag v0.2.0 && git push origin v0.2.0
 ```
 
 ## License
