@@ -336,6 +336,32 @@ test('lange namen en drie schermen passen in het kleinste venster', async () => 
     await operator.locator('.folder', { hasText: WORD }).click()
     await wholeTitle(operator.getByLabel('Naam van de map'))
     await check('media-folder-word')
+
+    // Tijdens het slepen staan de lange mapnamen helemaal in de balk onderin.
+    await operator.locator('.crumb').click()
+    const sound = operator.locator('.sound').first()
+    await sound.scrollIntoViewIfNeeded()
+    const from = (await sound.boundingBox())!
+    await operator.mouse.move(from.x + 200, from.y + from.height / 2)
+    await operator.mouse.down()
+    await operator.mouse.move(from.x + 260, from.y - 40, { steps: 6 })
+    const dock = operator.getByRole('group', { name: 'Verplaats naar' })
+    await expect(dock.locator('.dock-target', { hasText: WORD })).toBeVisible()
+    await expect(dock).toBeInViewport({ ratio: 1 })
+    const clipped = await dock
+      .locator('.dock-target')
+      .evaluateAll((targets) =>
+        targets
+          .filter((el) => el.scrollWidth > el.clientWidth || el.scrollHeight > el.clientHeight)
+          .map((el) => el.textContent)
+      )
+    expect.soft(clipped).toEqual([])
+    await check('media-drag-dock')
+    // Terug naar het bestand zelf: loslaten verplaatst dan niets.
+    await operator.mouse.move(from.x + 200, from.y + from.height / 2, { steps: 6 })
+    await operator.mouse.up()
+    await expect(dock).toHaveCount(0)
+
     await operator.locator('.topbar').getByRole('button', { name: labels.print }).click()
     await check('print')
     await operator.locator('.topbar').getByRole('button', { name: labels.print }).click()

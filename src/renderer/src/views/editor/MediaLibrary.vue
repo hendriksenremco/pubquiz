@@ -37,6 +37,7 @@ const previewId = ref<string | null>(null)
 const page = ref<HTMLElement | null>(null)
 const draggingId = ref<string | null>(null)
 const dockX = ref(0)
+const dockWidth = ref(0)
 
 const FILTERS: { value: MediaKind | 'all'; label: string }[] = [
   { value: 'all', label: t('all') },
@@ -155,6 +156,7 @@ function onDragStart(event: DragEvent) {
     if (token !== dragToken) return
     draggingId.value = id
     dockX.value = rect.left + rect.width / 2
+    dockWidth.value = Math.min(rect.width, 900)
   })
 }
 
@@ -334,7 +336,7 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
         class="dock"
         role="group"
         :aria-label="t('moveTo')"
-        :style="{ left: `${dockX}px` }"
+        :style="{ left: `${dockX}px`, maxWidth: `${dockWidth}px` }"
       >
         <span class="dock-label">{{ t('moveTo') }}</span>
         <div
@@ -585,7 +587,8 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
   font-size: 12px;
 }
 
-/* Verschijnt tijdens het slepen, onderin over de pagina heen (niets schuift op). */
+/* Verschijnt tijdens het slepen, onderin over de pagina heen (niets schuift op). Hij staat
+   gecentreerd op de pagina en is nooit breder dan die, dus hij valt niet uit het venster. */
 .dock {
   position: fixed;
   bottom: 28px;
@@ -594,7 +597,7 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
-  max-width: min(900px, calc(100vw - 48px));
+  width: max-content;
   padding: 8px 8px 8px 16px;
   border-radius: var(--radius-xl);
   background: var(--surface-3);
@@ -614,11 +617,13 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 34px;
-  padding: 0 14px;
-  border-radius: 999px;
+  min-width: 0;
+  min-height: 34px;
+  padding: 8px 14px;
+  border-radius: 17px;
   background: var(--surface-4);
   font-weight: 600;
+  overflow-wrap: anywhere;
   transition:
     background 0.1s,
     color 0.1s;
