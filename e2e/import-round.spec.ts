@@ -162,6 +162,8 @@ test('meldt een fout rondebestand en verandert niets', async () => {
   // Wacht tot de melding helemaal is ingeschoven, anders staat hij nog onzichtbaar op de foto.
   await expect(notice).not.toHaveClass(/notice-enter/)
   await snap(operator, 'test-results/notice-error.png')
+  await notice.getByRole('button', { name: 'Sluit' }).click()
+  await expect(notice).toHaveCount(0)
   expect(savedQuiz().rounds).toHaveLength(rounds)
 })
 
