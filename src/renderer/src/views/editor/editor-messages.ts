@@ -64,7 +64,7 @@ export const FRAGMENT_MESSAGES = defineMessages(
     fadeInSeconds: 'Fade-in in seconden',
     fadeOut: 'Fade-out',
     fadeOutSeconds: 'Fade-out in seconden',
-    seconds: 's',
+    seconds: 'seconden',
     moveUp: 'Omhoog',
     moveDown: 'Omlaag',
     remove: 'Verwijder fragment'
@@ -91,7 +91,7 @@ export const FRAGMENT_MESSAGES = defineMessages(
       fadeInSeconds: 'Fade in, in seconds',
       fadeOut: 'Fade out',
       fadeOutSeconds: 'Fade out, in seconds',
-      seconds: 's',
+      seconds: 'seconds',
       moveUp: 'Move up',
       moveDown: 'Move down',
       remove: 'Delete clip'
