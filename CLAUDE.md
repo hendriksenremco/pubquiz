@@ -251,8 +251,8 @@ Nieuwe optionele koppelingen, zoals Spotify of YouTube, volgen hetzelfde patroon
 
 ## Agent en CI
 
-- **CI:** elke pull request naar `master` draait op macOS in GitHub Actions (`.github/workflows/ci.yml`): typecheck, unit-tests, e2e-tests en een ongesigneerde dmg.
-- **Screenshots:** de CI draait de e2e-tests ook op `master` en vergelijkt de screenshots (`scripts/screenshot-diff.sh`). De verschillen, in amber, komen als één commentaar op de pull request; de plaatjes staan op de branch `pr-screenshots`. Kleine verschillen tellen niet; bijstellen met `FUZZ` en `MIN_PIXELS`.
+- **CI:** elke pull request naar `master` draait in GitHub Actions (`.github/workflows/ci.yml`): typecheck, unit-tests en e2e-tests op Linux (Electron onder `xvfb-run`, met `ELECTRON_DISABLE_SANDBOX`). De ongesigneerde dmg wordt alleen op macOS gebouwd als de pull request iets aan het verpakken verandert (job `packaging`).
+- **Screenshots:** komen uit dezelfde e2e-run, op Linux; fonts wijken dus iets af van een Mac. De CI draait de e2e-tests ook op `master` en vergelijkt de screenshots (`scripts/screenshot-diff.sh`). De verschillen, in amber, komen als één commentaar op de pull request; de plaatjes staan op de branch `pr-screenshots`. Kleine verschillen tellen niet; bijstellen met `FUZZ` en `MIN_PIXELS`.
 - **Agent:** op de thuisserver werkt doorlopend een Claude-sessie zelf aan de issues met het label `claude`: is een run klaar, dan begint de volgende. Hoe en wat staat in `agent/`. Zijn pull requests hebben het label `agent`, zijn vragen aan Remco zijn issues met het label `vraag`.
 
 ## Meer
