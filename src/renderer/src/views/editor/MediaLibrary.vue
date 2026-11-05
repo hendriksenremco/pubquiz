@@ -588,7 +588,8 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
 }
 
 /* Verschijnt tijdens het slepen, onderin over de pagina heen (niets schuift op). Hij staat
-   gecentreerd op de pagina en is nooit breder dan die, dus hij valt niet uit het venster. */
+   gecentreerd op de pagina en is nooit breder dan die, dus hij valt niet uit het venster.
+   Bij heel veel mappen schuift hij zelf, zodat er boven hem nog pagina overblijft. */
 .dock {
   position: fixed;
   bottom: 28px;
@@ -598,6 +599,8 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
   align-items: center;
   gap: 6px;
   width: max-content;
+  max-height: 50vh;
+  overflow-y: auto;
   padding: 8px 8px 8px 16px;
   border-radius: var(--radius-xl);
   background: var(--surface-3);
