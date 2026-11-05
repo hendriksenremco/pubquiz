@@ -303,7 +303,7 @@ test('bladert met de pijltjes door de fragmenten', async () => {
   await help.click()
   await expect(operator.locator('.shortcuts')).toHaveCount(0)
   await expect(frag(3)).toHaveClass(/upcoming/)
-  await expect(frag(3).locator('.frag-next')).toContainText('Volgende')
+  await expect(frag(3).locator('.frag-next')).toContainText('Hierna')
 
   await operator.keyboard.press('ArrowRight')
   await expect(frag(3)).toHaveClass(/on/)
