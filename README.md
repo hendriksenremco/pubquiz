@@ -94,6 +94,8 @@ Interface changes follow the design rules in CLAUDE.md: calm, in the spirit of A
 
 A tag `v*` starts `.github/workflows/release.yml`. It builds a universal app on macOS, signs it with Remco's Developer ID, notarises it with Apple and puts the dmg on GitHub Releases. The signing secrets live in the repository secrets.
 
+After the release, a second job takes the screenshots for the website (the tour and the AI quiz), attaches them to the release as `site-screens.zip`, and tells the `pubquiz-site` repository to update and deploy the site. That needs the secret `SITE_DISPATCH_TOKEN`: a fine-grained token with Contents read and write on `pubquiz-site` only.
+
 Before a release, update the top heading of [CHANGELOG.md](CHANGELOG.md): a unit test checks that it matches the version in `package.json`.
 
 ```sh
