@@ -87,3 +87,50 @@ jobs:
           } > "$RUNNER_TEMP/notes.md"
           gh release view "$VERSION" >/dev/null 2>&1 || gh release create "$VERSION" --title "QuizNote $VERSION" --notes-file "$RUNNER_TEMP/notes.md"
           gh release upload "$VERSION" dist/QuizNote.dmg dist/QuizNote-*-mac.zip dist/latest-mac.yml --clobber
+
+  # Na de release: de screenshots voor quiznote.app opnieuw maken (de rondleiding en de quiz die de
+  # AI maakt), als site-screens.zip bij de release zetten en de site laten weten dat hij moet bijwerken.
+  # De site haalt de zip op en zet de screenshots en het versienummer live (app-release.yml daar).
+  site:
+    name: Screenshots voor de site
+    needs: release
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 8
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: ffmpeg
+        run: |
+          brew install ffmpeg-full
+          echo "$(brew --prefix ffmpeg-full)/bin" >> "$GITHUB_PATH"
+      - run: pnpm install --frozen-lockfile
+      - run: node scripts/make-demo.mjs && node scripts/make-tour.mjs && npx electron-vite build
+      - run: npx playwright test e2e/tour.spec.ts e2e/ai.spec.ts
+
+      - name: Screenshots bij de release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="v$(node -p "require('./package.json').version")"
+          mkdir site-screens
+          cp test-results/tour-*.png test-results/ai-music-round.png site-screens/
+          (cd site-screens && zip -q ../site-screens.zip *.png)
+          gh release upload "$VERSION" site-screens.zip --clobber
+
+      # Een fine-grained token met alleen Contents: read and write op pubquiz-site.
+      - name: De site laten bijwerken
+        env:
+          GH_TOKEN: ${{ secrets.SITE_DISPATCH_TOKEN }}
+        run: |
+          VERSION="$(node -p "require('./package.json').version")"
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::warning::Geen SITE_DISPATCH_TOKEN: start app-release.yml in pubquiz-site met de hand (versie $VERSION)."
+            exit 0
+          fi
+          gh api repos/hendriksenremco/pubquiz-site/dispatches \
+            -f event_type=app-release -f "client_payload[version]=$VERSION"
