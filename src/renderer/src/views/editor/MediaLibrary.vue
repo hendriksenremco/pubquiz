@@ -13,6 +13,7 @@ import Icon from '../../components/Icon.vue'
 import MediaPreview from '../../components/MediaPreview.vue'
 import MediaThumb from '../../components/MediaThumb.vue'
 import MediaTile from '../../components/MediaTile.vue'
+import TitleField from '../../components/TitleField.vue'
 import { formatTime } from '../../lib/format'
 import { locale } from '../../lib/locale'
 import { ask } from '../../lib/confirm'
@@ -30,7 +31,7 @@ const { importFiles, pathsFromDrop } = useMediaImport()
 const preview = usePreviewPlayer()
 const filter = ref<MediaKind | 'all'>('all')
 const openFolderId = ref<string | null>(null)
-const folderTitle = ref<HTMLInputElement | null>(null)
+const folderTitle = ref<InstanceType<typeof TitleField> | null>(null)
 const dropFolder = ref<string | null>(null)
 const previewId = ref<string | null>(null)
 const page = ref<HTMLElement | null>(null)
@@ -102,8 +103,7 @@ async function newFolder(asset?: MediaAsset) {
   if (asset) moveToFolder(asset, created.id)
   openFolderId.value = created.id
   await nextTick()
-  folderTitle.value?.focus()
-  folderTitle.value?.select()
+  folderTitle.value?.selectAll()
 }
 
 async function removeFolder() {
@@ -211,30 +211,19 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
     @drop.prevent="onFilesDrop"
   >
     <header class="head">
-      <template v-if="folder">
-        <button
-          class="crumb"
-          :class="{ drop: dropFolder === 'root', receptive: draggingId }"
-          :title="t('back')"
-          @click="openFolderId = null"
-          @dragenter="onTargetDragOver($event, 'root')"
-          @dragover="onTargetDragOver($event, 'root')"
-          @dragleave="onTargetDragLeave($event, 'root')"
-          @drop="onTargetDrop($event, 'root')"
-        >
-          <Icon name="left" :size="18" /> {{ t('title') }}
-        </button>
-        <input
-          ref="folderTitle"
-          v-model="folder.name"
-          class="quiet folder-title"
-          :aria-label="t('folderName')"
-        />
-        <span class="count">{{ plural(assetsIn(quiz, folder.id).length) }}</span>
-        <button class="btn btn-ghost btn-sm" @click="removeFolder">
-          <Icon name="trash" :size="14" /> {{ t('removeFolder') }}
-        </button>
-      </template>
+      <button
+        v-if="folder"
+        class="crumb"
+        :class="{ drop: dropFolder === 'root', receptive: draggingId }"
+        :title="t('back')"
+        @click="openFolderId = null"
+        @dragenter="onTargetDragOver($event, 'root')"
+        @dragover="onTargetDragOver($event, 'root')"
+        @dragleave="onTargetDragLeave($event, 'root')"
+        @drop="onTargetDrop($event, 'root')"
+      >
+        <Icon name="left" :size="18" /> {{ t('title') }}
+      </button>
       <h2 v-else>{{ t('title') }}</h2>
 
       <span class="grow" />
@@ -256,6 +245,19 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
         <Icon name="download" /> {{ t('import') }}
       </button>
     </header>
+
+    <div v-if="folder" class="folder-head">
+      <TitleField
+        ref="folderTitle"
+        v-model="folder.name"
+        class="folder-title"
+        :aria-label="t('folderName')"
+      />
+      <span class="count">{{ plural(assetsIn(quiz, folder.id).length) }}</span>
+      <button class="btn btn-ghost btn-sm" @click="removeFolder">
+        <Icon name="trash" :size="14" /> {{ t('removeFolder') }}
+      </button>
+    </div>
 
     <div v-if="isEmpty" class="empty">
       {{ folder ? t('emptyFolder') : t('empty') }}
@@ -398,18 +400,30 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
   box-shadow: inset 0 0 0 2px var(--accent);
 }
 
+.folder-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: -12px;
+}
+
+/* De naam krijgt de ruimte die de rij over heeft en loopt daarna door op de volgende regel. */
 .folder-title {
+  flex: 0 1 auto;
   width: auto;
   min-width: 4ch;
-  max-width: 360px;
-  margin: 0;
+  margin-right: 0;
   font: 650 22px var(--display);
-  field-sizing: content;
 }
 
 .count {
+  flex: none;
   color: var(--faint);
   font-weight: 600;
+}
+
+.folder-head .btn {
+  flex: none;
 }
 
 .filters {
@@ -492,7 +506,9 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
 }
 
 .folder-name {
+  max-width: 100%;
   font-weight: 600;
+  overflow-wrap: anywhere;
 }
 
 .folder-meta {

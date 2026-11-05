@@ -288,6 +288,14 @@ test('lange namen en drie schermen passen in het kleinste venster', async () => 
   quiz.rounds[1].title = WORD
   quiz.plugins.scores.teams[0].name = 'De Slimmeriken van de Tweede Tafel bij het Raam'
   quiz.plugins.scores.teams[1].name = WORD
+  quiz.folders = [
+    ...(quiz.folders ?? []),
+    {
+      id: 'lange-map',
+      name: "Alle foto's en filmpjes voor de fotoronde over de geschiedenis van ons dorp"
+    },
+    { id: 'lang-woord', name: WORD + WORD }
+  ]
   writeFileSync(file, JSON.stringify(quiz, null, 2))
 
   const { app, operator } = await launch(userData, quizDir, {
@@ -319,6 +327,15 @@ test('lange namen en drie schermen passen in het kleinste venster', async () => 
     await operator.getByRole('button', { name: labels.setup }).click()
     await wholeTitle(operator.locator('#quiz-title'))
     await check('setup')
+    await operator.getByRole('button', { name: /^Media/ }).click()
+    await check('media')
+    await operator.locator('.folder', { hasText: 'Alle foto' }).click()
+    await wholeTitle(operator.getByLabel('Naam van de map'))
+    await check('media-folder')
+    await operator.locator('.crumb').click()
+    await operator.locator('.folder', { hasText: WORD }).click()
+    await wholeTitle(operator.getByLabel('Naam van de map'))
+    await check('media-folder-word')
     await operator.locator('.topbar').getByRole('button', { name: labels.print }).click()
     await check('print')
     await operator.locator('.topbar').getByRole('button', { name: labels.print }).click()
