@@ -62,9 +62,49 @@ export async function launch(
       ...extraEnv
     } as Record<string, string>
   })
+  await reportTrouble(app)
   const operator = await windowFor(app, 'operator')
   await operator.waitForLoadState('domcontentloaded')
   return { app, operator }
+}
+
+/**
+ * Zet in de testuitvoer wanneer een proces van Electron wegvalt of een mediabestand niet laadt.
+ * Zonder dit is een test die af en toe vastloopt achteraf niet te verklaren.
+ */
+async function reportTrouble(app: ElectronApplication) {
+  app.process().stderr?.on('data', (chunk: Buffer) => {
+    for (const line of chunk.toString().split('\n')) {
+      if (line.includes('[process-gone]')) console.log(line)
+    }
+  })
+  await app.evaluate(({ app: electronApp }) => {
+    const report = (details: { reason: string }, kind: string) => {
+      if (details.reason !== 'clean-exit') {
+        console.error('[process-gone]', kind, JSON.stringify(details))
+      }
+    }
+    electronApp.on('child-process-gone', (_event, details) => report(details, 'child'))
+    electronApp.on('render-process-gone', (_event, _contents, details) =>
+      report(details, 'renderer')
+    )
+  })
+  const watch = (page: Page) => {
+    page.on('requestfailed', (request) => {
+      const reason = request.failure()?.errorText
+      // Een video die uit beeld gaat, breekt zijn verzoek af; dat is geen fout.
+      if (request.url().startsWith('pq-media:') && reason !== 'net::ERR_ABORTED') {
+        console.log(`[media] ${reason}: ${request.url()}`)
+      }
+    })
+    page.on('response', (response) => {
+      if (response.url().startsWith('pq-media:') && response.status() >= 400) {
+        console.log(`[media] ${response.status()}: ${response.url()}`)
+      }
+    })
+  }
+  app.windows().forEach(watch)
+  app.on('window', watch)
 }
 
 export async function windowFor(app: ElectronApplication, route: string): Promise<Page> {
@@ -196,6 +236,9 @@ async function freezeVideos(events: string[]) {
   const until = async (ready: () => boolean) => {
     for (let i = 0; i < 100 && !ready(); i++) await new Promise((r) => setTimeout(r, 20))
   }
+  // Laadt de media niet, dan kan dit altijd blijven wachten, en page.evaluate heeft geen time-out.
+  const atMost = (work: Promise<unknown>) =>
+    Promise.race([work, new Promise((done) => setTimeout(done, 2000))])
   // Een video die net play() kreeg, eerst echt laten starten: pauzeren breekt de belofte van
   // play() af, en dan stopt bijvoorbeeld een voorbeeld in de mediabibliotheek.
   const started = Array.from(document.querySelectorAll('video')).filter((v) => !v.paused)
@@ -261,12 +304,12 @@ async function freezeVideos(events: string[]) {
   const images = Array.from(document.querySelectorAll('img')).filter(
     (img) => !img.closest('[data-volatile]')
   )
-  await Promise.all(images.map((img) => img.decode().catch(() => {})))
+  await atMost(Promise.all(images.map((img) => img.decode().catch(() => {}))))
   for (const img of images) {
     if (img.naturalWidth) paint(img, img.naturalWidth, img.naturalHeight)
   }
   // Twee frames, zodat het stilgezette beeld echt getekend is.
-  await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)))
+  await atMost(new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))))
 }
 
 /** Draait in de pagina: laat de video's die speelden weer lopen en geeft de events weer door. */
@@ -279,6 +322,10 @@ async function resumeVideos(events: string[]) {
     element.style.display = display
     canvas.remove()
   }
-  await Promise.all(frozen.playing.map((video) => video.play().catch(() => {})))
+  // play() blijft wachten zolang er geen beeld binnenkomt, en page.evaluate heeft geen time-out.
+  await Promise.race([
+    Promise.all(frozen.playing.map((video) => video.play().catch(() => {}))),
+    new Promise((done) => setTimeout(done, 2000))
+  ])
   for (const name of events) window.removeEventListener(name, frozen.block, true)
 }
