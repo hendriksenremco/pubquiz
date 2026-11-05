@@ -113,7 +113,7 @@ function click(id: string) {
           {{ remaining !== null ? `-${formatTime(remaining)}` : t('playing') }}
         </span>
         <span v-else-if="upcoming === f.id" class="frag-time frag-next">
-          {{ t('next') }} <span class="kbd">→</span>
+          {{ t('upNext') }} <span class="kbd">→</span>
         </span>
         <span v-else-if="session.state.played.includes(f.id)" class="frag-time">{{
           t('played')
