@@ -140,7 +140,7 @@ for (const locale of ['nl', 'en'] as const) {
       expect.soft(await overflowing(operator), screen).toEqual([])
       // Het adres bevat de willekeurige poort van de nep-controller.
       await snap(operator, `test-results/min-window-${locale}-${screen}.png`, {
-        mask: [operator.getByLabel(/MagicHome.*controller/).filter({ visible: true })]
+        mask: [operator.locator('input[aria-label*="MagicHome"]:visible')]
       })
     }
 
@@ -187,6 +187,10 @@ for (const locale of ['nl', 'en'] as const) {
       await sheet.getByRole('button', { name: 'Start show' }).click()
       await expect(operator.locator('.live')).toBeVisible()
       await operator.locator('.rounds .round').first().click()
+      // De schermen staan naast elkaar, zodat de bediening eronder ook zonder schuiven in beeld is.
+      const [beamer, tv] = await operator.locator('.live .screen').all()
+      expect((await beamer!.boundingBox())!.y).toBe((await tv!.boundingBox())!.y)
+      await expect(operator.locator('.slides-section')).toBeInViewport({ ratio: 1 })
       await check('show-slides')
       await operator.locator('.rounds .round').nth(1).click()
       await check('show-fragments')
