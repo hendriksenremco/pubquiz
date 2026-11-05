@@ -65,13 +65,9 @@ function onDragStart(event: DragEvent) {
       />
       <img v-else :src="urlFor(asset)" alt="" />
 
-      <button
-        v-if="asset.kind === 'video'"
-        class="play"
-        :aria-label="playing ? t('stopPreview') : t('playPreview')"
-        @click.stop="toggle"
-      >
-        <Icon :name="playing ? 'stop' : 'play'" :size="16" />
+      <button v-if="asset.kind === 'video'" class="btn btn-sm play" @click.stop="toggle">
+        <Icon :name="playing ? 'stop' : 'play'" :size="14" />
+        {{ playing ? t('stop') : t('play') }}
       </button>
     </div>
     <figcaption>
@@ -135,19 +131,11 @@ function onDragStart(event: DragEvent) {
   position: absolute;
   left: 10px;
   bottom: 10px;
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border: 0;
-  border-radius: 50%;
   background: rgba(15, 20, 32, 0.78);
-  color: var(--text);
-  cursor: pointer;
 }
 
 .frame.playing .play,
-.play:hover {
+.play:hover:not(:disabled) {
   background: var(--accent);
   color: var(--accent-ink);
 }

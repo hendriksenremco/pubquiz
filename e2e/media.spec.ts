@@ -149,16 +149,17 @@ test('verplaatst een bestand naar een map door het te slepen', async () => {
 test('speelt een video af als voorbeeld', async () => {
   await operator.locator('.folder', { hasText: 'Loops' }).click()
   const tile = operator.locator('.tile-item').first()
-  await tile.hover()
-  await tile.getByRole('button', { name: 'Speel voorbeeld' }).click()
+  // De knop staat altijd in beeld en zegt in tekst wat hij doet.
+  await tile.getByRole('button', { name: 'Speel af' }).click()
   await expect(tile.locator('.frame')).toHaveClass(/playing/)
   await expect
     .poll(() => tile.locator('video').evaluate((v: HTMLVideoElement) => v.paused))
     .toBe(false)
   await snap(operator, 'test-results/media-folder-loops.png')
 
-  await tile.getByRole('button', { name: 'Stop voorbeeld' }).click()
+  await tile.getByRole('button', { name: 'Stop' }).click()
   await expect(tile.locator('.frame')).not.toHaveClass(/playing/)
+  await expect(tile.locator('.play')).toHaveText('Speel af')
   await operator.locator('.crumb').click()
 })
 
@@ -167,7 +168,7 @@ test('toont een bestand groot als voorbeeld en bladert verder', async () => {
   const names = await operator.locator('.tile-item .name').allTextContents()
   expect(names).toHaveLength(3)
   const tile = operator.locator('.tile-item').first()
-  await tile.getByRole('button', { name: 'Speel voorbeeld' }).click()
+  await tile.getByRole('button', { name: 'Speel af' }).click()
 
   // Het grote voorbeeld neemt het over: de tegel stopt, het voorbeeld speelt met geluid.
   await tile.getByRole('button', { name: 'Voorbeeld', exact: true }).click()
