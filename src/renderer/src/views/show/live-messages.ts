@@ -135,7 +135,7 @@ export const ANSWERS_MESSAGES = defineMessages(
   {
     title: 'Antwoorden',
     notShown: 'Niet in beeld',
-    notShownHint: 'Kies in de editor bij Antwoorden op welk scherm ze komen',
+    notShownHint: 'Kies in de editor een scherm, bij Ronde → Antwoorden',
     start: 'Start antwoorden',
     reveal: 'Toon antwoord',
     nextQuestion: 'Volgende vraag',
@@ -166,7 +166,7 @@ export const ANSWERS_MESSAGES = defineMessages(
     en: {
       title: 'Answers',
       notShown: 'Not on screen',
-      notShownHint: 'Choose in the editor, under Answers, which screen they go to',
+      notShownHint: 'Choose a screen in the editor, under Round → Answers',
       start: 'Start answers',
       reveal: 'Show answer',
       nextQuestion: 'Next question',
@@ -320,7 +320,8 @@ export const START_MESSAGES = defineMessages(
     noSpeakers:
       '{name}: geen speakers bij dit scherm, het videogeluid gaat naar de systeemstandaard',
     outputMissing: '{name}: uitgang niet gevonden, het geluid gaat naar de systeemstandaard',
-    answersScreen: '{round}: kies bij Antwoorden op welk scherm ze in beeld komen',
+    answersScreen:
+      '“{round}”: de antwoorden komen op geen enkel scherm. Kies er een bij Ronde → Antwoorden',
     noRounds: 'De quiz heeft nog geen rondes'
   },
   {
@@ -364,7 +365,8 @@ export const START_MESSAGES = defineMessages(
       soundMissing: '{name}: output not found, the video sound goes to the system default',
       noSpeakers: '{name}: no speakers on this screen, the video sound goes to the system default',
       outputMissing: '{name}: output not found, the sound goes to the system default',
-      answersScreen: '{round}: under Answers, choose which screen shows them',
+      answersScreen:
+        '“{round}”: the answers aren’t on any screen. Choose one under Round → Answers',
       noRounds: 'The quiz has no rounds yet'
     }
   }
