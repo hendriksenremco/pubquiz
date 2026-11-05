@@ -256,7 +256,8 @@ export const MIXER_MESSAGES = defineMessages(
     turnOn: 'Muziek aan',
     systemDefault: 'Systeemstandaard',
     speakersOf: 'Speakers van {name}',
-    videoSound: 'Videogeluid {name}'
+    videoSound: 'Videogeluid {name}',
+    channelVolume: 'Volume {name}'
   },
   {
     en: {
@@ -272,7 +273,8 @@ export const MIXER_MESSAGES = defineMessages(
       turnOn: 'Music on',
       systemDefault: 'System default',
       speakersOf: '{name} speakers',
-      videoSound: 'Video sound {name}'
+      videoSound: 'Video sound {name}',
+      channelVolume: 'Volume {name}'
     }
   }
 )

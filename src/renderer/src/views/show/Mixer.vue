@@ -86,21 +86,22 @@ const soundScreens = computed(() =>
         class="channel"
         :title="session.hardware.audio[c.id]?.label ?? t('systemDefault')"
       >
-        <div class="row">
-          <span class="label grow">{{ c.name }}</span>
+        <span class="label">{{ c.name }}</span>
+        <div class="level">
+          <input
+            v-fill
+            type="range"
+            min="0"
+            max="1"
+            step="0.01"
+            :value="channelVolume(quiz, session.state, c.id)"
+            :aria-label="t('channelVolume', { name: c.name })"
+            @input="setVolume(c.id, $event)"
+          />
           <span class="mono muted pct">{{
             percent(channelVolume(quiz, session.state, c.id))
           }}</span>
         </div>
-        <input
-          v-fill
-          type="range"
-          min="0"
-          max="1"
-          step="0.01"
-          :value="channelVolume(quiz, session.state, c.id)"
-          @input="setVolume(c.id, $event)"
-        />
       </div>
 
       <div
@@ -115,18 +116,20 @@ const soundScreens = computed(() =>
           <span v-if="s.status" class="pill" :class="{ 'pill-accent': s.ducked }">{{
             s.status
           }}</span>
+        </div>
+        <div class="level">
+          <input
+            v-fill
+            type="range"
+            min="0"
+            max="1"
+            step="0.01"
+            :value="screenVolume(session.state, s.slot.id)"
+            :aria-label="t('videoSound', { name: s.slot.name })"
+            @input="setVolume(s.slot.id, $event)"
+          />
           <span class="mono muted pct">{{ percent(screenVolume(session.state, s.slot.id)) }}</span>
         </div>
-        <input
-          v-fill
-          type="range"
-          min="0"
-          max="1"
-          step="0.01"
-          :value="screenVolume(session.state, s.slot.id)"
-          :aria-label="t('videoSound', { name: s.slot.name })"
-          @input="setVolume(s.slot.id, $event)"
-        />
       </div>
     </div>
   </section>
@@ -163,11 +166,21 @@ const soundScreens = computed(() =>
   gap: 4px;
 }
 
-.channel input {
+/* Het percentage direct naast de schuifregelaar, zoals bij Quiz-instellingen. */
+.level {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 40px;
+  align-items: center;
+  gap: 10px;
+}
+
+.level input {
   width: 100%;
+  min-width: 0;
 }
 
 .pct {
   font-size: 12px;
+  text-align: right;
 }
 </style>
