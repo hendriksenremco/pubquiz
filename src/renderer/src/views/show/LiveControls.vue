@@ -108,6 +108,10 @@ const {
   .btn .kbd {
     display: none;
   }
+
+  .live-controls :deep(.btn) {
+    padding: 0 8px;
+  }
 }
 
 .shortcuts {
