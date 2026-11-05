@@ -619,7 +619,7 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
   gap: 6px;
   min-width: 0;
   min-height: 34px;
-  padding: 8px 14px;
+  padding: 6px 14px;
   border-radius: 17px;
   background: var(--surface-4);
   font-weight: 600;
