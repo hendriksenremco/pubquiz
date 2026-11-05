@@ -216,16 +216,18 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
               <button class="btn btn-ghost btn-sm del" @click="removeChannel(c.id)">
                 <Icon name="trash" :size="14" /> {{ t('removeChannel') }}
               </button>
-              <input
-                v-model.number="c.volume"
-                v-fill
-                type="range"
-                min="0"
-                max="1"
-                step="0.01"
-                class="channel-volume"
-              />
-              <span class="mono val">{{ percent(c.volume) }}</span>
+              <div class="channel-level">
+                <input
+                  v-model.number="c.volume"
+                  v-fill
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  class="channel-volume"
+                />
+                <span class="mono val">{{ percent(c.volume) }}</span>
+              </div>
             </div>
             <button class="btn btn-ghost btn-sm add-channel" @click="addChannel">
               <Icon name="plus" :size="14" /> {{ t('addChannel') }}
@@ -493,6 +495,15 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
 
 .channel-name {
   font-weight: 600;
+}
+
+/* Het percentage direct naast de schuifregelaar, zoals bij Achtergrondmuziek. */
+.channel-level {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 40px;
+  align-items: center;
+  gap: 10px;
 }
 
 .channel-volume {
