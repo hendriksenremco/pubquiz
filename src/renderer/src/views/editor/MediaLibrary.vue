@@ -413,7 +413,7 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
   width: auto;
   min-width: 4ch;
   margin-right: 0;
-  font: 650 22px var(--display);
+  font: 650 22px/1.25 var(--display);
 }
 
 .count {
