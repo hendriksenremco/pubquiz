@@ -12,12 +12,9 @@ const t = COMPONENT_MESSAGES.in(locale)
   <TransitionGroup tag="div" name="notice" class="notices">
     <div v-for="n in session.notices" :key="n.id" class="notice" :class="n.level">
       <span class="msg">{{ n.message }}</span>
-      <button
-        class="btn btn-ghost btn-sm btn-icon"
-        :aria-label="t('close')"
-        @click="session.dismiss(n.id)"
-      >
+      <button class="btn btn-ghost btn-sm close" @click="session.dismiss(n.id)">
         <Icon name="x" :size="14" />
+        {{ t('close') }}
       </button>
     </div>
   </TransitionGroup>
@@ -58,7 +55,14 @@ const t = COMPONENT_MESSAGES.in(locale)
 
 .msg {
   flex: 1;
+  min-width: 0;
   padding-top: 2px;
+  overflow-wrap: anywhere;
+}
+
+/* De knop houdt zijn breedte, ook naast een lang pad in de melding. */
+.close {
+  flex: none;
 }
 
 .notice-enter-active,
