@@ -83,6 +83,13 @@ jobs:
           name: screenshots-base
           path: test-results/*.png
           retention-days: 7
+      # De trace van een test die hier faalde, zodat je achteraf ziet waar hij vastliep.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: traces-base
+          path: test-results/**/trace.zip
+          retention-days: 7
+          if-no-files-found: ignore
 
   # Vergelijkt de screenshots en zet de verschillen als één commentaar op de pull request.
   # De plaatjes staan op de branch pr-screenshots, in de map pr-<nummer>/. Niet bij een fork:
