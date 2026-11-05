@@ -59,6 +59,8 @@ body {
   background: var(--night);
   color: var(--text);
   font: 13px/1.45 var(--font);
+  /* Een lang woord in een zelfgekozen naam breekt af in plaats van uit zijn vak te steken. */
+  overflow-wrap: break-word;
   -webkit-font-smoothing: antialiased;
   user-select: none;
   overflow: hidden;
@@ -700,6 +702,7 @@ input[type='number']::-webkit-outer-spin-button {
   align-items: center;
   gap: 7px;
   min-height: 28px;
+  overflow-wrap: anywhere;
   cursor: pointer;
 }
 
