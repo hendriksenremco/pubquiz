@@ -303,11 +303,12 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
         @dragstart="onSoundDragStart($event, a)"
       >
         <button
-          class="play"
-          :aria-label="preview.playingId.value === a.id ? t('stop') : t('listen')"
+          class="btn btn-sm play"
+          :class="{ 'btn-primary': preview.playingId.value === a.id }"
           @click="preview.toggle(a.id, a)"
         >
           <Icon :name="preview.playingId.value === a.id ? 'stop' : 'play'" :size="12" />
+          {{ preview.playingId.value === a.id ? t('stop') : t('listen') }}
         </button>
         <span class="name grow">{{ a.name }}</span>
         <span v-if="findAssetUsages(quiz, a.id).length" class="used">{{ t('used') }}</span>
@@ -527,21 +528,10 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
   color: var(--accent);
 }
 
+/* Even breed bij Luister en Stop, zodat de rij niet verspringt. */
 .play {
-  display: grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  border: 0;
-  border-radius: 50%;
-  background: var(--surface-3);
-  color: var(--text);
-  cursor: pointer;
-}
-
-.sound.playing .play {
-  background: var(--accent);
-  color: var(--accent-ink);
+  flex: none;
+  min-width: 76px;
 }
 
 .name {
