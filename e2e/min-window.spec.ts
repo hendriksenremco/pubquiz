@@ -85,12 +85,53 @@ function overflowing(page: Page): Promise<string[]> {
     for (const el of document.querySelectorAll('*')) {
       if (!shown(el) || el.matches(allowed)) continue
       const { overflowX } = getComputedStyle(el)
+      const hasText = [...el.childNodes].some(
+        (node) => node.nodeType === Node.TEXT_NODE && node.textContent!.trim()
+      )
+      if (
+        hasText &&
+        overflowX === 'visible' &&
+        !el.closest(allowed) &&
+        el.clientWidth > 0 &&
+        el.scrollWidth > el.clientWidth + 1
+      ) {
+        found.add(`tekst steekt uit: ${name(el)}`)
+      }
       if ((overflowX === 'auto' || overflowX === 'scroll') && el.scrollWidth > el.clientWidth + 1) {
         found.add(`schuifbalk: ${name(el).slice(0, 60)}`)
       }
     }
     return [...found]
   }, SCROLLS_SIDEWAYS)
+}
+
+/** De drukste opzet: alle plug-ins aan, teams met punten en een antwoordenronde. */
+function busyQuiz(userData: string, quizDir: string, host: string) {
+  writeFileSync(
+    join(userData, 'settings.json'),
+    JSON.stringify({
+      plugins: {
+        magichome: { enabled: true, config: { host } },
+        remote: { enabled: true, config: {} },
+        scores: { enabled: true, config: {} }
+      }
+    })
+  )
+  const file = join(quizDir, 'quiz.json')
+  const quiz = JSON.parse(readFileSync(file, 'utf8'))
+  const [one] = quiz.rounds
+  quiz.plugins = {
+    ...quiz.plugins,
+    scores: {
+      teams: ['De Slimmeriken', 'Quizzly Bears', 'Team Kroket'].map((name, i) => ({
+        id: `t${i}`,
+        name
+      })),
+      points: { [one.id]: { t0: 7.5, t1: 9, t2: 6 } }
+    }
+  }
+  quiz.rounds.push({ ...one, id: 'antwoorden', title: 'Antwoorden', answersFor: [one.id] })
+  writeFileSync(file, JSON.stringify(quiz, null, 2))
 }
 
 for (const locale of ['nl', 'en'] as const) {
@@ -101,32 +142,7 @@ for (const locale of ['nl', 'en'] as const) {
     const userData = tempDir('userdata')
     const quizDir = copyFixture()
 
-    // De drukste opzet: alle plug-ins aan, teams met punten en een antwoordenronde.
-    writeFileSync(
-      join(userData, 'settings.json'),
-      JSON.stringify({
-        plugins: {
-          magichome: { enabled: true, config: { host: device.host } },
-          remote: { enabled: true, config: {} },
-          scores: { enabled: true, config: {} }
-        }
-      })
-    )
-    const file = join(quizDir, 'quiz.json')
-    const quiz = JSON.parse(readFileSync(file, 'utf8'))
-    const [one] = quiz.rounds
-    quiz.plugins = {
-      ...quiz.plugins,
-      scores: {
-        teams: ['De Slimmeriken', 'Quizzly Bears', 'Team Kroket'].map((name, i) => ({
-          id: `t${i}`,
-          name
-        })),
-        points: { [one.id]: { t0: 7.5, t1: 9, t2: 6 } }
-      }
-    }
-    quiz.rounds.push({ ...one, id: 'antwoorden', title: 'Antwoorden', answersFor: [one.id] })
-    writeFileSync(file, JSON.stringify(quiz, null, 2))
+    busyQuiz(userData, quizDir, device.host)
 
     const { app, operator } = await launch(userData, quizDir, {
       PUBQUIZ_LOCALE: locale,
@@ -209,3 +225,91 @@ for (const locale of ['nl', 'en'] as const) {
     }
   })
 }
+
+test('lange namen en drie schermen passen in het kleinste venster', async () => {
+  test.setTimeout(120_000)
+  const labels = LABELS.nl
+  const device = await fakeController()
+  const userData = tempDir('userdata')
+  const quizDir = copyFixture()
+  busyQuiz(userData, quizDir, device.host)
+
+  // Namen die de quizmaster zelf kiest: lang, en ook een lang woord dat niet kan afbreken.
+  const WORD = 'Muziekherkenningsfragmentenachtergrondgeluidenronde'
+  const file = join(quizDir, 'quiz.json')
+  const quiz = JSON.parse(readFileSync(file, 'utf8'))
+  quiz.title = 'De allerlangste pubquiz van het hele dorp en de wijde omgeving, editie 2026'
+  quiz.screens[0].name = 'Beamer boven de bar in de grote zaal achterin het café'
+  quiz.screens[1].name = WORD
+  quiz.screens.push({ ...quiz.screens[0], id: 'derde', name: 'Derde scherm bij de ingang' })
+  quiz.channels[0].name = WORD
+  quiz.channels[1].name = 'Fragmenten voor de muziekronde via de kleine speakers'
+  quiz.rounds[0].title = 'Ronde 1: algemene kennis, sport, geschiedenis en aardrijkskunde'
+  quiz.rounds[1].title = WORD
+  quiz.plugins.scores.teams[0].name = 'De Slimmeriken van de Tweede Tafel bij het Raam'
+  quiz.plugins.scores.teams[1].name = WORD
+  writeFileSync(file, JSON.stringify(quiz, null, 2))
+
+  const { app, operator } = await launch(userData, quizDir, {
+    PUBQUIZ_REMOTE_HOST: '127.0.0.1',
+    PUBQUIZ_REMOTE_PORT: '0'
+  })
+
+  const check = async (screen: string) => {
+    await operator.waitForTimeout(400) // previews en overgangen laten uitlopen
+    expect.soft(await overflowing(operator), screen).toEqual([])
+    await snap(operator, `test-results/min-window-long-${screen}.png`, {
+      mask: [operator.locator('input[aria-label*="MagicHome"]:visible')]
+    })
+  }
+
+  try {
+    await shrink(app, operator)
+    await expect(operator.locator('.topbar .name')).toBeVisible()
+
+    // De editor.
+    await operator.locator('.sidebar .round').first().click()
+    await check('slides')
+    await operator.getByRole('tab', { name: labels.round }).click()
+    await check('round-settings')
+    await operator.locator('.sidebar .round').nth(1).click()
+    await operator.locator('.track').first().click()
+    await check('fragment')
+    await operator.getByRole('button', { name: labels.setup }).click()
+    await check('setup')
+    await operator.locator('.topbar').getByRole('button', { name: labels.print }).click()
+    await check('print')
+    await operator.locator('.topbar').getByRole('button', { name: labels.print }).click()
+
+    // Het startscherm.
+    await operator.locator('.topbar').getByRole('button', { name: labels.quizzes }).click()
+    await check('home')
+    await operator.getByRole('button', { name: labels.edit, exact: true }).click()
+
+    // De show.
+    await operator.locator('.topbar').getByRole('button', { name: 'Start show' }).click()
+    const sheet = operator.getByRole('dialog', { name: 'Start show' })
+    for (const box of await sheet.locator('.screen .screen-target [role="combobox"]').all()) {
+      await choose(operator, box, labels.windowed)
+    }
+    await check('start')
+    await sheet.getByRole('button', { name: 'Start show' }).click()
+    await expect(operator.locator('.live')).toBeVisible()
+    await operator.locator('.rounds .round').first().click()
+    await expect(operator.locator('.topbar .name')).toBeVisible()
+    // Het derde scherm staat eronder, even groot als de andere, en de slides blijven in beeld.
+    const [first, , third] = await operator.locator('.live .screen').all()
+    expect((await third!.boundingBox())!.width).toBe((await first!.boundingBox())!.width)
+    await expect(operator.locator('.slides-section')).toBeInViewport({ ratio: 1 })
+    await check('show-slides')
+    await operator.locator('.rounds .round').nth(1).click()
+    await check('show-fragments')
+    await operator.locator('.rounds .round').last().click()
+    await check('show-answers')
+  } finally {
+    await app.close()
+    await device.close()
+    rmSync(userData, { recursive: true, force: true })
+    rmSync(dirname(quizDir), { recursive: true, force: true })
+  }
+})
