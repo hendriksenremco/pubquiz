@@ -130,6 +130,13 @@ test('verplaatst een bestand naar een map door het te slepen', async () => {
   await expect(operator.getByLabel('Naam van de map')).toHaveValue('Nieuwe map')
   await expect(operator.getByLabel('Naam van de map')).toBeFocused()
   await expect(operator.locator('.sound .name')).toHaveText(['background-break.m4a'])
+
+  // Luisteren heeft icoon en tekst, net als Voorbeeld en Verwijder uit quiz ernaast.
+  const sound = operator.locator('.sound').first()
+  await sound.getByRole('button', { name: 'Luister' }).click()
+  await sound.getByRole('button', { name: 'Stop' }).click()
+  await expect(sound.getByRole('button', { name: 'Luister' })).toBeVisible()
+
   await operator.locator('.crumb').click()
   await expect(operator.locator('.folder-name')).toHaveText([
     'Fragmenten',
