@@ -1,6 +1,6 @@
-# Controle van elke pull request: typecheck, unit-tests en e2e-tests op Linux (Electron onder xvfb),
-# met de screenshots uit dezelfde e2e-run. macOS-runners zijn schaars en traag in de wachtrij; daarom draait
-# de dmg-build op macOS alleen als de pull request iets aan het verpakken verandert, of met de hand.
+# Controle van elke pull request: typecheck en unit-tests op Linux, e2e-tests op macOS, en de dmg-build
+# op macOS alleen als de pull request iets aan het verpakken verandert. macOS-runners staan vaak in de
+# wachtrij; daarom zo min mogelijk macOS-jobs. De e2e-tests slagen nog niet allemaal op Linux.
 name: CI
 
 on:
@@ -31,10 +31,7 @@ jobs:
 
   e2e:
     name: E2e-tests
-    runs-on: ubuntu-latest
-    env:
-      # Electron op een GitHub-runner: zonder sandbox, anders start hij niet (Ubuntu 24.04 en AppArmor).
-      ELECTRON_DISABLE_SANDBOX: 1
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -44,11 +41,13 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-      # ffmpeg met drawtext voor de demo en de rondleiding; xvfb als scherm voor Electron.
-      - name: ffmpeg en xvfb
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg xvfb fonts-dejavu-core
+      # Volledige ffmpeg: de demo en de rondleiding gebruiken het filter drawtext.
+      - name: ffmpeg
+        run: |
+          brew install ffmpeg-full
+          echo "$(brew --prefix ffmpeg-full)/bin" >> "$GITHUB_PATH"
       - run: pnpm install --frozen-lockfile
-      - run: xvfb-run -a pnpm test:e2e
+      - run: pnpm test:e2e
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -61,9 +60,7 @@ jobs:
   e2e-base:
     name: Screenshots van master
     if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    env:
-      ELECTRON_DISABLE_SANDBOX: 1
+    runs-on: macos-latest
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
@@ -76,10 +73,12 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-      - name: ffmpeg en xvfb
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg xvfb fonts-dejavu-core
+      - name: ffmpeg
+        run: |
+          brew install ffmpeg-full
+          echo "$(brew --prefix ffmpeg-full)/bin" >> "$GITHUB_PATH"
       - run: pnpm install --frozen-lockfile
-      - run: xvfb-run -a pnpm test:e2e || true
+      - run: pnpm test:e2e || true
       - uses: actions/upload-artifact@v4
         with:
           name: screenshots-base
