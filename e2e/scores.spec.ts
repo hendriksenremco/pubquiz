@@ -77,8 +77,9 @@ test('teams en punten per ronde bij Quiz-instellingen, via de plug-in Tussenstan
     await points('Team 3', 'Ronde 1: algemeen').fill('abc')
     await points('Team 3', 'Ronde 1: algemeen').press('Tab')
     await expect(points('Team 3', 'Ronde 1: algemeen')).toHaveValue('')
+    await expect(points('De Slimmeriken', 'Ronde 1: algemeen')).toHaveValue('7,5')
 
-    await expect(table.locator('td.total')).toHaveText(['13.5', '9', '0'])
+    await expect(table.locator('td.total')).toHaveText(['13,5', '9', '0'])
     await expect
       .poll(() => saved()?.teams.map((t: { name: string }) => t.name))
       .toEqual(['De Slimmeriken', 'Quizzly Bears', 'Team 3'])
@@ -232,7 +233,9 @@ test('punten invullen tijdens de show, voor de ronde die nu loopt', async () => 
     await points('De Slimmeriken').press('Tab')
     await points('Quizzly Bears').fill('7')
     await points('Quizzly Bears').press('Tab')
-    await expect(pad.locator('td.total')).toHaveText(['8.5', '7'])
+    // Op de Mac net als op de beamer: een komma in het Nederlands.
+    await expect(points('De Slimmeriken')).toHaveValue('8,5')
+    await expect(pad.locator('td.total')).toHaveText(['8,5', '7'])
     await expect.poll(saved).toEqual({ [one.id]: { t0: 8.5, t1: 7 } })
     await expectRoundNamesOnOneLine(pad)
     await operator.waitForTimeout(300)

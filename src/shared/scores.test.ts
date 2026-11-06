@@ -5,12 +5,14 @@ import {
   addTeam,
   clearPoints,
   createStandingsSlide,
+  formatPoints,
   isStandingsSlide,
   removeTeam,
   renameTeam,
   roundsToScore,
   scoredRounds,
   scoresOf,
+  pointsText,
   setPoints,
   standings
 } from './scores'
@@ -149,5 +151,30 @@ describe('slide met de stand', () => {
     expect(roundsToScore(quiz, answers)).toEqual([one])
     answers.answersFor = [two.id, one.id, 'weg']
     expect(roundsToScore(quiz, answers)).toEqual([one, two])
+  })
+})
+
+describe('punten als tekst', () => {
+  it('schrijft een halve punt met een komma in het Nederlands en een punt in het Engels', () => {
+    expect(formatPoints(8.5, 'nl')).toBe('8,5')
+    expect(formatPoints(8.5, 'en')).toBe('8.5')
+    expect(formatPoints(7, 'nl')).toBe('7')
+  })
+
+  it('zet geen duizendtallen, zodat een puntenveld hetzelfde getal teruggeeft', () => {
+    expect(formatPoints(1234.5, 'nl')).toBe('1234,5')
+    expect(formatPoints(1234.5, 'en')).toBe('1234.5')
+  })
+
+  it('rondt optelfouten af', () => {
+    expect(formatPoints(0.1 + 0.2, 'nl')).toBe('0,3')
+  })
+
+  it('laat een veld leeg als er nog niets is ingevuld', () => {
+    const { quiz, one } = setup()
+    const team = addTeam(quiz, 'De Slimmeriken')
+    expect(pointsText(scoresOf(quiz), one.id, team.id, 'nl')).toBe('')
+    setPoints(quiz, one.id, team.id, 8.5)
+    expect(pointsText(scoresOf(quiz), one.id, team.id, 'nl')).toBe('8,5')
   })
 })

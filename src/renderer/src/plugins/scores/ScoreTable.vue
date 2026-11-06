@@ -3,7 +3,8 @@ import { computed } from 'vue'
 import {
   addTeam,
   clearPoints,
-  pointsOf,
+  formatPoints,
+  pointsText,
   removeTeam,
   renameTeam,
   scoredRounds,
@@ -37,7 +38,7 @@ function rename(teamId: string, event: Event) {
 }
 
 function enter(roundId: string, teamId: string, event: Event) {
-  enterPoints(quiz.value, roundId, teamId, event)
+  enterPoints(quiz.value, roundId, teamId, event, locale)
 }
 
 async function remove(teamId: string, name: string) {
@@ -94,7 +95,7 @@ async function clear() {
               </td>
               <td v-for="round in rounds" :key="round.id" class="round">
                 <input
-                  :value="pointsOf(scores, round.id, team.id) ?? ''"
+                  :value="pointsText(scores, round.id, team.id, locale)"
                   type="text"
                   inputmode="decimal"
                   class="input input-sm points mono"
@@ -102,7 +103,7 @@ async function clear() {
                   @change="enter(round.id, team.id, $event)"
                 />
               </td>
-              <td class="total mono">{{ totals.get(team.id) ?? 0 }}</td>
+              <td class="total mono">{{ formatPoints(totals.get(team.id) ?? 0, locale) }}</td>
               <td class="del">
                 <button class="btn btn-ghost btn-sm" @click="remove(team.id, team.name)">
                   <Icon name="trash" :size="14" /> {{ t('removeTeam') }}
