@@ -19,7 +19,7 @@
     "typecheck": "pnpm typecheck:node && pnpm typecheck:web",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "node scripts/make-demo.mjs && node scripts/make-tour.mjs && electron-vite build && playwright test",
+    "test:e2e": "node scripts/make-demo.mjs && pnpm tour && electron-vite build && playwright test",
     "demo": "node scripts/make-demo.mjs",
     "tour": "node scripts/make-tour.mjs && node scripts/make-tour.mjs --locale en",
     "tour:build": "node scripts/make-tour.mjs --into dist/tour/Rondleiding.quiznote && node scripts/make-tour.mjs --locale en --into dist/tour/Tour.quiznote",

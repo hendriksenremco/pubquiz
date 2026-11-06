@@ -14,7 +14,7 @@ Wat er nog moet gebeuren, staat als **issues** op GitHub (`gh issue list`). Hoe 
 
 - **Versie:** 0.2.0 in `package.json`, nog niet uitgebracht (wat erin zit: `CHANGELOG.md`). De laatste release is 0.1.0: alleen macOS, alleen Nederlands. De tag voor een release zet Remco, of hij geeft er toestemming voor.
 - **Release:** 0.1.0 staat op GitHub Releases, gesigneerd en genotariseerd (`.github/workflows/release.yml`, bij een tag `v*`). Lokaal maakt `pnpm build:mac` een ongesigneerde dmg.
-- **Na een release** maakt de job `site` in `release.yml` de screenshots voor de site (`tour-*.png`, `ai-music-round.png`), zet ze als `site-screens.zip` bij de release en start `app-release.yml` in de site-repo (secret `SITE_DISPATCH_TOKEN`). Die zet de screenshots en het versienummer live; de teksten werkt de nachtelijke taak van de site bij.
+- **Na een release** maakt de job `site` in `release.yml` de screenshots voor de site (`tour-*.png` in het Nederlands, `tour-*.en.png` in het Engels, en `ai-music-round.png`), zet ze als `site-screens.zip` bij de release en start `app-release.yml` in de site-repo (secret `SITE_DISPATCH_TOKEN`). Die zet de screenshots en het versienummer live; de teksten werkt de nachtelijke taak van de site bij.
 - **Site:** live op https://quiznote.app (Firebase Hosting), met een downloadknop naar de nieuwste release. De site heeft een eigen repo: `~/Documents/pubquiz-site`, met een eigen CLAUDE.md.
 - **Laatst samengevoegd (30 oktober):** #12 en #13. Kijk met `gh pr list --state all` wat er sindsdien is gebeurd.
   - #12: Ronde opnieuw, dezelfde knoppen op de Mac en de telefoon, en het licht in de werkbalk van de show.
