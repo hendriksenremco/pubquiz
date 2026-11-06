@@ -844,10 +844,10 @@ const quiz = {
       title: L('Ronde 3: vlaggen', 'Round 3: flags'),
       slideLoopSeconds: 5,
       hostNotes: L(
-        'De vlaggen wisselen na de titelslide vanzelf, elke 5 seconden. Met L pauzeer je de ' +
-          'loop, met ← → blader je zelf. In de antwoordenronde komt bij 5 en 6 de hele vlag in beeld.',
+        'De vlaggen wisselen na de titelslide vanzelf, elke 5 seconden. Met L pauzeer je het ' +
+          'wisselen, met ← → blader je zelf. In de antwoordenronde komt bij 5 en 6 de hele vlag in beeld.',
         'After the title slide the flags change by themselves, every 5 seconds. L pauses the ' +
-          'loop, ← → let you go through them yourself. In the answers round, 5 and 6 show the ' +
+          'changing, ← → let you go through them yourself. In the answers round, 5 and 6 show the ' +
           'whole flag.'
       ),
       slides: [
