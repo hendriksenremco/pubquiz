@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import {
   channelVolume,
   findAsset,
@@ -9,6 +9,7 @@ import {
   screenVolume
 } from '@shared/resolve'
 import Icon from '../../components/Icon.vue'
+import { listAudioOutputs, screenSoundRoute, type AudioOutput } from '../../lib/audio-devices'
 import { vFill } from '../../lib/fill'
 import { percent } from '../../lib/format'
 import { locale } from '../../lib/locale'
@@ -44,20 +45,36 @@ const soundScreens = computed(() =>
     )
     .map((slot) => {
       const sound = resolveScreen(quiz.value, session.state, slot.id).sound
-      const target = session.hardware.screens[slot.id]
-      const choice = session.hardware.screenSound[slot.id]
       return {
         slot,
         status: !sound ? t('silent') : sound.ducked ? t('ducked') : null,
         ducked: !!sound?.ducked,
-        device:
-          choice?.label ??
-          (target?.kind === 'display'
-            ? t('speakersOf', { name: target.label })
-            : t('systemDefault'))
+        device: deviceLabel(slot.id)
       }
     })
 )
+
+// De uitgangen van deze Mac, om te zeggen waar het videogeluid echt heen gaat (zoals ScreenApp).
+const outputs = ref<AudioOutput[]>([])
+async function refreshOutputs() {
+  outputs.value = await listAudioOutputs(locale)
+}
+onMounted(() => {
+  void refreshOutputs()
+  navigator.mediaDevices.addEventListener('devicechange', refreshOutputs)
+})
+onBeforeUnmount(() => navigator.mediaDevices.removeEventListener('devicechange', refreshOutputs))
+
+function deviceLabel(slotId: string): string {
+  const route = screenSoundRoute(
+    session.hardware.screenSound[slotId],
+    session.hardware.screens[slotId],
+    outputs.value
+  )
+  if (route.kind === 'screen') return t('speakersOf', { name: route.name })
+  if (route.kind === 'output') return route.label
+  return t('systemDefault')
+}
 </script>
 
 <template>
