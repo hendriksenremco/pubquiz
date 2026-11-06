@@ -173,7 +173,10 @@ test('dashboard: een verplaatste quiz is te herkennen en uit de lijst te halen',
     const card = operator.locator('.card')
     await expect(card).toHaveCount(1)
     await expect(card).toContainText('Niet gevonden')
-    await snap(operator, 'test-results/home-missing.png')
+    // Het tijdelijke pad van de test wisselt per run.
+    await snap(operator, 'test-results/home-missing.png', {
+      mask: [card.locator('.card-meta')]
+    })
 
     await card.getByRole('button', { name: 'Verwijder uit lijst' }).click()
     await expect(card).toHaveCount(0)
