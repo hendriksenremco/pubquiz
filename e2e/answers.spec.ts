@@ -125,7 +125,7 @@ test('live: eerst de vraag, afbeelding of het fragment, dan het antwoord', async
   await beamer.waitForTimeout(500)
   await snap(beamer, 'test-results/question-number-only.png')
 
-  // De afbeeldingenronde zelf: → naar de eerste afbeelding, daarna gaat de loop vanzelf rond.
+  // De afbeeldingenronde zelf: → naar de eerste afbeelding, daarna wisselen de slides vanzelf.
   await operator.locator('.rounds .round').nth(4).click()
   await operator.keyboard.press('ArrowRight')
   const number = beamer.locator('.slide.layout-image .image-number').last()
@@ -135,7 +135,7 @@ test('live: eerst de vraag, afbeelding of het fragment, dan het antwoord', async
   await expect(number).toHaveText('1', { timeout: 3_000 })
   // Pauzeren met L: hij blijft staan.
   await operator.keyboard.press('l')
-  await expect(operator.getByRole('button', { name: /Hervat loop/ })).toBeVisible()
+  await expect(operator.getByRole('button', { name: /Hervat wisselen/ })).toBeVisible()
   const paused = await number.textContent()
   await operator.waitForTimeout(1_600)
   await expect(number).toHaveText(paused!)
