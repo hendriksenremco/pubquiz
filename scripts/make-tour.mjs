@@ -672,9 +672,8 @@ const quiz = {
           L('Achtergrondmuziek', 'Background music'),
           L(
             'Speelt de hele avond door.\n' +
-              'Elke ronde kiest zelf: doorspelen, zachter, pauzeren of andere muziek.',
-            'Plays all night long.\n' +
-              'Each round chooses: keep playing, quieter, pause or other music.'
+              'Elke ronde kiest zelf: gewoon, zachter, stil of andere muziek.',
+            'Plays all night long.\n' + 'Each round chooses: normal, softer, silent or other music.'
           ),
           beamerOnly
         ),
@@ -782,10 +781,10 @@ const quiz = {
       hostNotes: L(
         'Druk op → of 1 voor het eerste liedje. A speelt ze allemaal na elkaar, met aftellen ' +
           'ertussen; spatie stopt. Liedje 5 en 6 zijn ingekort en faden uit. ' +
-          'De achtergrondmuziek staat in deze ronde op pauze.',
+          'De achtergrondmuziek is in deze ronde stil.',
         'Press → or 1 for the first song. A plays them all in a row, with a countdown in ' +
           'between; Space stops. Songs 5 and 6 are shortened and fade out. ' +
-          'The background music is paused in this round.'
+          'The background music is silent in this round.'
       ),
       slides: [
         slide(
