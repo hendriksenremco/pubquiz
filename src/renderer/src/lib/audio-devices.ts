@@ -81,3 +81,22 @@ export function screenSoundOutput(
     outputs.find((o) => o.deviceId !== 'default' && sameDisplayName(o.label, target.label)) ?? null
   )
 }
+
+/**
+ * Waar het videogeluid van een scherm echt heen gaat, om in beeld te zetten: de speakers van het
+ * display zelf, een gekozen uitgang, of de systeemstandaard. Zonder speakers bij het display, of
+ * met een gekozen uitgang die er niet is, is dat de systeemstandaard (zoals in ScreenApp).
+ */
+export type ScreenSoundRoute =
+  { kind: 'default' } | { kind: 'screen'; name: string } | { kind: 'output'; label: string }
+
+export function screenSoundRoute(
+  choice: AudioTarget | undefined,
+  target: ScreenTarget | undefined,
+  outputs: AudioOutput[]
+): ScreenSoundRoute {
+  const output = screenSoundOutput(choice, target, outputs)
+  if (!output || output.deviceId === 'default') return { kind: 'default' }
+  if (!choice && target?.kind === 'display') return { kind: 'screen', name: target.label }
+  return { kind: 'output', label: output.label }
+}

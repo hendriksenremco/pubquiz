@@ -99,6 +99,11 @@ test('speelt het videogeluid alleen op het scherm, duckt bij een fragment en zwi
   // Fader van het scherm in de mixer.
   await operator.getByLabel('Videogeluid Beamer', { exact: true }).fill('0.5')
   await expect.poll(async () => (await sound(beamer)).volume).toBe(0.4)
+  // De mixer zegt waar het geluid echt heen gaat: hier de systeemstandaard, net als de sinkId.
+  await expect(operator.locator('.mixer .screen-sound').first()).toHaveAttribute(
+    'title',
+    'Systeemstandaard'
+  )
   await snap(operator, 'test-results/screen-sound-mixer.png')
 
   // Ronde 1: standaardvideo blijft lopen, maar zonder geluid.

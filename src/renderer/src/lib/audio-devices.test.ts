@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { screenSoundOutput, type AudioOutput } from './audio-devices'
+import { screenSoundOutput, screenSoundRoute, type AudioOutput } from './audio-devices'
 
 const outputs: AudioOutput[] = [
   { deviceId: 'default', label: 'Systeemstandaard (MacBook Pro-luidsprekers)' },
@@ -33,5 +33,32 @@ describe('screenSoundOutput', () => {
       'default'
     )
     expect(screenSoundOutput({ deviceId: 'weg', label: 'Weg' }, lgTv, outputs)).toBeNull()
+  })
+})
+
+describe('screenSoundRoute', () => {
+  it('noemt de speakers van het display als die er zijn', () => {
+    expect(screenSoundRoute(undefined, lgTv, outputs)).toEqual({
+      kind: 'screen',
+      name: 'LG TV SSCR2'
+    })
+  })
+
+  it('zegt systeemstandaard als het display geen speakers heeft', () => {
+    const dell = { kind: 'display', displayId: 4, label: 'DELL U2720Q' } as const
+    expect(screenSoundRoute(undefined, dell, outputs)).toEqual({ kind: 'default' })
+  })
+
+  it('noemt een gekozen uitgang, en de systeemstandaard als die weg is', () => {
+    expect(screenSoundRoute({ deviceId: 'usb', label: 'x' }, lgTv, outputs)).toEqual({
+      kind: 'output',
+      label: 'USB Audio CODEC (USB)'
+    })
+    expect(screenSoundRoute({ deviceId: 'weg', label: 'Weg' }, lgTv, outputs)).toEqual({
+      kind: 'default'
+    })
+    expect(screenSoundRoute({ deviceId: 'default', label: '' }, lgTv, outputs)).toEqual({
+      kind: 'default'
+    })
   })
 })
