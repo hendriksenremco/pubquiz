@@ -62,7 +62,7 @@ function effect(id: number) {
     <div class="head">
       <h2>{{ t('light') }}</h2>
       <button v-if="light.manual" class="chip" :disabled="disabled" @click="emit('choose', null)">
-        {{ t('followShow') }}
+        <Icon name="restart" :size="16" />{{ t('followShow') }}
       </button>
     </div>
 
@@ -250,7 +250,7 @@ button:disabled {
 }
 
 .head .chip {
-  padding-left: 14px;
+  padding-left: 12px;
   background: var(--accent-soft);
   color: var(--accent);
 }
