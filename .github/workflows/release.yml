@@ -109,7 +109,7 @@ jobs:
           brew install ffmpeg-full
           echo "$(brew --prefix ffmpeg-full)/bin" >> "$GITHUB_PATH"
       - run: pnpm install --frozen-lockfile
-      - run: node scripts/make-demo.mjs && node scripts/make-tour.mjs && npx electron-vite build
+      - run: node scripts/make-demo.mjs && pnpm tour && npx electron-vite build
       - run: npx playwright test e2e/tour.spec.ts e2e/ai.spec.ts
 
       - name: Screenshots bij de release

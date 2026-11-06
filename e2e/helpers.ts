@@ -27,15 +27,20 @@ export function copyFixture(): string {
 /** De rondleiding zoals `pnpm tour` hem maakt; de app zet hem bij de eerste start klaar. */
 export const tourFixture = join(root, 'fixtures', 'rondleiding.pubquiz')
 
-/** Zelfde voor de rondleiding (fixtures/rondleiding.pubquiz, gemaakt met `pnpm tour`). */
-export function copyTour(): string {
-  return copyQuiz('rondleiding.pubquiz', 'make-tour.mjs')
+/**
+ * Zelfde voor de rondleiding, gemaakt met `pnpm tour`: fixtures/rondleiding.pubquiz, of in het
+ * Engels fixtures/tour.pubquiz.
+ */
+export function copyTour(locale: 'nl' | 'en' = 'nl'): string {
+  return locale === 'en'
+    ? copyQuiz('tour.pubquiz', 'make-tour.mjs', ['--locale', 'en'])
+    : copyQuiz('rondleiding.pubquiz', 'make-tour.mjs')
 }
 
-function copyQuiz(folder: string, script: string): string {
+function copyQuiz(folder: string, script: string, args: string[] = []): string {
   const target = join(tempDir('quiz'), folder)
   cpSync(join(root, 'fixtures', folder, 'media'), join(target, 'media'), { recursive: true })
-  execFileSync(process.execPath, [join(root, 'scripts', script), '--quiz-only', target])
+  execFileSync(process.execPath, [join(root, 'scripts', script), '--quiz-only', target, ...args])
   return target
 }
 
@@ -163,9 +168,12 @@ export async function startShow(page: Page) {
 }
 
 /** Zet alle scherm-slots op "venster op deze laptop", zodat tests geen externe displays overnemen. */
-export async function useWindowedScreens(operator: Page) {
+export async function useWindowedScreens(
+  operator: Page,
+  label = 'Venster op deze laptop (om te testen)'
+) {
   for (const box of await operator.locator('.screen .screen-target [role="combobox"]').all()) {
-    await choose(operator, box, 'Venster op deze laptop (om te testen)')
+    await choose(operator, box, label)
   }
 }
 
