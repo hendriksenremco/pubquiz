@@ -7,6 +7,7 @@
 import { z } from 'zod'
 import { definePlugin, pluginData, setPluginData, typeOnly, type HasPlugins } from './plugin'
 import { createSlide, hasAnswers, newId } from './factory'
+import type { Locale } from './i18n'
 import type { Quiz, Round, Slide } from './types'
 
 const TeamSchema = z.object({ id: z.string(), name: z.string() })
@@ -129,6 +130,25 @@ export function clearPoints(quiz: HasPlugins): void {
 
 export function pointsOf(scores: Scores, roundId: string, teamId: string): number | undefined {
   return scores.points[roundId]?.[teamId]
+}
+
+/**
+ * Punten als tekst, in de taal van de app: 8,5 in het Nederlands, 8.5 in het Engels. Zonder
+ * duizendtallen, zodat wat in een puntenveld staat weer precies zo ingelezen wordt.
+ */
+export function formatPoints(points: number, locale: Locale): string {
+  return points.toLocaleString(locale, { maximumFractionDigits: 2, useGrouping: false })
+}
+
+/** Wat er in een puntenveld staat: leeg als het nog niet is ingevuld. */
+export function pointsText(
+  scores: Scores,
+  roundId: string,
+  teamId: string,
+  locale: Locale
+): string {
+  const points = pointsOf(scores, roundId, teamId)
+  return points === undefined ? '' : formatPoints(points, locale)
 }
 
 export interface Standing {

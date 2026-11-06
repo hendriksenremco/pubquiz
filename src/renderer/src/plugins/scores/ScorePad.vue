@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { pointsOf, roundsToScore, scoresOf, standings } from '@shared/scores'
+import { formatPoints, pointsText, roundsToScore, scoresOf, standings } from '@shared/scores'
 import type { Round } from '@shared/types'
 import { locale } from '../../lib/locale'
 import { useSession } from '../../stores/session'
@@ -43,15 +43,15 @@ const totals = computed(
             <td class="team">{{ team.name }}</td>
             <td v-for="r in rounds" :key="r.id" class="round">
               <input
-                :value="pointsOf(scores, r.id, team.id) ?? ''"
+                :value="pointsText(scores, r.id, team.id, locale)"
                 type="text"
                 inputmode="decimal"
                 class="input input-sm points mono"
                 :aria-label="t('points', { team: team.name, round: r.title })"
-                @change="enterPoints(quiz, r.id, team.id, $event)"
+                @change="enterPoints(quiz, r.id, team.id, $event, locale)"
               />
             </td>
-            <td class="total mono">{{ totals.get(team.id) ?? 0 }}</td>
+            <td class="total mono">{{ formatPoints(totals.get(team.id) ?? 0, locale) }}</td>
           </tr>
         </tbody>
       </table>

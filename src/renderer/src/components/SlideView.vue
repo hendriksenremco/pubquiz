@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, inject } from 'vue'
 import type { Locale } from '@shared/i18n'
-import type { Standing } from '@shared/scores'
+import { formatPoints, type Standing } from '@shared/scores'
 import { SCREEN_MESSAGES } from '@shared/show-messages'
 import type { Quiz, Slide } from '@shared/types'
 import { locale as appLocale } from '../lib/locale'
@@ -72,7 +72,7 @@ const standingsGrid = computed(() => {
         <li v-for="s in standings" :key="s.team.id" class="standing">
           <span class="place">{{ s.place }}</span>
           <span class="team">{{ s.team.name }}</span>
-          <span class="total">{{ s.total.toLocaleString(locale) }}</span>
+          <span class="total">{{ formatPoints(s.total, locale) }}</span>
         </li>
       </ol>
     </template>
