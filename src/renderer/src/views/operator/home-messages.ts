@@ -28,7 +28,7 @@ export const HOME_MESSAGES = defineMessages(
     basedOn: 'Op basis van…',
     finder: 'Toon in Finder',
     notFound: 'Niet gevonden in {folder}',
-    forgetHint: 'Verwijder uit deze lijst',
+    forgetHint: 'Het quizbestand zelf blijft staan',
     forget: 'Verwijder uit lijst'
   },
   {
@@ -57,7 +57,7 @@ export const HOME_MESSAGES = defineMessages(
       basedOn: 'Based on this…',
       finder: 'Show in Finder',
       notFound: 'Not found in {folder}',
-      forgetHint: 'Remove from this list',
+      forgetHint: 'The quiz file itself stays where it is',
       forget: 'Remove from list'
     }
   }
