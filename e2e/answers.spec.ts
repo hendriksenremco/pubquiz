@@ -63,7 +63,7 @@ test('een vraag kan alleen zijn nummer in beeld tonen', async () => {
     .getByRole('group', { name: 'Op de slide', exact: true })
     .getByRole('button', { name: 'Alleen het nummer' })
     .click()
-  await expect(question).toContainText('alleen het nummer in beeld')
+  await expect(question).toContainText('alleen het nummer op de slide')
   await expect(question.locator('.slide .number')).toHaveText('1')
   await expect(question.locator('.slide .body')).toHaveCount(0)
 })
