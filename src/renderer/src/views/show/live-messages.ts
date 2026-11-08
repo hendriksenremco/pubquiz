@@ -79,11 +79,11 @@ export const LIVE_MESSAGES = defineMessages(
       imageSlide: 'Picture {number}',
       imageSlideTitled: 'Picture {number}: {title}',
       emptySlide: '(empty)',
-      loopPaused: 'Changing paused',
-      loopAfterTitle: 'Changing starts after the title',
+      loopPaused: 'Auto-advance paused',
+      loopAfterTitle: 'Auto-advance starts after the title',
       loopNext: 'Next in {seconds} s',
-      loopResume: 'Resume changing',
-      loopPause: 'Pause changing',
+      loopResume: 'Resume auto-advance',
+      loopPause: 'Pause auto-advance',
       controls: 'Controls',
       prevRound: 'Previous round',
       nextRound: 'Next round',
@@ -124,7 +124,7 @@ export const LIVE_MESSAGES = defineMessages(
       keySkip: 'Next in the sequence',
       keyBlackout: 'Black out or back',
       keyMute: 'Mute or unmute',
-      keyLoop: 'Pause or resume changing slides automatically',
+      keyLoop: 'Pause or resume auto-advancing the slides',
       keyTimer: 'Start or stop the countdown'
     }
   }

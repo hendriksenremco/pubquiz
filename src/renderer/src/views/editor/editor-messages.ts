@@ -299,7 +299,7 @@ export const ROUND_MESSAGES = defineMessages(
       gapUnit: 'seconds in between',
       countdown: 'Show the time until the next clip',
       renumber: 'Renumber names: Clip 1, 2, …',
-      loop: 'Change automatically',
+      loop: 'Auto-advance',
       every: 'Every',
       loopLabel: 'Seconds per slide',
       seconds: 'seconds',
