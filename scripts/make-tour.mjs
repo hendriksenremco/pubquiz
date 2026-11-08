@@ -846,8 +846,8 @@ const quiz = {
       hostNotes: L(
         'De vlaggen wisselen na de titelslide vanzelf, elke 5 seconden. Met L pauzeer je het ' +
           'wisselen, met ← → blader je zelf. In de antwoordenronde komt bij 5 en 6 de hele vlag in beeld.',
-        'After the title slide the flags change by themselves, every 5 seconds. L pauses the ' +
-          'changing, ← → let you go through them yourself. In the answers round, 5 and 6 show the ' +
+        'After the title slide the flags auto-advance, every 5 seconds. L pauses the ' +
+          'auto-advance, ← → let you go through them yourself. In the answers round, 5 and 6 show the ' +
           'whole flag.'
       ),
       slides: [
