@@ -12,7 +12,7 @@ Wat er nog moet gebeuren, staat als **issues** op GitHub (`gh issue list`). Hoe 
 
 ## Stand op 31 oktober 2026
 
-- **Versie:** 0.2.0 in `package.json`, nog niet uitgebracht (wat erin zit: `CHANGELOG.md`). De laatste release is 0.1.0: alleen macOS, alleen Nederlands. De tag voor een release zet Remco, of hij geeft er toestemming voor.
+- **Versie:** 0.2.0 (uitgebracht op 8 november 2026; wat erin zit: `CHANGELOG.md`). Een nieuwe release mag Claude zelf uitbrengen (sinds 8 november 2026): zet de kop in `CHANGELOG.md` op versie en datum, merge, en push de tag `v<versie>` op master. Doe dat zodra master een afgerond, getest geheel is; niet tijdens werk dat nog half af is.
 - **Release:** 0.1.0 staat op GitHub Releases, gesigneerd en genotariseerd (`.github/workflows/release.yml`, bij een tag `v*`). Lokaal maakt `pnpm build:mac` een ongesigneerde dmg.
 - **Na een release** maakt de job `site` in `release.yml` de screenshots voor de site (`tour-*.png` in het Nederlands, `tour-*.en.png` in het Engels, en `ai-music-round.png`), zet ze als `site-screens.zip` bij de release en start `app-release.yml` in de site-repo (secret `SITE_DISPATCH_TOKEN`). Die zet de screenshots en het versienummer live; de teksten werkt de nachtelijke taak van de site bij.
 - **Site:** live op https://quiznote.app (Firebase Hosting), met een downloadknop naar de nieuwste release. De site heeft een eigen repo: `~/Documents/pubquiz-site`, met een eigen CLAUDE.md.
