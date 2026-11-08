@@ -880,7 +880,7 @@ const quiz = {
       hostNotes: L(
         'Het geluid van deze video komt uit de speakers van de beamer; kies die bij Start ' +
           'show. Druk op → voor de vraag: die staat over de video heen. ' +
-          'Heeft een standaardvideo geluid, dan zet je dat per ronde uit bij Geluid van de video.',
+          'Heeft een standaardvideo geluid, dan zet je dat per ronde uit bij Videogeluid.',
         "The sound of this video comes from the projector's speakers; choose them at Start " +
           'show. Press → for the question: it appears on top of the video. ' +
           'If a default video has sound, you turn it off per round at Video sound.'
