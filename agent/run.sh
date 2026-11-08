@@ -18,6 +18,14 @@ export GH_CONFIG_DIR="$DIR/gh"   # eigen gh-instellingen, los van ~/.config/gh
 exec 9>"$DIR/.lock"
 flock -n 9 || { echo "De agent draait al." >&2; exit 0; }
 
+# Pauze: staat agent/PAUZE op master, dan doet de agent niets (geen Claude-run, geen tegoed).
+# Weghalen van dat bestand zet hem weer aan. De service probeert het elke 10 minuten opnieuw.
+if git -C "$REPO" cat-file -e origin/master:agent/PAUZE 2>/dev/null; then
+  echo "Pauze: agent/PAUZE staat op master." >&2
+  sleep 600
+  exit 0
+fi
+
 # Deze clone is alleen voor de agent: elke run begint schoon vanaf master.
 [ -d "$REPO/.git" ] || git -c credential.helper= -c 'credential.helper=!gh auth git-credential' \
   clone https://github.com/hendriksenremco/pubquiz.git "$REPO"
