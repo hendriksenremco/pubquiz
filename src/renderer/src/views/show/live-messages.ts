@@ -87,7 +87,7 @@ export const LIVE_MESSAGES = defineMessages(
       controls: 'Controls',
       prevRound: 'Previous round',
       nextRound: 'Next round',
-      nextRoundHint: 'Start the next round (Enter)',
+      nextRoundHint: 'Start the next round (Return)',
       restartRound: 'Restart round',
       restartRoundHint: 'From the start, with all clips unplayed again (R)',
       endRound: 'End round',
