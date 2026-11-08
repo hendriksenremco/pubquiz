@@ -1,6 +1,8 @@
 import { expect, test, type ElectronApplication, type Page } from '@playwright/test'
+import { Client } from '@modelcontextprotocol/sdk/client/index.js'
+import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 import { readFileSync, rmSync, writeFileSync } from 'fs'
-import { dirname, join } from 'path'
+import { dirname, join, resolve } from 'path'
 import {
   confirmIn,
   copyTour,
@@ -164,3 +166,84 @@ for (const locale of ['nl', 'en'] as const) {
     })
   })
 }
+
+const root = resolve(__dirname, '..')
+
+// De quiz die een AI maakte, in het Engels: ai-music-round.en.png. De Nederlandse komt uit ai.spec.ts.
+test.describe('screenshot van de AI-quiz voor de site (en)', () => {
+  let app: ElectronApplication
+  let operator: Page
+  let userData: string
+  let ai: Client
+
+  test.beforeAll(async () => {
+    userData = tempDir('userdata')
+    ;({ app, operator } = await launch(userData, undefined, { PUBQUIZ_LOCALE: 'en' }))
+    ai = new Client({ name: 'test', version: '1' })
+    await ai.connect(
+      new StdioClientTransport({
+        command: process.execPath,
+        args: [resolve('out/main/mcp.js')],
+        env: {
+          ...(process.env as Record<string, string>),
+          QUIZNOTE_SOCKET: join(userData, 'mcp.sock'),
+          QUIZNOTE_NO_LAUNCH: '1'
+        }
+      })
+    )
+  })
+
+  test.afterAll(async () => {
+    await ai?.close()
+    await app?.close()
+    rmSync(userData, { recursive: true, force: true })
+  })
+
+  test('een AI maakt een Engelse quiz over Italië', async () => {
+    const media = (file: string) => join(root, 'fixtures', 'tour.pubquiz', 'media', file)
+    const result = await ai.callTool({
+      name: 'create_quiz',
+      arguments: {
+        title: 'Pub quiz Italy',
+        rounds: [
+          {
+            type: 'questions',
+            title: 'Round 1: Italy',
+            intro: 'Five questions about Italy',
+            questions: [
+              { question: 'What is the capital of Italy?', answer: 'Rome' },
+              { question: 'Which volcano destroyed Pompeii?', answer: 'Vesuvius' },
+              { question: 'What colours are on the Italian flag?', answer: 'Green, white and red' }
+            ]
+          },
+          {
+            type: 'music',
+            title: 'Round 2: music',
+            intro: 'Which song do you hear?',
+            songs: [
+              { audio: media('frere-jacques.m4a'), answer: 'Frère Jacques' },
+              { audio: media('fur-elise.m4a'), answer: 'Für Elise', end: 6 }
+            ]
+          },
+          {
+            type: 'pictures',
+            title: 'Round 3: flags',
+            loopSeconds: 6,
+            pictures: [
+              { image: media('flag-italy.png'), answer: 'Italy' },
+              { image: media('flag-ireland.png'), answer: 'Ireland' }
+            ]
+          },
+          { type: 'break' },
+          { type: 'answers' }
+        ]
+      }
+    })
+    expect(result.isError).toBeFalsy()
+    await expect(operator.locator('.topbar .name')).toHaveText('Pub quiz Italy')
+    await operator.locator('.sidebar .round').nth(1).click()
+    await expect(operator.locator('.track')).toHaveCount(2)
+    await operator.waitForTimeout(1200)
+    await snap(operator, 'test-results/ai-music-round.en.png')
+  })
+})

@@ -118,7 +118,7 @@ jobs:
         run: |
           VERSION="v$(node -p "require('./package.json').version")"
           mkdir site-screens
-          cp test-results/site-*.png test-results/ai-music-round.png site-screens/
+          cp test-results/site-*.png test-results/ai-music-round*.png site-screens/
           (cd site-screens && zip -q ../site-screens.zip *.png)
           gh release upload "$VERSION" site-screens.zip --clobber
 
