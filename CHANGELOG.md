@@ -3,7 +3,7 @@
 Bij elke release komt hier bovenaan een kop met het versienummer uit `package.json` en de datum.
 Een unit-test (`src/main/about.test.ts`) controleert dat de bovenste kop bij die versie hoort.
 
-## 0.2.0 (nog niet uitgebracht)
+## 0.2.0 (8 november 2026)
 
 - QuizNote spreekt Engels: de app volgt de taal van je Mac (Nederlands of Engels), en de rondleiding is er in beide talen.
 - Aftellen op de schermen: druk op T, of op de knop Aftellen op de Mac of je telefoon. De tijd stel je in per quiz of per ronde.
