@@ -31,10 +31,10 @@ export const COMPONENT_MESSAGES = defineMessages(
     withoutSound: ', zonder geluid',
     withSound: ', met geluid',
     showsQuizDefault: 'Toont wat bij de quiz is ingesteld.',
-    videoSound: 'Geluid van de video',
+    videoSound: 'Videogeluid',
     mutedThisRound: 'Stil tijdens deze ronde, daarna klinkt hij weer.',
     asQuiz: 'Zoals bij de quiz.',
-    videoVolume: 'Volume van de video',
+    videoVolume: 'Volume van het videogeluid',
     videoSoundHint: 'Via de speakers van het scherm, of de uitgang die je bij Start show kiest.',
     // BackdropPicker
     backdrop: 'Achtergrond',
