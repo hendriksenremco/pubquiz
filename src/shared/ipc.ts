@@ -111,7 +111,15 @@ export interface AiSetup {
 }
 
 export type MenuAction =
-  'new' | 'open' | 'exportZip' | 'importZip' | 'reveal' | 'undo' | 'redo' | 'settings'
+  | 'new'
+  | 'open'
+  | 'exportZip'
+  | 'importZip'
+  | 'importRound'
+  | 'reveal'
+  | 'undo'
+  | 'redo'
+  | 'settings'
 
 export interface ImportResult {
   assets: MediaAsset[]
