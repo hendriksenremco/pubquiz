@@ -1,5 +1,6 @@
-# Controle van elke pull request op echte macOS: typecheck, unit-tests, e2e-tests en een build.
-# macOS-minuten tellen op GitHub tien keer zwaarder dan Linux; daarom alleen bij pull requests en met de hand.
+# Controle van elke pull request: typecheck en unit-tests op Linux, e2e-tests op macOS, en de dmg-build
+# op macOS alleen als de pull request iets aan het verpakken verandert. macOS-runners staan vaak in de
+# wachtrij; daarom zo min mogelijk macOS-jobs. De e2e-tests slagen nog niet allemaal op Linux.
 name: CI
 
 on:
@@ -14,7 +15,7 @@ concurrency:
 jobs:
   check:
     name: Typecheck en unit-tests
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -168,8 +169,30 @@ jobs:
             gh pr comment "$PR" --repo "$REPO" --body-file "$body"
           fi
 
+  # Verandert de pull request iets aan het verpakken? Alleen dan is de dmg-build op macOS nodig.
+  packaging:
+    name: Verpakken gewijzigd?
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.diff.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: diff
+        run: |
+          if [ "${{ github.event_name }}" != pull_request ]; then echo changed=true >> "$GITHUB_OUTPUT"; exit 0; fi
+          files=$(git diff --name-only "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}")
+          if echo "$files" | grep -qE '^(package\.json|pnpm-lock\.yaml|electron-builder\.yml|electron\.vite\.config\.ts|build/|resources/|scripts/(make-tour|install-app)|\.github/workflows/)'; then
+            echo changed=true >> "$GITHUB_OUTPUT"
+          else
+            echo changed=false >> "$GITHUB_OUTPUT"
+          fi
+
   build:
     name: Build (ongesigneerde dmg)
+    needs: packaging
+    if: needs.packaging.outputs.changed == 'true'
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
