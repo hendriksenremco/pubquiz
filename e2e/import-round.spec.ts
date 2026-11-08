@@ -176,6 +176,21 @@ test('importeert een rondebestand dat in Finder geopend wordt', async () => {
     .toBe(true)
 })
 
+test('importeert een rondebestand via het menu Archief', async () => {
+  await chooseFile(roundFile('Natuur', 'Natuur'))
+  await app.evaluate(({ Menu }, label) => {
+    const file = Menu.getApplicationMenu()!.items.find((item) => item.label === 'Archief')!
+    file.submenu!.items.find((item) => item.label === label)!.click()
+  }, 'Importeer ronde…')
+  await expect(
+    operator.locator('.notice', { hasText: 'Ronde “Natuur” geïmporteerd' })
+  ).toBeVisible()
+  await expect(operator.locator('.sidebar .round.on .round-title')).toHaveText('Natuur')
+  await expect
+    .poll(() => savedQuiz().rounds.some((r: { title: string }) => r.title === 'Natuur'))
+    .toBe(true)
+})
+
 test('vraagt in welke quiz als er geen quiz open is', async () => {
   await operator.locator('.topbar .back').click()
   await expect(operator.locator('.sidebar')).toHaveCount(0)

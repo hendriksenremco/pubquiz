@@ -41,6 +41,14 @@ async function importRoundFiles() {
   for (const path of paths) await editor.value?.importRounds(path)
 }
 
+/** Importeer ronde… uit het menu Archief: hetzelfde als de knop in de editor; zonder quiz niets. */
+async function importRound() {
+  if (!session.quiz) return
+  mode.value = 'edit'
+  await nextTick()
+  await editor.value?.importRounds()
+}
+
 async function open(path?: string, openIn: 'edit' | 'show' = 'edit') {
   session.flush()
   mode.value = 'edit'
@@ -91,6 +99,7 @@ const actions: Record<MenuAction, () => void> = {
   new: () => void create(),
   open: () => void open(),
   importZip: () => void api.importZip(),
+  importRound: () => void importRound(),
   exportZip: () => {
     session.flush()
     void api.exportZip()

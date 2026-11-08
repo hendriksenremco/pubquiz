@@ -32,6 +32,7 @@ export function buildMenu(controller: AppController): void {
         { label: t('openQuiz'), accelerator: 'CmdOrCtrl+O', click: () => send('open') },
         { type: 'separator' },
         { label: t('importZip'), click: () => send('importZip') },
+        { label: t('importRound'), click: () => send('importRound') },
         { label: t('exportZip'), click: () => send('exportZip') },
         { type: 'separator' },
         { label: t('reveal'), click: () => send('reveal') }
