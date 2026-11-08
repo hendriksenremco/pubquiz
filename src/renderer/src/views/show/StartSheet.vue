@@ -432,7 +432,9 @@ const savedAt = computed(() =>
 <style scoped>
 .backdrop {
   position: fixed;
-  inset: 46px 0 0;
+  inset: 0;
+  /* Het venster hangt onder de werkbalk, maar de werkbalk dimt mee: zoals bij elke dialoog. */
+  padding-top: 46px;
   z-index: 80;
   display: flex;
   align-items: flex-start;
