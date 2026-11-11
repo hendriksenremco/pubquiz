@@ -120,7 +120,8 @@ export const NOTICE_MESSAGES = defineMessages(
     badRoundLink: 'QuizNote opent alleen rondes van quiznote.app',
     roundDownloadFailed: 'Het rondebestand ophalen is mislukt: {error}',
     folderWithoutMedia: '{name} (geen media)',
-    formNotLoading: 'het formulier laadt niet'
+    formNotLoading: 'het formulier laadt niet',
+    updateReady: 'QuizNote {version} staat klaar en wordt geïnstalleerd als je de app afsluit'
   },
   {
     en: {
@@ -161,7 +162,8 @@ export const NOTICE_MESSAGES = defineMessages(
       badRoundLink: 'QuizNote only opens rounds from quiznote.app',
       roundDownloadFailed: 'Could not download the round file: {error}',
       folderWithoutMedia: '{name} (no media)',
-      formNotLoading: 'the form does not load'
+      formNotLoading: 'the form does not load',
+      updateReady: 'QuizNote {version} is ready and will be installed when you quit the app'
     }
   }
 )

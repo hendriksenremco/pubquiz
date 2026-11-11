@@ -13,6 +13,12 @@ mac:
   notarize: true
   # Geldt voor de zip (voor updates); de dmg krijgt hieronder een vaste naam.
   artifactName: QuizNote-${version}-mac.${ext}
+# Automatische updates (issue #46): de app leest app-update.yml en haalt latest-mac.yml en de zip
+# van GitHub Releases. Uploaden doet release.yml zelf (--publish never).
+publish:
+  provider: github
+  owner: hendriksenremco
+  repo: pubquiz
 # Vaste naam, zodat de site altijd naar .../releases/latest/download/QuizNote.dmg kan linken.
 dmg:
   artifactName: QuizNote.${ext}

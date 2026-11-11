@@ -11,6 +11,7 @@ import type { HardwareMapping, Quiz } from '@shared/types'
 import { aboutPanelOptions } from './about'
 import { AgentBridge, aiSetup, connectClaude, handleAgent } from './agent'
 import { Analytics } from './analytics'
+import { startUpdates } from './auto-update'
 import { AppController } from './controller'
 import { handleMediaProtocol, registerMediaScheme } from './media-protocol'
 import { appLocale } from './locale'
@@ -147,6 +148,7 @@ app.whenReady().then(async () => {
     ctl.operator = null
     app.quit()
   })
+  startUpdates(ctl)
 })
 
 let quitting = false

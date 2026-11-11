@@ -45,6 +45,9 @@ protocols:
   - name: QuizNote-ronde
     schemes:
       - quiznote
+# Geen updates voor een ongesigneerde build (pnpm build:mac): zonder publish geen app-update.yml.
+# De release zet hem wel (electron-builder.release.yml).
+publish: null
 mac:
   target:
     - dmg
