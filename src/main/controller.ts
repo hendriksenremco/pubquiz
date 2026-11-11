@@ -47,6 +47,7 @@ import { Settings, type RecoveryData } from './settings'
 import { readRoundFile } from './round-file'
 import { downloadRoundFile } from './round-link'
 import { ShowController } from './show'
+import type { Updater } from './updater'
 import { headless } from './windows'
 
 const SAVE_DELAY_MS = 600
@@ -57,6 +58,8 @@ const RECOVERY_MAX_AGE_MS = 12 * 60 * 60 * 1000
 export class AppController {
   operator: BrowserWindow | null = null
   audio: BrowserWindow | null = null
+  /** Automatische updates (issue #46); alleen in de gesigneerde app. */
+  updater: Updater | null = null
 
   private quiz: Quiz | null = null
   private quizDir: string | null = null
@@ -531,6 +534,7 @@ export class AppController {
     if (this.recoveryTimer) clearTimeout(this.recoveryTimer)
     this.recoveryTimer = null
     await this.settings.clearRecovery()
+    this.updater?.showStopped()
   }
 
   setHardware(mapping: HardwareMapping): void {
