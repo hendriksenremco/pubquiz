@@ -47,7 +47,7 @@ function addRound(preset: RoundPreset, close: () => void) {
 }
 
 /**
- * Ronde importeren…: de rondes uit een rondebestand komen na de gekozen ronde (issue #99). Zonder
+ * Importeer ronde…: de rondes uit een rondebestand komen na de gekozen ronde (issue #99). Zonder
  * pad vraagt main welk bestand; met pad komt het uit Finder of van een drop.
  */
 async function importRounds(path?: string) {

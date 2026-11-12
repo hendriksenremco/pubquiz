@@ -46,17 +46,17 @@ export const MENU_MESSAGES = defineMessages(
 /** De dialogen van macOS om te openen en op te slaan. */
 export const DIALOG_MESSAGES = defineMessages(
   {
-    openTitle: 'Quiz openen',
+    openTitle: 'Open quiz',
     openButton: 'Open',
     openMessage: 'Kies een {ext}-map (of het quiz.json-bestand erin)',
-    importZipTitle: 'Quiz importeren uit zip',
-    exportZipTitle: 'Quiz exporteren als zip',
-    savePdfTitle: 'Pdf opslaan',
-    importMediaTitle: 'Media importeren',
+    importZipTitle: 'Importeer quiz uit zip',
+    exportZipTitle: 'Exporteer quiz als zip',
+    savePdfTitle: 'Sla pdf op',
+    importMediaTitle: 'Importeer media',
     importMediaMessage: 'Kies bestanden of een hele map',
     importMediaButton: 'Importeer',
     mediaFilter: 'Video, audio en afbeeldingen',
-    importRoundsTitle: 'Ronde importeren',
+    importRoundsTitle: 'Importeer ronde',
     roundFileFilter: 'Rondebestand van QuizNote',
     chooseQuizForRound: 'In welke quiz wil je “{file}” importeren?'
   },
