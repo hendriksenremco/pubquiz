@@ -11,7 +11,7 @@ const each = (list: unknown, fn: (item: Record<string, unknown>) => unknown) =>
 
 /** `migrations[n]` zet een quiz van schemaVersion n om naar n + 1. */
 const migrations: Record<number, Migration> = {
-  // 1 → 2: videogeluid ging naar een audiokanaal; nu via de speakers van het scherm met een volume.
+  // 1 → 2: videogeluid ging naar een geluidskanaal; nu via de speakers van het scherm met een volume.
   1: (raw) => {
     const convert = (content: unknown) => {
       if (typeof content !== 'object' || content === null) return content

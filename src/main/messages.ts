@@ -55,7 +55,7 @@ export const DIALOG_MESSAGES = defineMessages(
     importMediaTitle: 'Importeer media',
     importMediaMessage: 'Kies bestanden of een hele map',
     importMediaButton: 'Importeer',
-    mediaFilter: 'Video, audio en afbeeldingen',
+    mediaFilter: 'Video, geluid en afbeeldingen',
     importRoundsTitle: 'Importeer ronde',
     roundFileFilter: 'Rondebestand van QuizNote',
     chooseQuizForRound: 'In welke quiz wil je “{file}” importeren?'
@@ -71,7 +71,7 @@ export const DIALOG_MESSAGES = defineMessages(
       importMediaTitle: 'Import Media',
       importMediaMessage: 'Choose files or a whole folder',
       importMediaButton: 'Import',
-      mediaFilter: 'Video, audio and pictures',
+      mediaFilter: 'Video, sound and pictures',
       importRoundsTitle: 'Import Round',
       roundFileFilter: 'QuizNote round file',
       chooseQuizForRound: 'Which quiz do you want to import “{file}” into?'
@@ -115,7 +115,7 @@ export const NOTICE_MESSAGES = defineMessages(
     notAPicture: '{file}: geen afbeelding',
     notAudio: '{file}: geen geluidsbestand',
     noAudioChannel:
-      'Deze quiz heeft geen audiokanaal voor de fragmenten. Voeg er een toe bij Quiz-instellingen.',
+      'Deze quiz heeft geen geluidskanaal voor de fragmenten. Voeg er een toe bij Quiz-instellingen.',
     roundFileTooBig: 'Dit rondebestand is groter dan 1 GB',
     badRoundLink: 'QuizNote opent alleen rondes van quiznote.app',
     roundDownloadFailed: 'Rondebestand ophalen mislukt: {error}',

@@ -72,7 +72,7 @@ Meer rondes:
 ## Bij het importeren
 
 - Er zijn vier manieren: **Importeer ronde…** onder de lijst met rondes of in het menu Archief, het bestand op de editor slepen, dubbelklikken in Finder, of een link vanaf de site (zie hieronder). Is er dan geen quiz open, dan vraagt de app eerst in welke quiz. De rondes komen na de gekozen ronde.
-- De app controleert eerst alles: het formaat (zod), de paden, of elk bestand bestaat en van de goede soort is, en of de rondes in de quiz passen (een muziekronde heeft een audiokanaal nodig). Bij een fout komt er een melding en verandert er niets.
+- De app controleert eerst alles: het formaat (zod), de paden, of elk bestand bestaat en van de goede soort is, en of de rondes in de quiz passen (een muziekronde heeft een geluidskanaal nodig). Bij een fout komt er een melding en verandert er niets.
 - De media gaan naar `media/` van de quiz, onder een hash-naam, zoals altijd. Een bestand dat de quiz al heeft, komt er niet dubbel in.
 - Elke ronde krijgt in Media een map met zijn titel.
 
