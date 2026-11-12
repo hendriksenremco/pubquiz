@@ -190,9 +190,11 @@ function autoOutput(slotId: string): AudioOutput | null {
 }
 
 function autoLabel(slotId: string): string {
-  if (session.hardware.screens[slotId]?.kind !== 'display') return t('autoDefault')
-  const output = autoOutput(slotId)
-  return output ? t('screenSpeakers', { name: output.label }) : t('screenSpeakersMissing')
+  // Dezelfde woorden als in de mixer tijdens de show: de speakers heten naar het display.
+  const target = session.hardware.screens[slotId]
+  if (target?.kind !== 'display') return t('autoDefault')
+  const name = target.label
+  return autoOutput(slotId) ? t('screenSpeakers', { name }) : t('screenSpeakersMissing', { name })
 }
 
 function soundOptions(slotId: string): SelectOption[] {
