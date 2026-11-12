@@ -91,7 +91,7 @@ export const COMPONENT_MESSAGES = defineMessages(
       videoSound: 'Video sound',
       mutedThisRound: 'Silent during this round, then it plays again.',
       asQuiz: 'As set for the quiz.',
-      videoVolume: 'Video volume',
+      videoVolume: 'Video sound volume',
       videoSoundHint: "Through the display's speakers, or the output you choose at Start show.",
       backdrop: 'Background',
       backdropDim: 'Video, dimmed',

@@ -145,7 +145,7 @@ export const SLIDE_MESSAGES = defineMessages(
       kindNumber: 'Number',
       kindStandings: 'Scoreboard',
       kindImage: 'Picture {number}',
-      choose: 'Select {name}',
+      choose: 'Choose {name}',
       heading: 'Heading',
       questionPlaceholder: 'Question',
       numberOnlyNote: 'only the number on the slide',

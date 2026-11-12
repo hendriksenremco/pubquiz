@@ -41,5 +41,7 @@ describe('teksten van de werkbalk en de dialogen', () => {
     const t = ANALYTICS_MESSAGES.in('nl')
     expect(t('no')).toBe('Meet niet')
     expect(t('yes')).toBe('Meet anoniem')
+    // Het Engels belooft op de knop ook dat het anoniem is.
+    expect(ANALYTICS_MESSAGES.in('en')('yes')).toBe('Measure anonymously')
   })
 })
