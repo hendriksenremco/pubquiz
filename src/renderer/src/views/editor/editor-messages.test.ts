@@ -68,4 +68,13 @@ describe('teksten van de editor', () => {
       expect(setup('createFromCurrent').endsWith('…')).toBe(true)
     }
   })
+  it('noemt de schermen bij een slide, het fragmentnummer en de antwoorden overal "In beeld op"', () => {
+    for (const locale of ['nl', 'en'] as const) {
+      const round = ROUND_MESSAGES.in(locale)
+      const slide = SLIDE_MESSAGES.in(locale)
+      expect(slide('shownOn')).toBe(round('shownOn'))
+      for (const label of [slide('onScreens'), round('numberOnLabel'), round('answersShownOn')])
+        expect(label.endsWith(` ${round('shownOn').toLowerCase()}`), label).toBe(true)
+    }
+  })
 })
