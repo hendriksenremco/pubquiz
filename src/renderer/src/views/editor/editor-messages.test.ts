@@ -104,4 +104,9 @@ describe('teksten van de editor', () => {
       expect(SETUP_MESSAGES.in(locale)('remove')).toBe(confirm)
     }
   })
+
+  it('zegt "Choose" voor Kies, zoals in de keuzelijsten', () => {
+    expect(SLIDE_MESSAGES.in('en')('choose', { name: 'Title' })).toBe('Choose Title')
+    expect(SLIDE_MESSAGES.in('nl')('choose', { name: 'Titel' })).toBe('Kies Titel')
+  })
 })

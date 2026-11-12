@@ -141,7 +141,7 @@ export const ANALYTICS_MESSAGES = defineMessages(
         'QuizNote then anonymously measures the version, your type of Mac, shows started (numbers of rounds, screens and channels, and which plug-ins) and errors, but never the content of your quiz, file names, media or IP addresses.',
       later: 'You can change this at any time in Settings.',
       no: "Don't measure",
-      yes: 'Measure'
+      yes: 'Measure anonymously'
     }
   }
 )

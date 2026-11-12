@@ -19,4 +19,11 @@ describe('teksten van de algemene onderdelen', () => {
       COMPONENT_MESSAGES.in('nl')('kindsJoin', { first: "Video's", second: 'Afbeeldingen' })
     ).toBe("Video's en Afbeeldingen")
   })
+
+  it('noemt het volume van een video naar het videogeluid, zoals het veld erboven', () => {
+    for (const locale of ['nl', 'en'] as const) {
+      const t = COMPONENT_MESSAGES.in(locale)
+      expect(t('videoVolume').toLowerCase()).toContain(t('videoSound').toLowerCase())
+    }
+  })
 })
