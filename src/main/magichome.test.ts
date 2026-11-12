@@ -191,7 +191,7 @@ describe('MagicHomePlugin', () => {
     })
     expect(await plugin.actions.probe(host)).toMatchObject({
       ok: false,
-      error: expect.stringContaining('refuses the connection')
+      error: `MagicHome controller at ${host.split(':')[0]}: refuses the connection. Is the IP address right?`
     })
     plugin.stop()
   })
