@@ -185,7 +185,7 @@ function reveal(q: RecentQuiz) {
               <Icon name="folder" :size="13" /> {{ t('finder') }}
             </button>
             <button class="card-action" :title="t('forgetHint')" @click="forget(q)">
-              <Icon name="x" :size="13" /> {{ t('forget') }}
+              <Icon name="trash" :size="13" /> {{ t('forget') }}
             </button>
           </div>
         </div>
