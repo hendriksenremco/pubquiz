@@ -189,27 +189,30 @@ export function errorText(err: unknown, locale: Locale): string {
   return err instanceof Error ? err.message : String(err)
 }
 
-/** Fouten van de MagicHome-controller, voor de instellingen, de werkbalk en de telefoon. */
+/**
+ * Fouten van de MagicHome-controller, voor de instellingen, de werkbalk en de telefoon. Zelfde vorm
+ * als de andere meldingen: eerst de controller, dan wat er mis is.
+ */
 export const MAGICHOME_ERRORS = defineMessages(
   {
     fillAddress: 'Vul het IP-adres van de controller in',
-    fillAddressFirst: 'Vul eerst het adres van de controller in',
+    fillAddressFirst: 'Vul eerst het IP-adres van de controller in',
     onlyLive: 'Alleen tijdens de show',
     followsShow: 'Tijdens de show volgt het licht de show',
-    refused: '{host} weigert de verbinding. Is dit de MagicHome-controller?',
+    refused: 'MagicHome-controller op {host}: weigert de verbinding. Klopt het IP-adres?',
     unreachable:
-      'MagicHome-controller op {host} niet bereikbaar. Zit hij op hetzelfde wifi-netwerk als deze Mac?',
+      'MagicHome-controller op {host}: niet bereikbaar. Zit hij op hetzelfde wifi-netwerk als deze Mac?',
     other: 'MagicHome-controller op {host}: {error}'
   },
   {
     en: {
       fillAddress: 'Enter the IP address of the controller',
-      fillAddressFirst: 'Enter the address of the controller first',
+      fillAddressFirst: 'Enter the IP address of the controller first',
       onlyLive: 'Only during the show',
       followsShow: 'During the show, the lights follow the show',
-      refused: '{host} refuses the connection. Is this the MagicHome controller?',
+      refused: 'MagicHome controller at {host}: refuses the connection. Is the IP address right?',
       unreachable:
-        'Cannot reach the MagicHome controller at {host}. Is it on the same Wi-Fi network as this Mac?',
+        'MagicHome controller at {host}: not reachable. Is it on the same Wi-Fi network as this Mac?',
       other: 'MagicHome controller at {host}: {error}'
     }
   }

@@ -45,7 +45,7 @@ export const LIGHT_PICKER_MESSAGES = defineMessages(
     speed: 'Snelheid',
     previewOnLamp: 'Voorbeeld op het licht',
     liveFollowsShow: 'Tijdens de show volgt het licht de show.',
-    noAddress: 'Vul eerst het adres van de controller in bij Instellingen.',
+    noAddress: 'Vul eerst het IP-adres van de controller in bij Instellingen.',
     /** De tooltip van het veld, bv. "Licht in deze ronde: Rood". */
     title: '{label}: {value}',
     /** Zonder eigen licht, met wat er dan brandt: "Licht bij deze slide: Zoals de ronde (Rood)". */
@@ -62,7 +62,7 @@ export const LIGHT_PICKER_MESSAGES = defineMessages(
       speed: 'Speed',
       previewOnLamp: 'Preview on the lights',
       liveFollowsShow: 'During the show, the lights follow the show.',
-      noAddress: 'First enter the address of the controller in Settings.',
+      noAddress: 'First enter the IP address of the controller in Settings.',
       title: '{label}: {value}',
       titleInherited: '{label}: {value} ({fallback})'
     }
