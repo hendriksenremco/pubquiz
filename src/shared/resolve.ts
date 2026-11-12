@@ -505,7 +505,8 @@ export function findBrokenReferences(quiz: Quiz, locale: Locale = 'nl'): string[
   for (const slot of quiz.screens) checkContent(slot.default, t('screen', { name: slot.name }))
   if (quiz.background) {
     checkAsset(quiz.background.assetId, t('background'))
-    if (!channelIds.has(quiz.background.channelId)) problems.push(t('backgroundChannelMissing'))
+    if (!channelIds.has(quiz.background.channelId))
+      problems.push(t('channelMissing', { where: t('background') }))
   }
   for (const round of quiz.rounds) {
     const where = t('round', { title: roundTitle(round, locale) })

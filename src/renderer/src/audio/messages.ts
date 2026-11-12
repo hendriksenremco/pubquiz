@@ -4,20 +4,19 @@ import { defineMessages } from '@shared/i18n'
 export const AUDIO_MESSAGES = defineMessages(
   {
     outputMissing:
-      'Uitgang “{output}” voor kanaal “{channel}” niet gevonden; systeemstandaard gebruikt',
+      '{channel}: uitgang “{output}” niet gevonden, het geluid gaat naar de systeemstandaard',
     cannotRoute: 'Kan kanaal “{channel}” niet naar deze uitgang sturen',
     noChannel: 'Geen kanaal voor {fragment}',
     cannotPlay: '{fragment} kan niet worden afgespeeld ({error})',
-    fileMissing: 'bestand niet gevonden ({status})'
+    fileMissing: 'bestand ontbreekt ({status})'
   },
   {
     en: {
-      outputMissing:
-        'Output “{output}” for channel “{channel}” not found; using the system default',
+      outputMissing: '{channel}: output “{output}” not found, the sound goes to the system default',
       cannotRoute: 'Cannot send channel “{channel}” to this output',
       noChannel: 'No channel for {fragment}',
       cannotPlay: '{fragment} cannot be played ({error})',
-      fileMissing: 'file not found ({status})'
+      fileMissing: 'file missing ({status})'
     }
   }
 )
