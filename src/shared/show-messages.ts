@@ -117,9 +117,8 @@ export const ANSWER_CONTEXT = {
 /** Wat `findBrokenReferences` meldt bij Start show: verwijzingen naar media of kanalen die weg zijn. */
 export const CHECK_MESSAGES = defineMessages(
   {
-    mediaMissing: '{where}: media ontbreekt',
+    mediaMissing: '{where}: bestand ontbreekt',
     channelMissing: '{where}: kanaal ontbreekt',
-    backgroundChannelMissing: 'Achtergrondmuziek: audiokanaal ontbreekt',
     screen: 'Scherm “{name}”',
     background: 'Achtergrondmuziek',
     round: 'Ronde “{title}”',
@@ -128,9 +127,8 @@ export const CHECK_MESSAGES = defineMessages(
   },
   {
     en: {
-      mediaMissing: '{where}: media missing',
+      mediaMissing: '{where}: file missing',
       channelMissing: '{where}: channel missing',
-      backgroundChannelMissing: 'Background music: audio channel missing',
       screen: 'Screen “{name}”',
       background: 'Background music',
       round: 'Round “{title}”',

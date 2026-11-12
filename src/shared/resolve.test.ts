@@ -392,12 +392,12 @@ describe('referenties', () => {
     quiz.channels = quiz.channels.filter((c) => c.id !== 'frag')
     expect(findBrokenReferences(quiz)).toEqual([
       'Ronde “Muziek”, Fragment 1: kanaal ontbreekt',
-      'Ronde “Muziek”, Fragment 2: media ontbreekt',
+      'Ronde “Muziek”, Fragment 2: bestand ontbreekt',
       'Ronde “Muziek”, Fragment 2: kanaal ontbreekt'
     ])
     expect(findBrokenReferences(quiz, 'en')).toEqual([
       'Round “Muziek”, Fragment 1: channel missing',
-      'Round “Muziek”, Fragment 2: media missing',
+      'Round “Muziek”, Fragment 2: file missing',
       'Round “Muziek”, Fragment 2: channel missing'
     ])
   })
