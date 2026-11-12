@@ -25,6 +25,13 @@ type Report = (event: AudioEngineEvent) => void
 
 const t = AUDIO_MESSAGES.in(locale)
 
+/** Het bestand van een fragment is er niet (meer): de melding zegt "bestand ontbreekt", geen technische fout. */
+class FileMissingError extends Error {
+  constructor(status: number) {
+    super(`HTTP ${status}`)
+  }
+}
+
 /** Eén AudioContext per kanaal; via setSinkId naar het gekoppelde apparaat. */
 class Output {
   readonly ctx = new AudioContext({ latencyHint: 'playback' })
@@ -248,7 +255,8 @@ export class AudioEngine {
   }
 
   private fail = (err: unknown) => {
-    this.report({ type: 'error', message: err instanceof Error ? err.message : String(err) })
+    const error = err instanceof Error ? err.message : String(err)
+    this.report({ type: 'error', message: t('failed', { error }) })
   }
 
   private syncOutputs(quiz: Quiz, hardware: HardwareMapping, volumes: Record<string, number>) {
@@ -398,7 +406,10 @@ export class AudioEngine {
       this.report({
         type: 'error',
         key: want.key,
-        message: t('cannotPlay', { fragment: want.fragment.label, error: (err as Error).message })
+        message:
+          err instanceof FileMissingError
+            ? t('fileMissing', { fragment: want.fragment.label })
+            : t('cannotPlay', { fragment: want.fragment.label, error: (err as Error).message })
       })
       return
     }
@@ -460,7 +471,7 @@ export class AudioEngine {
     if (!pending) {
       pending = fetch(urlFor(asset))
         .then((res) => {
-          if (!res.ok) throw new Error(t('fileMissing', { status: res.status }))
+          if (!res.ok) throw new FileMissingError(res.status)
           return res.arrayBuffer()
         })
         .then((data) => this.decoder.decodeAudioData(data))

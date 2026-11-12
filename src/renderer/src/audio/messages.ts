@@ -1,7 +1,7 @@
 import { defineMessages } from '@shared/i18n'
 
 /**
- * Wat de audio-engine meldt; main zet er "Audio:" voor (`audioError` in src/main/messages.ts).
+ * Wat de audio-engine meldt; main toont het zo als melding.
  * Zelfde vorm als de andere meldingen over iets wat ontbreekt: `{waar}: {wat} {toestand}`.
  */
 export const AUDIO_MESSAGES = defineMessages(
@@ -11,7 +11,8 @@ export const AUDIO_MESSAGES = defineMessages(
     cannotRoute: '{channel}: kan niet naar deze uitgang',
     noChannel: '{fragment}: kanaal ontbreekt',
     cannotPlay: '{fragment}: kan niet spelen ({error})',
-    fileMissing: 'bestand ontbreekt ({status})'
+    fileMissing: '{fragment}: bestand ontbreekt',
+    failed: 'Geluid: {error}'
   },
   {
     en: {
@@ -19,7 +20,8 @@ export const AUDIO_MESSAGES = defineMessages(
       cannotRoute: '{channel}: cannot use this output',
       noChannel: '{fragment}: channel missing',
       cannotPlay: '{fragment}: cannot play ({error})',
-      fileMissing: 'file missing ({status})'
+      fileMissing: '{fragment}: file missing',
+      failed: 'Sound: {error}'
     }
   }
 )
