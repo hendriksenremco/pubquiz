@@ -9,7 +9,12 @@ import {
   screenVolume
 } from '@shared/resolve'
 import Icon from '../../components/Icon.vue'
-import { listAudioOutputs, screenSoundRoute, type AudioOutput } from '../../lib/audio-devices'
+import {
+  listAudioOutputs,
+  outputLabel,
+  screenSoundRoute,
+  type AudioOutput
+} from '../../lib/audio-devices'
 import { vFill } from '../../lib/fill'
 import { percent } from '../../lib/format'
 import { locale } from '../../lib/locale'
@@ -103,7 +108,7 @@ function deviceLabel(slotId: string): string {
         v-for="c in quiz.channels"
         :key="c.id"
         class="channel"
-        :title="session.hardware.audio[c.id]?.label ?? t('systemDefault')"
+        :title="outputLabel(session.hardware.audio[c.id], outputs, locale)"
       >
         <span class="label">{{ c.name }}</span>
         <div class="level">

@@ -48,6 +48,23 @@ export async function listAudioOutputs(locale: Locale = 'nl'): Promise<AudioOutp
 }
 
 /**
+ * De naam van de uitgang van een kanaal, in de taal van nu. De systeemstandaard heet zo als
+ * `listAudioOutputs` hem noemt: het label dat main of een eerdere sessie bewaarde, kan in een
+ * andere taal zijn.
+ */
+export function outputLabel(
+  target: AudioTarget | undefined,
+  outputs: AudioOutput[],
+  locale: Locale = 'nl'
+): string {
+  if (target && target.deviceId !== 'default' && target.deviceId !== '') return target.label
+  return (
+    outputs.find((o) => o.deviceId === 'default')?.label ??
+    AUDIO_DEVICE_MESSAGES.in(locale)('systemDefault')
+  )
+}
+
+/**
  * Vertaalt een opgeslagen uitgang naar een sinkId voor deze sessie.
  * deviceIds verschillen tussen dev en build, dus bij een gemiste id zoeken we op naam.
  * '' = systeemstandaard; null = uitgang niet gevonden.
