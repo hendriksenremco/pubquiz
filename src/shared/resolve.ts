@@ -16,7 +16,7 @@ import type {
 import { autoplayCountdown } from './autoplay'
 import { answerSlides, fragmentChannel } from './factory'
 import type { Locale } from './i18n'
-import { USAGE_MESSAGES } from './quiz-messages'
+import { roundTitle, USAGE_MESSAGES } from './quiz-messages'
 import { CHECK_MESSAGES, STEP_MESSAGES } from './show-messages'
 
 export type ScreenOverlay =
@@ -468,7 +468,7 @@ export function findAssetUsages(quiz: Quiz, assetId: string, locale: Locale = 'n
   }
   if (quiz.background?.assetId === assetId) usages.push(t('background'))
   for (const round of quiz.rounds) {
-    const title = round.title
+    const title = roundTitle(round, locale)
     if (Object.values(round.screens).some(uses)) usages.push(t('roundScreen', { title }))
     if (typeof round.background === 'object' && round.background.replaceAssetId === assetId) {
       usages.push(t('roundBackground', { title }))
@@ -508,7 +508,7 @@ export function findBrokenReferences(quiz: Quiz, locale: Locale = 'nl'): string[
     if (!channelIds.has(quiz.background.channelId)) problems.push(t('backgroundChannelMissing'))
   }
   for (const round of quiz.rounds) {
-    const where = t('round', { title: round.title })
+    const where = t('round', { title: roundTitle(round, locale) })
     for (const content of Object.values(round.screens)) checkContent(content, where)
     if (typeof round.background === 'object') checkAsset(round.background.replaceAssetId, where)
     for (const f of round.fragments) {

@@ -176,6 +176,16 @@ describe('remoteView', () => {
       blackout: false
     })
   })
+
+  it('noemt een ronde zonder titel "Naamloze ronde", ook bij vorige en volgende', () => {
+    const { quiz, first, live } = setup()
+    first.title = ''
+    quiz.rounds[1].title = ' '
+    const view = remoteView(quiz, live({ activeRoundId: first.id, lastRoundId: first.id }))
+    expect(view.round?.title).toBe('Naamloze ronde')
+    expect(view.nextRound).toBe('Naamloze ronde')
+    expect(view.restartRound).toBe('Naamloze ronde')
+  })
 })
 
 describe('remoteCommand', () => {

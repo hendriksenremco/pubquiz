@@ -1,4 +1,4 @@
-import { defineMessages } from './i18n'
+import { defineMessages, type Locale } from './i18n'
 
 /**
  * Namen die de app zelf aan een nieuwe quiz geeft: schermen, kanalen, rondes, vragen en
@@ -33,6 +33,17 @@ export const NAME_MESSAGES = defineMessages(
     }
   }
 )
+
+/** Een ronde zonder titel, in de bediening op de Mac en de telefoon (niet op de schermen). */
+export const TITLE_MESSAGES = defineMessages(
+  { untitledRound: 'Naamloze ronde' },
+  { en: { untitledRound: 'Untitled round' } }
+)
+
+/** De titel van een ronde zoals de bediening hem toont: een lege titel wordt "Naamloze ronde". */
+export function roundTitle(round: { title: string }, locale: Locale = 'nl'): string {
+  return round.title.trim() || TITLE_MESSAGES.in(locale)('untitledRound')
+}
 
 /** Waar een bestand gebruikt wordt (`findAssetUsages` in `src/shared/resolve.ts`). */
 export const USAGE_MESSAGES = defineMessages(

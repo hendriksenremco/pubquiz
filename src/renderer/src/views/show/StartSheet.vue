@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { mediaUrl } from '@shared/ipc'
 import { sameDisplayName } from '@shared/airplay'
 import { answerItems, findBrokenReferences, screenHasSound } from '@shared/resolve'
+import { roundTitle } from '@shared/quiz-messages'
 import type { HardwareMapping, ScreenTarget } from '@shared/types'
 import Icon from '../../components/Icon.vue'
 import Select, { type SelectOption } from '../../components/Select.vue'
@@ -267,7 +268,7 @@ const problems = computed(() => {
     if (answerItems(quiz.value, r).length && !r.fragmentScreens.length) {
       list.push({
         level: 'warning',
-        text: t('answersScreen', { round: r.title })
+        text: t('answersScreen', { round: roundTitle(r, locale) })
       })
     }
   }

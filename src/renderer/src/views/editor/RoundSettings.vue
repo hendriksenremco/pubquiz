@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { answerScreens, hasAnswers } from '@shared/factory'
 import { itemSummary } from '@shared/forms'
 import { answerItems, loopIndices, timerSeconds } from '@shared/resolve'
+import { roundTitle } from '@shared/quiz-messages'
 import type { Round, RoundBackground, ScreenContent } from '@shared/types'
 import ContentChip from '../../components/ContentChip.vue'
 import Icon from '../../components/Icon.vue'
@@ -289,7 +290,7 @@ function setAnswersFor(roundId: string, on: boolean) {
           @change="setAnswersFor(r.id, ($event.target as HTMLInputElement).checked)"
         />
         <span class="grow">
-          {{ r.title }}
+          {{ roundTitle(r, locale) }}
           <span class="hint">{{ itemSummary(r, locale) }}</span>
         </span>
       </label>

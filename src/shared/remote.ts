@@ -8,6 +8,7 @@ import type { Locale } from './i18n'
 import type { ShowCommand } from './ipc'
 import { adjacentFragment } from './autoplay'
 import { action, definePlugin, typeOnly } from './plugin'
+import { roundTitle } from './quiz-messages'
 import type { PluginId, PluginStatus } from './plugins'
 import {
   activeRound,
@@ -129,6 +130,9 @@ export interface RemoteLink {
 /** Antwoord van de Mac op een actie. */
 export type RemoteResult = { ok: true } | { ok: false; error: string }
 
+const titleOf = (round: Round | null | undefined, locale: Locale): string | null =>
+  round ? roundTitle(round, locale) : null
+
 /** `plugins`: de plug-ins voor de telefoon; zonder quiz toont hij ze niet. */
 export function remoteView(
   quiz: Quiz | null,
@@ -141,11 +145,14 @@ export function remoteView(
     locale,
     quiz: quiz?.title ?? null,
     live: state.live,
-    round: round && quiz ? { title: round.title, number: quiz.rounds.indexOf(round) + 1 } : null,
+    round:
+      round && quiz
+        ? { title: roundTitle(round, locale), number: quiz.rounds.indexOf(round) + 1 }
+        : null,
     rounds: quiz?.rounds.length ?? 0,
-    prevRound: (quiz && adjacentRound(quiz, state, 'prev')?.title) ?? null,
-    nextRound: (quiz && adjacentRound(quiz, state, 'next')?.title) ?? null,
-    restartRound: (quiz && restartRound(quiz, state)?.title) ?? null,
+    prevRound: titleOf(quiz && adjacentRound(quiz, state, 'prev'), locale),
+    nextRound: titleOf(quiz && adjacentRound(quiz, state, 'next'), locale),
+    restartRound: titleOf(quiz && restartRound(quiz, state), locale),
     step: quiz && round ? remoteStep(quiz, round, state, locale) : null,
     screen: quiz ? onScreen(quiz, state) : null,
     screens: !!quiz?.screens.length,
@@ -208,7 +215,10 @@ export function remoteStep(
     }
     return {
       ...base,
-      label: t(ANSWER_LABELS[item.noun], { number: item.number, round: item.round.title }),
+      label: t(ANSWER_LABELS[item.noun], {
+        number: item.number,
+        round: roundTitle(item.round, locale)
+      }),
       text: item.slide ? questionText(item.slide) : (item.fragment?.label ?? null),
       answer: current.revealed ? item.answer || item.fragment?.label || '—' : null,
       playing: playing(item.fragment?.id),

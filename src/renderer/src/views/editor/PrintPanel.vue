@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { formRounds, itemSummary, type FormDoc } from '@shared/forms'
+import { roundTitle } from '@shared/quiz-messages'
 import Icon from '../../components/Icon.vue'
 import { locale } from '../../lib/locale'
 import { useSession } from '../../stores/session'
@@ -67,7 +68,7 @@ async function save(doc: FormDoc) {
           <label v-for="r in rounds" :key="r.id" class="tile option">
             <input v-model="chosen" type="checkbox" :value="r.id" />
             <span class="grow">
-              <span class="option-title">{{ r.title }}</span>
+              <span class="option-title">{{ roundTitle(r, locale) }}</span>
               <span class="option-hint">{{ itemSummary(r, locale) }}</span>
             </span>
           </label>
