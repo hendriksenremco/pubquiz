@@ -131,8 +131,8 @@ export const ANALYTICS_MESSAGES = defineMessages(
     explain:
       'QuizNote meet dan anoniem de versie, je type Mac, gestarte shows (aantallen rondes, schermen en kanalen, en welke plug-ins) en fouten, maar nooit de inhoud van je quiz, bestandsnamen, media of IP-adressen.',
     later: 'Je kunt dit altijd wijzigen bij Instellingen.',
-    no: 'Niet meten',
-    yes: 'Meten'
+    no: 'Meet niet',
+    yes: 'Meet anoniem'
   },
   {
     en: {

@@ -47,10 +47,10 @@ test('meten: de vraag bij de eerste start, en niets zonder toestemming', async (
     await expect(question).toBeHidden()
     await app.close()
 
-    // Nog niet beantwoord: de volgende start opnieuw. Nu "Niet meten".
+    // Nog niet beantwoord: de volgende start opnieuw. Nu "Meet niet".
     ;({ app, operator } = await launch(userData, undefined, env))
     question = operator.getByRole('dialog', { name: 'Help QuizNote beter maken?' })
-    await question.getByRole('button', { name: 'Niet meten' }).click()
+    await question.getByRole('button', { name: 'Meet niet' }).click()
     await expect(question).toBeHidden()
     await expect.poll(() => consent(userData)).toBe(false)
     await app.close()
@@ -77,14 +77,14 @@ test('meten: de vraag bij de eerste start, en niets zonder toestemming', async (
   }
 })
 
-test('meten: "Meten" bij de eerste start telt die start meteen', async () => {
+test('meten: "Meet anoniem" bij de eerste start telt die start meteen', async () => {
   const userData = tempDir('userdata')
   const { server, url, events } = await fakePostHog()
   try {
     const { app, operator } = await launch(userData, undefined, { PUBQUIZ_ANALYTICS_URL: url })
     const question = operator.getByRole('dialog', { name: 'Help QuizNote beter maken?' })
     expect(events).toEqual([])
-    await question.getByRole('button', { name: 'Meten', exact: true }).click()
+    await question.getByRole('button', { name: 'Meet anoniem' }).click()
     await expect(question).toBeHidden()
     await expect.poll(() => starts(events)).toEqual(['app_started'])
     await app.close()
