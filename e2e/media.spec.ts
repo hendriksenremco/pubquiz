@@ -82,7 +82,7 @@ test('toont mappen en maakt een nieuwe map', async () => {
   await operator.waitForTimeout(500) // thumbnails laten laden voor de screenshot
   await snap(operator, 'test-results/media-folders.png')
 
-  await operator.getByRole('button', { name: 'Nieuwe map' }).click()
+  await operator.getByRole('button', { name: 'Voeg map toe' }).click()
   const title = operator.getByLabel('Naam van de map')
   await expect(title).toBeFocused()
   await title.fill('Pauzemuziek')

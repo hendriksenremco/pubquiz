@@ -258,7 +258,7 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
         </button>
       </div>
       <button v-if="!folder" class="btn btn-ghost" @click="newFolder()">
-        <Icon name="folder-plus" /> {{ t('newFolder') }}
+        <Icon name="folder-plus" /> {{ t('addFolder') }}
       </button>
       <button class="btn" @click="importFiles(undefined, openFolderId)">
         <Icon name="download" /> {{ t('import') }}

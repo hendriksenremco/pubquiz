@@ -51,6 +51,15 @@ describe('teksten van de editor', () => {
     expect(ROUND_MESSAGES.in('en')('fragmentName', { number: 2 })).toBe('Clip 2')
   })
 
+  it('noemt de knop voor een map zoals Voeg ronde, scherm en kanaal toe', () => {
+    expect(MEDIA_MESSAGES.in('nl')('addFolder')).toBe('Voeg map toe')
+    expect(MEDIA_MESSAGES.in('en')('addFolder')).toBe('Add folder')
+    expect(EDITOR_MESSAGES.in('nl')('addRound')).toBe('Voeg ronde toe')
+    expect(SETUP_MESSAGES.in('nl')('addScreen')).toBe('Voeg scherm toe')
+    // De map zelf, en het doel bij Verplaats naar, heet nog Nieuwe map.
+    expect(MEDIA_MESSAGES.in('nl')('newFolder')).toBe('Nieuwe map')
+  })
+
   it('telt bestanden in Media en noemt nieuwe mappen, schermen en kanalen', () => {
     expect(MEDIA_MESSAGES.in('nl')('filesMany', { count: 3 })).toBe('3 bestanden')
     expect(MEDIA_MESSAGES.in('en')('newFolderNumber', { number: 2 })).toBe('New folder 2')
