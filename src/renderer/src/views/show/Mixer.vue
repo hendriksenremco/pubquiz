@@ -23,13 +23,15 @@ const quiz = computed(() => session.quiz!)
 
 const background = computed(() => resolveAudio(quiz.value, session.state).background)
 const backgroundName = computed(() => findAsset(quiz.value, background.value?.assetId)?.name)
+// Amber als de muziek klinkt, grijs als hij stil is; zoals "Speelt" op de telefoon.
+// Stil door de ronde is zo bedoeld, dus geen waarschuwing.
 const backgroundStatus = computed(() => {
   const bg = background.value
   if (!bg) return { text: t('none'), cls: '' }
   if (!session.state.backgroundEnabled) return { text: t('off'), cls: '' }
-  if (!bg.playing) return { text: t('pausedByRound'), cls: 'pill-warn' }
+  if (!bg.playing) return { text: t('pausedByRound'), cls: '' }
   if (bg.ducked) return { text: t('ducked'), cls: 'pill-accent' }
-  return { text: t('playing'), cls: 'pill-ok' }
+  return { text: t('playing'), cls: 'pill-accent' }
 })
 
 function setVolume(id: string, event: Event) {

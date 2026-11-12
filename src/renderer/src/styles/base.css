@@ -21,7 +21,6 @@
   --live: #ff4d6a;
   --live-soft: rgba(255, 77, 106, 0.15);
   --ok: #4fd69c;
-  --ok-soft: rgba(79, 214, 156, 0.14);
   --warn: #ffc247;
   --warn-soft: rgba(255, 194, 71, 0.14);
   --info: #7cb1ff;
@@ -551,11 +550,6 @@ input[type='number']::-webkit-outer-spin-button {
 .pill-live {
   background: var(--live-soft);
   color: var(--live);
-}
-
-.pill-ok {
-  background: var(--ok-soft);
-  color: var(--ok);
 }
 
 .pill-warn {
