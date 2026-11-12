@@ -77,4 +77,12 @@ describe('teksten van de editor', () => {
         expect(label.endsWith(` ${round('shownOn').toLowerCase()}`), label).toBe(true)
     }
   })
+
+  it('heeft bij elke vraag om te verwijderen dezelfde bevestigknop, want de titel noemt al wat', () => {
+    for (const locale of ['nl', 'en'] as const) {
+      const confirm = EDITOR_MESSAGES.in(locale)('remove')
+      expect(MEDIA_MESSAGES.in(locale)('remove')).toBe(confirm)
+      expect(SETUP_MESSAGES.in(locale)('remove')).toBe(confirm)
+    }
+  })
 })
