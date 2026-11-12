@@ -9,8 +9,8 @@ export const OPERATOR_MESSAGES = defineMessages(
     print: 'Afdrukken',
     startShow: 'Start show',
     settings: 'Instellingen',
-    quitTitle: 'De show loopt nog',
-    quitMessage: 'Wil je echt afsluiten? De schermen gaan uit en de muziek stopt.',
+    quitTitle: 'QuizNote afsluiten?',
+    quitMessage: 'De show loopt nog. De schermen gaan uit en de muziek stopt.',
     quit: 'Sluit af'
   },
   {
@@ -21,8 +21,8 @@ export const OPERATOR_MESSAGES = defineMessages(
       print: 'Print',
       startShow: 'Start show',
       settings: 'Settings',
-      quitTitle: 'The show is still running',
-      quitMessage: 'Do you really want to quit? The screens go dark and the music stops.',
+      quitTitle: 'Quit QuizNote?',
+      quitMessage: 'The show is still running. The screens go dark and the music stops.',
       quit: 'Quit'
     }
   }
