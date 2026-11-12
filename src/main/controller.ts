@@ -360,7 +360,7 @@ export class AppController {
     this.settings.removeRecent(path)
   }
 
-  /** Ronde importeren… in de editor (issue #99): leest een rondebestand voor de werkkopie `input`. */
+  /** Importeer ronde… in de editor (issue #99): leest een rondebestand voor de werkkopie `input`. */
   async importRounds(input: unknown, at: number, path?: string): Promise<RoundImport | null> {
     const parsed = QuizSchema.safeParse(input)
     if (!this.quizDir || !parsed.success || !Number.isInteger(at)) return null
