@@ -44,4 +44,11 @@ describe('teksten van de werkbalk en de dialogen', () => {
     // Het Engels belooft op de knop ook dat het anoniem is.
     expect(ANALYTICS_MESSAGES.in('en')('yes')).toBe('Measure anonymously')
   })
+
+  it('vraagt bij afsluiten tijdens de show zoals bij Stop show: een vraag als titel', () => {
+    const t = OPERATOR_MESSAGES.in('nl')
+    expect(t('quitTitle')).toBe('QuizNote afsluiten?')
+    expect(t('quitMessage')).toBe('De show loopt nog. De schermen gaan uit en de muziek stopt.')
+    expect(OPERATOR_MESSAGES.in('en')('quitTitle')).toBe('Quit QuizNote?')
+  })
 })
