@@ -232,6 +232,16 @@ test('serveert media met Range-requests (nodig voor loopen en seeken)', async ()
 
 test('beeld- en geluidknoppen zijn terug te draaien', async () => {
   const beamer = await windowFor('screen/beamer')
+  // Onder een scherm zegt de uitleg dat alleen dat scherm op zwart gaat, anders dan in de werkbalk.
+  await expect(
+    operator
+      .locator('.screens .screen')
+      .first()
+      .getByRole('button', { name: /Beeld op zwart/ })
+  ).toHaveAttribute('title', /^Alleen .+ op zwart$/)
+  await expect(
+    operator.locator('.live-controls').getByRole('button', { name: /Beeld op zwart/ })
+  ).toHaveAttribute('title', 'Alle schermen op zwart')
   await operator
     .locator('.live-controls')
     .getByRole('button', { name: /Beeld op zwart/ })
