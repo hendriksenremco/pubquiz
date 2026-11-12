@@ -139,6 +139,14 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
             <button
               class="btn btn-ghost btn-sm"
               :class="{ active: state.blackout.includes(slot.id) }"
+              :title="
+                t(
+                  state.blackout.includes(slot.id)
+                    ? 'screenBlackoutOffHint'
+                    : 'screenBlackoutOnHint',
+                  { name: slot.name }
+                )
+              "
               @click="toggleBlackout(slot.id)"
             >
               <template v-if="state.blackout.includes(slot.id)">
