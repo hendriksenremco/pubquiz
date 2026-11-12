@@ -487,7 +487,7 @@ export const SETUP_MESSAGES = defineMessages(
       newScreen: 'Screen {number}',
       removeScreen: 'Delete screen',
       removeScreenTitle: 'Delete screen “{name}”?',
-      removeScreenMessage: 'What rounds have set for this screen is removed as well.',
+      removeScreenMessage: 'Round settings for this screen are removed too.',
       remove: 'Delete',
       shows: 'Shows',
       addScreen: 'Add screen',
