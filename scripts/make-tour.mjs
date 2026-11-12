@@ -779,11 +779,11 @@ const quiz = {
       fragmentScreens: ['beamer'],
       background: 'pause',
       hostNotes: L(
-        'Druk op → of 1 voor het eerste liedje. A speelt ze allemaal na elkaar, met aftellen ' +
-          'ertussen; spatie stopt. Liedje 5 en 6 zijn ingekort en faden uit. ' +
+        'Druk op → of 1 voor het eerste liedje. Speel reeks (A) speelt ze allemaal na elkaar, met de ' +
+          'wachttijd ertussen in beeld; spatie stopt. Liedje 5 en 6 zijn ingekort en faden uit. ' +
           'De achtergrondmuziek is in deze ronde stil.',
-        'Press → or 1 for the first song. A plays them all in a row, with a countdown in ' +
-          'between; Space stops. Songs 5 and 6 are shortened and fade out. ' +
+        'Press → or 1 for the first song. Play sequence (A) plays them all in a row, with the ' +
+          'wait in between on screen; Space stops. Songs 5 and 6 are shortened and fade out. ' +
           'The background music is silent in this round.'
       ),
       slides: [
@@ -793,10 +793,10 @@ const quiz = {
           L('Ronde 2: muziek', 'Round 2: music'),
           L(
             'Welk liedje hoor je?\n' +
-              'De quizmaster speelt ze met 1–6 of →, of in één reeks met aftellen (A).\n' +
+              'De quizmaster speelt ze met 1–6 of →, of in één reeks (A).\n' +
               'Het nummer staat alleen op de beamer.',
             'Which song do you hear?\n' +
-              'The quizmaster plays them with 1–6 or →, or in one sequence with a countdown (A).\n' +
+              'The quizmaster plays them with 1–6 or →, or in one sequence (A).\n' +
               'The number is only on the projector.'
           )
         )

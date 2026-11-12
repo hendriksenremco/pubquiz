@@ -17,7 +17,7 @@ The app is in Dutch and English (it follows the macOS language; release 0.1.0 is
 - **Defaults, rounds and slides.** A quiz sets the defaults (screens, background, music); a round or slide only stores what it changes. After "Einde ronde" everything falls back to the defaults.
 - **Round types:** normal, music, pictures, break and answers.
 - **Screens:** one frameless window per display, or an AirPlay screen. Crossfades without a black frame.
-- **Audio:** background music, sound clips (by hand with 1–9, or as an automatic sequence with a countdown), and video sound through the screen's own speakers. Each channel plays on its own output.
+- **Audio:** background music, sound clips (by hand with 1–9, or as an automatic sequence with the wait shown on screen), and video sound through the screen's own speakers. Each channel plays on its own output.
 - **Show controls:** ← → through slides, answers or clips; next round, end round, "Ronde opnieuw" (R), black screen (B), mute (M).
 - **Crash recovery:** after a crash the app offers to resume the show where it was.
 - **Printing:** answer sheets and four question cards per A4, with cut lines.
