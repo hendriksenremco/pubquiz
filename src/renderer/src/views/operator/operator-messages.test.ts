@@ -36,4 +36,10 @@ describe('teksten van de werkbalk en de dialogen', () => {
       'New quiz based on “May”'
     )
   })
+
+  it('zet de knoppen bij de vraag over meten als opdracht, zoals elke andere knop', () => {
+    const t = ANALYTICS_MESSAGES.in('nl')
+    expect(t('no')).toBe('Meet niet')
+    expect(t('yes')).toBe('Meet anoniem')
+  })
 })
