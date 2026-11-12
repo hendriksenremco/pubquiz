@@ -31,7 +31,7 @@ export const SCORE_TABLE_MESSAGES = defineMessages(
       addTeam: 'Add team',
       removeTeam: 'Delete team',
       removeTeamTitle: 'Delete team “{name}”?',
-      removeTeamMessage: "This team's points will be removed too.",
+      removeTeamMessage: "This team's points are removed too.",
       remove: 'Delete',
       points: 'Points for {team} in {round}',
       clearPoints: 'Clear points',
