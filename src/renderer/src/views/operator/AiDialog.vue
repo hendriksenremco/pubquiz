@@ -72,7 +72,13 @@ function copy() {
     </template>
 
     <template #actions>
-      <button class="btn" @click="emit('close')">{{ t('done') }}</button>
+      <button
+        class="btn"
+        :class="{ 'btn-primary': !setup || setup.claudeConnected || !setup.claudeInstalled }"
+        @click="emit('close')"
+      >
+        <Icon name="check" :size="15" /> {{ t('done') }}
+      </button>
     </template>
   </Dialog>
 </template>

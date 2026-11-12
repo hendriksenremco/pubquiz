@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { PLUGIN_OFF, PLUGINS, type PluginId } from '@shared/plugins'
 import Dialog from '../../components/Dialog.vue'
+import Icon from '../../components/Icon.vue'
 import { locale } from '../../lib/locale'
 import { RENDERER_PLUGINS } from '../../plugins'
 import { useSession } from '../../stores/session'
@@ -59,7 +60,9 @@ function toggle(id: PluginId, enabled: boolean) {
       </div>
     </div>
     <template #actions>
-      <button class="btn btn-primary" @click="emit('close')">{{ t('done') }}</button>
+      <button class="btn btn-primary" @click="emit('close')">
+        <Icon name="check" :size="15" /> {{ t('done') }}
+      </button>
     </template>
   </Dialog>
 </template>
