@@ -573,7 +573,7 @@ export class AppController {
   }
 
   audioEvent(event: AudioEngineEvent): void {
-    if (event.type === 'error') this.notify('error', this.t('audioError', { error: event.message }))
+    if (event.type === 'error') this.notify('error', event.message)
     this.show.audioEvent(event)
   }
 
