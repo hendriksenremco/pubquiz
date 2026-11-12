@@ -253,7 +253,7 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
               :aria-label="t('timerLabel')"
               @change="setTimer"
             />
-            <span class="muted">{{ t('timerUnit') }}</span>
+            <span class="muted">{{ t('seconds') }}</span>
           </span>
           <span class="muted hint">{{ t('timerHint') }}</span>
         </div>

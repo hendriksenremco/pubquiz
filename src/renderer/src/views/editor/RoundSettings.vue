@@ -236,7 +236,7 @@ function setAnswersFor(roundId: string, on: boolean) {
           :title="t('timerQuiz', { seconds: timerSeconds(quiz, null) })"
           @change="setTimer"
         />
-        <span class="muted">{{ t('timerUnit') }}</span>
+        <span class="muted">{{ t('seconds') }}</span>
       </span>
     </div>
 
