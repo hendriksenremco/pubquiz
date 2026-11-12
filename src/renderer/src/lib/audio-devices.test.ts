@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { screenSoundOutput, screenSoundRoute, type AudioOutput } from './audio-devices'
+import { outputLabel, screenSoundOutput, screenSoundRoute, type AudioOutput } from './audio-devices'
 
 const outputs: AudioOutput[] = [
   { deviceId: 'default', label: 'Systeemstandaard (MacBook Pro-luidsprekers)' },
@@ -60,5 +60,23 @@ describe('screenSoundRoute', () => {
     expect(screenSoundRoute({ deviceId: 'default', label: '' }, lgTv, outputs)).toEqual({
       kind: 'default'
     })
+  })
+})
+
+describe('outputLabel', () => {
+  const outputs: AudioOutput[] = [
+    { deviceId: 'default', label: 'System default (MacBook Pro Speakers)' },
+    { deviceId: 'abc', label: 'USB Audio' }
+  ]
+
+  it('noemt de systeemstandaard in de taal van nu, niet zoals main hem bewaarde', () => {
+    const stored = { deviceId: 'default', label: 'Systeemstandaard' }
+    expect(outputLabel(stored, outputs, 'en')).toBe('System default (MacBook Pro Speakers)')
+    expect(outputLabel(stored, [], 'en')).toBe('System default')
+    expect(outputLabel(undefined, [], 'nl')).toBe('Systeemstandaard')
+  })
+
+  it('houdt de naam van een gekozen uitgang', () => {
+    expect(outputLabel({ deviceId: 'abc', label: 'USB Audio' }, outputs, 'en')).toBe('USB Audio')
   })
 })
