@@ -48,7 +48,7 @@ export interface ResolvedScreen {
   /** Nummer van de slide in zijn ronde (voor afbeeldingen), zie `slideNumber`. */
   slideNumber: number | null
   overlay: ScreenOverlay | null
-  /** Geluid van de video op de speakers van het scherm; null = stil. */
+  /** Geluid van de video op de speakers van het display; null = stil. */
   sound: ResolvedSound | null
 }
 

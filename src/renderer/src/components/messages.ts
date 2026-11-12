@@ -35,7 +35,7 @@ export const COMPONENT_MESSAGES = defineMessages(
     mutedThisRound: 'Stil tijdens deze ronde, daarna klinkt hij weer.',
     asQuiz: 'Zoals bij de quiz.',
     videoVolume: 'Volume van het videogeluid',
-    videoSoundHint: 'Via de speakers van het scherm, of de uitgang die je bij Start show kiest.',
+    videoSoundHint: 'Via de speakers van het display, of de uitgang die je bij Start show kiest.',
     // BackdropPicker
     backdrop: 'Achtergrond',
     backdropDim: 'Video, gedimd',
@@ -92,7 +92,7 @@ export const COMPONENT_MESSAGES = defineMessages(
       mutedThisRound: 'Silent during this round, then it plays again.',
       asQuiz: 'As set for the quiz.',
       videoVolume: 'Video volume',
-      videoSoundHint: "Through the screen's speakers, or the output you choose at Start show.",
+      videoSoundHint: "Through the display's speakers, or the output you choose at Start show.",
       backdrop: 'Background',
       backdropDim: 'Video, dimmed',
       backdropOverVideo: 'Over the video',

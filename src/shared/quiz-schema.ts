@@ -31,7 +31,7 @@ export const ScreenContentSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('video'),
     assetId: id,
-    /** Volume van het geluid van de video, via de speakers van het scherm; ontbreekt = stil. */
+    /** Volume van het geluid van de video, via de speakers van het display; ontbreekt = stil. */
     volume: unit.optional()
   }),
   z.object({ type: z.literal('image'), assetId: id }),
