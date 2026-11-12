@@ -233,6 +233,9 @@ test('toont een bestand groot als voorbeeld en bladert verder', async () => {
   await expect(dialog.locator('.transport .time').last()).toHaveText('0:30')
   await operator.waitForTimeout(300)
   await snap(operator, 'test-results/media-preview-sound.png')
+  // Gepauzeerd heet de knop bij geluid Luister, net als in de lijst bij Media.
+  await dialog.getByRole('button', { name: 'Pauzeer' }).click()
+  await expect(dialog.getByRole('button', { name: 'Luister' })).toHaveText('Luister')
   await dialog.getByRole('button', { name: 'Sluit' }).click()
   await expect(dialog).toHaveCount(0)
 

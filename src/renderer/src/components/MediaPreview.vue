@@ -189,7 +189,7 @@ onBeforeUnmount(() => {
         <div class="transport" :class="{ idle: asset.kind === 'image' }">
           <button class="btn toggle" :disabled="asset.kind === 'image'" @click="togglePlay">
             <Icon :name="paused ? 'play' : 'pause'" :size="15" />
-            {{ paused ? t('play') : t('pause') }}
+            {{ paused ? t(asset.kind === 'audio' ? 'listen' : 'play') : t('pause') }}
           </button>
           <span class="time mono" data-volatile>{{ formatTime(current) }}</span>
           <input
