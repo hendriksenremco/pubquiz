@@ -185,7 +185,7 @@ function setAnswersFor(roundId: string, on: boolean) {
     <div v-if="round.fragments.length" class="inspector-group">
       <span class="label">{{ t('fragments') }}</span>
       <div v-if="quiz.screens.length" class="inspector-row">
-        <span class="row-label">{{ t('numberOn') }}</span>
+        <span class="row-label">{{ t('shownOn') }}</span>
         <div class="checks" role="group" :aria-label="t('numberOnLabel')">
           <label v-for="slot in quiz.screens" :key="slot.id">
             <input
