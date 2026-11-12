@@ -198,7 +198,7 @@ function setAnswersFor(roundId: string, on: boolean) {
         </div>
       </div>
       <div class="inspector-row">
-        <span class="row-label">{{ t('inSeries') }}</span>
+        <span class="row-label">{{ t('gap') }}</span>
         <span class="inline">
           <input
             :value="round.autoplay.gapSeconds"
@@ -209,7 +209,7 @@ function setAnswersFor(roundId: string, on: boolean) {
             :aria-label="t('gapLabel')"
             @change="round.autoplay.gapSeconds = numberFrom($event, 0)"
           />
-          <span class="muted">{{ t('gapUnit') }}</span>
+          <span class="muted">{{ t('seconds') }}</span>
         </span>
       </div>
       <label class="check-line">
