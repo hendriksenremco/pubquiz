@@ -48,7 +48,7 @@ export const LIGHT_PICKER_MESSAGES = defineMessages(
     noAddress: 'Vul eerst het IP-adres van de controller in bij Instellingen.',
     /** De tooltip van het veld, bv. "Licht in deze ronde: Rood". */
     title: '{label}: {value}',
-    /** Zonder eigen licht, met wat er dan brandt: "Licht bij deze slide: Zoals de ronde (Rood)". */
+    /** Zonder eigen licht, met wat er dan brandt: "Licht bij deze slide: Zoals bij de ronde (Rood)". */
     titleInherited: '{label}: {value} ({fallback})'
   },
   {
@@ -82,7 +82,7 @@ export const LIGHT_PLACE_MESSAGES = defineMessages(
     roundInheritText: 'Standaard',
     slideLabel: 'Licht bij deze slide',
     slideInherit: 'Ronde',
-    slideInheritText: 'Zoals de ronde'
+    slideInheritText: 'Zoals bij de ronde'
   },
   {
     en: {
@@ -96,7 +96,7 @@ export const LIGHT_PLACE_MESSAGES = defineMessages(
       roundInheritText: 'Default',
       slideLabel: 'Lights on this slide',
       slideInherit: 'Round',
-      slideInheritText: 'Same as the round'
+      slideInheritText: 'As set for the round'
     }
   }
 )

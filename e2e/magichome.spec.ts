@@ -80,7 +80,7 @@ test('licht per ronde en per slide via de plug-in MagicHome', async () => {
 
     // De tweede slide: een effect uit een raster, een rennend punt op rood naar buiten.
     await selectSlide(operator, 1)
-    await expect(slideLight).toContainText('Zoals de ronde')
+    await expect(slideLight).toContainText('Zoals bij de ronde')
     await slideLight.click()
     // Het voorbeeld staat nog aan: de lamp toont wat de slide nu krijgt, die van de ronde.
     await expect.poll(last).toEqual(RED)
