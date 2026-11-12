@@ -291,7 +291,7 @@ export const ROUND_MESSAGES = defineMessages(
       bgAsset: 'Music for this round',
       numberOnLabel: 'Clip number shown on',
       gap: 'Gap',
-      gapLabel: 'Wait between clips in seconds',
+      gapLabel: 'Gap between clips in seconds',
       countdown: 'Show the time until the next clip',
       renumber: 'Renumber names: Clip 1, 2, …',
       loop: 'Auto-advance',
