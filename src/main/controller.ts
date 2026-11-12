@@ -17,6 +17,7 @@ import { QuizSchema } from '@shared/quiz-schema'
 import { findRound } from '@shared/resolve'
 import { ROUND_FILE_EXT, type RoundImport } from '@shared/round-file'
 import { ROUND_LINK_ORIGIN, roundLinkSource } from '@shared/round-link'
+import { quizTitle } from '@shared/quiz-name'
 import type { TemplateOptions } from '@shared/template'
 import type { HardwareMapping, Notice, Quiz, ShowState } from '@shared/types'
 import { AirPlayBrowser } from './airplay'
@@ -85,6 +86,7 @@ export class AppController {
       this.setPlugin(id, { ...(this.settings.plugins[id] ?? PLUGIN_OFF), config }),
     command: (command) => this.show.handle(command),
     publishStatus: (id, status) => this.broadcast(IPC.pluginStatus, [id, status]),
+    quizName: () => this.quizName,
     mediaFile: (file) => {
       const location = locateMedia(mediaUrl(file), {
         current: () => this.quizDir,
@@ -129,7 +131,12 @@ export class AppController {
   }
 
   get windowTitle(): string {
-    return this.quiz ? `${this.quiz.title} — QuizNote` : 'QuizNote'
+    return this.quiz ? `${this.quizName} — QuizNote` : 'QuizNote'
+  }
+
+  /** De titel van de geopende quiz zoals de bediening hem toont (quizTitle); null = geen quiz. */
+  get quizName(): string | null {
+    return this.quiz ? quizTitle(this.quiz.title, this.quizDir) : null
   }
 
   get live(): boolean {

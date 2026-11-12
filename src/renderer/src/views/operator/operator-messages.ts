@@ -3,7 +3,6 @@ import { defineMessages } from '@shared/i18n'
 /** De werkbalk van de app en de vraag bij afsluiten tijdens de show (OperatorApp). */
 export const OPERATOR_MESSAGES = defineMessages(
   {
-    untitled: 'Naamloze quiz',
     quizzes: 'Quizzen',
     live: 'Live',
     toShow: 'Naar de show',
@@ -16,7 +15,6 @@ export const OPERATOR_MESSAGES = defineMessages(
   },
   {
     en: {
-      untitled: 'Untitled quiz',
       quizzes: 'Quizzes',
       live: 'Live',
       toShow: 'Back to show',

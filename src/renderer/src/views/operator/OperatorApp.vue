@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import type { MenuAction } from '@shared/ipc'
+import { quizTitle } from '@shared/quiz-name'
 import ConfirmHost from '../../components/ConfirmHost.vue'
 import Icon from '../../components/Icon.vue'
 import NoticeStack from '../../components/NoticeStack.vue'
@@ -27,7 +28,7 @@ const mode = ref<'edit' | 'show'>('edit')
 const page = ref('')
 const starting = ref(false)
 
-const title = computed(() => session.quiz?.title || t('untitled'))
+const title = computed(() => (session.quiz ? quizTitle(session.quiz.title, session.quizDir) : ''))
 
 const home = ref<InstanceType<typeof HomeView> | null>(null)
 const editor = ref<InstanceType<typeof EditorView> | null>(null)
@@ -78,7 +79,7 @@ function createFrom(path: string, title: string) {
 }
 
 function createFromCurrent() {
-  if (session.quizDir && session.quiz) createFrom(session.quizDir, session.quiz.title)
+  if (session.quizDir && session.quiz) createFrom(session.quizDir, title.value)
 }
 
 async function goHome() {

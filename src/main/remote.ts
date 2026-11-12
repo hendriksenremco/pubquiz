@@ -320,7 +320,9 @@ export class RemotePlugin implements MainPlugin<'remote'> {
       const status = this.host.status(id)
       return status === null ? [] : [{ id, status } as RemotePluginView]
     })
-    return remoteView(this.quiz, this.state, plugins, this.options.locale)
+    const view = remoteView(this.quiz, this.state, plugins, this.options.locale)
+    // Een lege titel heet op de telefoon net als op de Mac naar de map (quizTitle).
+    return this.quiz ? { ...view, quiz: this.host.quizName() ?? view.quiz } : view
   }
 
   /** De telefoons bijwerken; één keer voor alles wat tegelijk verandert. */
