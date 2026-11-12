@@ -170,7 +170,7 @@ function setAudio(channelId: string, deviceId: string) {
   save({ ...session.hardware, audio: { ...session.hardware.audio, [channelId]: target } })
 }
 
-// Videogeluid: standaard naar de speakers van het scherm zelf, of naar een gekozen uitgang.
+// Videogeluid: standaard naar de speakers van het display zelf, of naar een gekozen uitgang.
 function hasSound(slotId: string): boolean {
   const target = session.hardware.screens[slotId]
   return screenHasSound(quiz.value, slotId) && !!target && target.kind !== 'off'

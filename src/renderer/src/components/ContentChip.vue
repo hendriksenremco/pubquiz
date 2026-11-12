@@ -84,7 +84,7 @@ const assetId = computed({
   }
 })
 
-// Videogeluid gaat naar de speakers van het scherm; zonder volume is de video stil.
+// Videogeluid gaat naar de speakers van het display; zonder volume is de video stil.
 const DEFAULT_VOLUME = 0.8
 const soundOn = computed({
   get: () => model.value?.type === 'video' && model.value.volume !== undefined,

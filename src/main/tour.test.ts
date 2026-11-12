@@ -31,7 +31,7 @@ describe.each(LOCALES)('rondleiding (%s)', (locale) => {
     // Slides op één scherm, en een vraag over de video heen.
     expect(slides.some((s) => s.targetScreens !== 'all')).toBe(true)
     expect(slides.some((s) => s.backdrop === 'over-video')).toBe(true)
-    // Video met geluid via de speakers van het scherm.
+    // Video met geluid via de speakers van het display.
     const screens = tour.rounds.flatMap((r) => Object.values(r.screens))
     expect(screens.some((c) => c.type === 'video' && c.volume)).toBe(true)
     // Achtergrondmuziek: alle vier de keuzes per ronde.
