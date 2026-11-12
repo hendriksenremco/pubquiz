@@ -9,7 +9,7 @@ import {
   SETUP_MESSAGES,
   SLIDE_MESSAGES
 } from './editor-messages'
-import { MENU_MESSAGES } from '../../../../main/messages'
+import { DIALOG_MESSAGES, MENU_MESSAGES } from '../../../../main/messages'
 
 const BOOKS: Record<string, MessageBook<string>> = {
   PRINT_MESSAGES,
@@ -76,6 +76,16 @@ describe('teksten van de editor', () => {
       expect(setup('reveal')).toBe(menu('reveal'))
       expect(setup('createFromCurrent').endsWith('…')).toBe(true)
     }
+  })
+
+  it('noemt de knop in Media zoals het venster dat hij opent, zoals Importeer ronde…', () => {
+    for (const locale of ['nl', 'en'] as const) {
+      const dialog = DIALOG_MESSAGES.in(locale)
+      expect(MEDIA_MESSAGES.in(locale)('import').toLowerCase()).toBe(
+        `${dialog('importMediaTitle')}…`.toLowerCase()
+      )
+    }
+    expect(MEDIA_MESSAGES.in('nl')('import')).toBe('Importeer media…')
   })
   it('noemt de schermen bij een slide, het fragmentnummer en de antwoorden overal "In beeld op"', () => {
     for (const locale of ['nl', 'en'] as const) {
