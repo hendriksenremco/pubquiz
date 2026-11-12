@@ -67,7 +67,7 @@ onMounted(() => {
         @keydown.enter="change($event.target as HTMLInputElement)"
       />
       <button class="btn btn-ghost btn-sm" :disabled="!host || testing" @click="test">
-        <Icon name="check" :size="14" /> {{ testing ? t('testing') : t('test') }}
+        <Icon name="wifi" :size="14" /> {{ testing ? t('testing') : t('test') }}
       </button>
     </div>
     <p v-if="!host" class="status">{{ t('noAddress') }}</p>
