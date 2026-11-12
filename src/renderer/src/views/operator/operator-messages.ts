@@ -73,7 +73,7 @@ export const AI_MESSAGES = defineMessages(
     askFor: 'Vraag je AI-assistent bijvoorbeeld:',
     example: 'Maak een pubquiz in QuizNote met zes rondes over Italië.',
     explain:
-      "De quiz verschijnt dan hier, met vragen, antwoorden en een antwoordenronde. Muziek en foto's maakt een AI niet zelf: noem een map met je liedjes of foto's, of voeg ze daarna toe.",
+      'De quiz verschijnt dan hier, met vragen, antwoorden en een antwoordenronde. Muziek en afbeeldingen maakt een AI niet zelf: noem een map met je muziek of afbeeldingen, of voeg ze daarna toe.',
     connected: 'Gekoppeld. Start Claude Desktop opnieuw als hij open stond.',
     connectOnce: 'Eén keer koppelen, daarna kun je het Claude gewoon vragen.',
     connect: 'Koppel aan Claude Desktop',
@@ -90,7 +90,7 @@ export const AI_MESSAGES = defineMessages(
       askFor: 'Ask your AI assistant, for example:',
       example: 'Make a pub quiz in QuizNote with six rounds about Italy.',
       explain:
-        "The quiz then appears here, with questions, answers and an answers round. An AI doesn't make music or photos itself: name a folder with your songs or photos, or add them afterwards.",
+        "The quiz then appears here, with questions, answers and an answers round. An AI doesn't make music or pictures itself: name a folder with your music or pictures, or add them afterwards.",
       connected: 'Connected. Restart Claude Desktop if it was open.',
       connectOnce: 'Connect once, then just ask Claude.',
       connect: 'Connect to Claude Desktop',

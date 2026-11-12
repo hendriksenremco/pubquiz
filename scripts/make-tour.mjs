@@ -967,9 +967,9 @@ const quiz = {
           'title',
           L('Je eigen quiz', 'Your own quiz'),
           L(
-            'Sleep je video’s, muziek en foto’s in Media en klik je rondes in elkaar.\n' +
+            'Sleep je video’s, muziek en afbeeldingen in Media en klik je rondes in elkaar.\n' +
               'Of begin met Nieuwe quiz op basis van deze.',
-            'Drag your videos, music and photos into Media and click your rounds together.\n' +
+            'Drag your videos, music and pictures into Media and click your rounds together.\n' +
               'Or start with New quiz based on this one.'
           ),
           beamerOnly
