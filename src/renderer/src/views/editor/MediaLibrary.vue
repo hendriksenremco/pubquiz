@@ -583,7 +583,8 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
 }
 
 .used {
-  color: var(--accent);
+  /* Grijs, zoals de duur ernaast: amber is in Media alleen wat gekozen is of speelt. */
+  color: var(--muted);
   font-size: 12px;
 }
 

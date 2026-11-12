@@ -159,10 +159,6 @@ figcaption {
   font-size: 12px;
 }
 
-.used {
-  color: var(--accent);
-}
-
 /* Net als de knoppen bij een geluid in de lijst. */
 .actions {
   display: flex;
