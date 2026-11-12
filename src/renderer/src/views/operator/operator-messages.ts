@@ -55,7 +55,7 @@ export const NEW_QUIZ_MESSAGES = defineMessages(
       namePlaceholder: 'For example: Pub quiz November',
       savedIn: 'Saved in {folder}',
       alwaysCopied:
-        'Screens, audio channels, background music and all videos and pictures are always copied.',
+        'Screens, sound channels, background music and all videos and pictures are always copied.',
       rounds: 'Rounds',
       roundsHint: 'Titles, slides, and the picture and music for each round',
       fragments: 'Clips',
