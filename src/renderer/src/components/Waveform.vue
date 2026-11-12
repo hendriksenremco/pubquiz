@@ -207,6 +207,8 @@ svg {
 }
 
 .handle:focus-visible::after {
-  box-shadow: 0 0 0 3px rgba(255, 165, 61, 0.4);
+  /* Dezelfde focusring als bij knoppen en vinkjes: een dichte amberen rand, geen gloed. */
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 </style>

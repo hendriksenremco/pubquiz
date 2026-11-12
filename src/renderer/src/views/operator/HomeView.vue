@@ -287,9 +287,13 @@ function reveal(q: RecentQuiz) {
 }
 
 .card:hover :deep(.cover),
-.card:focus-visible :deep(.cover),
 .new-tile:hover .new-art {
   box-shadow: 0 0 0 2px var(--surface-4);
+}
+
+/* Met het toetsenbord: de amberen focusring van knoppen, om de cover heen. */
+.card:focus-visible :deep(.cover) {
+  box-shadow: 0 0 0 2px var(--accent);
 }
 
 .card:focus-visible {
