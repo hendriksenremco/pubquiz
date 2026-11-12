@@ -59,4 +59,11 @@ describe('teksten van de show', () => {
     expect(ANSWERS_MESSAGES.in('nl')(ANSWER_NOUNS.fragment.next)).toBe('Volgend fragment')
     expect(t('hintShow', { noun: t(ANSWER_NOUNS.vraag.noun) })).toBe('Put this question on screen')
   })
+
+  it('noemt stoppen zoals beginnen: Start antwoorden en Stop antwoorden', () => {
+    for (const locale of ['nl', 'en'] as const) {
+      const t = ANSWERS_MESSAGES.in(locale)
+      expect(t('stop').split(' ')[1]).toBe(t('start').split(' ')[1])
+    }
+  })
 })

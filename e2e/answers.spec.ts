@@ -189,7 +189,7 @@ test('live: eerst de vraag, afbeelding of het fragment, dan het antwoord', async
   await operator.getByRole('button', { name: 'Volgende stap' }).click()
   await expect(operator.locator('.answers .next-step')).toContainText('Toon antwoord')
 
-  await operator.locator('.answers').getByRole('button', { name: 'Stop', exact: true }).click()
+  await operator.locator('.answers').getByRole('button', { name: 'Stop antwoorden' }).click()
   await expect(beamer.locator('.overlay')).toHaveCount(0)
 
   await operator.getByRole('button', { name: 'Stop show' }).click()
