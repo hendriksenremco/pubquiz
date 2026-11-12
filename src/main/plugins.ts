@@ -32,6 +32,8 @@ export interface PluginHost<Id extends PluginId> {
   command(command: ShowCommand): void
   /** Waar een bestand uit de geopende quiz staat; null = geen quiz, of buiten de quizmap. */
   mediaFile(file: string): string | null
+  /** De titel van de geopende quiz zoals de bediening hem toont (quizTitle); null = geen quiz. */
+  quizName(): string | null
   /**
    * Zijn status voor de vensters, de telefoons en de andere plug-ins. Mag vaak: alleen een echte
    * verandering gaat weg, en hooguit een paar keer per seconde (StatusBoard).
@@ -105,7 +107,10 @@ export class Plugins {
   private readonly board: StatusBoard
 
   constructor(
-    private readonly host: Pick<PluginHost<PluginId>, 'notify' | 'command' | 'mediaFile'> & {
+    private readonly host: Pick<
+      PluginHost<PluginId>,
+      'notify' | 'command' | 'mediaFile' | 'quizName'
+    > & {
       saveConfig(id: PluginId, config: Record<string, unknown>): void
       /** Naar alle vensters; null = de plug-in staat uit. */
       publishStatus(id: PluginId, status: unknown): void
@@ -183,6 +188,7 @@ export class Plugins {
       saveConfig: (config) => this.host.saveConfig(id, { ...config }),
       command: this.host.command,
       mediaFile: this.host.mediaFile,
+      quizName: this.host.quizName,
       publish: (status) => {
         if (this.running.has(id)) this.board.publish(id, status)
       },

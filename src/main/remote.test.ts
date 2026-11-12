@@ -32,6 +32,7 @@ async function setup(light: unknown = null, locale?: Locale) {
   const dir = fakeBuild()
   const host = {
     mediaFile: (file: string) => join(dir, 'quiz', file),
+    quizName: vi.fn((): string | null => 'Kroegquiz'),
     notify: vi.fn(),
     command: vi.fn(),
     saveConfig: vi.fn((config: PluginConfig<'remote'>) => plugin!.configure(config)),
@@ -162,6 +163,17 @@ describe('RemotePlugin', () => {
       screen: { slide: { layout: 'title', title: 'Ronde 1' } }
     })
     expect(await published(host, (link) => link.devices === 1)).toMatchObject({ devices: 1 })
+    await events.cancel()
+  })
+
+  it('noemt een quiz zoals de Mac hem noemt: zonder titel naar de map', async () => {
+    const { host, plugin, quiz, live, api } = await setup()
+    quiz.title = ''
+    host.quizName.mockReturnValue('Vrijdag')
+    const events = await subscribe(api('/api/events'))
+    expect(await events.next()).toMatchObject({ quiz: null })
+    plugin.update(quiz, live())
+    expect(await events.next()).toMatchObject({ quiz: 'Vrijdag' })
     await events.cancel()
   })
 
@@ -326,6 +338,7 @@ describe('RemotePlugin tijdens het ontwikkelen', () => {
       command: vi.fn(),
       saveConfig: vi.fn(),
       mediaFile: vi.fn(),
+      quizName: vi.fn(() => null),
       publish: vi.fn(),
       status: vi.fn(() => null),
       act: vi.fn(async () => null),

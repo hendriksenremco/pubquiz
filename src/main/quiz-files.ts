@@ -8,6 +8,13 @@ import type { Locale } from '@shared/i18n'
 import type { ImportResult, RecentQuiz } from '@shared/ipc'
 import { naturalCompare } from '@shared/media-folders'
 import { migrateQuiz } from '@shared/migrate'
+import {
+  hasQuizExtension,
+  LEGACY_QUIZ_EXT,
+  QUIZ_EXT,
+  quizBaseName,
+  quizTitle
+} from '@shared/quiz-name'
 import { quizFromTemplate, type TemplateOptions } from '@shared/template'
 import type { MediaAsset, Quiz } from '@shared/types'
 import { readJson, writeJson } from './json-store'
@@ -15,26 +22,11 @@ import { NoticeError, NOTICE_MESSAGES } from './messages'
 
 const run = promisify(execFile)
 
-/** Extensie van nieuwe quizzen (issue #43). */
-export const QUIZ_EXT = '.quiznote'
-/** De oude werknaam: zulke quizzen blijven gewoon open te maken. */
-export const LEGACY_QUIZ_EXT = '.pubquiz'
-const QUIZ_EXTS = [QUIZ_EXT, LEGACY_QUIZ_EXT]
 const QUIZ_FILE = 'quiz.json'
 const MEDIA_DIR = 'media'
 
-/** Heeft het pad de extensie van een quiz, nieuw of oud (ook met een `/` erachter)? */
-export function hasQuizExtension(path: string): boolean {
-  const trimmed = path.replace(/\/+$/, '')
-  return QUIZ_EXTS.some((ext) => trimmed.endsWith(ext))
-}
-
-/** Naam van een quizmap zonder extensie: `Vrijdag.quiznote` en `Vrijdag.pubquiz` worden `Vrijdag`. */
-export function quizBaseName(path: string): string {
-  const name = basename(path.replace(/\/+$/, ''))
-  const ext = QUIZ_EXTS.find((e) => name.endsWith(e))
-  return ext ? name.slice(0, -ext.length) : name
-}
+// De naam van een quizmap staat in shared, want de renderer gebruikt hem ook (quizTitle).
+export { hasQuizExtension, LEGACY_QUIZ_EXT, QUIZ_EXT, quizBaseName }
 
 export function withQuizExtension(path: string): string {
   return hasQuizExtension(path) ? path : path + QUIZ_EXT
@@ -137,7 +129,7 @@ export async function summarizeQuiz(dir: string): Promise<Omit<RecentQuiz, 'tour
     return {
       path: dir,
       exists: true,
-      title: quiz.title || missing.title,
+      title: quizTitle(quiz.title, dir),
       rounds: quiz.rounds.length,
       screens: quiz.screens.length,
       modifiedAt: stat.mtimeMs,
