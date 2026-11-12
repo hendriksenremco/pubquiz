@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { ShowCommand } from '@shared/ipc'
+import { roundTitle } from '@shared/quiz-messages'
 import { answerItems, findAsset, type AnswerItem } from '@shared/resolve'
 import type { Round } from '@shared/types'
 import Icon from '../../components/Icon.vue'
@@ -101,7 +102,7 @@ const imageOf = (item: Item) => findAsset(session.quiz!, item.slide?.imageAssetI
 
     <div class="card-body groups">
       <div v-for="g in groups" :key="g.round.id">
-        <div class="group-title">{{ g.round.title }}</div>
+        <div class="group-title">{{ roundTitle(g.round, locale) }}</div>
         <div class="grid">
           <button
             v-for="item in g.items"

@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { createFragment, createQuiz, createRound, fragmentChannel } from './factory'
 import { placeholders, type MessageBook } from './i18n'
-import { FORMAT_MESSAGES, NAME_MESSAGES, USAGE_MESSAGES } from './quiz-messages'
+import {
+  FORMAT_MESSAGES,
+  NAME_MESSAGES,
+  roundTitle,
+  TITLE_MESSAGES,
+  USAGE_MESSAGES
+} from './quiz-messages'
 
 function samePlaceholders<Key extends string>(book: MessageBook<Key>) {
   const { nl, ...others } = book.messages
@@ -17,6 +23,7 @@ describe('namen in een nieuwe quiz', () => {
     samePlaceholders(NAME_MESSAGES)
     samePlaceholders(USAGE_MESSAGES)
     samePlaceholders(FORMAT_MESSAGES)
+    samePlaceholders(TITLE_MESSAGES)
   })
 
   it('zijn standaard Nederlands', () => {
@@ -50,5 +57,13 @@ describe('namen in een nieuwe quiz', () => {
       quiz.channels.reverse()
       expect(fragmentChannel(quiz)?.name).toBe(NAME_MESSAGES.in(locale)('fragmentChannel'))
     }
+  })
+})
+
+describe('roundTitle', () => {
+  it('geeft de titel, of "Naamloze ronde" als hij leeg is', () => {
+    expect(roundTitle({ title: 'Ronde 1' })).toBe('Ronde 1')
+    expect(roundTitle({ title: '' })).toBe('Naamloze ronde')
+    expect(roundTitle({ title: '  ' }, 'en')).toBe('Untitled round')
   })
 })

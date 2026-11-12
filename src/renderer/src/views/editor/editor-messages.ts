@@ -323,7 +323,6 @@ export const ROUND_MESSAGES = defineMessages(
 export const EDITOR_MESSAGES = defineMessages(
   {
     rounds: 'Rondes',
-    untitled: 'Naamloze ronde',
     addRound: 'Voeg ronde toe',
     presetNormal: 'Gewone ronde',
     presetNormalHint: 'Vragen met slides',
@@ -351,7 +350,6 @@ export const EDITOR_MESSAGES = defineMessages(
   {
     en: {
       rounds: 'Rounds',
-      untitled: 'Untitled round',
       addRound: 'Add round',
       presetNormal: 'Regular round',
       presetNormalHint: 'Questions with slides',

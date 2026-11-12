@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { createRound, newId, type RoundPreset } from '@shared/factory'
+import { roundTitle } from '@shared/quiz-messages'
 import { addRounds, isRoundFile } from '@shared/round-file'
 import Icon from '../../components/Icon.vue'
 import Popover from '../../components/Popover.vue'
@@ -83,7 +84,7 @@ async function remove(id: string) {
   const r = quiz.value.rounds.find((x) => x.id === id)
   if (!r) return
   const ok = await ask({
-    title: t('removeRound', { title: r.title }),
+    title: t('removeRound', { title: roundTitle(r, locale) }),
     confirm: t('remove'),
     icon: 'trash',
     danger: true
@@ -176,7 +177,7 @@ defineExpose({ importRounds })
           @drop.prevent.stop="dragging && onRoundDrop(r.id)"
         >
           <span class="num mono">{{ i + 1 }}</span>
-          <span class="round-title grow">{{ r.title || t('untitled') }}</span>
+          <span class="round-title grow">{{ roundTitle(r, locale) }}</span>
         </div>
         <Popover :width="250">
           <template #trigger="{ open, toggle }">

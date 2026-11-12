@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { roundTitle } from '@shared/quiz-messages'
 import {
   addTeam,
   clearPoints,
@@ -76,8 +77,13 @@ async function clear() {
           <thead>
             <tr>
               <th class="team">{{ t('team') }}</th>
-              <th v-for="round in rounds" :key="round.id" class="round" :title="round.title">
-                {{ round.title }}
+              <th
+                v-for="round in rounds"
+                :key="round.id"
+                class="round"
+                :title="roundTitle(round, locale)"
+              >
+                {{ roundTitle(round, locale) }}
               </th>
               <th class="total">{{ t('total') }}</th>
               <th />
@@ -99,7 +105,7 @@ async function clear() {
                   type="text"
                   inputmode="decimal"
                   class="input input-sm points mono"
-                  :aria-label="t('points', { team: team.name, round: round.title })"
+                  :aria-label="t('points', { team: team.name, round: roundTitle(round, locale) })"
                   @change="enter(round.id, team.id, $event)"
                 />
               </td>

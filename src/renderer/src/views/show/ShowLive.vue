@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted } from 'vue'
+import { roundTitle } from '@shared/quiz-messages'
 import { slideNumber } from '@shared/resolve'
 import type { Round, Slide } from '@shared/types'
 import Icon from '../../components/Icon.vue'
@@ -118,7 +119,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
       >
         <span class="dot" aria-hidden="true" />
         <span class="grow">
-          <span class="round-title">{{ r.title }}</span>
+          <span class="round-title">{{ roundTitle(r, locale) }}</span>
           <span v-if="r.id === state.activeRoundId" class="round-tag">{{ t('now') }}</span>
           <span v-else-if="r.id === nextRound?.id" class="round-tag">{{ t('upNext') }}</span>
         </span>
@@ -126,7 +127,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
     </aside>
 
     <main class="center scroll">
-      <h2 class="now-title">{{ round?.title ?? t('betweenRounds') }}</h2>
+      <h2 class="now-title">{{ round ? roundTitle(round, locale) : t('betweenRounds') }}</h2>
 
       <section class="screens">
         <figure v-for="slot in quiz.screens" :key="slot.id" class="screen">
@@ -219,7 +220,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
         <div class="pair">
           <button class="btn tile" :disabled="!prevRound" @click="send({ type: 'prevRound' })">
             <span class="tile-label"><Icon name="left" :size="14" />{{ t('prevRound') }}</span>
-            <span class="tile-sub">{{ prevRound?.title ?? '–' }}</span>
+            <span class="tile-sub">{{ prevRound ? roundTitle(prevRound, locale) : '–' }}</span>
           </button>
           <button
             class="btn tile end"
@@ -228,7 +229,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
             @click="send({ type: 'nextRound' })"
           >
             <span class="tile-label">{{ t('nextRound') }}<Icon name="right" :size="14" /></span>
-            <span class="tile-sub">{{ nextRound?.title ?? '–' }}</span>
+            <span class="tile-sub">{{ nextRound ? roundTitle(nextRound, locale) : '–' }}</span>
           </button>
           <button
             class="btn tile"
@@ -239,7 +240,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
             <span class="tile-label"
               ><Icon name="restart" :size="13" />{{ t('restartRound') }}</span
             >
-            <span class="tile-sub">{{ restartable?.title ?? '–' }}</span>
+            <span class="tile-sub">{{ restartable ? roundTitle(restartable, locale) : '–' }}</span>
           </button>
           <button
             class="btn tile end"
@@ -248,7 +249,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
             @click="send({ type: 'endRound' })"
           >
             <span class="tile-label">{{ t('endRound') }}<Icon name="end" :size="12" /></span>
-            <span class="tile-sub">{{ round?.title ?? '–' }}</span>
+            <span class="tile-sub">{{ round ? roundTitle(round, locale) : '–' }}</span>
           </button>
         </div>
       </section>
