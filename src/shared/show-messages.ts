@@ -123,7 +123,7 @@ export const CHECK_MESSAGES = defineMessages(
     background: 'Achtergrondmuziek',
     round: 'Ronde “{title}”',
     slide: '{round}, slide',
-    answerImage: '{where}, afbeelding bij antwoord'
+    answerImage: '{where}, afbeelding bij het antwoord'
   },
   {
     en: {
