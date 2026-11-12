@@ -42,7 +42,7 @@ export type ShowCommand =
   | { type: 'timer' }
   /** Slide-loop van de ronde pauzeren of laten doorgaan. */
   | { type: 'slideLoop'; paused: boolean }
-  /** `id`: een audiokanaal of een scherm (videogeluid). */
+  /** `id`: een geluidskanaal of een scherm (videogeluid). */
   | { type: 'setVolume'; id: string; volume: number }
   | { type: 'toggleBackground' }
   | { type: 'blackout'; screenId?: string; on: boolean }

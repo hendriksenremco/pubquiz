@@ -192,7 +192,7 @@ describe('addRounds', () => {
     expect(quiz.rounds[0].slides[1].imageAssetId).toBe(quiz.assets[0].id)
   })
 
-  it('weigert een muziekronde zonder audiokanaal en een ontbrekend bestand', () => {
+  it('weigert een muziekronde zonder geluidskanaal en een ontbrekend bestand', () => {
     const quiz = createQuiz('Vrijdag')
     quiz.channels = []
     const drafts = parseRoundFile(JSON.stringify({ formatVersion: 1, ...music }))

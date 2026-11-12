@@ -38,7 +38,7 @@ export const NEW_QUIZ_MESSAGES = defineMessages(
     namePlaceholder: 'Bijvoorbeeld: Pubquiz november',
     savedIn: 'Wordt bewaard in {folder}',
     alwaysCopied:
-      "Schermen, audiokanalen, achtergrondmuziek en alle video's en afbeeldingen gaan altijd mee.",
+      "Schermen, geluidskanalen, achtergrondmuziek en alle video's en afbeeldingen gaan altijd mee.",
     rounds: 'Rondes',
     roundsHint: 'Titels, slides, en per ronde het beeld en de muziek',
     fragments: 'Fragmenten',
