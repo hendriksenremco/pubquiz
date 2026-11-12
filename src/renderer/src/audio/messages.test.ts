@@ -11,4 +11,12 @@ describe('teksten van de audio-engine', () => {
       }
     }
   })
+
+  it('beginnen met waar het om gaat, zoals de andere meldingen over iets wat ontbreekt', () => {
+    for (const messages of Object.values(AUDIO_MESSAGES.messages)) {
+      for (const key of ['outputMissing', 'cannotRoute', 'noChannel', 'cannotPlay'] as const) {
+        expect(messages[key], key).toMatch(/^\{(channel|fragment)\}: /)
+      }
+    }
+  })
 })
