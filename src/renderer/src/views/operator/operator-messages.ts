@@ -5,7 +5,7 @@ export const OPERATOR_MESSAGES = defineMessages(
   {
     quizzes: 'Quizzen',
     live: 'Live',
-    toShow: 'Naar de show',
+    toShow: 'Terug naar de show',
     print: 'Afdrukken',
     startShow: 'Start show',
     settings: 'Instellingen',
