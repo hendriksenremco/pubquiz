@@ -69,7 +69,7 @@ export const NEW_QUIZ_MESSAGES = defineMessages(
 /** Een quiz maken met je eigen AI-assistent (AiDialog). */
 export const AI_MESSAGES = defineMessages(
   {
-    title: 'Een quiz maken met je AI',
+    title: 'Nieuwe quiz met je AI',
     askFor: 'Vraag je AI-assistent bijvoorbeeld:',
     example: 'Maak een pubquiz in QuizNote met zes rondes over Italië.',
     explain:
@@ -86,7 +86,7 @@ export const AI_MESSAGES = defineMessages(
   },
   {
     en: {
-      title: 'Create a quiz with your AI',
+      title: 'New quiz with your AI',
       askFor: 'Ask your AI assistant, for example:',
       example: 'Make a pub quiz in QuizNote with six rounds about Italy.',
       explain:

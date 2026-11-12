@@ -209,7 +209,7 @@ test('vanaf het dashboard koppel je QuizNote in één keer aan Claude Desktop', 
   await operator.getByRole('button', { name: 'Quizzen' }).click()
   await operator.locator('.new-tile').click()
   await operator.getByRole('button', { name: 'Met je AI…' }).click()
-  const dialog = operator.getByRole('dialog', { name: 'Een quiz maken met je AI' })
+  const dialog = operator.getByRole('dialog', { name: 'Nieuwe quiz met je AI' })
   await expect(dialog.locator('.snippet')).toContainText('mcp.js')
   await dialog.getByRole('button', { name: 'Koppel aan Claude Desktop' }).click()
   await expect(dialog.locator('.ok')).toContainText('Gekoppeld')
