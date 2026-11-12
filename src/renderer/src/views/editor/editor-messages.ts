@@ -18,7 +18,7 @@ export const PRINT_MESSAGES = defineMessages(
       'Voor jou: per ronde de vragen met antwoord, vier ansichtkaarten per A4 om te knippen',
     save: 'Sla op…',
     saveDoc: 'Sla {title} op',
-    busy: 'Bezig…'
+    busy: 'Opslaan…'
   },
   {
     en: {
