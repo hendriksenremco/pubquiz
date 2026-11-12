@@ -100,7 +100,7 @@ test('een afbeeldingenronde vul je in één keer met een map uit Media', async (
 })
 
 test('een antwoordenronde loopt vragen, afbeeldingen en fragmenten langs', async () => {
-  await addRound('Antwoorden')
+  await addRound('Antwoordenronde')
   await operator.getByRole('tab', { name: 'Ronde' }).click()
   const sources = operator.locator('.answers .check-row')
   await expect(sources.locator('input:checked')).toHaveCount(4)
