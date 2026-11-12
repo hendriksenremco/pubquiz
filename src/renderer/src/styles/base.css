@@ -332,9 +332,10 @@ input[type='range']:focus-visible {
   outline: none;
 }
 
+/* Een dichte amberen rand, zoals de focusring van knoppen; geen gloed. */
 input[type='range']:focus-visible::-webkit-slider-thumb {
   box-shadow:
-    0 0 0 4px rgba(255, 165, 61, 0.35),
+    0 0 0 2px var(--accent),
     0 1px 4px rgba(3, 6, 14, 0.5);
 }
 
