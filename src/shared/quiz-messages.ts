@@ -54,7 +54,7 @@ export const USAGE_MESSAGES = defineMessages(
     roundBackground: 'Ronde “{title}”: achtergrondmuziek',
     roundFragment: 'Ronde “{title}”: fragment',
     roundSlide: 'Ronde “{title}”: slide',
-    roundAnswer: 'Ronde “{title}”: bij een antwoord'
+    roundAnswer: 'Ronde “{title}”: afbeelding bij het antwoord'
   },
   {
     en: {
@@ -64,7 +64,7 @@ export const USAGE_MESSAGES = defineMessages(
       roundBackground: 'Round “{title}”: background music',
       roundFragment: 'Round “{title}”: clip',
       roundSlide: 'Round “{title}”: slide',
-      roundAnswer: 'Round “{title}”: with an answer'
+      roundAnswer: 'Round “{title}”: picture with the answer'
     }
   }
 )

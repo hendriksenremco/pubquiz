@@ -401,4 +401,21 @@ describe('referenties', () => {
       'Round “Muziek”, Fragment 2: channel missing'
     ])
   })
+
+  it('noemt een afbeelding bij het antwoord zoals de editor', () => {
+    const quiz = makeQuiz()
+    const music = quiz.rounds.find((r) => r.title === 'Muziek')!
+    music.fragments[0].answerImageAssetId = 'loop2'
+    expect(findAssetUsages(quiz, 'loop2')).toEqual(['Ronde “Muziek”: afbeelding bij het antwoord'])
+    expect(findAssetUsages(quiz, 'loop2', 'en')).toEqual([
+      'Round “Muziek”: picture with the answer'
+    ])
+    quiz.assets = quiz.assets.filter((a) => a.id !== 'loop2')
+    expect(findBrokenReferences(quiz)).toEqual([
+      'Ronde “Muziek”, Fragment 1, afbeelding bij het antwoord: bestand ontbreekt'
+    ])
+    expect(findBrokenReferences(quiz, 'en')).toEqual([
+      'Round “Muziek”, Fragment 1, picture with the answer: file missing'
+    ])
+  })
 })
