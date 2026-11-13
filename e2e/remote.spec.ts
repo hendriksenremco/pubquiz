@@ -162,6 +162,11 @@ test('de show bedienen met een telefoon via de QR-code', async () => {
     await reeks.getByRole('button', { name: 'Pauzeer' }).click()
     await expect(pad.getByRole('button', { name: /Hervat/ })).toBeVisible()
     await expect(reeks.getByRole('button', { name: 'Hervat' })).toBeVisible()
+    // Waar de reeks is, naast het kopje, zoals naast Fragmenten op de Mac: het fragment speelt
+    // nog uit, of is net afgelopen.
+    await expect(reeks.locator('.title-status')).toHaveText(
+      /^(Reeks: fragment 1 \(stopt hierna\)|Reeks gepauzeerd, volgende: fragment 2)$/
+    )
     await reeks.scrollIntoViewIfNeeded()
     await snap(phone, 'test-results/remote-phone-sequence.png')
     await reeks.getByRole('button', { name: 'Stop reeks' }).click()
@@ -174,7 +179,8 @@ test('de show bedienen met een telefoon via de QR-code', async () => {
     await tegel.click()
     await expect(frag(2)).toHaveClass(/on/)
     await expect(tegel).toHaveAttribute('aria-pressed', 'true')
-    await expect(tegel).toContainText('Speelt')
+    // De resterende tijd, zoals op het fragment op de Mac.
+    await expect(tegel.locator('.tile-sub')).toHaveText(/^-\d+:\d\d$/)
     // Het antwoord staat erbij, zoals op het fragment op de Mac.
     await expect(tegel).toContainText('Antwoord 2')
     // Altijd dezelfde stand, los van waar de vorige stap de pagina liet staan.

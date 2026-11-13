@@ -156,14 +156,14 @@ test('live: eerst de vraag, afbeelding of het fragment, dan het antwoord', async
   await operator.keyboard.press('Escape')
   const phone = await openRemote(app, url, PHONE)
   const phoneSlides = phone.getByRole('region', { name: 'Slides' })
-  await expect(phoneSlides.locator('.loop-text')).toHaveText('Wisselen gepauzeerd')
+  await expect(phoneSlides.locator('.title-status')).toHaveText('Wisselen gepauzeerd')
   await phoneSlides.getByRole('button', { name: 'Hervat wisselen' }).click()
   await expect(operator.getByRole('button', { name: /Pauzeer wisselen/ })).toBeVisible()
   // Eén seconde per slide: de telefoon telt nooit verder terug dan dat.
-  await expect(phoneSlides.locator('.loop-text')).toHaveText('Volgende over 1 s')
+  await expect(phoneSlides.locator('.title-status')).toHaveText('Volgende over 1 s')
   await phoneSlides.getByRole('button', { name: 'Pauzeer wisselen' }).click()
   await expect(operator.getByRole('button', { name: /Hervat wisselen/ })).toBeVisible()
-  await expect(phoneSlides.locator('.loop-text')).toHaveText('Wisselen gepauzeerd')
+  await expect(phoneSlides.locator('.title-status')).toHaveText('Wisselen gepauzeerd')
   await phoneSlides.evaluate((el) => el.scrollIntoView({ block: 'start' }))
   await snap(phone, 'test-results/remote-phone-loop.png')
 

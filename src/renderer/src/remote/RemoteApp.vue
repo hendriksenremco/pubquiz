@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { computed, onMounted, provide, reactive, watchEffect } from 'vue'
-import type { RemoteAnswer, RemoteLevel } from '@shared/remote'
+import type { RemoteAnswer, RemoteFragment, RemoteLevel } from '@shared/remote'
 import { musicAudible, stepNames as namesOf } from '@shared/resolve'
 import Icon from '../components/Icon.vue'
 import SlideView from '../components/SlideView.vue'
 import { vFill } from '../lib/fill'
-import { percent } from '../lib/format'
+import { formatTime, percent } from '../lib/format'
 import { ASSET_URL } from '../lib/media'
 import { useNow } from '../lib/use-now'
 import { MUSIC_STATUS } from '../views/show/live-messages'
@@ -26,10 +26,17 @@ const screen = computed(() => view.value?.screen ?? null)
 const sequence = computed(() => view.value?.sequence?.status ?? null)
 const slides = computed(() => view.value?.slides ?? [])
 const loop = computed(() => view.value?.loop ?? null)
+const fragments = computed(() => view.value?.fragments ?? [])
+const sequenceStep = computed(() => view.value?.sequence?.step ?? null)
 
 // Zoals naast Slides op de Mac: wanneer de volgende slide komt. De tijd komt van de klok van de Mac;
-// hooguit de duur van een slide, voor als de klok van de telefoon wat afwijkt.
-const now = useNow(250, () => !!loop.value?.until)
+// hooguit de duur van een slide, voor als de klok van de telefoon wat afwijkt. Ook voor de reeks
+// en de resterende tijd van een fragment.
+const now = useNow(
+  250,
+  () =>
+    !!loop.value?.until || sequenceStep.value?.kind === 'gap' || fragments.value.some((f) => f.ends)
+)
 const loopText = computed(() => {
   const l = loop.value
   if (!l) return null
@@ -38,7 +45,40 @@ const loopText = computed(() => {
   const seconds = Math.ceil((l.until - now.value) / 1000)
   return t.value('loopNext', { seconds: Math.min(l.seconds, Math.max(1, seconds)) })
 })
-const fragments = computed(() => view.value?.fragments ?? [])
+
+/** Zoals naast Fragmenten op de Mac: waar de reeks is. */
+const sequenceText = computed(() => {
+  const s = sequenceStep.value
+  if (!s) return null
+  const say = t.value
+  switch (s.kind) {
+    case 'playing':
+      return say('sequencePlaying', { number: s.number })
+    case 'last':
+      return say('sequenceLast', { number: s.number })
+    case 'paused':
+      return say('sequencePaused', { number: s.number })
+    case 'gap': {
+      const seconds = Math.ceil((s.until - now.value) / 1000)
+      return say('sequenceGap', {
+        number: s.number,
+        seconds: Math.min(s.seconds, Math.max(0, seconds))
+      })
+    }
+  }
+})
+
+/** Wat er onder een fragment staat: de resterende tijd zoals op de Mac ("-0:12"), of Speelt. */
+function fragmentState(f: RemoteFragment): string {
+  const say = t.value
+  if (f.playing) {
+    if (!f.ends) return say('playing')
+    const left = Math.min(f.ends.seconds, Math.max(0, (f.ends.at - now.value) / 1000))
+    return `-${formatTime(left)}`
+  }
+  if (f.upcoming) return say('upNextFragment')
+  return f.played ? say('played') : '\u00a0'
+}
 const answers = computed(() => view.value?.answers ?? [])
 const roundList = computed(() => view.value?.roundList ?? [])
 const screenList = computed(() => view.value?.screenList ?? [])
@@ -259,9 +299,9 @@ onMounted(connect)
       <!-- Zoals Slides in de show op de Mac: Geen slide en elke slide van de ronde, met één tik in
            beeld. -->
       <section v-if="slides.length" class="pair" :aria-label="t('slides')">
-        <span class="slides-title" :class="{ 'with-loop': loopText }"
+        <span class="slides-title" :class="{ 'with-status': loopText }"
           >{{ t('slides')
-          }}<span v-if="loopText" class="loop-text" data-volatile>{{ loopText }}</span></span
+          }}<span v-if="loopText" class="title-status" data-volatile>{{ loopText }}</span></span
         >
         <!-- Alleen in een ronde waarin de slides vanzelf wisselen: de knop staat bij Slides, net als
              op de Mac (L). -->
@@ -340,7 +380,13 @@ onMounted(connect)
 
       <!-- Alleen in een ronde met fragmenten: dezelfde knoppen als bij Fragmenten op de Mac. -->
       <section v-if="sequence" class="pair" :aria-label="t('fragments')">
-        <span class="slides-title">{{ t('fragments') }}</span>
+        <!-- Waar de reeks is, rechts naast het kopje, zoals naast Fragmenten op de Mac. -->
+        <span class="slides-title" :class="{ 'with-status': sequenceText }"
+          >{{ t('fragments')
+          }}<span v-if="sequenceText" class="title-status" data-volatile>{{
+            sequenceText
+          }}</span></span
+        >
         <template v-if="sequence === 'idle'">
           <button
             class="tile toggle"
@@ -397,14 +443,8 @@ onMounted(connect)
             ><span class="frag-label">{{ f.label }}</span></span
           >
           <span v-if="f.answer" class="frag-answer">{{ f.answer }}</span>
-          <span class="tile-sub">{{
-            f.playing
-              ? t('playing')
-              : f.upcoming
-                ? t('upNextFragment')
-                : f.played
-                  ? t('played')
-                  : '\u00a0'
+          <span class="tile-sub" :data-volatile="f.playing || undefined">{{
+            fragmentState(f)
           }}</span>
         </button>
       </section>
@@ -917,14 +957,15 @@ button:disabled {
   font-weight: 600;
 }
 
-/* Slides met het wisselen ernaast, zoals op de Mac: "Volgende over 5 s" rechts, grijs. */
-.slides-title.with-loop {
+/* Slides met het wisselen en Fragmenten met de reeks ernaast, zoals op de Mac: "Volgende over 5 s"
+   rechts, grijs. */
+.slides-title.with-status {
   display: flex;
   gap: 10px;
   justify-content: space-between;
 }
 
-.loop-text {
+.title-status {
   color: var(--faint);
   font-weight: 500;
   font-variant-numeric: tabular-nums;

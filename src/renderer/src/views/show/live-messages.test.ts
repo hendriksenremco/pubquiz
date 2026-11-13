@@ -74,6 +74,11 @@ describe('teksten van de show', () => {
         ['played', 'played']
       ] as const
       for (const [mac, tel] of pairs) expect(pad(mac), `${locale}: ${mac}`).toBe(phone(tel))
+      // Waar de reeks is, naast Fragmenten.
+      for (const key of ['sequencePlaying', 'sequenceLast', 'sequencePaused'] as const)
+        expect(pad(key, { number: 3 }), `${locale}: ${key}`).toBe(phone(key, { number: 3 }))
+      const gap = { number: 3, seconds: 4 }
+      expect(pad('sequenceGap', gap), `${locale}: sequenceGap`).toBe(phone('sequenceGap', gap))
       // Antwoorden (AnswersPad).
       const answers = ANSWERS_MESSAGES.in(locale)
       expect(answers('title'), `${locale}: answers`).toBe(phone('answers'))
