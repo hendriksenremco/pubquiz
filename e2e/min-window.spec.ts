@@ -331,6 +331,18 @@ for (const locale of ['nl', 'en'] as const) {
       // De editor.
       await operator.locator('.sidebar .round').first().click()
       await check('slides')
+      // Een lange schermnaam bij In beeld op blijft op één regel; de hele naam staat in de tooltip.
+      const checks = await operator.locator('.checks .check-name').evaluateAll((els) =>
+        els.map((el) => ({
+          text: el.textContent,
+          title: el.getAttribute('title'),
+          short: el.getBoundingClientRect().height < 24
+        }))
+      )
+      expect(checks.length).toBe(3)
+      for (const name of checks) {
+        expect.soft(name).toEqual({ ...name, title: name.text, short: true })
+      }
       await operator.getByRole('tab', { name: labels.round }).click()
       await check('round-settings')
       await operator.locator('.sidebar .round').nth(1).click()

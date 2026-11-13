@@ -193,7 +193,7 @@ function setAnswersFor(roundId: string, on: boolean) {
               :checked="round.fragmentScreens.includes(slot.id)"
               @change="setFragmentScreen(slot.id, ($event.target as HTMLInputElement).checked)"
             />
-            {{ slot.name }}
+            <span class="check-name" :title="slot.name">{{ slot.name }}</span>
           </label>
         </div>
       </div>
@@ -304,7 +304,7 @@ function setAnswersFor(roundId: string, on: boolean) {
               :checked="round.fragmentScreens.includes(slot.id)"
               @change="setFragmentScreen(slot.id, ($event.target as HTMLInputElement).checked)"
             />
-            {{ slot.name }}
+            <span class="check-name" :title="slot.name">{{ slot.name }}</span>
           </label>
         </div>
       </div>
