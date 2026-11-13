@@ -332,6 +332,8 @@ describe('remoteCommand', () => {
   it('één fragment kiezen: spelen of stoppen, alleen een fragment van de ronde die loopt', () => {
     const { quiz, first, music, live } = setup()
     const [one, two, three] = music.fragments
+    two.answer = 'Artiest 2'
+    three.answer = ''
     const playing = {
       fragment: { key: 'k', roundId: music.id, fragmentId: two.id, startedAt: 0, duration: 10 },
       lastFragmentId: two.id,
@@ -339,9 +341,33 @@ describe('remoteCommand', () => {
     }
     const state = live({ activeRoundId: music.id, ...playing })
     expect(remoteView(quiz, state).fragments).toEqual([
-      { id: one.id, number: 1, label: 'Liedje 1', playing: false, played: true, upcoming: false },
-      { id: two.id, number: 2, label: 'Liedje 2', playing: true, played: false, upcoming: false },
-      { id: three.id, number: 3, label: 'Liedje 3', playing: false, played: false, upcoming: true }
+      {
+        id: one.id,
+        number: 1,
+        label: 'Liedje 1',
+        answer: null,
+        playing: false,
+        played: true,
+        upcoming: false
+      },
+      {
+        id: two.id,
+        number: 2,
+        label: 'Liedje 2',
+        answer: 'Artiest 2',
+        playing: true,
+        played: false,
+        upcoming: false
+      },
+      {
+        id: three.id,
+        number: 3,
+        label: 'Liedje 3',
+        answer: null,
+        playing: false,
+        played: false,
+        upcoming: true
+      }
     ])
     expect(remoteView(quiz, live({ activeRoundId: first.id })).fragments).toEqual([])
     expect(remoteView(quiz, live()).fragments).toEqual([])
