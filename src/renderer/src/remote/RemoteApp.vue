@@ -11,7 +11,7 @@ import { ANSWER_NOUNS } from './messages'
 
 /**
  * De afstandsbediening op een telefoon of tablet: de slide die in beeld staat, vorige en volgende
- * (zoals ← → op de Mac: slides, fragmenten of antwoorden), rondes, Stop antwoorden, de fragmentenreeks, aftellen, wisselen van de slides, beeld op zwart en geluid, en
+ * (zoals ← → op de Mac: slides, fragmenten of antwoorden), rondes, de slides, Stop antwoorden, de fragmentenreeks, aftellen, wisselen van de slides, beeld op zwart en geluid, en
  * daaronder de plug-ins met knoppen voor de telefoon (bv. het licht; zie plugins/phone.ts). Volgt de show op de Mac; buiten de show
  * staat alles stil. Dezelfde knoppen staan in de show op de Mac (ShowLive en de werkbalk).
  */
@@ -20,6 +20,7 @@ const round = computed(() => view.value?.round ?? null)
 const step = computed(() => view.value?.step ?? null)
 const screen = computed(() => view.value?.screen ?? null)
 const sequence = computed(() => view.value?.sequence?.status ?? null)
+const slides = computed(() => view.value?.slides ?? [])
 const fragments = computed(() => view.value?.fragments ?? [])
 const answers = computed(() => view.value?.answers ?? [])
 provide(ASSET_URL, imageUrl)
@@ -188,6 +189,35 @@ onMounted(connect)
       <section v-if="view?.notes" class="notes" :aria-label="t('notes')">
         <span class="eyebrow">{{ t('notes') }}</span>
         <p>{{ view.notes }}</p>
+      </section>
+
+      <!-- Zoals Slides in de show op de Mac: Geen slide en elke slide van de ronde, met één tik in
+           beeld. -->
+      <section v-if="slides.length" class="pair" :aria-label="t('slides')">
+        <span class="slides-title">{{ t('slides') }}</span>
+        <button
+          class="tile pick"
+          :class="{ active: !slides.some((s) => s.on) }"
+          :aria-pressed="!slides.some((s) => s.on)"
+          :disabled="!live"
+          @click="send({ type: 'slide', index: -1 })"
+        >
+          <span class="tile-label">{{ t('noSlideButton') }}</span>
+        </button>
+        <button
+          v-for="(s, i) in slides"
+          :key="s.id"
+          class="tile pick"
+          :class="{ active: s.on }"
+          :aria-pressed="s.on"
+          :disabled="!live"
+          @click="send({ type: 'slide', index: i })"
+        >
+          <span class="tile-label"
+            ><span class="frag-num">{{ i + 1 }}</span
+            ><span class="frag-label">{{ s.label }}</span></span
+          >
+        </button>
       </section>
 
       <!-- Alleen in een antwoordenronde, zoals Antwoorden op de Mac: Stop antwoorden zodra er een
@@ -664,7 +694,8 @@ button:disabled {
   gap: 10px;
 }
 
-.frag .tile-label {
+.frag .tile-label,
+.pick .tile-label {
   max-width: 100%;
   gap: 8px;
 }
@@ -679,7 +710,8 @@ button:disabled {
   text-overflow: ellipsis;
 }
 
-.frag.active {
+.frag.active,
+.pick.active {
   background: var(--accent-soft);
   color: var(--accent);
 }
@@ -689,7 +721,8 @@ button:disabled {
 }
 
 /* Antwoorden: per ronde een kopje over de hele breedte, zoals op de Mac. */
-.group-title {
+.group-title,
+.slides-title {
   grid-column: 1 / -1;
   margin-top: 4px;
   padding: 0 2px;

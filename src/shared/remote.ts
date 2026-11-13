@@ -20,6 +20,7 @@ import {
   loopActive,
   resolveScreen,
   restartRound,
+  slideLabel,
   stepCommand,
   stepTarget,
   type StepTarget
@@ -74,6 +75,11 @@ export interface RemoteView {
   muted: boolean
   /** Het aftellen (T) loopt. */
   timer: boolean
+  /**
+   * De slides van de ronde, om er één te kiezen zoals bij Slides in de show op de Mac; leeg = deze
+   * ronde heeft geen slides. De telefoon zet er Geen slide voor (index -1): aan als er geen `on` is.
+   */
+  slides: RemoteSlide[]
   /** De slides van de ronde wisselen vanzelf (L op de Mac); null = deze ronde heeft dat niet. */
   loop: { paused: boolean } | null
   /**
@@ -98,6 +104,14 @@ export interface RemoteView {
   answers: RemoteAnswer[]
   /** Plug-ins die aan staan en knoppen op de telefoon hebben (`remoteActions`), met hun status. */
   plugins: RemotePlugin[]
+}
+
+/** Eén slide in de lijst Slides op de telefoon, met dezelfde korte naam als op de Mac. */
+export interface RemoteSlide {
+  id: string
+  label: string
+  /** Deze slide staat nu in beeld. */
+  on: boolean
 }
 
 /** Eén fragment op de telefoon: tikken speelt het, nog eens tikken stopt het. */
@@ -172,6 +186,8 @@ export const RemoteActionSchema = z.discriminatedUnion('type', [
     type: z.literal('sequence'),
     action: z.enum(['start', 'pause', 'resume', 'skip', 'stop'])
   }),
+  /** Eén slide van de ronde in beeld zetten, zoals een tik bij Slides op de Mac; -1 = Geen slide. */
+  z.object({ type: z.literal('slide'), index: z.number().int().min(-1).max(999) }),
   /** Fragmenten opnieuw: alle fragmenten van de ronde weer ongespeeld. */
   z.object({ type: z.literal('resetPlayed') }),
   /** Eén fragment van de ronde spelen of stoppen, zoals een tik op dat fragment op de Mac. */
@@ -240,6 +256,12 @@ export function remoteView(
     blackout: !!quiz && allBlack(quiz, state),
     muted: !state.backgroundEnabled,
     timer: state.timer !== null,
+    slides:
+      round?.slides.map((slide, i) => ({
+        id: slide.id,
+        label: slideLabel(round, slide, locale),
+        on: state.slideIndex === i
+      })) ?? [],
     loop: round?.slideLoopSeconds ? { paused: state.loopPaused } : null,
     sequence: round?.fragments.length ? { status: sequenceOf(round, state) } : null,
     fragments: quiz && round ? remoteFragments(quiz, round, state) : [],
@@ -289,6 +311,12 @@ export function remoteCommand(
       }
       if (!allowed[sequenceOf(round, state)].includes(action.action)) return null
       return { type: 'autoplay', action: action.action }
+    }
+    case 'slide': {
+      const round = activeRound(quiz, state)
+      if (!round || action.index >= round.slides.length) return null
+      if (action.index === -1 && !round.slides.length) return null
+      return action.index === state.slideIndex ? null : { type: 'setSlide', index: action.index }
     }
     case 'resetPlayed':
       return activeRound(quiz, state)?.fragments.length ? { type: 'resetPlayed' } : null

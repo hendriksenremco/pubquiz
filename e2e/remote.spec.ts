@@ -98,6 +98,22 @@ test('de show bedienen met een telefoon via de QR-code', async () => {
     await phone.getByRole('button', { name: 'Vorige slide' }).click()
     await expect(macSlide).toHaveText('2')
 
+    // Eén slide kiezen, of Geen slide, zoals bij Slides in de show op de Mac.
+    const slides = phone.getByRole('region', { name: 'Slides' })
+    const slideTiles = slides.getByRole('button')
+    await expect(slideTiles).toHaveCount(4)
+    await expect(slideTiles.nth(2)).toHaveAttribute('aria-pressed', 'true')
+    await slideTiles.nth(3).click()
+    await expect(macSlide).toHaveText('3')
+    await expect(slideTiles.nth(3)).toHaveAttribute('aria-pressed', 'true')
+    await slides.getByRole('button', { name: 'Geen slide' }).click()
+    await expect(operator.locator('.live .slide.on')).toHaveText('Geen slide')
+    await expect(slideTiles.nth(0)).toHaveAttribute('aria-pressed', 'true')
+    await slides.evaluate((el) => el.scrollIntoView({ block: 'center' }))
+    await snap(phone, 'test-results/remote-phone-slides.png')
+    await slideTiles.nth(2).click()
+    await expect(macSlide).toHaveText('2')
+
     // In een muziekronde bladeren dezelfde knoppen door de fragmenten, zoals ← → op de Mac.
     const frag = (n: number) => operator.locator('.frag').nth(n - 1)
     await phone.getByRole('button', { name: /Volgende ronde/ }).click()

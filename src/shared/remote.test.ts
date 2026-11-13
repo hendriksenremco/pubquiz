@@ -356,6 +356,33 @@ describe('remoteCommand', () => {
     expect(pick(live({ activeRoundId: first.id }), one.id, true)).toBeNull()
   })
 
+  it('één slide kiezen, of Geen slide, zoals bij Slides op de Mac', () => {
+    const { quiz, first, music, live } = setup()
+    const [title, question] = first.slides
+    first.slides.push(createSlide('image'), { ...createSlide('number'), title: '2' })
+    const state = live({ activeRoundId: first.id, slideIndex: 1 })
+    expect(remoteView(quiz, state).slides).toEqual([
+      { id: title.id, label: 'Ronde 1', on: false },
+      { id: question.id, label: 'Vraag 1', on: true },
+      { id: first.slides[2].id, label: 'Afbeelding 2', on: false },
+      { id: first.slides[3].id, label: 'Nummer 2', on: false }
+    ])
+    expect(remoteView(quiz, state, [], 'en').slides[2].label).toBe('Picture 2')
+    expect(remoteView(quiz, live({ activeRoundId: first.id })).slides.some((s) => s.on)).toBe(false)
+    expect(remoteView(quiz, live()).slides).toEqual([])
+
+    const pick = (s: ShowState, index: number) => remoteCommand(quiz, s, { type: 'slide', index })
+    expect(pick(state, 0)).toEqual({ type: 'setSlide', index: 0 })
+    expect(pick(state, -1)).toEqual({ type: 'setSlide', index: -1 })
+    expect(pick(state, 1)).toBeNull()
+    expect(pick(state, 4)).toBeNull()
+    expect(pick(live(), 0)).toBeNull()
+    music.slides = []
+    expect(pick(live({ activeRoundId: music.id }), -1)).toBeNull()
+    expect(RemoteActionSchema.safeParse({ type: 'slide', index: -2 }).success).toBe(false)
+    expect(RemoteActionSchema.safeParse({ type: 'slide', index: 1.5 }).success).toBe(false)
+  })
+
   it('Stop antwoorden: alleen als er een stap van deze antwoordenronde in beeld staat', () => {
     const { quiz, first, answers, live } = setup()
     const showing = live({
