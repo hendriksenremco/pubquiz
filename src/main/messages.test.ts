@@ -30,6 +30,17 @@ describe('teksten van main', () => {
   })
 })
 
+describe('ontbrekende media bij het openen', () => {
+  it('zegt "bestand ontbreekt", zoals de fragmenten en Start show', () => {
+    expect(NOTICE_MESSAGES.in('nl')('missingMediaOne', { file: 'media/intro.mp4' })).toBe(
+      'media/intro.mp4: bestand ontbreekt'
+    )
+    expect(NOTICE_MESSAGES.in('en')('missingMediaMany', { files: 'a.mp3, b.mp3' })).toBe(
+      'Files missing: a.mp3, b.mp3'
+    )
+  })
+})
+
 describe('errorText', () => {
   it('vertaalt een NoticeError; zijn message blijft Nederlands', () => {
     const err = new NoticeError('quizExists', { name: 'Kroegquiz' })
