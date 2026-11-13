@@ -96,13 +96,13 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
   <div class="live">
     <aside class="rounds scroll" :aria-label="t('rounds')">
       <button
-        v-for="r in quiz.rounds"
+        v-for="(r, i) in quiz.rounds"
         :key="r.id"
         class="round"
         :class="{ on: r.id === state.activeRoundId, next: r.id === nextRound?.id }"
         @click="send({ type: 'startRound', roundId: r.id })"
       >
-        <span class="dot" aria-hidden="true" />
+        <span class="num mono">{{ i + 1 }}</span>
         <span class="grow round-text">
           <span class="round-title hyphenate" :title="roundTitle(r, locale)">{{
             roundTitle(r, locale)
@@ -299,12 +299,18 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
   color: var(--text);
 }
 
-.round .dot {
+/* Het nummer zoals in de lijst met rondes van de editor; de achtergrond en "Nu" laten zien welke
+   ronde loopt. */
+.round .num {
   flex: none;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: transparent;
+  align-self: flex-start;
+  width: 18px;
+  padding-top: 1px;
+  color: var(--faint);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .round.on {
@@ -312,8 +318,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
   color: var(--text);
 }
 
-.round.on .dot {
-  background: var(--accent);
+.round.on .num {
+  color: var(--muted);
 }
 
 .round.next {
