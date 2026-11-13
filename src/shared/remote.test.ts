@@ -383,6 +383,51 @@ describe('remoteCommand', () => {
     expect(RemoteActionSchema.safeParse({ type: 'slide', index: 1.5 }).success).toBe(false)
   })
 
+  it('elke ronde starten, zoals in de lijst Rondes op de Mac', () => {
+    const { quiz, first, music, answers, live } = setup()
+    const state = live({ activeRoundId: first.id, lastRoundId: first.id })
+    expect(remoteView(quiz, state).roundList).toEqual([
+      { id: first.id, number: 1, title: 'Ronde 1', on: true, next: false },
+      { id: music.id, number: 2, title: 'Ronde 2: muziek', on: false, next: true },
+      { id: answers.id, number: 3, title: answers.title, on: false, next: false }
+    ])
+    // Tussen twee rondes is de ronde na die van net de volgende.
+    const between = live({ lastRoundId: music.id })
+    expect(remoteView(quiz, between).roundList.map((r) => [r.on, r.next])).toEqual([
+      [false, false],
+      [false, false],
+      [false, true]
+    ])
+    expect(remoteView(null, createShowState()).roundList).toEqual([])
+
+    const start = (s: ShowState, id: string) => remoteCommand(quiz, s, { type: 'startRound', id })
+    expect(start(state, answers.id)).toEqual({ type: 'startRound', roundId: answers.id })
+    expect(start(between, first.id)).toEqual({ type: 'startRound', roundId: first.id })
+    expect(start(state, first.id)).toBeNull()
+    expect(start(state, 'onbekend')).toBeNull()
+  })
+
+  it('één scherm op zwart of terug, zoals onder elk scherm op de Mac', () => {
+    const { quiz, live } = setup()
+    const [beamer] = quiz.screens
+    expect(remoteView(quiz, live()).screenList).toEqual([])
+    quiz.screens.push({ ...beamer, id: 'tv', name: 'Tv bar' })
+    const state = live({ blackout: ['tv'] })
+    expect(remoteView(quiz, state).screenList).toEqual([
+      { id: beamer.id, name: beamer.name, black: false },
+      { id: 'tv', name: 'Tv bar', black: true }
+    ])
+    expect(remoteView(quiz, state).blackout).toBe(false)
+
+    const black = (screenId: string, on: boolean) =>
+      remoteCommand(quiz, state, { type: 'blackout', screenId, on })
+    expect(black(beamer.id, true)).toEqual({ type: 'blackout', screenId: beamer.id, on: true })
+    expect(black('tv', false)).toEqual({ type: 'blackout', screenId: 'tv', on: false })
+    expect(black('tv', true)).toBeNull()
+    expect(black(beamer.id, false)).toBeNull()
+    expect(black('onbekend', true)).toBeNull()
+  })
+
   it('Stop antwoorden: alleen als er een stap van deze antwoordenronde in beeld staat', () => {
     const { quiz, first, answers, live } = setup()
     const showing = live({
