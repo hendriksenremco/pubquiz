@@ -48,7 +48,9 @@ export const REMOTE_MESSAGES = defineMessages(
     resume: 'Hervat',
     skip: 'Volgende',
     stopSequence: 'Stop reeks',
-    reset: 'Fragmenten opnieuw'
+    reset: 'Fragmenten opnieuw',
+    played: '✓ gespeeld',
+    upNextFragment: 'Hierna'
   },
   {
     en: {
@@ -94,7 +96,9 @@ export const REMOTE_MESSAGES = defineMessages(
       resume: 'Resume',
       skip: 'Next',
       stopSequence: 'Stop sequence',
-      reset: 'Restart clips'
+      reset: 'Restart clips',
+      played: '✓ played',
+      upNextFragment: 'Up next'
     }
   }
 )

@@ -78,8 +78,24 @@ export interface RemoteView {
    * `paused` is ook het laatste fragment van een reeks die daarna stopt: dan staat er Hervat.
    */
   sequence: { status: RemoteSequence } | null
+  /**
+   * De fragmenten van de ronde, om er één te kiezen zoals bij Fragmenten op de Mac; leeg = deze
+   * ronde heeft geen fragmenten.
+   */
+  fragments: RemoteFragment[]
   /** Plug-ins die aan staan en knoppen op de telefoon hebben (`remoteActions`), met hun status. */
   plugins: RemotePlugin[]
+}
+
+/** Eén fragment op de telefoon: tikken speelt het, nog eens tikken stopt het. */
+export interface RemoteFragment {
+  id: string
+  number: number
+  label: string
+  playing: boolean
+  played: boolean
+  /** Speelt bij Volgende (→), als vorige en volgende door de fragmenten gaan. */
+  upcoming: boolean
 }
 
 /** Hoe de reeks erbij staat, zoals de knoppen op de Mac hem tonen. */
@@ -122,6 +138,8 @@ export const RemoteActionSchema = z.discriminatedUnion('type', [
   }),
   /** Fragmenten opnieuw: alle fragmenten van de ronde weer ongespeeld. */
   z.object({ type: z.literal('resetPlayed') }),
+  /** Eén fragment van de ronde spelen of stoppen, zoals een tik op dat fragment op de Mac. */
+  z.object({ type: z.literal('fragment'), id: z.string().max(64), play: z.boolean() }),
   /**
    * Een actie van een plug-in, bv. het licht kiezen. Main controleert hem met de definitie van die
    * plug-in, en alleen wat in zijn `remoteActions` staat, mag.
@@ -180,6 +198,7 @@ export function remoteView(
     timer: state.timer !== null,
     loop: round?.slideLoopSeconds ? { paused: state.loopPaused } : null,
     sequence: round?.fragments.length ? { status: sequenceOf(round, state) } : null,
+    fragments: quiz && round ? remoteFragments(quiz, round, state) : [],
     plugins: quiz ? plugins : []
   }
 }
@@ -227,6 +246,14 @@ export function remoteCommand(
     }
     case 'resetPlayed':
       return activeRound(quiz, state)?.fragments.length ? { type: 'resetPlayed' } : null
+    case 'fragment': {
+      if (!activeRound(quiz, state)?.fragments.some((f) => f.id === action.id)) return null
+      const playing = state.fragment?.fragmentId === action.id
+      if (action.play === playing) return null
+      return action.play
+        ? { type: 'playFragment', fragmentId: action.id }
+        : { type: 'stopFragment' }
+    }
     case 'plugin':
       return null
   }
@@ -238,6 +265,26 @@ export function sequenceOf(round: Round, state: ShowState): RemoteSequence {
   if (a.status === 'idle' || a.roundId !== round.id) return 'idle'
   if (a.status === 'paused' || (a.status === 'playing' && a.holdAfter)) return 'paused'
   return 'running'
+}
+
+/** De fragmenten zoals FragmentPad ze toont: wat speelt, wat gespeeld is en wat → gaat spelen. */
+function remoteFragments(quiz: Quiz, round: Round, state: ShowState): RemoteFragment[] {
+  const ids = round.fragments.map((f) => f.id)
+  const next =
+    stepTarget(quiz, round) === 'fragments'
+      ? adjacentFragment(ids, state.lastFragmentId, 'next')
+      : null
+  return round.fragments.map((f, i) => {
+    const playing = state.fragment?.fragmentId === f.id
+    return {
+      id: f.id,
+      number: i + 1,
+      label: f.label,
+      playing,
+      played: !playing && state.played.includes(f.id),
+      upcoming: next === i
+    }
+  })
 }
 
 /** Ook voor de knoppen op de Mac, zodat die hetzelfde tonen en kunnen. */

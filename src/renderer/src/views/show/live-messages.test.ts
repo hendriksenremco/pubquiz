@@ -61,7 +61,9 @@ describe('teksten van de show', () => {
         ['resume', 'resume'],
         ['next', 'skip'],
         ['stopSequence', 'stopSequence'],
-        ['reset', 'reset']
+        ['reset', 'reset'],
+        ['upNext', 'upNextFragment'],
+        ['played', 'played']
       ] as const
       for (const [mac, tel] of pairs) expect(pad(mac), `${locale}: ${mac}`).toBe(phone(tel))
     }
