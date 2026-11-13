@@ -59,7 +59,7 @@ const shownAsset = computed(() =>
 const valueText = computed(() => {
   if (!model.value) return t('standard')
   if (model.value.type === 'black') return t('black')
-  return shownAsset.value?.name.replace(/\.[^.]+$/, '') ?? t('missingFile')
+  return shownAsset.value?.name.replace(/\.[^.]+$/, '') ?? t('fileMissing')
 })
 
 function choose(value: Choice) {

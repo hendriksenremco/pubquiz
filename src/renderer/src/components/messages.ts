@@ -27,7 +27,7 @@ export const COMPONENT_MESSAGES = defineMessages(
     // ContentChip
     standard: 'Standaard',
     black: 'Zwart',
-    missingFile: 'Ontbrekend bestand',
+    fileMissing: 'Bestand ontbreekt',
     withoutSound: ', zonder geluid',
     withSound: ', met geluid',
     showsQuizDefault: 'Toont wat bij de quiz is ingesteld.',
@@ -86,7 +86,7 @@ export const COMPONENT_MESSAGES = defineMessages(
       labelValue: '{label}: {value}',
       standard: 'Default',
       black: 'Black',
-      missingFile: 'Missing file',
+      fileMissing: 'File missing',
       withoutSound: ', without sound',
       withSound: ', with sound',
       showsQuizDefault: 'Shows what is set for the quiz.',
