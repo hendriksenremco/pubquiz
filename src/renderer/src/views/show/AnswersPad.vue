@@ -89,7 +89,8 @@ const imageOf = (item: Item) => findAsset(session.quiz!, item.slide?.imageAssetI
         >{{ t('notShown') }}</span
       >
       <span v-else-if="status" class="pill pill-accent">{{ status }}</span>
-      <span v-if="nextLabel" class="next-step"><span class="kbd">→</span> {{ nextLabel }}</span>
+      <!-- De toets achter de tekst, zoals bij Hierna → in Fragmenten en Speel reeks A. -->
+      <span v-if="nextLabel" class="next-step">{{ nextLabel }} <span class="kbd">→</span></span>
       <button
         v-if="answer"
         class="btn btn-sm"
