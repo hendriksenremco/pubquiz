@@ -506,6 +506,24 @@ describe('remoteCommand', () => {
     expect(remoteView(quiz, live()).answersOffScreen).toBe(false)
   })
 
+  it('geeft een antwoord de afbeelding van zijn slide, zoals het tegeltje op de Mac', () => {
+    const { quiz, first, answers, live } = setup()
+    const state = live({ activeRoundId: answers.id })
+    const question = first.slides[1]
+    const image = (kind: 'image' | 'video') => {
+      const asset = { id: `${kind}-1`, kind, file: `media/${kind}`, name: kind }
+      quiz.assets.push(asset)
+      return asset.id
+    }
+    question.imageAssetId = image('image')
+    expect(remoteView(quiz, state).answers[0].image).toBe('image-1')
+    // Een video haalt de telefoon niet op; een id dat niet bestaat ook niet.
+    question.imageAssetId = image('video')
+    expect(remoteView(quiz, state).answers[0].image).toBeNull()
+    question.imageAssetId = 'weg'
+    expect(remoteView(quiz, state).answers[0].image).toBeNull()
+  })
+
   it('één antwoord kiezen: in beeld zetten, dan het antwoord tonen of verbergen', () => {
     const { quiz, first, music, answers, live } = setup()
     const [one, two] = music.fragments
@@ -537,6 +555,8 @@ describe('remoteCommand', () => {
     })
     // De vraag zelf staat erbij, zoals op de Mac; een fragment heeft er geen.
     expect(list.map((a) => a.question)).toEqual(['Hoofdstad van Peru?', null, null, null])
+    // Geen afbeelding bij deze vragen en fragmenten.
+    expect(list.map((a) => a.image)).toEqual([null, null, null, null])
     expect(remoteView(quiz, live({ activeRoundId: first.id })).answers).toEqual([])
     expect(remoteView(quiz, live()).answers).toEqual([])
 

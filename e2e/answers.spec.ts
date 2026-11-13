@@ -270,6 +270,16 @@ test('live: eerst de vraag, afbeelding of het fragment, dan het antwoord', async
   await expect(beamer.locator('.overlay')).toHaveCount(0)
   await expect(phoneTiles.nth(0)).toContainText('vraag in beeld')
 
+  // Een afbeelding heeft op de telefoon hetzelfde tegeltje als op de Mac, met de afbeelding.
+  await expect(tiles.nth(18).locator('.frag-thumb img')).toHaveCount(1)
+  const phoneThumb = phoneTiles.nth(18).locator('img.frag-thumb')
+  await expect(phoneThumb).toHaveAttribute('src', /\/media\/.+key=/)
+  await expect
+    .poll(() => phoneThumb.evaluate((img) => (img as HTMLImageElement).naturalWidth))
+    .toBeGreaterThan(0)
+  await phoneTiles.nth(18).evaluate((el) => el.scrollIntoView({ block: 'center' }))
+  await snap(phone, 'test-results/remote-phone-answer-pictures.png')
+
   await operator.getByRole('button', { name: 'Stop show' }).click()
   await confirmIn(operator, 'Stop show')
   await expect.poll(() => app.windows().some((w) => w.url().includes('#/screen/'))).toBe(false)

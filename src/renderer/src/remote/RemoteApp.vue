@@ -388,10 +388,11 @@ onMounted(connect)
             :disabled="!live"
             @click="send({ type: 'answer', id: a.id, revealed: a.on && !a.revealed })"
           >
-            <span class="tile-label"
+            <span class="tile-label" :class="{ 'with-thumb': a.image }"
               ><span class="frag-num">{{ a.number }}</span
-              ><span class="frag-noun">{{ t(ANSWER_NOUNS[a.noun]) }}</span></span
-            >
+              ><span class="frag-noun">{{ t(ANSWER_NOUNS[a.noun]) }}</span
+              ><img v-if="a.image" class="frag-thumb" :src="imageUrl(a.image)!" alt=""
+            /></span>
             <span v-if="a.question" class="frag-question">{{ a.question }}</span>
             <span class="frag-answer" :class="{ missing: !a.answer }">{{
               a.answer || t('noAnswer')
@@ -1003,6 +1004,21 @@ button:disabled {
   color: var(--muted);
   font-size: 13px;
   font-weight: 500;
+}
+
+/* De afbeelding rechts naast het nummer, zoals het tegeltje bij Antwoorden op de Mac. */
+.tile-label.with-thumb {
+  width: 100%;
+}
+
+.frag-thumb {
+  flex: none;
+  width: 44px;
+  height: 26px;
+  margin-left: auto;
+  border-radius: 4px;
+  background: var(--surface-4);
+  object-fit: cover;
 }
 
 .frag-answer {
