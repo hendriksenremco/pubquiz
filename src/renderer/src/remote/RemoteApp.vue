@@ -546,7 +546,8 @@ h1 {
 
 .pair {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  /* minmax(0, …): een lang antwoord kort zichzelf af in plaats van de kolom op te rekken. */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 

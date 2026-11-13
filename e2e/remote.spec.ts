@@ -153,7 +153,8 @@ test('de show bedienen met een telefoon via de QR-code', async () => {
     await expect(frag(2)).toHaveClass(/on/)
     await expect(tegel).toHaveAttribute('aria-pressed', 'true')
     await expect(tegel).toContainText('Speelt')
-    await reeks.scrollIntoViewIfNeeded()
+    // Altijd dezelfde stand, los van waar de vorige stap de pagina liet staan.
+    await tegel.evaluate((el) => el.scrollIntoView({ block: 'center' }))
     await snap(phone, 'test-results/remote-phone-fragments.png')
     await tegel.click()
     await expect(frag(2)).not.toHaveClass(/on/)
