@@ -83,6 +83,11 @@ export interface RemoteView {
    * ronde heeft geen fragmenten.
    */
   fragments: RemoteFragment[]
+  /**
+   * Er staat een vraag, fragment of antwoord van deze antwoordenronde in beeld: dan kan Stop
+   * antwoorden, zoals bij Antwoorden op de Mac.
+   */
+  answering: boolean
   /** Plug-ins die aan staan en knoppen op de telefoon hebben (`remoteActions`), met hun status. */
   plugins: RemotePlugin[]
 }
@@ -140,6 +145,8 @@ export const RemoteActionSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('resetPlayed') }),
   /** Eén fragment van de ronde spelen of stoppen, zoals een tik op dat fragment op de Mac. */
   z.object({ type: z.literal('fragment'), id: z.string().max(64), play: z.boolean() }),
+  /** Stop antwoorden: nummer en antwoord uit beeld, zoals de knop bij Antwoorden op de Mac. */
+  z.object({ type: z.literal('stopAnswers') }),
   /**
    * Een actie van een plug-in, bv. het licht kiezen. Main controleert hem met de definitie van die
    * plug-in, en alleen wat in zijn `remoteActions` staat, mag.
@@ -199,6 +206,7 @@ export function remoteView(
     loop: round?.slideLoopSeconds ? { paused: state.loopPaused } : null,
     sequence: round?.fragments.length ? { status: sequenceOf(round, state) } : null,
     fragments: quiz && round ? remoteFragments(quiz, round, state) : [],
+    answering: !!round && answering(round, state),
     plugins: quiz ? plugins : []
   }
 }
@@ -254,9 +262,18 @@ export function remoteCommand(
         ? { type: 'playFragment', fragmentId: action.id }
         : { type: 'stopFragment' }
     }
+    case 'stopAnswers': {
+      const round = activeRound(quiz, state)
+      return round && answering(round, state) ? { type: 'answers', action: 'stop' } : null
+    }
     case 'plugin':
       return null
   }
+}
+
+/** Er staat een stap van deze antwoordenronde in beeld (AnswersPad toont dan Stop antwoorden). */
+function answering(round: Round, state: ShowState): boolean {
+  return state.answer?.roundId === round.id
 }
 
 /** De stand van de reeks in deze ronde, zoals FragmentPad hem toont: Speel reeks, Pauzeer of Hervat. */

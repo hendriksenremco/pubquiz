@@ -60,6 +60,7 @@ describe('remoteView', () => {
       loop: null,
       sequence: null,
       fragments: [],
+      answering: false,
       plugins: []
     })
   })
@@ -340,6 +341,23 @@ describe('remoteCommand', () => {
     expect(pick(state, three.id, false)).toBeNull()
     expect(pick(state, 'onbekend', true)).toBeNull()
     expect(pick(live({ activeRoundId: first.id }), one.id, true)).toBeNull()
+  })
+
+  it('Stop antwoorden: alleen als er een stap van deze antwoordenronde in beeld staat', () => {
+    const { quiz, first, answers, live } = setup()
+    const showing = live({
+      activeRoundId: answers.id,
+      answer: { roundId: answers.id, index: 1, revealed: true }
+    })
+    const before = live({ activeRoundId: answers.id })
+    expect(remoteView(quiz, showing).answering).toBe(true)
+    expect(remoteView(quiz, before).answering).toBe(false)
+    expect(remoteView(quiz, live({ activeRoundId: first.id })).answering).toBe(false)
+
+    const stop = { type: 'stopAnswers' } as const
+    expect(remoteCommand(quiz, showing, stop)).toEqual({ type: 'answers', action: 'stop' })
+    expect(remoteCommand(quiz, before, stop)).toBeNull()
+    expect(remoteCommand(quiz, live({ activeRoundId: first.id }), stop)).toBeNull()
   })
 
   it('weigert onbekende acties', () => {

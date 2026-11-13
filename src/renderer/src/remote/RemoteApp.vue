@@ -9,7 +9,7 @@ import { connect, imageUrl, link, locale, send, t, toast, view } from './connect
 
 /**
  * De afstandsbediening op een telefoon of tablet: de slide die in beeld staat, vorige en volgende
- * (zoals ← → op de Mac: slides, fragmenten of antwoorden), rondes, de fragmentenreeks, aftellen, wisselen van de slides, beeld op zwart en geluid, en
+ * (zoals ← → op de Mac: slides, fragmenten of antwoorden), rondes, Stop antwoorden, de fragmentenreeks, aftellen, wisselen van de slides, beeld op zwart en geluid, en
  * daaronder de plug-ins met knoppen voor de telefoon (bv. het licht; zie plugins/phone.ts). Volgt de show op de Mac; buiten de show
  * staat alles stil. Dezelfde knoppen staan in de show op de Mac (ShowLive en de werkbalk).
  */
@@ -159,6 +159,14 @@ onMounted(connect)
         <button class="tile end" :disabled="!live || !round" @click="send({ type: 'endRound' })">
           <span class="tile-label">{{ t('endRound') }}<Icon name="end" :size="14" /></span>
           <span class="tile-sub">{{ round?.title ?? '–' }}</span>
+        </button>
+      </section>
+
+      <!-- Alleen als er een antwoord(stap) in beeld staat, zoals bij Antwoorden op de Mac. -->
+      <section v-if="view?.answering" class="pair" :aria-label="t('answers')">
+        <button class="tile toggle" :disabled="!live" @click="send({ type: 'stopAnswers' })">
+          <Icon name="stop" :size="22" />
+          <span class="tile-label">{{ t('stopAnswers') }}</span>
         </button>
       </section>
 
