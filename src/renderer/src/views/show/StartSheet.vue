@@ -345,7 +345,7 @@ const savedAt = computed(() =>
           </div>
           <template v-for="slot in quiz.screens" :key="slot.id">
             <div class="line screen">
-              <span class="name">{{ slot.name }}</span>
+              <span class="name" :title="slot.name">{{ slot.name }}</span>
               <Select
                 class="grow screen-target"
                 :aria-label="t('screenShowsOn', { name: slot.name })"
@@ -381,7 +381,7 @@ const savedAt = computed(() =>
             <span class="label grow">{{ t('sound') }}</span>
           </div>
           <div v-for="c in quiz.channels" :key="c.id" class="line channel">
-            <span class="name">{{ c.name }}</span>
+            <span class="name" :title="c.name">{{ c.name }}</span>
             <Select
               class="grow"
               :aria-label="t('outputFor', { name: c.name })"

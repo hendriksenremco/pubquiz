@@ -136,7 +136,7 @@ function setAnswersFor(roundId: string, on: boolean) {
     <div v-if="quiz.screens.length" class="inspector-group">
       <span class="label">{{ t('screens') }}</span>
       <div v-for="slot in quiz.screens" :key="slot.id" class="inspector-row">
-        <span class="row-label">{{ slot.name }}</span>
+        <span class="row-label screen-name" :title="slot.name">{{ slot.name }}</span>
         <ContentChip
           :label="slot.name"
           :model-value="round.screens[slot.id]"
@@ -331,6 +331,13 @@ function setAnswersFor(roundId: string, on: boolean) {
 
 .small {
   font-size: 12px;
+}
+
+/* Een lange schermnaam op één regel, met … zoals bij Start show; de hele naam staat in de tooltip. */
+.screen-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .warn {
