@@ -365,6 +365,7 @@ onMounted(connect)
             ><span class="frag-num">{{ f.number }}</span
             ><span class="frag-label">{{ f.label }}</span></span
           >
+          <span v-if="f.answer" class="frag-answer">{{ f.answer }}</span>
           <span class="tile-sub">{{
             f.playing
               ? t('playing')

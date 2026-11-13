@@ -177,6 +177,8 @@ export interface RemoteFragment {
   id: string
   number: number
   label: string
+  /** Het antwoord bij dit fragment, zoals op de Mac; null als het niet is ingevuld. */
+  answer: string | null
   playing: boolean
   played: boolean
   /** Speelt bij Volgende (→), als vorige en volgende door de fragmenten gaan. */
@@ -549,6 +551,7 @@ function remoteFragments(quiz: Quiz, round: Round, state: ShowState): RemoteFrag
       id: f.id,
       number: i + 1,
       label: f.label,
+      answer: f.answer || null,
       playing,
       played: !playing && state.played.includes(f.id),
       upcoming: next === i
