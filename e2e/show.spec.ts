@@ -87,7 +87,8 @@ test('opent de demo-quiz in de editor', async () => {
   await operator.getByRole('button', { name: 'Quiz-instellingen' }).click()
   await operator.waitForTimeout(800)
   await snap(operator, 'test-results/editor-setup.png')
-  const listen = operator.locator('.bg .art')
+  // Luister heeft dezelfde knop als in de lijst met fragmenten.
+  const listen = operator.locator('.bg').getByRole('button', { name: /^(Luister|Stop)$/ })
   await expect(listen).toHaveText('Luister')
   await listen.click()
   await expect(listen).toHaveText('Stop')
