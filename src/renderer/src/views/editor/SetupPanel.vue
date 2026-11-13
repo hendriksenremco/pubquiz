@@ -117,8 +117,14 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
       />
 
       <section>
+        <!-- Voeg scherm toe rechts in de kop, zoals Open quiz… op het startscherm: een gewone knop,
+             geen lege kaart naast de schermen. -->
         <div class="section-head">
           <h3>{{ t('screens') }}</h3>
+          <span class="grow" />
+          <button class="btn btn-ghost btn-sm" @click="addScreen">
+            <Icon name="plus" :size="14" /> {{ t('addScreen') }}
+          </button>
         </div>
         <div class="screens">
           <div v-for="slot in quiz.screens" :key="slot.id" class="screen tile">
@@ -136,10 +142,6 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
             </div>
             <ContentChip v-model="slot.default" :label="t('shows')" />
           </div>
-          <button class="add-tile" @click="addScreen">
-            <Icon name="plus" :size="20" />
-            {{ t('addScreen') }}
-          </button>
         </div>
       </section>
 
@@ -372,28 +374,6 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
 
 .screen :deep(.popover) > .chip {
   align-self: flex-start;
-}
-
-.add-tile {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-height: 200px;
-  border: 0;
-  border-radius: var(--radius-lg);
-  background: transparent;
-  box-shadow: inset 0 0 0 1.5px var(--line-strong);
-  color: var(--muted);
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.add-tile:hover {
-  background: var(--surface-1);
-  color: var(--text);
 }
 
 .sound {
