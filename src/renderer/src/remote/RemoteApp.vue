@@ -7,6 +7,7 @@ import SlideView from '../components/SlideView.vue'
 import { vFill } from '../lib/fill'
 import { percent } from '../lib/format'
 import { ASSET_URL } from '../lib/media'
+import { useNow } from '../lib/use-now'
 import { MUSIC_STATUS } from '../views/show/live-messages'
 import { PHONE_PLUGINS } from '../plugins/phone'
 import { connect, imageUrl, link, locale, send, t, toast, view } from './connection'
@@ -14,7 +15,7 @@ import { ANSWER_NOUNS } from './messages'
 
 /**
  * De afstandsbediening op een telefoon of tablet: de slide die in beeld staat, vorige en volgende
- * (zoals ← → op de Mac: slides, fragmenten of antwoorden), rondes, de slides, Stop antwoorden, de fragmentenreeks, aftellen, wisselen van de slides, beeld op zwart (ook per scherm), geluid uit, Geluid (muziek en volume) en de lijst met alle rondes, en
+ * (zoals ← → op de Mac: slides, fragmenten of antwoorden), rondes, de slides (met het wisselen), Stop antwoorden, de fragmentenreeks, aftellen, beeld op zwart (ook per scherm), geluid uit, Geluid (muziek en volume) en de lijst met alle rondes, en
  * daaronder de plug-ins met knoppen voor de telefoon (bv. het licht; zie plugins/phone.ts). Volgt de show op de Mac; buiten de show
  * staat alles stil. Dezelfde knoppen staan in de show op de Mac (ShowLive en de werkbalk).
  */
@@ -24,6 +25,19 @@ const step = computed(() => view.value?.step ?? null)
 const screen = computed(() => view.value?.screen ?? null)
 const sequence = computed(() => view.value?.sequence?.status ?? null)
 const slides = computed(() => view.value?.slides ?? [])
+const loop = computed(() => view.value?.loop ?? null)
+
+// Zoals naast Slides op de Mac: wanneer de volgende slide komt. De tijd komt van de klok van de Mac;
+// hooguit de duur van een slide, voor als de klok van de telefoon wat afwijkt.
+const now = useNow(250, () => !!loop.value?.until)
+const loopText = computed(() => {
+  const l = loop.value
+  if (!l) return null
+  if (l.paused) return t.value('loopPaused')
+  if (l.until === null) return t.value('loopAfterTitle')
+  const seconds = Math.ceil((l.until - now.value) / 1000)
+  return t.value('loopNext', { seconds: Math.min(l.seconds, Math.max(1, seconds)) })
+})
 const fragments = computed(() => view.value?.fragments ?? [])
 const answers = computed(() => view.value?.answers ?? [])
 const roundList = computed(() => view.value?.roundList ?? [])
@@ -245,7 +259,21 @@ onMounted(connect)
       <!-- Zoals Slides in de show op de Mac: Geen slide en elke slide van de ronde, met één tik in
            beeld. -->
       <section v-if="slides.length" class="pair" :aria-label="t('slides')">
-        <span class="slides-title">{{ t('slides') }}</span>
+        <span class="slides-title" :class="{ 'with-loop': loopText }"
+          >{{ t('slides')
+          }}<span v-if="loopText" class="loop-text" data-volatile>{{ loopText }}</span></span
+        >
+        <!-- Alleen in een ronde waarin de slides vanzelf wisselen: de knop staat bij Slides, net als
+             op de Mac (L). -->
+        <button
+          v-if="loop"
+          class="tile toggle wide"
+          :disabled="!live"
+          @click="send({ type: 'slideLoop', paused: !loop.paused })"
+        >
+          <Icon :name="loop.paused ? 'play' : 'pause'" :size="22" />
+          <span class="tile-label">{{ loop.paused ? t('loopResume') : t('loopPause') }}</span>
+        </button>
         <button
           class="tile pick"
           :class="{ active: !slides.some((s) => s.on) }"
@@ -390,16 +418,6 @@ onMounted(connect)
         >
           <Icon :name="view?.timer ? 'stop' : 'timer'" :size="22" />
           <span class="tile-label">{{ view?.timer ? t('timerOff') : t('timerOn') }}</span>
-        </button>
-        <!-- Alleen in een ronde waarin de slides vanzelf wisselen, net als op de Mac (L). -->
-        <button
-          v-if="view?.loop"
-          class="tile toggle wide"
-          :disabled="!live"
-          @click="send({ type: 'slideLoop', paused: !view.loop.paused })"
-        >
-          <Icon :name="view.loop.paused ? 'play' : 'pause'" :size="22" />
-          <span class="tile-label">{{ view.loop.paused ? t('loopResume') : t('loopPause') }}</span>
         </button>
         <button
           class="tile toggle"
@@ -897,6 +915,19 @@ button:disabled {
   color: var(--muted);
   font-size: 13px;
   font-weight: 600;
+}
+
+/* Slides met het wisselen ernaast, zoals op de Mac: "Volgende over 5 s" rechts, grijs. */
+.slides-title.with-loop {
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.loop-text {
+  color: var(--faint);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
 }
 
 .frag-noun {

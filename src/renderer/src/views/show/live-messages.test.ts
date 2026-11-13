@@ -47,6 +47,9 @@ describe('teksten van de show', () => {
       'timerOff',
       'loopPause',
       'loopResume',
+      'loopPaused',
+      'loopAfterTitle',
+      'loopNext',
       'betweenRounds',
       'notes'
     ] as const
