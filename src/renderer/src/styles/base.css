@@ -260,6 +260,11 @@ button:focus-visible,
   outline: none;
 }
 
+/* Een te lange naam eindigt op …; klik je erin, dan zie je hem helemaal. */
+input.quiet {
+  text-overflow: ellipsis;
+}
+
 .quiet::placeholder {
   color: var(--faint);
 }

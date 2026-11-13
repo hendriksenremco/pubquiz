@@ -124,7 +124,12 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
           <div v-for="slot in quiz.screens" :key="slot.id" class="screen tile">
             <StagePreview :screen="slot" :caption="false" class="screen-preview" />
             <div class="screen-foot">
-              <input v-model="slot.name" class="quiet screen-name" :aria-label="t('screenName')" />
+              <input
+                v-model="slot.name"
+                class="quiet screen-name"
+                :title="slot.name"
+                :aria-label="t('screenName')"
+              />
               <button class="btn btn-ghost btn-sm remove-screen" @click="removeScreen(slot.id)">
                 <Icon name="trash" :size="14" /> {{ t('removeScreen') }}
               </button>
@@ -213,7 +218,12 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
           <div class="tile channels">
             <span class="tile-title tile-head">{{ t('channels') }}</span>
             <div v-for="c in quiz.channels" :key="c.id" class="channel">
-              <input v-model="c.name" class="quiet channel-name" :aria-label="t('channelName')" />
+              <input
+                v-model="c.name"
+                class="quiet channel-name"
+                :title="c.name"
+                :aria-label="t('channelName')"
+              />
               <button class="btn btn-ghost btn-sm del" @click="removeChannel(c.id)">
                 <Icon name="trash" :size="14" /> {{ t('removeChannel') }}
               </button>
