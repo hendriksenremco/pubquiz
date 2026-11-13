@@ -175,6 +175,20 @@ test('de show bedienen met een telefoon via de QR-code', async () => {
     await reeks.getByRole('button', { name: 'Fragmenten opnieuw' }).click()
     await expect(operator.locator('.frag.played')).toHaveCount(0)
 
+    // Eén fragment kiezen, zoals een tik op een fragment op de Mac: nog eens tikken stopt het.
+    const tegel = reeks.locator('.frag').nth(1)
+    await tegel.click()
+    await expect(frag(2)).toHaveClass(/on/)
+    await expect(tegel).toHaveAttribute('aria-pressed', 'true')
+    await expect(tegel).toContainText('Speelt')
+    await reeks.scrollIntoViewIfNeeded()
+    await snap(phone, 'test-results/remote-phone-fragments.png')
+    await tegel.click()
+    await expect(frag(2)).not.toHaveClass(/on/)
+    await expect(tegel).toHaveAttribute('aria-pressed', 'false')
+    // Terug naar boven, zoals de schermen hierna altijd gemaakt zijn.
+    await phone.evaluate(() => window.scrollTo(0, 0))
+
     // Op de Mac dezelfde knoppen als op de telefoon.
     await mac.getByRole('button', { name: /Vorige ronde/ }).click()
     await expect(macRound).toContainText('Ronde 1: algemeen')

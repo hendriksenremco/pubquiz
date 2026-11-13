@@ -18,6 +18,7 @@ const round = computed(() => view.value?.round ?? null)
 const step = computed(() => view.value?.step ?? null)
 const screen = computed(() => view.value?.screen ?? null)
 const sequence = computed(() => view.value?.sequence?.status ?? null)
+const fragments = computed(() => view.value?.fragments ?? [])
 provide(ASSET_URL, imageUrl)
 
 const plugins = computed(() =>
@@ -203,6 +204,30 @@ onMounted(connect)
         <button class="tile toggle" :disabled="!live" @click="send({ type: 'resetPlayed' })">
           <Icon name="restart" :size="22" />
           <span class="tile-label">{{ t('reset') }}</span>
+        </button>
+        <!-- Eén fragment kiezen, zoals op de Mac: tikken speelt het, nog eens tikken stopt het. -->
+        <button
+          v-for="f in fragments"
+          :key="f.id"
+          class="tile frag"
+          :class="{ active: f.playing, played: f.played, upcoming: f.upcoming }"
+          :aria-pressed="f.playing"
+          :disabled="!live"
+          @click="send({ type: 'fragment', id: f.id, play: !f.playing })"
+        >
+          <span class="tile-label"
+            ><span class="frag-num">{{ f.number }}</span
+            ><span class="frag-label">{{ f.label }}</span></span
+          >
+          <span class="tile-sub">{{
+            f.playing
+              ? t('playing')
+              : f.upcoming
+                ? t('upNextFragment')
+                : f.played
+                  ? t('played')
+                  : '\u00a0'
+          }}</span>
         </button>
       </section>
 
@@ -557,6 +582,36 @@ button:disabled {
   justify-content: flex-start;
   align-items: center;
   gap: 10px;
+}
+
+.frag .tile-label {
+  max-width: 100%;
+  gap: 8px;
+}
+
+.frag-num {
+  font-variant-numeric: tabular-nums;
+}
+
+.frag-label {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.frag.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.frag.played {
+  opacity: 0.55;
+}
+
+/* Wat Volgende gaat spelen, zoals op de Mac: een stippellijn in amber. */
+.frag.upcoming {
+  outline: 1px dashed var(--accent);
+  outline-offset: -1px;
 }
 
 .tile.wide {

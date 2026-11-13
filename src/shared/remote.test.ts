@@ -59,6 +59,7 @@ describe('remoteView', () => {
       timer: false,
       loop: null,
       sequence: null,
+      fragments: [],
       plugins: []
     })
   })
@@ -312,6 +313,33 @@ describe('remoteCommand', () => {
       remoteCommand(quiz, live({ activeRoundId: first.id }), { type: 'resetPlayed' })
     ).toBeNull()
     expect(remoteCommand(quiz, live(), { type: 'resetPlayed' })).toBeNull()
+  })
+
+  it('één fragment kiezen: spelen of stoppen, alleen een fragment van de ronde die loopt', () => {
+    const { quiz, first, music, live } = setup()
+    const [one, two, three] = music.fragments
+    const playing = {
+      fragment: { key: 'k', roundId: music.id, fragmentId: two.id, startedAt: 0, duration: 10 },
+      lastFragmentId: two.id,
+      played: [one.id, two.id]
+    }
+    const state = live({ activeRoundId: music.id, ...playing })
+    expect(remoteView(quiz, state).fragments).toEqual([
+      { id: one.id, number: 1, label: 'Liedje 1', playing: false, played: true, upcoming: false },
+      { id: two.id, number: 2, label: 'Liedje 2', playing: true, played: false, upcoming: false },
+      { id: three.id, number: 3, label: 'Liedje 3', playing: false, played: false, upcoming: true }
+    ])
+    expect(remoteView(quiz, live({ activeRoundId: first.id })).fragments).toEqual([])
+    expect(remoteView(quiz, live()).fragments).toEqual([])
+
+    const pick = (s: ShowState, id: string, play: boolean) =>
+      remoteCommand(quiz, s, { type: 'fragment', id, play })
+    expect(pick(state, three.id, true)).toEqual({ type: 'playFragment', fragmentId: three.id })
+    expect(pick(state, two.id, true)).toBeNull()
+    expect(pick(state, two.id, false)).toEqual({ type: 'stopFragment' })
+    expect(pick(state, three.id, false)).toBeNull()
+    expect(pick(state, 'onbekend', true)).toBeNull()
+    expect(pick(live({ activeRoundId: first.id }), one.id, true)).toBeNull()
   })
 
   it('weigert onbekende acties', () => {
