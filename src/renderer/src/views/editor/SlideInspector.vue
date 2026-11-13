@@ -148,7 +148,7 @@ function remove() {
         <div class="checks" role="group" :aria-label="t('onScreens')">
           <label v-for="s in screens" :key="s.id">
             <input type="checkbox" :checked="targets(s.id)" @change="toggleTarget(s.id)" />
-            {{ s.name }}
+            <span class="check-name" :title="s.name">{{ s.name }}</span>
           </label>
         </div>
       </div>
