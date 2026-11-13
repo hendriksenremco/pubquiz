@@ -69,7 +69,8 @@ document.addEventListener('visibilitychange', () => {
 })
 
 export async function send(action: RemoteAction): Promise<void> {
-  navigator.vibrate?.(8)
+  // Een tik voelbaar; een schuifje niet, dat stuurt er veel achter elkaar.
+  if (action.type !== 'volume') navigator.vibrate?.(8)
   let result: RemoteResult
   try {
     const res = await fetch(withKey('/api/action'), {

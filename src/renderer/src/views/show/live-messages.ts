@@ -1,5 +1,5 @@
 import { defineMessages } from '@shared/i18n'
-import type { AnswerNoun } from '@shared/resolve'
+import type { AnswerNoun, MusicStatus } from '@shared/resolve'
 
 /**
  * De show op de Mac: ShowLive, de werkbalk (LiveControls) en de sneltoetsen (live-controls.ts).
@@ -279,6 +279,15 @@ export const MIXER_MESSAGES = defineMessages(
     }
   }
 )
+
+/** Wat Geluid zegt over de achtergrondmuziek; op de telefoon dezelfde sleutels en woorden. */
+export const MUSIC_STATUS = {
+  none: 'none',
+  off: 'off',
+  silent: 'pausedByRound',
+  ducked: 'ducked',
+  playing: 'playing'
+} as const satisfies Record<MusicStatus, string>
 
 /** Het venster Start show (StartSheet): schermen en uitgangen koppelen en de controle. */
 export const START_MESSAGES = defineMessages(

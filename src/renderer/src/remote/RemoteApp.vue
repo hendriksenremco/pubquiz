@@ -1,17 +1,20 @@
 <script setup lang="ts">
-import { computed, onMounted, provide, watchEffect } from 'vue'
-import type { RemoteAnswer } from '@shared/remote'
-import { stepNames as namesOf } from '@shared/resolve'
+import { computed, onMounted, provide, reactive, watchEffect } from 'vue'
+import type { RemoteAnswer, RemoteLevel } from '@shared/remote'
+import { musicAudible, stepNames as namesOf } from '@shared/resolve'
 import Icon from '../components/Icon.vue'
 import SlideView from '../components/SlideView.vue'
+import { vFill } from '../lib/fill'
+import { percent } from '../lib/format'
 import { ASSET_URL } from '../lib/media'
+import { MUSIC_STATUS } from '../views/show/live-messages'
 import { PHONE_PLUGINS } from '../plugins/phone'
 import { connect, imageUrl, link, locale, send, t, toast, view } from './connection'
 import { ANSWER_NOUNS } from './messages'
 
 /**
  * De afstandsbediening op een telefoon of tablet: de slide die in beeld staat, vorige en volgende
- * (zoals ← → op de Mac: slides, fragmenten of antwoorden), rondes, de slides, Stop antwoorden, de fragmentenreeks, aftellen, wisselen van de slides, beeld op zwart (ook per scherm), geluid en de lijst met alle rondes, en
+ * (zoals ← → op de Mac: slides, fragmenten of antwoorden), rondes, de slides, Stop antwoorden, de fragmentenreeks, aftellen, wisselen van de slides, beeld op zwart (ook per scherm), geluid uit, Geluid (muziek en volume) en de lijst met alle rondes, en
  * daaronder de plug-ins met knoppen voor de telefoon (bv. het licht; zie plugins/phone.ts). Volgt de show op de Mac; buiten de show
  * staat alles stil. Dezelfde knoppen staan in de show op de Mac (ShowLive en de werkbalk).
  */
@@ -25,6 +28,10 @@ const fragments = computed(() => view.value?.fragments ?? [])
 const answers = computed(() => view.value?.answers ?? [])
 const roundList = computed(() => view.value?.roundList ?? [])
 const screenList = computed(() => view.value?.screenList ?? [])
+const sound = computed(() => {
+  const s = view.value?.sound
+  return s && (s.music || s.levels.length) ? s : null
+})
 provide(ASSET_URL, imageUrl)
 
 const plugins = computed(() =>
@@ -86,6 +93,48 @@ function answerState(a: RemoteAnswer): string {
     default:
       return '\u00a0'
   }
+}
+
+/**
+ * De schuifjes bij Geluid. Tijdens het schuiven geldt de stand van de vinger, niet die van de Mac
+ * (die loopt net achter); de Mac krijgt hooguit om de 100 ms een nieuw volume, en bij loslaten het
+ * laatste.
+ */
+const sliding = reactive<Record<string, number>>({})
+const pending = new Map<string, number>()
+let flushTimer: ReturnType<typeof setTimeout> | null = null
+
+function levelOf(level: RemoteLevel): number {
+  return sliding[level.id] ?? level.volume
+}
+
+function flushVolumes() {
+  if (flushTimer) clearTimeout(flushTimer)
+  flushTimer = null
+  for (const [id, volume] of pending) void send({ type: 'volume', id, volume })
+  pending.clear()
+}
+
+function slide(id: string, event: Event) {
+  const volume = Number((event.target as HTMLInputElement).value)
+  sliding[id] = volume
+  pending.set(id, volume)
+  flushTimer ??= setTimeout(flushVolumes, 100)
+}
+
+function release(id: string, event: Event) {
+  slide(id, event)
+  flushVolumes()
+  // Even de stand van de vinger houden, tot de Mac het nieuwe volume terugstuurt.
+  const volume = sliding[id]
+  setTimeout(() => {
+    if (sliding[id] === volume) delete sliding[id]
+  }, 500)
+}
+
+function levelStatus(level: RemoteLevel): string | null {
+  if (level.status === 'silent') return t.value('silent')
+  return level.status === 'ducked' ? t.value('ducked') : null
 }
 
 // Voor de voorleesfunctie en het afbreken van woorden.
@@ -389,6 +438,64 @@ onMounted(connect)
           >
           <span class="tile-sub">{{ s.black ? t('blackoutOff') : t('blackoutOn') }}</span>
         </button>
+      </section>
+
+      <!-- Zoals Geluid rechts in de show op de Mac: de achtergrondmuziek aan of uit, en het volume
+           per kanaal en per scherm met videogeluid. -->
+      <section v-if="sound" class="pair" :aria-label="t('sound')">
+        <span class="slides-title">{{ t('sound') }}</span>
+        <template v-if="sound.music">
+          <div class="level">
+            <div class="level-head">
+              <span class="level-name">{{ t('background') }}</span>
+              <span class="pill" :class="{ 'pill-accent': musicAudible(sound.music.status) }">{{
+                t(MUSIC_STATUS[sound.music.status])
+              }}</span>
+            </div>
+            <span v-if="sound.music.name" class="level-sub">{{ sound.music.name }}</span>
+          </div>
+          <button
+            class="tile toggle wide"
+            :disabled="!live"
+            @click="send({ type: 'music', on: sound.music.status === 'off' })"
+          >
+            <Icon :name="sound.music.status === 'off' ? 'volume' : 'volume-off'" :size="22" />
+            <span class="tile-label">{{
+              sound.music.status === 'off' ? t('turnOn') : t('turnOff')
+            }}</span>
+          </button>
+        </template>
+        <div v-for="l in sound.levels" :key="l.id" class="level">
+          <div class="level-head">
+            <Icon v-if="l.kind === 'screen'" name="monitor" :size="16" class="faint" />
+            <span class="level-name">{{ l.name }}</span>
+            <span
+              v-if="levelStatus(l)"
+              class="pill"
+              :class="{ 'pill-accent': l.status === 'ducked' }"
+              >{{ levelStatus(l) }}</span
+            >
+          </div>
+          <div class="level-row">
+            <input
+              v-fill
+              type="range"
+              min="0"
+              max="1"
+              step="0.01"
+              :value="levelOf(l)"
+              :disabled="!live"
+              :aria-label="
+                l.kind === 'screen'
+                  ? t('videoSound', { name: l.name })
+                  : t('channelVolume', { name: l.name })
+              "
+              @input="slide(l.id, $event)"
+              @change="release(l.id, $event)"
+            />
+            <span class="pct">{{ percent(levelOf(l)) }}</span>
+          </div>
+        </div>
       </section>
 
       <!-- Zoals de lijst links in de show op de Mac: elke ronde met één tik starten. -->
@@ -829,6 +936,70 @@ button:disabled {
 .pick.alert:active:not(:disabled) {
   background: var(--live-soft);
   color: var(--live);
+}
+
+/* Geluid: per kanaal de naam, en daaronder een schuifje dat groot genoeg is voor een vinger. */
+.level {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: var(--radius-lg);
+  background: var(--surface-2);
+}
+
+.level-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.level-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 650;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.level-sub {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 13px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.level-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 44px;
+  align-items: center;
+  gap: 12px;
+}
+
+.level-row input {
+  width: 100%;
+  height: 36px;
+}
+
+.level-row input::-webkit-slider-runnable-track {
+  height: 6px;
+}
+
+.level-row input::-webkit-slider-thumb {
+  width: 26px;
+  height: 26px;
+  margin-top: -10px;
+}
+
+.pct {
+  color: var(--muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
 }
 
 .toast {

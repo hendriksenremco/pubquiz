@@ -7,6 +7,7 @@ import {
   FRAGMENT_PAD_MESSAGES,
   LIVE_MESSAGES,
   MIXER_MESSAGES,
+  MUSIC_STATUS,
   START_MESSAGES
 } from './live-messages'
 import { AUDIO_DEVICE_MESSAGES } from '../../lib/audio-devices'
@@ -85,6 +86,20 @@ describe('teksten van de show', () => {
       ] as const
       for (const key of answerKeys) expect(answers(key), `${locale}: ${key}`).toBe(phone(key))
       expect(answers('nounShown', { noun: 'x' })).toBe(phone('nounShown', { noun: 'x' }))
+      // Geluid (Mixer): de muziek, haar stand en de schuifjes.
+      const mixer = MIXER_MESSAGES.in(locale)
+      const soundKeys = [
+        'sound',
+        'background',
+        ...Object.values(MUSIC_STATUS),
+        'silent',
+        'turnOff',
+        'turnOn'
+      ] as const
+      for (const key of soundKeys) expect(mixer(key), `${locale}: ${key}`).toBe(phone(key))
+      for (const key of ['videoSound', 'channelVolume'] as const) {
+        expect(mixer(key, { name: 'x' }), `${locale}: ${key}`).toBe(phone(key, { name: 'x' }))
+      }
     }
   })
 
