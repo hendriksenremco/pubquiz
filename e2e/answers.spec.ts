@@ -150,6 +150,23 @@ test('live: eerst de vraag, afbeelding of het fragment, dan het antwoord', async
   await operator.waitForTimeout(1_600)
   await expect(number).toHaveText(paused!)
 
+  // Op de telefoon staat het wisselen bij Slides, met dezelfde tekst ernaast als op de Mac.
+  await operator.locator('.live-controls').getByRole('button', { name: 'Telefoon' }).click()
+  const url = (await operator.locator('.popover-panel .remote-qr .url').textContent())!
+  await operator.keyboard.press('Escape')
+  const phone = await openRemote(app, url, PHONE)
+  const phoneSlides = phone.getByRole('region', { name: 'Slides' })
+  await expect(phoneSlides.locator('.loop-text')).toHaveText('Wisselen gepauzeerd')
+  await phoneSlides.getByRole('button', { name: 'Hervat wisselen' }).click()
+  await expect(operator.getByRole('button', { name: /Pauzeer wisselen/ })).toBeVisible()
+  // Eén seconde per slide: de telefoon telt nooit verder terug dan dat.
+  await expect(phoneSlides.locator('.loop-text')).toHaveText('Volgende over 1 s')
+  await phoneSlides.getByRole('button', { name: 'Pauzeer wisselen' }).click()
+  await expect(operator.getByRole('button', { name: /Hervat wisselen/ })).toBeVisible()
+  await expect(phoneSlides.locator('.loop-text')).toHaveText('Wisselen gepauzeerd')
+  await phoneSlides.evaluate((el) => el.scrollIntoView({ block: 'start' }))
+  await snap(phone, 'test-results/remote-phone-loop.png')
+
   // Antwoorden: vraag 1 van ronde 1 staat eerst zelf in beeld, dan het antwoord eronder.
   await operator.locator('.rounds .round').last().click()
   await expect(beamer.locator('.slide .title')).toHaveText('Antwoorden')
@@ -200,10 +217,6 @@ test('live: eerst de vraag, afbeelding of het fragment, dan het antwoord', async
   await expect(operator.locator('.answers .next-step')).toContainText('Toon antwoord')
 
   // Stop antwoorden staat ook op de telefoon, met dezelfde naam.
-  await operator.locator('.live-controls').getByRole('button', { name: 'Telefoon' }).click()
-  const url = (await operator.locator('.popover-panel .remote-qr .url').textContent())!
-  await operator.keyboard.press('Escape')
-  const phone = await openRemote(app, url, PHONE)
   const stopOnPhone = phone.getByRole('button', { name: 'Stop antwoorden' })
   await stopOnPhone.click()
   await expect(beamer.locator('.overlay')).toHaveCount(0)

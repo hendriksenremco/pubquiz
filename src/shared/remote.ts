@@ -97,8 +97,14 @@ export interface RemoteView {
    * ronde heeft geen slides. De telefoon zet er Geen slide voor (index -1): aan als er geen `on` is.
    */
   slides: RemoteSlide[]
-  /** De slides van de ronde wisselen vanzelf (L op de Mac); null = deze ronde heeft dat niet. */
-  loop: { paused: boolean } | null
+  /**
+   * De slides van de ronde wisselen vanzelf (L op de Mac); null = deze ronde heeft dat niet.
+   * `until`: wanneer de volgende slide komt (klok van de Mac, ms), voor "Volgende over 5 s" zoals bij
+   * Slides op de Mac; null = er wordt nu niet geteld (gepauzeerd, of nog op de titel). `seconds`:
+   * hoe lang een slide blijft staan; de telefoon telt nooit verder terug dan dat, ook als zijn klok
+   * wat afwijkt van die van de Mac.
+   */
+  loop: { paused: boolean; seconds: number; until: number | null } | null
   /**
    * De fragmentenreeks (Speel reeks op de Mac, A); null = deze ronde heeft geen fragmenten.
    * `paused` is ook het laatste fragment van een reeks die daarna stopt: dan staat er Hervat.
@@ -348,7 +354,9 @@ export function remoteView(
         label: slideLabel(round, slide, locale),
         on: state.slideIndex === i
       })) ?? [],
-    loop: round?.slideLoopSeconds ? { paused: state.loopPaused } : null,
+    loop: round?.slideLoopSeconds
+      ? { paused: state.loopPaused, seconds: round.slideLoopSeconds, until: state.loopUntil }
+      : null,
     sequence: round?.fragments.length ? { status: sequenceOf(round, state) } : null,
     fragments: quiz && round ? remoteFragments(quiz, round, state) : [],
     answering: !!round && answering(round, state),

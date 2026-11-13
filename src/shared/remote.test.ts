@@ -272,8 +272,10 @@ describe('remoteCommand', () => {
     const between = live()
     const inRound = live({ activeRoundId: first.id })
     const paused = live({ activeRoundId: first.id, loopPaused: true })
-    expect(remoteView(quiz, inRound).loop).toEqual({ paused: false })
-    expect(remoteView(quiz, paused).loop).toEqual({ paused: true })
+    const counting = live({ activeRoundId: first.id, slideIndex: 1, loopUntil: 5000 })
+    expect(remoteView(quiz, inRound).loop).toEqual({ paused: false, seconds: 8, until: null })
+    expect(remoteView(quiz, paused).loop).toEqual({ paused: true, seconds: 8, until: null })
+    expect(remoteView(quiz, counting).loop).toEqual({ paused: false, seconds: 8, until: 5000 })
     expect(remoteView(quiz, between).loop).toBeNull()
     expect(remoteCommand(quiz, inRound, { type: 'slideLoop', paused: true })).toEqual({
       type: 'slideLoop',
