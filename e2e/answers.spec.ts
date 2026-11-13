@@ -6,7 +6,9 @@ import {
   confirmIn,
   copyFixture,
   launch,
+  openRemote,
   openStart,
+  PHONE,
   snap,
   startShow,
   tempDir,
@@ -41,7 +43,15 @@ test.beforeAll(async () => {
   userData = tempDir('userdata')
   quizDir = copyFixture()
   addPictures(quizDir)
-  ;({ app, operator } = await launch(userData, quizDir))
+  // De afstandsbediening staat aan, om Stop antwoorden ook op de telefoon te proberen.
+  writeFileSync(
+    join(userData, 'settings.json'),
+    JSON.stringify({ plugins: { remote: { enabled: true, config: {} } } })
+  )
+  ;({ app, operator } = await launch(userData, quizDir, {
+    PUBQUIZ_REMOTE_HOST: '127.0.0.1',
+    PUBQUIZ_REMOTE_PORT: '0'
+  }))
 })
 
 test.afterAll(async () => {
@@ -189,8 +199,25 @@ test('live: eerst de vraag, afbeelding of het fragment, dan het antwoord', async
   await operator.getByRole('button', { name: 'Volgende stap' }).click()
   await expect(operator.locator('.answers .next-step')).toContainText('Toon antwoord')
 
+  // Stop antwoorden staat ook op de telefoon, met dezelfde naam.
+  await operator.locator('.live-controls').getByRole('button', { name: 'Telefoon' }).click()
+  const url = (await operator.locator('.popover-panel .remote-qr .url').textContent())!
+  await operator.keyboard.press('Escape')
+  const phone = await openRemote(app, url, PHONE)
+  const stopOnPhone = phone.getByRole('button', { name: 'Stop antwoorden' })
+  await stopOnPhone.click()
+  await expect(beamer.locator('.overlay')).toHaveCount(0)
+  await expect(stopOnPhone).toHaveCount(0)
+  await expect(
+    operator.locator('.answers').getByRole('button', { name: 'Stop antwoorden' })
+  ).toHaveCount(0)
+
+  // En op de Mac.
+  await operator.keyboard.press('ArrowRight')
+  await expect(stopOnPhone).toBeVisible()
   await operator.locator('.answers').getByRole('button', { name: 'Stop antwoorden' }).click()
   await expect(beamer.locator('.overlay')).toHaveCount(0)
+  await expect(stopOnPhone).toHaveCount(0)
 
   await operator.getByRole('button', { name: 'Stop show' }).click()
   await confirmIn(operator, 'Stop show')

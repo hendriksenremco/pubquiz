@@ -66,6 +66,10 @@ describe('teksten van de show', () => {
         ['played', 'played']
       ] as const
       for (const [mac, tel] of pairs) expect(pad(mac), `${locale}: ${mac}`).toBe(phone(tel))
+      // Antwoorden (AnswersPad).
+      const answers = ANSWERS_MESSAGES.in(locale)
+      expect(answers('title'), `${locale}: answers`).toBe(phone('answers'))
+      expect(answers('stop'), `${locale}: stopAnswers`).toBe(phone('stopAnswers'))
     }
   })
 

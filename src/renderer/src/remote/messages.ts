@@ -50,7 +50,9 @@ export const REMOTE_MESSAGES = defineMessages(
     stopSequence: 'Stop reeks',
     reset: 'Fragmenten opnieuw',
     played: '✓ gespeeld',
-    upNextFragment: 'Hierna'
+    upNextFragment: 'Hierna',
+    answers: 'Antwoorden',
+    stopAnswers: 'Stop antwoorden'
   },
   {
     en: {
@@ -98,7 +100,9 @@ export const REMOTE_MESSAGES = defineMessages(
       stopSequence: 'Stop sequence',
       reset: 'Restart clips',
       played: '✓ played',
-      upNextFragment: 'Up next'
+      upNextFragment: 'Up next',
+      answers: 'Answers',
+      stopAnswers: 'Stop answers'
     }
   }
 )

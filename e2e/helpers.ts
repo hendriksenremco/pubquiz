@@ -337,3 +337,34 @@ async function resumeVideos(events: string[]) {
   ])
   for (const name of events) window.removeEventListener(name, frozen.block, true)
 }
+
+export const PHONE = { width: 390, height: 844 }
+export const TABLET = { width: 1024, height: 768 }
+
+/** Opent de link uit de QR-code in een verborgen venster zo groot als een telefoon of tablet. */
+export async function openRemote(
+  app: ElectronApplication,
+  url: string,
+  size: { width: number; height: number }
+): Promise<Page> {
+  const before = new Set(app.windows())
+  await app.evaluate(
+    ({ BrowserWindow }, { url, size }) => {
+      const win = new BrowserWindow({
+        ...size,
+        show: false,
+        useContentSize: true,
+        webPreferences: { sandbox: true, backgroundThrottling: false }
+      })
+      void win.loadURL(url)
+    },
+    { url, size }
+  )
+  // Niet het eerste nieuwe venster: tegelijk kunnen er schermvensters van de show opengaan.
+  let page: Page | undefined
+  await expect
+    .poll(() => (page = app.windows().find((w) => !before.has(w) && w.url() === url)))
+    .toBeTruthy()
+  await page!.waitForLoadState('domcontentloaded')
+  return page!
+}

@@ -1,4 +1,4 @@
-import { expect, test, type ElectronApplication, type Page } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 import { rmSync } from 'fs'
 import { dirname } from 'path'
 import { command, fakeController } from './fake-magichome'
@@ -6,43 +6,15 @@ import {
   confirmIn,
   copyFixture,
   launch,
+  openRemote,
   openStart,
+  PHONE,
   snap,
   startShow,
+  TABLET,
   tempDir,
   useWindowedScreens
 } from './helpers'
-
-const PHONE = { width: 390, height: 844 }
-const TABLET = { width: 1024, height: 768 }
-
-/** Opent de link uit de QR-code in een verborgen venster zo groot als een telefoon of tablet. */
-async function openRemote(
-  app: ElectronApplication,
-  url: string,
-  size: { width: number; height: number }
-): Promise<Page> {
-  const before = new Set(app.windows())
-  await app.evaluate(
-    ({ BrowserWindow }, { url, size }) => {
-      const win = new BrowserWindow({
-        ...size,
-        show: false,
-        useContentSize: true,
-        webPreferences: { sandbox: true, backgroundThrottling: false }
-      })
-      void win.loadURL(url)
-    },
-    { url, size }
-  )
-  // Niet het eerste nieuwe venster: tegelijk kunnen er schermvensters van de show opengaan.
-  let page: Page | undefined
-  await expect
-    .poll(() => (page = app.windows().find((w) => !before.has(w) && w.url() === url)))
-    .toBeTruthy()
-  await page!.waitForLoadState('domcontentloaded')
-  return page!
-}
 
 test('de show bedienen met een telefoon via de QR-code', async () => {
   const device = await fakeController()
