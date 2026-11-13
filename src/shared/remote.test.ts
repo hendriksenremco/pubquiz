@@ -57,6 +57,7 @@ describe('remoteView', () => {
       blackout: false,
       muted: false,
       timer: false,
+      loop: null,
       plugins: []
     })
   })
@@ -247,6 +248,30 @@ describe('remoteCommand', () => {
     expect(remoteCommand(quiz, timing, { type: 'timer', on: false })).toEqual({ type: 'timer' })
     expect(remoteCommand(quiz, timing, { type: 'timer', on: true })).toBeNull()
     expect(remoteView(quiz, timing).timer).toBe(true)
+  })
+
+  it('wisselen pauzeren of hervatten is een stand, en kan alleen in een ronde die wisselt', () => {
+    const { quiz, first, live } = setup()
+    first.slideLoopSeconds = 8
+    const between = live()
+    const inRound = live({ activeRoundId: first.id })
+    const paused = live({ activeRoundId: first.id, loopPaused: true })
+    expect(remoteView(quiz, inRound).loop).toEqual({ paused: false })
+    expect(remoteView(quiz, paused).loop).toEqual({ paused: true })
+    expect(remoteView(quiz, between).loop).toBeNull()
+    expect(remoteCommand(quiz, inRound, { type: 'slideLoop', paused: true })).toEqual({
+      type: 'slideLoop',
+      paused: true
+    })
+    expect(remoteCommand(quiz, paused, { type: 'slideLoop', paused: false })).toEqual({
+      type: 'slideLoop',
+      paused: false
+    })
+    expect(remoteCommand(quiz, paused, { type: 'slideLoop', paused: true })).toBeNull()
+    expect(remoteCommand(quiz, between, { type: 'slideLoop', paused: true })).toBeNull()
+    first.slideLoopSeconds = null
+    expect(remoteView(quiz, inRound).loop).toBeNull()
+    expect(remoteCommand(quiz, inRound, { type: 'slideLoop', paused: true })).toBeNull()
   })
 
   it('weigert onbekende acties', () => {

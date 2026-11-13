@@ -9,7 +9,7 @@ import { connect, imageUrl, link, locale, send, t, toast, view } from './connect
 
 /**
  * De afstandsbediening op een telefoon of tablet: de slide die in beeld staat, vorige en volgende
- * (zoals ← → op de Mac: slides, fragmenten of antwoorden), rondes, aftellen, beeld op zwart en geluid, en
+ * (zoals ← → op de Mac: slides, fragmenten of antwoorden), rondes, aftellen, wisselen van de slides, beeld op zwart en geluid, en
  * daaronder de plug-ins met knoppen voor de telefoon (bv. het licht; zie plugins/phone.ts). Volgt de show op de Mac; buiten de show
  * staat alles stil. Dezelfde knoppen staan in de show op de Mac (ShowLive en de werkbalk).
  */
@@ -169,6 +169,16 @@ onMounted(connect)
         >
           <Icon :name="view?.timer ? 'stop' : 'timer'" :size="22" />
           <span class="tile-label">{{ view?.timer ? t('timerOff') : t('timerOn') }}</span>
+        </button>
+        <!-- Alleen in een ronde waarin de slides vanzelf wisselen, net als op de Mac (L). -->
+        <button
+          v-if="view?.loop"
+          class="tile toggle wide"
+          :disabled="!live"
+          @click="send({ type: 'slideLoop', paused: !view.loop.paused })"
+        >
+          <Icon :name="view.loop.paused ? 'play' : 'pause'" :size="22" />
+          <span class="tile-label">{{ view.loop.paused ? t('loopResume') : t('loopPause') }}</span>
         </button>
         <button
           class="tile toggle"

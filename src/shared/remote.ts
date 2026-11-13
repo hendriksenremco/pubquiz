@@ -71,6 +71,8 @@ export interface RemoteView {
   muted: boolean
   /** Het aftellen (T) loopt. */
   timer: boolean
+  /** De slides van de ronde wisselen vanzelf (L op de Mac); null = deze ronde heeft dat niet. */
+  loop: { paused: boolean } | null
   /** Plug-ins die aan staan en knoppen op de telefoon hebben (`remoteActions`), met hun status. */
   plugins: RemotePlugin[]
 }
@@ -103,6 +105,8 @@ export const RemoteActionSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('mute'), on: z.boolean() }),
   /** Aftellen (T) starten of stoppen; alleen in een ronde. */
   z.object({ type: z.literal('timer'), on: z.boolean() }),
+  /** Het vanzelf wisselen van de slides (L) pauzeren of hervatten; alleen in zo'n ronde. */
+  z.object({ type: z.literal('slideLoop'), paused: z.boolean() }),
   /**
    * Een actie van een plug-in, bv. het licht kiezen. Main controleert hem met de definitie van die
    * plug-in, en alleen wat in zijn `remoteActions` staat, mag.
@@ -159,6 +163,7 @@ export function remoteView(
     blackout: !!quiz && allBlack(quiz, state),
     muted: !state.backgroundEnabled,
     timer: state.timer !== null,
+    loop: round?.slideLoopSeconds ? { paused: state.loopPaused } : null,
     plugins: quiz ? plugins : []
   }
 }
@@ -189,6 +194,10 @@ export function remoteCommand(
     case 'timer':
       if (action.on === (state.timer !== null)) return null
       return action.on && !activeRound(quiz, state) ? null : { type: 'timer' }
+    case 'slideLoop':
+      if (!activeRound(quiz, state)?.slideLoopSeconds || action.paused === state.loopPaused)
+        return null
+      return { type: 'slideLoop', paused: action.paused }
     case 'plugin':
       return null
   }
