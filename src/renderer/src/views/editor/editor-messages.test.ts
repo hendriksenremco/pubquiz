@@ -105,6 +105,12 @@ describe('teksten van de editor', () => {
     }
   })
 
+  it('noemt importeren bij Afbeeldingen en Fragmenten zoals de knop in Media', () => {
+    for (const locale of ['nl', 'en'] as const) {
+      expect(ROUND_MESSAGES.in(locale)('fromFiles')).toBe(MEDIA_MESSAGES.in(locale)('import'))
+    }
+  })
+
   it('zegt "Choose" voor Kies, zoals in de keuzelijsten', () => {
     expect(SLIDE_MESSAGES.in('en')('choose', { name: 'Title' })).toBe('Choose Title')
     expect(SLIDE_MESSAGES.in('nl')('choose', { name: 'Titel' })).toBe('Kies Titel')
