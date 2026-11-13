@@ -5,6 +5,8 @@ import { oneLine } from '../lib/format'
 // Stil titelveld dat meegroeit: een lange titel loopt door op de volgende regel in plaats van
 // aan de rand te worden afgesneden. Het blijft één regel tekst: Enter en plakken maken geen
 // nieuwe regel, want een titel komt ook op slides, in lijsten en in bestandsnamen.
+// Een lang woord breekt af met een streepje, op een lettergreep in de taal van de app
+// (`lang` op <html>); alleen als dat niet kan, breekt het ergens anders.
 const title = defineModel<string>({ required: true })
 const field = ref<HTMLTextAreaElement | null>(null)
 
@@ -39,6 +41,9 @@ function onInput(event: Event): void {
   display: block;
   overflow: hidden;
   overflow-wrap: anywhere;
+  hyphens: auto;
+  /* Alleen lange woorden: korte woorden schuiven heel naar de volgende regel. */
+  hyphenate-limit-chars: 10 4 4;
   field-sizing: content;
 }
 </style>
