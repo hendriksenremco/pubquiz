@@ -232,7 +232,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
         <div class="pair">
           <button class="btn tile" :disabled="!prevRound" @click="send({ type: 'prevRound' })">
             <span class="tile-label"><Icon name="left" :size="14" />{{ t('prevRound') }}</span>
-            <span class="tile-sub">{{ prevRound ? roundTitle(prevRound, locale) : '–' }}</span>
+            <span class="tile-sub">{{ prevRound ? roundTitle(prevRound, locale) : '\u00a0' }}</span>
           </button>
           <button
             class="btn tile end"
@@ -241,7 +241,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
             @click="send({ type: 'nextRound' })"
           >
             <span class="tile-label">{{ t('nextRound') }}<Icon name="right" :size="14" /></span>
-            <span class="tile-sub">{{ nextRound ? roundTitle(nextRound, locale) : '–' }}</span>
+            <span class="tile-sub">{{ nextRound ? roundTitle(nextRound, locale) : '\u00a0' }}</span>
           </button>
           <button
             class="btn tile"
@@ -252,7 +252,9 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
             <span class="tile-label"
               ><Icon name="restart" :size="13" />{{ t('restartRound') }}</span
             >
-            <span class="tile-sub">{{ restartable ? roundTitle(restartable, locale) : '–' }}</span>
+            <span class="tile-sub">{{
+              restartable ? roundTitle(restartable, locale) : '\u00a0'
+            }}</span>
           </button>
           <button
             class="btn tile end"
@@ -261,7 +263,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
             @click="send({ type: 'endRound' })"
           >
             <span class="tile-label">{{ t('endRound') }}<Icon name="end" :size="12" /></span>
-            <span class="tile-sub">{{ round ? roundTitle(round, locale) : '–' }}</span>
+            <span class="tile-sub">{{ round ? roundTitle(round, locale) : '\u00a0' }}</span>
           </button>
         </div>
       </section>

@@ -160,7 +160,7 @@ onMounted(connect)
           @click="send({ type: 'round', direction: 'prev' })"
         >
           <span class="tile-label"><Icon name="left" :size="16" />{{ t('prevRound') }}</span>
-          <span class="tile-sub">{{ view?.prevRound ?? '–' }}</span>
+          <span class="tile-sub">{{ view?.prevRound ?? '\u00a0' }}</span>
         </button>
         <button
           class="tile end"
@@ -168,7 +168,7 @@ onMounted(connect)
           @click="send({ type: 'round', direction: 'next' })"
         >
           <span class="tile-label">{{ t('nextRound') }}<Icon name="right" :size="16" /></span>
-          <span class="tile-sub">{{ view?.nextRound ?? '–' }}</span>
+          <span class="tile-sub">{{ view?.nextRound ?? '\u00a0' }}</span>
         </button>
         <button
           class="tile"
@@ -176,11 +176,11 @@ onMounted(connect)
           @click="send({ type: 'restartRound' })"
         >
           <span class="tile-label"><Icon name="restart" :size="15" />{{ t('restartRound') }}</span>
-          <span class="tile-sub">{{ view?.restartRound ?? '–' }}</span>
+          <span class="tile-sub">{{ view?.restartRound ?? '\u00a0' }}</span>
         </button>
         <button class="tile end" :disabled="!live || !round" @click="send({ type: 'endRound' })">
           <span class="tile-label">{{ t('endRound') }}<Icon name="end" :size="14" /></span>
-          <span class="tile-sub">{{ round?.title ?? '–' }}</span>
+          <span class="tile-sub">{{ round?.title ?? '\u00a0' }}</span>
         </button>
       </section>
 
