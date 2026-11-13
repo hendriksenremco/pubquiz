@@ -72,6 +72,16 @@ export interface RemoteView {
   /** Er zijn schermen om op zwart te zetten. */
   screens: boolean
   blackout: boolean
+  /**
+   * De rondes van de quiz, om er één te starten zoals in de lijst links in de show op de Mac; leeg
+   * = er is geen quiz open.
+   */
+  roundList: RemoteRound[]
+  /**
+   * De schermen, om er één op zwart te zetten zoals onder elk scherm in de show op de Mac. Alleen
+   * bij twee of meer schermen: bij één doet Beeld op zwart hetzelfde.
+   */
+  screenList: RemoteScreen[]
   muted: boolean
   /** Het aftellen (T) loopt. */
   timer: boolean
@@ -104,6 +114,24 @@ export interface RemoteView {
   answers: RemoteAnswer[]
   /** Plug-ins die aan staan en knoppen op de telefoon hebben (`remoteActions`), met hun status. */
   plugins: RemotePlugin[]
+}
+
+/** Eén ronde in de lijst Rondes op de telefoon: tikken start hem. */
+export interface RemoteRound {
+  id: string
+  number: number
+  title: string
+  /** Deze ronde loopt (Nu). */
+  on: boolean
+  /** Deze ronde start bij Volgende ronde (Hierna). */
+  next: boolean
+}
+
+/** Eén scherm op de telefoon: tikken zet alleen dit scherm op zwart, of weer terug. */
+export interface RemoteScreen {
+  id: string
+  name: string
+  black: boolean
 }
 
 /** Eén slide in de lijst Slides op de telefoon, met dezelfde korte naam als op de Mac. */
@@ -175,7 +203,14 @@ export const RemoteActionSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('endRound') }),
   /** Vorige of volgende slide, fragment of antwoordstap; zie RemoteStep. */
   z.object({ type: z.literal('step'), direction: z.enum(['next', 'prev']) }),
-  z.object({ type: z.literal('blackout'), on: z.boolean() }),
+  /** Beeld op zwart of terug: alle schermen, of met `screenId` alleen dat scherm. */
+  z.object({
+    type: z.literal('blackout'),
+    on: z.boolean(),
+    screenId: z.string().max(64).optional()
+  }),
+  /** Eén ronde starten, zoals een tik in de lijst Rondes op de Mac. */
+  z.object({ type: z.literal('startRound'), id: z.string().max(64) }),
   z.object({ type: z.literal('mute'), on: z.boolean() }),
   /** Aftellen (T) starten of stoppen; alleen in een ronde. */
   z.object({ type: z.literal('timer'), on: z.boolean() }),
@@ -254,6 +289,15 @@ export function remoteView(
     screen: quiz ? onScreen(quiz, state) : null,
     screens: !!quiz?.screens.length,
     blackout: !!quiz && allBlack(quiz, state),
+    roundList: quiz ? remoteRounds(quiz, state, locale) : [],
+    screenList:
+      quiz && quiz.screens.length > 1
+        ? quiz.screens.map((s) => ({
+            id: s.id,
+            name: s.name,
+            black: state.blackout.includes(s.id)
+          }))
+        : [],
     muted: !state.backgroundEnabled,
     timer: state.timer !== null,
     slides:
@@ -289,8 +333,16 @@ export function remoteCommand(
       return { type: action.type }
     case 'step':
       return stepCommand(stepTarget(quiz, activeRound(quiz, state)), action.direction)
-    case 'blackout':
-      return { type: 'blackout', on: action.on }
+    case 'blackout': {
+      if (!action.screenId) return { type: 'blackout', on: action.on }
+      if (!quiz.screens.some((s) => s.id === action.screenId)) return null
+      if (state.blackout.includes(action.screenId) === action.on) return null
+      return { type: 'blackout', screenId: action.screenId, on: action.on }
+    }
+    case 'startRound':
+      if (!quiz.rounds.some((r) => r.id === action.id) || state.activeRoundId === action.id)
+        return null
+      return { type: 'startRound', roundId: action.id }
     case 'mute':
       if (action.on) return { type: 'stopAll' }
       return state.backgroundEnabled ? null : { type: 'toggleBackground' }
@@ -346,6 +398,18 @@ export function remoteCommand(
     case 'plugin':
       return null
   }
+}
+
+/** De rondes zoals de lijst links in de show op de Mac ze toont, met Nu en Hierna. */
+function remoteRounds(quiz: Quiz, state: ShowState, locale: Locale): RemoteRound[] {
+  const next = adjacentRound(quiz, state, 'next')
+  return quiz.rounds.map((round, i) => ({
+    id: round.id,
+    number: i + 1,
+    title: roundTitle(round, locale),
+    on: round.id === state.activeRoundId,
+    next: round.id === next?.id
+  }))
 }
 
 /** De vragen, afbeeldingen en fragmenten zoals AnswersPad ze toont. */

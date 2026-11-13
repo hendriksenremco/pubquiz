@@ -11,7 +11,7 @@ import { ANSWER_NOUNS } from './messages'
 
 /**
  * De afstandsbediening op een telefoon of tablet: de slide die in beeld staat, vorige en volgende
- * (zoals ← → op de Mac: slides, fragmenten of antwoorden), rondes, de slides, Stop antwoorden, de fragmentenreeks, aftellen, wisselen van de slides, beeld op zwart en geluid, en
+ * (zoals ← → op de Mac: slides, fragmenten of antwoorden), rondes, de slides, Stop antwoorden, de fragmentenreeks, aftellen, wisselen van de slides, beeld op zwart (ook per scherm), geluid en de lijst met alle rondes, en
  * daaronder de plug-ins met knoppen voor de telefoon (bv. het licht; zie plugins/phone.ts). Volgt de show op de Mac; buiten de show
  * staat alles stil. Dezelfde knoppen staan in de show op de Mac (ShowLive en de werkbalk).
  */
@@ -23,6 +23,8 @@ const sequence = computed(() => view.value?.sequence?.status ?? null)
 const slides = computed(() => view.value?.slides ?? [])
 const fragments = computed(() => view.value?.fragments ?? [])
 const answers = computed(() => view.value?.answers ?? [])
+const roundList = computed(() => view.value?.roundList ?? [])
+const screenList = computed(() => view.value?.screenList ?? [])
 provide(ASSET_URL, imageUrl)
 
 const plugins = computed(() =>
@@ -363,6 +365,49 @@ onMounted(connect)
         >
           <Icon :name="view?.muted ? 'volume' : 'volume-off'" :size="22" />
           <span class="tile-label">{{ view?.muted ? t('muteOff') : t('muteOn') }}</span>
+        </button>
+      </section>
+
+      <!-- Zoals onder elk scherm in de show op de Mac: alleen dit scherm op zwart, of terug. Alleen
+           bij twee of meer schermen; bij één doet Beeld op zwart hierboven hetzelfde. -->
+      <section v-if="screenList.length" class="pair" :aria-label="t('screens')">
+        <span class="slides-title">{{ t('screens') }}</span>
+        <button
+          v-for="s in screenList"
+          :key="s.id"
+          class="tile pick"
+          :class="{ alert: s.black }"
+          :aria-pressed="s.black"
+          :disabled="!live"
+          @click="send({ type: 'blackout', screenId: s.id, on: !s.black })"
+        >
+          <span class="tile-label"
+            ><Icon :name="s.black ? 'monitor' : 'screen-off'" :size="16" /><span
+              class="frag-label"
+              >{{ s.name }}</span
+            ></span
+          >
+          <span class="tile-sub">{{ s.black ? t('blackoutOff') : t('blackoutOn') }}</span>
+        </button>
+      </section>
+
+      <!-- Zoals de lijst links in de show op de Mac: elke ronde met één tik starten. -->
+      <section v-if="roundList.length" class="pair" :aria-label="t('allRounds')">
+        <span class="slides-title">{{ t('rounds') }}</span>
+        <button
+          v-for="r in roundList"
+          :key="r.id"
+          class="tile pick round-pick"
+          :class="{ active: r.on }"
+          :aria-pressed="r.on"
+          :disabled="!live"
+          @click="send({ type: 'startRound', id: r.id })"
+        >
+          <span class="tile-label"
+            ><span class="frag-num">{{ r.number }}</span
+            ><span class="round-title hyphenate">{{ r.title }}</span></span
+          >
+          <span class="tile-sub">{{ r.on ? t('now') : r.next ? t('upNextRound') : '\u00a0' }}</span>
         </button>
       </section>
     </main>
@@ -720,6 +765,18 @@ button:disabled {
   opacity: 0.55;
 }
 
+/* Een rondenaam: hooguit twee regels, dan …, zoals in de lijst Rondes op de Mac. */
+.round-pick .tile-label {
+  align-items: flex-start;
+}
+
+.round-title {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
 /* Antwoorden: per ronde een kopje over de hele breedte, zoals op de Mac. */
 .group-title,
 .slides-title {
@@ -767,7 +824,9 @@ button:disabled {
 }
 
 .toggle.alert,
-.toggle.alert:active:not(:disabled) {
+.toggle.alert:active:not(:disabled),
+.pick.alert,
+.pick.alert:active:not(:disabled) {
   background: var(--live-soft);
   color: var(--live);
 }
