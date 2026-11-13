@@ -233,6 +233,15 @@ test('nieuwe quiz: alleen een naam, de app maakt zelf de map aan', async () => {
     expect(saved.rounds[1].fragments).toEqual([])
     expect(readdirSync(join(dir, 'media'))).toHaveLength(saved.assets.length)
     expect(readdirSync(join(dir, 'media'))).not.toContain('fragment-1.m4a')
+
+    // Op een quizkaart heet het net als bij Quiz-instellingen.
+    await operator.getByRole('button', { name: 'Quizzen' }).click()
+    await operator
+      .locator('.card', { hasText: 'Pubquiz november' })
+      .getByRole('button', { name: 'Nieuwe quiz op basis van deze…' })
+      .click()
+    await expect(dialog).toContainText('Nieuwe quiz op basis van “Pubquiz november”')
+    await dialog.getByRole('button', { name: 'Annuleer' }).click()
   } finally {
     await app.close()
     rmSync(userData, { recursive: true, force: true })
