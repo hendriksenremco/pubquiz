@@ -397,7 +397,7 @@ onMounted(connect)
         <button
           v-for="r in roundList"
           :key="r.id"
-          class="tile pick"
+          class="tile pick round-pick"
           :class="{ active: r.on }"
           :aria-pressed="r.on"
           :disabled="!live"
@@ -405,7 +405,7 @@ onMounted(connect)
         >
           <span class="tile-label"
             ><span class="frag-num">{{ r.number }}</span
-            ><span class="frag-label">{{ r.title }}</span></span
+            ><span class="round-title hyphenate">{{ r.title }}</span></span
           >
           <span class="tile-sub">{{ r.on ? t('now') : r.next ? t('upNextRound') : '\u00a0' }}</span>
         </button>
@@ -763,6 +763,18 @@ button:disabled {
 
 .frag.played {
   opacity: 0.55;
+}
+
+/* Een rondenaam: hooguit twee regels, dan …, zoals in de lijst Rondes op de Mac. */
+.round-pick .tile-label {
+  align-items: flex-start;
+}
+
+.round-title {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 /* Antwoorden: per ronde een kopje over de hele breedte, zoals op de Mac. */
