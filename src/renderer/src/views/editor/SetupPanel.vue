@@ -218,7 +218,14 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
           </div>
 
           <div class="tile channels">
-            <span class="tile-title tile-head">{{ t('channels') }}</span>
+            <!-- Voeg kanaal toe rechts in de kop, zoals Voeg scherm toe bij Schermen. -->
+            <div class="tile-head">
+              <span class="tile-title">{{ t('channels') }}</span>
+              <span class="grow" />
+              <button class="btn btn-ghost btn-sm add-channel" @click="addChannel">
+                <Icon name="plus" :size="14" /> {{ t('addChannel') }}
+              </button>
+            </div>
             <div v-for="c in quiz.channels" :key="c.id" class="channel">
               <input
                 v-model="c.name"
@@ -242,9 +249,6 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
                 <span class="mono val">{{ percent(c.volume) }}</span>
               </div>
             </div>
-            <button class="btn btn-ghost btn-sm add-channel" @click="addChannel">
-              <Icon name="plus" :size="14" /> {{ t('addChannel') }}
-            </button>
           </div>
         </div>
       </section>
@@ -452,13 +456,10 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
 }
 
 .tile-head {
-  margin-bottom: 6px;
-}
-
-.add-channel {
-  align-self: flex-start;
-  margin-top: 6px;
-  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: -4px 0 6px;
 }
 
 /* Naam en knop op de eerste regel, de schuifregelaar eronder: naast de knop is hij te kort. */
