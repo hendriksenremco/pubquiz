@@ -331,17 +331,17 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
   color: var(--text);
 }
 
-/* Een lange naam op één regel, met … zoals in de zijbalk van de editor; de hele naam staat in de tooltip en boven het midden. */
+/* Hooguit twee regels, dan …; de hele naam staat in de tooltip en boven het midden. */
 .round-text {
   min-width: 0;
 }
 
 .round-title {
-  display: block;
   font-weight: 550;
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .round.on .round-title {
