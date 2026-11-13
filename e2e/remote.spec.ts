@@ -128,6 +128,8 @@ test('de show bedienen met een telefoon via de QR-code', async () => {
     await phone.getByRole('button', { name: 'Volgend fragment' }).click()
     await expect(frag(2)).toHaveClass(/on/)
     await expect(phone.getByText('Fragment 2 van 8')).toBeVisible()
+    // Altijd bovenaan, met de preview: anders hangt de screenshot af van wat er eerder gescrold is.
+    await phone.evaluate(() => window.scrollTo(0, 0))
     await snap(phone, 'test-results/remote-phone-fragment.png')
     await phone.getByRole('button', { name: 'Vorig fragment' }).click()
     await expect(frag(1)).toHaveClass(/on/)
