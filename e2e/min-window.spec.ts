@@ -2,7 +2,7 @@ import { expect, test, type ElectronApplication, type Locator, type Page } from 
 import { readFileSync, rmSync, writeFileSync } from 'fs'
 import { dirname, join } from 'path'
 import { fakeController } from './fake-magichome'
-import { choose, copyFixture, launch, snap, tempDir } from './helpers'
+import { choose, copyFixture, launch, openRemote, PHONE, snap, tempDir } from './helpers'
 
 /** De kleinste maat van het venster: `minWidth` en `minHeight` in src/main/windows.ts. */
 const WIDTH = 1100
@@ -23,7 +23,8 @@ const LABELS = {
     windowed: 'Venster op deze laptop (om te testen)',
     folderName: 'Naam van de map',
     moveTo: 'Verplaats naar',
-    newFolder: 'Nieuwe map'
+    newFolder: 'Nieuwe map',
+    phone: 'Telefoon'
   },
   en: {
     quizzes: 'Quizzes',
@@ -36,7 +37,8 @@ const LABELS = {
     windowed: 'Window on this laptop (for testing)',
     folderName: 'Folder name',
     moveTo: 'Move to',
-    newFolder: 'New folder'
+    newFolder: 'New folder',
+    phone: 'Phone'
   }
 } as const
 
@@ -432,6 +434,24 @@ for (const locale of ['nl', 'en'] as const) {
       await check('show-fragments')
       await operator.locator('.rounds .round').last().click()
       await check('show-answers')
+
+      // Op de telefoon breekt een lange rondenaam af met een streepje, in de taal van de Mac.
+      await operator.locator('.live-controls').getByRole('button', { name: labels.phone }).click()
+      const url = (await operator.locator('.popover-panel .remote-qr .url').textContent())!
+      await operator.keyboard.press('Escape')
+      const phone = await openRemote(app, url, PHONE)
+      await expect(phone.locator('html')).toHaveAttribute('lang', locale)
+      const phoneShot = (screen: string) =>
+        snap(phone, `test-results/min-window-long-${locale === 'nl' ? '' : 'en-'}${screen}.png`)
+      const fits = (selector: string) =>
+        phone.locator(selector).evaluate((el) => el.scrollWidth <= el.clientWidth)
+      await expect(phone.locator('.group-title')).toHaveText(quiz.rounds[0].title)
+      expect(await fits('.group-title')).toBe(true)
+      await phoneShot('phone-answers')
+      await operator.locator('.rounds .round').nth(1).click()
+      await expect(phone.locator('h1')).toHaveText(WORD)
+      expect(await fits('h1')).toBe(true)
+      await phoneShot('phone')
     } finally {
       await app.close()
       await device.close()

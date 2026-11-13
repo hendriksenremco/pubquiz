@@ -108,7 +108,7 @@ onMounted(connect)
     <main class="controls" :class="{ idle: !live }">
       <section class="now">
         <span v-if="eyebrow" class="eyebrow">{{ eyebrow }}</span>
-        <h1>{{ heading }}</h1>
+        <h1 class="hyphenate">{{ heading }}</h1>
       </section>
 
       <section class="card" :aria-label="t('onScreen')">
@@ -197,7 +197,9 @@ onMounted(connect)
           <span class="tile-label">{{ t('stopAnswers') }}</span>
         </button>
         <template v-for="(a, i) in answers" :key="a.id">
-          <span v-if="a.round !== answers[i - 1]?.round" class="group-title">{{ a.round }}</span>
+          <span v-if="a.round !== answers[i - 1]?.round" class="group-title hyphenate">{{
+            a.round
+          }}</span>
           <!-- Tikken zet hem in beeld (een fragment speelt opnieuw), nog eens tikken toont of
                verbergt het antwoord. -->
           <button
@@ -458,10 +460,10 @@ body[data-route='remote'] button {
   font-size: 13px;
 }
 
+/* Een lange rondenaam breekt af met een streepje, zoals op de Mac: `.hyphenate` in base.css. */
 h1 {
   font-size: 28px;
   line-height: 1.15;
-  overflow-wrap: anywhere;
 }
 
 .card {
