@@ -228,37 +228,8 @@ const imageOf = (item: Item) => findAsset(session.quiz!, item.slide?.imageAssetI
   line-height: 1;
 }
 
-.frag.on .frag-top {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  width: 100%;
-}
-
-.frag-noun {
-  color: var(--muted);
-  font-size: 11px;
-}
-
-.frag-thumb {
-  width: 44px;
-  height: 26px;
-  margin-left: auto;
-  border-radius: 4px;
-  align-self: center;
-}
-
-.frag-question {
-  display: -webkit-box;
-  overflow: hidden;
-  color: var(--muted);
-  font-size: 12px;
-  line-height: 1.35;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-}
-
-.frag-num {
+/* Alleen het gekozen nummer is amber, zoals bij Fragmenten en op de telefoon. */
+.frag.on .frag-num {
   color: var(--accent);
 }
 
