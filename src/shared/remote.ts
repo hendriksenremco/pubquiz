@@ -90,8 +90,12 @@ export interface RemoteView {
    */
   screenList: RemoteScreen[]
   muted: boolean
-  /** Het aftellen (T) loopt. */
-  timer: boolean
+  /**
+   * Het aftellen (T) loopt; null = niet. Zoals in de preview op de Mac telt de telefoon de seconden
+   * af in zijn preview. `until`: wanneer het afloopt (klok van de Mac, ms); `seconds`: hoe lang het
+   * duurt, voor de balk; de telefoon telt nooit verder terug dan dat.
+   */
+  timer: { seconds: number; until: number } | null
   /**
    * De slides van de ronde, om er één te kiezen zoals bij Slides in de show op de Mac; leeg = deze
    * ronde heeft geen slides. De telefoon zet er Geen slide voor (index -1): aan als er geen `on` is.
@@ -374,7 +378,7 @@ export function remoteView(
           }))
         : [],
     muted: !state.backgroundEnabled,
-    timer: state.timer !== null,
+    timer: state.timer ? { seconds: state.timer.seconds, until: state.timer.until } : null,
     slides:
       round?.slides.map((slide, i) => ({
         id: slide.id,

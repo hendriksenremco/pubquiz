@@ -222,8 +222,14 @@ test('de show bedienen met een telefoon via de QR-code', async () => {
     await phone.getByRole('button', { name: 'Aftellen', exact: true }).click()
     await expect(toolbar.getByRole('button', { name: /Stop aftellen/ })).toBeVisible()
     await expect(phone.getByRole('button', { name: 'Stop aftellen' })).toBeVisible()
+    // De preview telt af, zoals de preview op de Mac.
+    const countdown = phone.locator('.preview .countdown')
+    await expect(countdown).toBeVisible()
+    await expect(countdown).toContainText('Nog')
+    await snap(phone, 'test-results/remote-phone-timer.png')
     await phone.getByRole('button', { name: 'Stop aftellen' }).click()
     await expect(toolbar.getByRole('button', { name: /^Aftellen/ })).toBeVisible()
+    await expect(countdown).toBeHidden()
 
     // Eén scherm op zwart, zoals onder elk scherm in de show op de Mac.
     const macFrame = (n: number) => operator.locator('.live .screen .frame').nth(n)

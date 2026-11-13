@@ -35,7 +35,10 @@ const sequenceStep = computed(() => view.value?.sequence?.step ?? null)
 const now = useNow(
   250,
   () =>
-    !!loop.value?.until || sequenceStep.value?.kind === 'gap' || fragments.value.some((f) => f.ends)
+    !!loop.value?.until ||
+    sequenceStep.value?.kind === 'gap' ||
+    fragments.value.some((f) => f.ends) ||
+    !!view.value?.timer
 )
 const loopText = computed(() => {
   const l = loop.value
@@ -44,6 +47,17 @@ const loopText = computed(() => {
   if (l.until === null) return t.value('loopAfterTitle')
   const seconds = Math.ceil((l.until - now.value) / 1000)
   return t.value('loopNext', { seconds: Math.min(l.seconds, Math.max(1, seconds)) })
+})
+
+/**
+ * Het aftellen in de preview, zoals in de preview op de Mac: de seconden en een balk die leegloopt.
+ * Nooit meer dan de hele duur, ook als de klok van de telefoon wat afwijkt.
+ */
+const countdown = computed(() => {
+  const timer = view.value?.timer
+  if (!timer) return null
+  const left = Math.min(timer.seconds * 1000, Math.max(0, timer.until - now.value))
+  return { seconds: Math.ceil(left / 1000), remaining: left / (timer.seconds * 1000) }
 })
 
 /** Zoals naast Fragmenten op de Mac: waar de reeks is. */
@@ -245,6 +259,13 @@ onMounted(connect)
             :locale="locale"
           />
           <span v-else class="empty">{{ t('noSlide') }}</span>
+          <div v-if="countdown" class="countdown">
+            <span class="countdown-label">{{ t('timeLeft') }}</span>
+            <span class="countdown-number" data-volatile>{{ countdown.seconds }}</span>
+            <span class="countdown-bar" data-volatile
+              ><span :style="{ transform: `scaleX(${countdown.remaining})` }"
+            /></span>
+          </div>
         </div>
         <!-- De knoppen meteen onder de preview (vaste hoogte): wat er onder komt, kan ze niet
              verschuiven terwijl je tikt. -->
@@ -787,6 +808,53 @@ h1 {
 
 .preview.black {
   opacity: 0.4;
+}
+
+/* Het aftellen, rechtsonder zoals op de schermen: de seconden groot, de balk loopt leeg. */
+.countdown {
+  position: absolute;
+  right: 4cqw;
+  bottom: 5cqh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 22cqh;
+  padding: 2.5cqh 3.5cqh;
+  border-radius: 3cqh;
+  background: rgba(0, 0, 0, 0.82);
+  color: #fff;
+}
+
+.countdown-label {
+  font-size: 3.4cqh;
+  font-weight: 650;
+  opacity: 0.8;
+}
+
+.countdown-number {
+  font-family: var(--display);
+  font-size: 16cqh;
+  font-weight: 850;
+  line-height: 1;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.countdown-bar {
+  width: 100%;
+  height: 0.7cqh;
+  margin-top: 1.4cqh;
+  overflow: hidden;
+  border-radius: 1cqh;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.countdown-bar span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transform-origin: left;
+  transition: transform 0.2s linear;
 }
 
 .empty {
