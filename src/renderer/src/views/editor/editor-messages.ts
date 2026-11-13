@@ -192,7 +192,8 @@ export const ROUND_MESSAGES = defineMessages(
     addImages: 'Afbeeldingen',
     addFragments: 'Fragmenten',
     addSlide: 'Slide',
-    fromFiles: 'Bestanden of map…',
+    // Hetzelfde venster als de knop in Media
+    fromFiles: 'Importeer media…',
     fromMedia: 'Uit Media',
     slideTitle: 'Titel',
     slideNumber: 'Nummer',
@@ -256,7 +257,7 @@ export const ROUND_MESSAGES = defineMessages(
       addImages: 'Pictures',
       addFragments: 'Clips',
       addSlide: 'Slide',
-      fromFiles: 'Files or folder…',
+      fromFiles: 'Import media…',
       fromMedia: 'From Media',
       slideTitle: 'Title',
       slideNumber: 'Number',
