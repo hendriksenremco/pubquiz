@@ -224,6 +224,13 @@ test('live: eerst de vraag, afbeelding of het fragment, dan het antwoord', async
   const phoneTiles = phone.locator('.frag')
   await expect(phoneTiles).toHaveCount(await tiles.count())
   await expect(phoneTiles.nth(0)).toContainText('Canberra')
+  // Met de vraag zelf, zoals de tegel op de Mac, en het kopje Antwoorden erboven.
+  await expect(phoneTiles.nth(0).locator('.frag-question')).toHaveText(
+    'Wat is de hoofdstad van Australië?'
+  )
+  await expect(
+    phone.getByRole('region', { name: 'Antwoorden' }).locator('.slides-title')
+  ).toHaveText('Antwoorden')
   await phoneTiles.nth(0).click()
   await expect(beamer.locator('.slide.layout-question .body')).toHaveText(
     'Wat is de hoofdstad van Australië?'

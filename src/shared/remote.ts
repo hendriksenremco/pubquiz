@@ -197,6 +197,8 @@ export interface RemoteAnswer {
   noun: AnswerNoun
   /** Leeg = geen antwoord ingevuld. */
   answer: string
+  /** De vraag zelf, zoals AnswersPad hem toont: alleen bij een vraagslide, anders null. */
+  question: string | null
   /**
    * Zoals AnswersPad hem toont: het fragment speelt, het antwoord of alleen de vraag (of het
    * nummer) staat in beeld, of hij is al gedaan.
@@ -510,6 +512,8 @@ function remoteAnswers(quiz: Quiz, round: Round, state: ShowState, locale: Local
       number: item.number,
       noun: item.noun,
       answer: item.answer,
+      question:
+        item.slide?.layout === 'question' ? item.slide.body || item.slide.title || null : null,
       state: playing
         ? 'playing'
         : on

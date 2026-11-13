@@ -500,6 +500,8 @@ describe('remoteCommand', () => {
       on: true,
       revealed: true
     })
+    // De vraag zelf staat erbij, zoals op de Mac; een fragment heeft er geen.
+    expect(list.map((a) => a.question)).toEqual(['Hoofdstad van Peru?', null, null, null])
     expect(remoteView(quiz, live({ activeRoundId: first.id })).answers).toEqual([])
     expect(remoteView(quiz, live()).answers).toEqual([])
 
