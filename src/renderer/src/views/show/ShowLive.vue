@@ -181,7 +181,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
             :class="{ on: state.slideIndex === -1 }"
             @click="send({ type: 'setSlide', index: -1 })"
           >
-            <span class="slide-kind">–</span>
+            <span class="slide-kind">&nbsp;</span>
             <span>{{ t('noSlide') }}</span>
           </button>
           <button
