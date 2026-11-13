@@ -402,6 +402,20 @@ for (const locale of ['nl', 'en'] as const) {
       expect((await third!.boundingBox())!.width).toBe((await first!.boundingBox())!.width)
       await expect(operator.locator('.slides-section')).toBeInViewport({ ratio: 1 })
       await check('show-slides')
+      // Een lange rondenaam krijgt hooguit twee regels, een kanaalnaam één; de hele naam staat in de tooltip.
+      const names = await operator
+        .locator('.rounds .round-title, .mixer .name')
+        .evaluateAll((els) =>
+          els.map((el) => ({
+            text: el.textContent,
+            title: el.getAttribute('title'),
+            short: el.getBoundingClientRect().height < (el.matches('.round-title') ? 44 : 24)
+          }))
+        )
+      expect(names.length).toBeGreaterThan(4)
+      for (const name of names) {
+        expect.soft(name).toEqual({ ...name, title: name.text, short: true })
+      }
       await operator.locator('.rounds .round').nth(1).click()
       await check('show-fragments')
       await operator.locator('.rounds .round').last().click()
