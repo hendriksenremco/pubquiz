@@ -9,7 +9,7 @@ import { connect, imageUrl, link, locale, send, t, toast, view } from './connect
 
 /**
  * De afstandsbediening op een telefoon of tablet: de slide die in beeld staat, vorige en volgende
- * (zoals ← → op de Mac: slides, fragmenten of antwoorden), rondes, aftellen, wisselen van de slides, beeld op zwart en geluid, en
+ * (zoals ← → op de Mac: slides, fragmenten of antwoorden), rondes, de fragmentenreeks, aftellen, wisselen van de slides, beeld op zwart en geluid, en
  * daaronder de plug-ins met knoppen voor de telefoon (bv. het licht; zie plugins/phone.ts). Volgt de show op de Mac; buiten de show
  * staat alles stil. Dezelfde knoppen staan in de show op de Mac (ShowLive en de werkbalk).
  */
@@ -17,6 +17,7 @@ const live = computed(() => !!view.value?.live && link.value === 'open')
 const round = computed(() => view.value?.round ?? null)
 const step = computed(() => view.value?.step ?? null)
 const screen = computed(() => view.value?.screen ?? null)
+const sequence = computed(() => view.value?.sequence?.status ?? null)
 provide(ASSET_URL, imageUrl)
 
 const plugins = computed(() =>
@@ -157,6 +158,51 @@ onMounted(connect)
         <button class="tile end" :disabled="!live || !round" @click="send({ type: 'endRound' })">
           <span class="tile-label">{{ t('endRound') }}<Icon name="end" :size="14" /></span>
           <span class="tile-sub">{{ round?.title ?? '–' }}</span>
+        </button>
+      </section>
+
+      <!-- Alleen in een ronde met fragmenten: dezelfde knoppen als bij Fragmenten op de Mac. -->
+      <section v-if="sequence" class="pair" :aria-label="t('fragments')">
+        <template v-if="sequence === 'idle'">
+          <button
+            class="tile toggle"
+            :disabled="!live"
+            @click="send({ type: 'sequence', action: 'start' })"
+          >
+            <Icon name="play" :size="22" />
+            <span class="tile-label">{{ t('playSequence') }}</span>
+          </button>
+        </template>
+        <template v-else>
+          <button
+            class="tile toggle"
+            :class="{ active: sequence === 'running' }"
+            :disabled="!live"
+            @click="send({ type: 'sequence', action: sequence === 'paused' ? 'resume' : 'pause' })"
+          >
+            <Icon :name="sequence === 'paused' ? 'play' : 'pause'" :size="22" />
+            <span class="tile-label">{{ sequence === 'paused' ? t('resume') : t('pause') }}</span>
+          </button>
+          <button
+            class="tile toggle"
+            :disabled="!live"
+            @click="send({ type: 'sequence', action: 'skip' })"
+          >
+            <Icon name="next" :size="22" />
+            <span class="tile-label">{{ t('skip') }}</span>
+          </button>
+          <button
+            class="tile toggle"
+            :disabled="!live"
+            @click="send({ type: 'sequence', action: 'stop' })"
+          >
+            <Icon name="stop" :size="22" />
+            <span class="tile-label">{{ t('stopSequence') }}</span>
+          </button>
+        </template>
+        <button class="tile toggle" :disabled="!live" @click="send({ type: 'resetPlayed' })">
+          <Icon name="restart" :size="22" />
+          <span class="tile-label">{{ t('reset') }}</span>
         </button>
       </section>
 

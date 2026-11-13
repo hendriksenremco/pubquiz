@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { adjacentFragment, autoplayCountdown } from '@shared/autoplay'
 import type { AutoplayAction, ShowCommand } from '@shared/ipc'
+import { sequenceOf } from '@shared/remote'
 import type { Round } from '@shared/types'
 import Icon from '../../components/Icon.vue'
 import { formatTime } from '../../lib/format'
@@ -27,6 +28,8 @@ const upcoming = computed(() => {
   return index === null ? null : ids[index]
 })
 const ap = computed(() => session.state.autoplay)
+/** Dezelfde stand als de knoppen op de telefoon: Speel reeks, Pauzeer of Hervat. */
+const sequence = computed(() => sequenceOf(props.round, session.state))
 const now = useNow(100, () => playing.value !== null || ap.value.status === 'gap')
 
 const remaining = computed(() => {
@@ -62,17 +65,13 @@ function click(id: string) {
     <header class="card-head">
       <h3 class="grow">{{ t('title') }}</h3>
       <span v-if="status" class="pill pill-accent">{{ status }}</span>
-      <template v-if="ap.status === 'idle'">
+      <template v-if="sequence === 'idle'">
         <button class="btn btn-primary btn-sm" @click="autoplay('start')">
           <Icon name="play" :size="14" /> {{ t('playSequence') }} <span class="kbd">A</span>
         </button>
       </template>
       <template v-else>
-        <button
-          v-if="ap.status === 'paused' || (ap.status === 'playing' && ap.holdAfter)"
-          class="btn btn-sm"
-          @click="autoplay('resume')"
-        >
+        <button v-if="sequence === 'paused'" class="btn btn-sm" @click="autoplay('resume')">
           <Icon name="play" :size="14" /> {{ t('resume') }} <span class="kbd">A</span>
         </button>
         <button v-else class="btn btn-sm" @click="autoplay('pause')">

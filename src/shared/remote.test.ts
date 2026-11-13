@@ -58,6 +58,7 @@ describe('remoteView', () => {
       muted: false,
       timer: false,
       loop: null,
+      sequence: null,
       plugins: []
     })
   })
@@ -272,6 +273,45 @@ describe('remoteCommand', () => {
     first.slideLoopSeconds = null
     expect(remoteView(quiz, inRound).loop).toBeNull()
     expect(remoteCommand(quiz, inRound, { type: 'slideLoop', paused: true })).toBeNull()
+  })
+
+  it('de reeks en Fragmenten opnieuw, alleen in een ronde met fragmenten en als het kan', () => {
+    const { quiz, first, music, live } = setup()
+    const at = (autoplay: ShowState['autoplay']) => live({ activeRoundId: music.id, autoplay })
+    const idle = at({ status: 'idle' })
+    const playing = at({ status: 'playing', roundId: music.id, index: 0, holdAfter: false })
+    const gap = at({ status: 'gap', roundId: music.id, nextIndex: 1, until: 5000 })
+    const last = at({ status: 'playing', roundId: music.id, index: 2, holdAfter: true })
+    const paused = at({ status: 'paused', roundId: music.id, nextIndex: 1, remainingMs: 0 })
+    const elsewhere = at({ status: 'paused', roundId: first.id, nextIndex: 1, remainingMs: 0 })
+    const status = (state: ShowState) => remoteView(quiz, state).sequence?.status
+    expect(status(idle)).toBe('idle')
+    expect(status(playing)).toBe('running')
+    expect(status(gap)).toBe('running')
+    expect(status(last)).toBe('paused')
+    expect(status(paused)).toBe('paused')
+    expect(status(elsewhere)).toBe('idle')
+    expect(remoteView(quiz, live({ activeRoundId: first.id })).sequence).toBeNull()
+
+    const command = (state: ShowState, action: 'start' | 'pause' | 'resume' | 'skip' | 'stop') =>
+      remoteCommand(quiz, state, { type: 'sequence', action })
+    expect(command(idle, 'start')).toEqual({ type: 'autoplay', action: 'start' })
+    expect(command(playing, 'start')).toBeNull()
+    expect(command(playing, 'pause')).toEqual({ type: 'autoplay', action: 'pause' })
+    expect(command(paused, 'pause')).toBeNull()
+    expect(command(paused, 'resume')).toEqual({ type: 'autoplay', action: 'resume' })
+    expect(command(last, 'resume')).toEqual({ type: 'autoplay', action: 'resume' })
+    expect(command(playing, 'resume')).toBeNull()
+    expect(command(gap, 'skip')).toEqual({ type: 'autoplay', action: 'skip' })
+    expect(command(paused, 'stop')).toEqual({ type: 'autoplay', action: 'stop' })
+    expect(command(idle, 'stop')).toBeNull()
+    expect(command(live({ activeRoundId: first.id }), 'start')).toBeNull()
+
+    expect(remoteCommand(quiz, idle, { type: 'resetPlayed' })).toEqual({ type: 'resetPlayed' })
+    expect(
+      remoteCommand(quiz, live({ activeRoundId: first.id }), { type: 'resetPlayed' })
+    ).toBeNull()
+    expect(remoteCommand(quiz, live(), { type: 'resetPlayed' })).toBeNull()
   })
 
   it('weigert onbekende acties', () => {

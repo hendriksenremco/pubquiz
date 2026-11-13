@@ -207,7 +207,10 @@ export const ANSWER_NOUNS = {
   fragment: { noun: 'nounFragment', item: 'itemFragment', next: 'nextFragment' }
 } as const satisfies Record<AnswerNoun, Record<string, string>>
 
-/** De fragmenten van een ronde tijdens de show (FragmentPad). */
+/**
+ * De fragmenten van een ronde tijdens de show (FragmentPad). De knoppen van de reeks staan ook op
+ * de telefoon, met dezelfde namen.
+ */
 export const FRAGMENT_PAD_MESSAGES = defineMessages(
   {
     title: 'Fragmenten',

@@ -159,6 +159,22 @@ test('de show bedienen met een telefoon via de QR-code', async () => {
     await expect(phone.getByText('8 fragmenten', { exact: true })).toBeVisible()
     await snap(operator, 'test-results/remote-mac-controls.png')
 
+    // De reeks: dezelfde knoppen als bij Fragmenten op de Mac.
+    const reeks = phone.getByRole('region', { name: 'Fragmenten' })
+    const pad = operator.locator('.pad', { has: operator.locator('.frag') })
+    await reeks.getByRole('button', { name: 'Speel reeks' }).click()
+    await expect(pad.getByRole('button', { name: /Pauzeer/ })).toBeVisible()
+    await expect(frag(1)).toHaveClass(/on/)
+    await reeks.getByRole('button', { name: 'Pauzeer' }).click()
+    await expect(pad.getByRole('button', { name: /Hervat/ })).toBeVisible()
+    await expect(reeks.getByRole('button', { name: 'Hervat' })).toBeVisible()
+    await reeks.scrollIntoViewIfNeeded()
+    await snap(phone, 'test-results/remote-phone-sequence.png')
+    await reeks.getByRole('button', { name: 'Stop reeks' }).click()
+    await expect(pad.getByRole('button', { name: /Speel reeks/ })).toBeVisible()
+    await reeks.getByRole('button', { name: 'Fragmenten opnieuw' }).click()
+    await expect(operator.locator('.frag.played')).toHaveCount(0)
+
     // Op de Mac dezelfde knoppen als op de telefoon.
     await mac.getByRole('button', { name: /Vorige ronde/ }).click()
     await expect(macRound).toContainText('Ronde 1: algemeen')

@@ -52,6 +52,18 @@ describe('teksten van de show', () => {
       const mac = LIVE_MESSAGES.in(locale)
       const phone = REMOTE_MESSAGES.in(locale)
       for (const key of same) expect(mac(key), `${locale}: ${key}`).toBe(phone(key))
+      // De knoppen van de reeks (FragmentPad); "Volgende" heet op de telefoon `skip`, naast vorige en volgende.
+      const pad = FRAGMENT_PAD_MESSAGES.in(locale)
+      const pairs = [
+        ['title', 'fragments'],
+        ['playSequence', 'playSequence'],
+        ['pause', 'pause'],
+        ['resume', 'resume'],
+        ['next', 'skip'],
+        ['stopSequence', 'stopSequence'],
+        ['reset', 'reset']
+      ] as const
+      for (const [mac, tel] of pairs) expect(pad(mac), `${locale}: ${mac}`).toBe(phone(tel))
     }
   })
 
