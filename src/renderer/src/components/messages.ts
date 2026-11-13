@@ -51,7 +51,7 @@ export const COMPONENT_MESSAGES = defineMessages(
     inUse: 'in gebruik',
     inUseLabel: 'In gebruik',
     unused: 'Nog nergens in gebruik',
-    play: 'Speel af',
+    play: 'Speel',
     // Een geluid heet in Media ook Luister
     listen: 'Luister',
     stop: 'Stop',
