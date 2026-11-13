@@ -128,6 +128,8 @@ test('de show bedienen met een telefoon via de QR-code', async () => {
     await phone.getByRole('button', { name: 'Volgend fragment' }).click()
     await expect(frag(2)).toHaveClass(/on/)
     await expect(phone.getByText('Fragment 2 van 8')).toBeVisible()
+    // Altijd bovenaan, met de preview: anders hangt de screenshot af van wat er eerder gescrold is.
+    await phone.evaluate(() => window.scrollTo(0, 0))
     await snap(phone, 'test-results/remote-phone-fragment.png')
     await phone.getByRole('button', { name: 'Vorig fragment' }).click()
     await expect(frag(1)).toHaveClass(/on/)
@@ -222,8 +224,15 @@ test('de show bedienen met een telefoon via de QR-code', async () => {
     await phone.getByRole('button', { name: 'Aftellen', exact: true }).click()
     await expect(toolbar.getByRole('button', { name: /Stop aftellen/ })).toBeVisible()
     await expect(phone.getByRole('button', { name: 'Stop aftellen' })).toBeVisible()
+    // De preview telt af, zoals de preview op de Mac.
+    const countdown = phone.locator('.preview .countdown')
+    await expect(countdown).toBeVisible()
+    await expect(countdown).toContainText('Nog')
+    await countdown.evaluate((el) => el.scrollIntoView({ block: 'center' }))
+    await snap(phone, 'test-results/remote-phone-timer.png')
     await phone.getByRole('button', { name: 'Stop aftellen' }).click()
     await expect(toolbar.getByRole('button', { name: /^Aftellen/ })).toBeVisible()
+    await expect(countdown).toBeHidden()
 
     // Eén scherm op zwart, zoals onder elk scherm in de show op de Mac.
     const macFrame = (n: number) => operator.locator('.live .screen .frame').nth(n)

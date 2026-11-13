@@ -57,7 +57,7 @@ describe('remoteView', () => {
       screens: true,
       blackout: false,
       muted: false,
-      timer: false,
+      timer: null,
       loop: null,
       sequence: null,
       fragments: [],
@@ -263,7 +263,8 @@ describe('remoteCommand', () => {
     expect(remoteCommand(quiz, inRound, { type: 'timer', on: false })).toBeNull()
     expect(remoteCommand(quiz, timing, { type: 'timer', on: false })).toEqual({ type: 'timer' })
     expect(remoteCommand(quiz, timing, { type: 'timer', on: true })).toBeNull()
-    expect(remoteView(quiz, timing).timer).toBe(true)
+    expect(remoteView(quiz, timing).timer).toEqual({ seconds: 30, until: 31_000 })
+    expect(remoteView(quiz, inRound).timer).toBeNull()
   })
 
   it('wisselen pauzeren of hervatten is een stand, en kan alleen in een ronde die wisselt', () => {
