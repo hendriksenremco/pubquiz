@@ -230,7 +230,7 @@ test('de show bedienen met een telefoon via de QR-code', async () => {
     // Een nieuwe code sluit beide buiten.
     await toolbar.getByRole('button', { name: 'Telefoon' }).click()
     await expect(qr.getByText('2 apparaten verbonden')).toBeVisible()
-    await qr.getByRole('button', { name: 'Nieuwe code' }).click()
+    await qr.getByRole('button', { name: 'Vernieuw code' }).click()
     await expect(qr.locator('.url')).not.toHaveText(url)
     await expect(phone.getByRole('heading', { name: 'Scan de QR-code opnieuw' })).toBeVisible()
     await expect(tablet.getByRole('heading', { name: 'Scan de QR-code opnieuw' })).toBeVisible()
