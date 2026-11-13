@@ -228,6 +228,11 @@ export interface RemoteAnswer {
   /** De vraag zelf, zoals AnswersPad hem toont: alleen bij een vraagslide, anders null. */
   question: string | null
   /**
+   * De afbeelding van de slide, voor het tegeltje zoals op de Mac (id voor /media/); alleen een
+   * afbeelding, want de telefoon haalt geen video's op. Null = geen afbeelding.
+   */
+  image: string | null
+  /**
    * Zoals AnswersPad hem toont: het fragment speelt, het antwoord of alleen de vraag (of het
    * nummer) staat in beeld, of hij is al gedaan.
    */
@@ -548,6 +553,7 @@ function remoteAnswers(quiz: Quiz, round: Round, state: ShowState, locale: Local
       answer: item.answer,
       question:
         item.slide?.layout === 'question' ? item.slide.body || item.slide.title || null : null,
+      image: imageOf(quiz, item.slide?.imageAssetId),
       state: playing
         ? 'playing'
         : on
@@ -561,6 +567,11 @@ function remoteAnswers(quiz: Quiz, round: Round, state: ShowState, locale: Local
       revealed: on && current.revealed
     }
   })
+}
+
+function imageOf(quiz: Quiz, assetId: string | undefined): string | null {
+  const asset = findAsset(quiz, assetId)
+  return asset?.kind === 'image' ? asset.id : null
 }
 
 /** Er staat een stap van deze antwoordenronde in beeld (AnswersPad toont dan Stop antwoorden). */
