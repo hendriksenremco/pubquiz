@@ -495,7 +495,8 @@ h2 {
 
 .name {
   flex: none;
-  width: 110px;
+  /* Breed genoeg voor "Beamer boven de bar" of "Fragmenten voor de zaal"; langer krijgt … en de tooltip. */
+  width: 150px;
   font-size: 14px;
   white-space: nowrap;
   overflow: hidden;
@@ -511,7 +512,7 @@ h2 {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding-left: 122px;
+  padding-left: 162px;
   color: var(--muted);
   font-size: 12px;
 }
