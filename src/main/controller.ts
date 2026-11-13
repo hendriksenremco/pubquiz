@@ -206,8 +206,11 @@ export class AppController {
     this.operator?.setTitle(this.windowTitle)
 
     const missing = await findMissingMedia(dir, quiz)
-    if (missing.length > 0) {
-      this.notify('warning', this.t('missingMedia', { files: missing.slice(0, 5).join(', ') }))
+    // Zelfde woorden als de fragmenten, de inhoudschip en Start show: "bestand ontbreekt".
+    if (missing.length === 1) {
+      this.notify('warning', this.t('missingMediaOne', { file: missing[0] }))
+    } else if (missing.length > 1) {
+      this.notify('warning', this.t('missingMediaMany', { files: missing.slice(0, 5).join(', ') }))
     }
   }
 
