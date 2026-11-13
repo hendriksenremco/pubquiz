@@ -118,8 +118,10 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
         @click="send({ type: 'startRound', roundId: r.id })"
       >
         <span class="dot" aria-hidden="true" />
-        <span class="grow">
-          <span class="round-title">{{ roundTitle(r, locale) }}</span>
+        <span class="grow round-text">
+          <span class="round-title" :title="roundTitle(r, locale)">{{
+            roundTitle(r, locale)
+          }}</span>
           <span v-if="r.id === state.activeRoundId" class="round-tag">{{ t('now') }}</span>
           <span v-else-if="r.id === nextRound?.id" class="round-tag">{{ t('upNext') }}</span>
         </span>
@@ -329,9 +331,17 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
   color: var(--text);
 }
 
+/* Een lange naam op één regel, met … zoals in de zijbalk van de editor; de hele naam staat in de tooltip en boven het midden. */
+.round-text {
+  min-width: 0;
+}
+
 .round-title {
   display: block;
   font-weight: 550;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .round.on .round-title {

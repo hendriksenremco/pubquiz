@@ -110,7 +110,7 @@ function deviceLabel(slotId: string): string {
         class="channel"
         :title="outputLabel(session.hardware.audio[c.id], outputs, locale)"
       >
-        <span class="label">{{ c.name }}</span>
+        <span class="label name" :title="c.name">{{ c.name }}</span>
         <div class="level">
           <input
             v-fill
@@ -136,7 +136,7 @@ function deviceLabel(slotId: string): string {
       >
         <div class="row">
           <Icon name="monitor" :size="14" class="faint" />
-          <span class="label grow">{{ s.slot.name }}</span>
+          <span class="label grow name" :title="s.slot.name">{{ s.slot.name }}</span>
           <span v-if="s.status" class="pill" :class="{ 'pill-accent': s.ducked }">{{
             s.status
           }}</span>
@@ -175,6 +175,14 @@ function deviceLabel(slotId: string): string {
 .bg-name {
   font-size: 12px;
   color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Een lange kanaal- of schermnaam op één regel, met … zoals bij Start show; de hele naam staat in de tooltip. */
+.name {
+  min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
