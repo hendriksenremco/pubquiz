@@ -1,4 +1,5 @@
 import { defineMessages } from '@shared/i18n'
+import type { AnswerNoun } from '@shared/resolve'
 
 /**
  * De teksten op de telefoon. Dezelfde knoppen als in de show op de Mac, met dezelfde namen: pas
@@ -52,7 +53,15 @@ export const REMOTE_MESSAGES = defineMessages(
     played: '✓ gespeeld',
     upNextFragment: 'Hierna',
     answers: 'Antwoorden',
-    stopAnswers: 'Stop antwoorden'
+    stopAnswers: 'Stop antwoorden',
+    nounQuestion: 'vraag',
+    nounImage: 'afbeelding',
+    nounFragment: 'fragment',
+    answerShown: 'antwoord in beeld',
+    numberShown: 'nummer in beeld',
+    nounShown: '{noun} in beeld',
+    finished: '✓ gedaan',
+    noAnswer: 'Geen antwoord ingevuld'
   },
   {
     en: {
@@ -102,7 +111,22 @@ export const REMOTE_MESSAGES = defineMessages(
       played: '✓ played',
       upNextFragment: 'Up next',
       answers: 'Answers',
-      stopAnswers: 'Stop answers'
+      stopAnswers: 'Stop answers',
+      nounQuestion: 'question',
+      nounImage: 'picture',
+      nounFragment: 'clip',
+      answerShown: 'answer on screen',
+      numberShown: 'number on screen',
+      nounShown: '{noun} on screen',
+      finished: '✓ done',
+      noAnswer: 'No answer filled in'
     }
   }
 )
+
+/** Hoe een vraag, afbeelding of fragment in een antwoordenronde heet, zoals bij Antwoorden op de Mac. */
+export const ANSWER_NOUNS = {
+  vraag: 'nounQuestion',
+  afbeelding: 'nounImage',
+  fragment: 'nounFragment'
+} as const satisfies Record<AnswerNoun, string>

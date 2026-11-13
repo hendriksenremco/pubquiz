@@ -16,6 +16,7 @@ import {
   allBlack,
   answerItems,
   type AnswerItem,
+  type AnswerNoun,
   loopActive,
   resolveScreen,
   restartRound,
@@ -88,6 +89,11 @@ export interface RemoteView {
    * antwoorden, zoals bij Antwoorden op de Mac.
    */
   answering: boolean
+  /**
+   * De vragen, afbeeldingen en fragmenten van een antwoordenronde, om er één te kiezen zoals bij
+   * Antwoorden op de Mac; leeg = dit is geen antwoordenronde.
+   */
+  answers: RemoteAnswer[]
   /** Plug-ins die aan staan en knoppen op de telefoon hebben (`remoteActions`), met hun status. */
   plugins: RemotePlugin[]
 }
@@ -101,6 +107,29 @@ export interface RemoteFragment {
   played: boolean
   /** Speelt bij Volgende (→), als vorige en volgende door de fragmenten gaan. */
   upcoming: boolean
+}
+
+/**
+ * Eén vraag, afbeelding of fragment in een antwoordenronde op de telefoon: tikken zet hem in beeld,
+ * nog eens tikken toont of verbergt het antwoord.
+ */
+export interface RemoteAnswer {
+  id: string
+  /** De ronde waar hij bij hoort; de telefoon zet ze per ronde onder elkaar, zoals de Mac. */
+  round: string
+  number: number
+  noun: AnswerNoun
+  /** Leeg = geen antwoord ingevuld. */
+  answer: string
+  /**
+   * Zoals AnswersPad hem toont: het fragment speelt, het antwoord of alleen de vraag (of het
+   * nummer) staat in beeld, of hij is al gedaan.
+   */
+  state: 'playing' | 'answer' | 'shown' | 'done' | null
+  /** Deze staat in beeld (ook als zijn fragment speelt); tikken toont of verbergt dan het antwoord. */
+  on: boolean
+  /** Het antwoord staat in beeld; voor de gewenste stand bij nog eens tikken. */
+  revealed: boolean
 }
 
 /** Hoe de reeks erbij staat, zoals de knoppen op de Mac hem tonen. */
@@ -147,6 +176,11 @@ export const RemoteActionSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('fragment'), id: z.string().max(64), play: z.boolean() }),
   /** Stop antwoorden: nummer en antwoord uit beeld, zoals de knop bij Antwoorden op de Mac. */
   z.object({ type: z.literal('stopAnswers') }),
+  /**
+   * Eén vraag, afbeelding of fragment van de antwoordenronde, zoals een tik erop bij Antwoorden op de
+   * Mac. `revealed`: de gewenste stand van het antwoord; een andere vraag komt altijd eerst zonder.
+   */
+  z.object({ type: z.literal('answer'), id: z.string().max(64), revealed: z.boolean() }),
   /**
    * Een actie van een plug-in, bv. het licht kiezen. Main controleert hem met de definitie van die
    * plug-in, en alleen wat in zijn `remoteActions` staat, mag.
@@ -207,6 +241,7 @@ export function remoteView(
     sequence: round?.fragments.length ? { status: sequenceOf(round, state) } : null,
     fragments: quiz && round ? remoteFragments(quiz, round, state) : [],
     answering: !!round && answering(round, state),
+    answers: quiz && round ? remoteAnswers(quiz, round, state, locale) : [],
     plugins: quiz ? plugins : []
   }
 }
@@ -266,9 +301,47 @@ export function remoteCommand(
       const round = activeRound(quiz, state)
       return round && answering(round, state) ? { type: 'answers', action: 'stop' } : null
     }
+    case 'answer': {
+      const round = activeRound(quiz, state)
+      if (!round) return null
+      const index = answerItems(quiz, round).findIndex((item) => item.id === action.id)
+      if (index < 0) return null
+      const current = answering(round, state) ? state.answer : null
+      // answerAt wisselt het antwoord bij de vraag in beeld, en zet een andere vraag in beeld zonder.
+      const command: ShowCommand = { type: 'answerAt', index }
+      if (current?.index === index) return action.revealed === current.revealed ? null : command
+      return action.revealed ? null : command
+    }
     case 'plugin':
       return null
   }
+}
+
+/** De vragen, afbeeldingen en fragmenten zoals AnswersPad ze toont. */
+function remoteAnswers(quiz: Quiz, round: Round, state: ShowState, locale: Locale): RemoteAnswer[] {
+  const current = answering(round, state) ? state.answer : null
+  return answerItems(quiz, round).map((item, index) => {
+    const on = current?.index === index
+    const playing = !!item.fragment && state.fragment?.fragmentId === item.fragment.id
+    return {
+      id: item.id,
+      round: roundTitle(item.round, locale),
+      number: item.number,
+      noun: item.noun,
+      answer: item.answer,
+      state: playing
+        ? 'playing'
+        : on
+          ? current.revealed
+            ? 'answer'
+            : 'shown'
+          : state.answered.includes(item.id)
+            ? 'done'
+            : null,
+      on,
+      revealed: on && current.revealed
+    }
+  })
 }
 
 /** Er staat een stap van deze antwoordenronde in beeld (AnswersPad toont dan Stop antwoorden). */

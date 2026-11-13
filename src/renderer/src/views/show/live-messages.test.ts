@@ -70,6 +70,17 @@ describe('teksten van de show', () => {
       const answers = ANSWERS_MESSAGES.in(locale)
       expect(answers('title'), `${locale}: answers`).toBe(phone('answers'))
       expect(answers('stop'), `${locale}: stopAnswers`).toBe(phone('stopAnswers'))
+      const answerKeys = [
+        'nounQuestion',
+        'nounImage',
+        'nounFragment',
+        'answerShown',
+        'numberShown',
+        'finished',
+        'noAnswer'
+      ] as const
+      for (const key of answerKeys) expect(answers(key), `${locale}: ${key}`).toBe(phone(key))
+      expect(answers('nounShown', { noun: 'x' })).toBe(phone('nounShown', { noun: 'x' }))
     }
   })
 
