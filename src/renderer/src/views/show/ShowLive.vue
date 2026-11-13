@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted } from 'vue'
 import { roundTitle } from '@shared/quiz-messages'
-import { slideNumber } from '@shared/resolve'
-import type { Round, Slide } from '@shared/types'
+import { slideLabel } from '@shared/resolve'
 import Icon from '../../components/Icon.vue'
 import ScreenStage from '../../components/ScreenStage.vue'
 import { useLiveControls } from '../../lib/live-controls'
@@ -51,20 +50,6 @@ const loopText = computed(() => {
   if (until === null) return t('loopAfterTitle')
   return t('loopNext', { seconds: Math.max(1, Math.ceil((until - now.value) / 1000)) })
 })
-
-/** Korte tekst voor een slide in de lijst. */
-function slideText(round: Round, slide: Slide): string {
-  if (slide.layout === 'image') {
-    const number = slideNumber(round, slide) ?? ''
-    return slide.title
-      ? t('imageSlideTitled', { number, title: slide.title })
-      : t('imageSlide', { number })
-  }
-  // Alleen een getal zegt niets naast de plek in de lijst; andere tekst blijft zoals hij is.
-  if (slide.layout === 'number' && /^\d+$/.test(slide.title ?? ''))
-    return t('numberSlide', { number: slide.title! })
-  return slide.title || slide.body || t('emptySlide')
-}
 
 const KEYS: Record<string, () => void> = {
   ArrowRight: () => step('next'),
@@ -192,7 +177,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
             @click="send({ type: 'setSlide', index: i })"
           >
             <span class="slide-kind">{{ i + 1 }}</span>
-            <span class="slide-text">{{ slideText(round, s) }}</span>
+            <span class="slide-text">{{ slideLabel(round, s, locale) }}</span>
           </button>
         </div>
       </section>

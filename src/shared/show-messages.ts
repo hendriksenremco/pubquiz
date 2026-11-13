@@ -3,7 +3,8 @@ import type { AnswerNoun } from './resolve'
 
 /**
  * Teksten over de show die main en shared maken, voor de Mac en de telefoon: hoe vorige en
- * volgende heten (`stepNames`) en waar je staat (`remoteStep`).
+ * volgende heten (`stepNames`), waar je staat (`remoteStep`) en de korte naam van een slide in de
+ * lijst Slides (`slideLabel`).
  */
 export const STEP_MESSAGES = defineMessages(
   {
@@ -21,7 +22,11 @@ export const STEP_MESSAGES = defineMessages(
     fragments: '{count} fragmenten',
     noSlides: 'Geen slides in deze ronde',
     slideOf: 'Slide {number} van {total}',
-    noSlideOf: 'Geen slide, {count} in deze ronde'
+    noSlideOf: 'Geen slide, {count} in deze ronde',
+    numberSlide: 'Nummer {number}',
+    imageSlide: 'Afbeelding {number}',
+    imageSlideTitled: 'Afbeelding {number}: {title}',
+    emptySlide: '(leeg)'
   },
   {
     en: {
@@ -39,7 +44,11 @@ export const STEP_MESSAGES = defineMessages(
       fragments: '{count} clips',
       noSlides: 'No slides in this round',
       slideOf: 'Slide {number} of {total}',
-      noSlideOf: 'No slide, {count} in this round'
+      noSlideOf: 'No slide, {count} in this round',
+      numberSlide: 'Number {number}',
+      imageSlide: 'Picture {number}',
+      imageSlideTitled: 'Picture {number}: {title}',
+      emptySlide: '(empty)'
     }
   }
 )

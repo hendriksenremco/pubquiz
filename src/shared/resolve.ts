@@ -294,6 +294,24 @@ export function slideNumber(round: Round, slide: Slide): number | null {
 }
 
 /**
+ * Korte naam van een slide in de lijst Slides van de show, op de Mac en de telefoon: een
+ * afbeelding met zijn nummer, een nummerslide met alleen een getal als "Nummer 2", anders de tekst.
+ */
+export function slideLabel(round: Round, slide: Slide, locale: Locale = 'nl'): string {
+  const t = STEP_MESSAGES.in(locale)
+  if (slide.layout === 'image') {
+    const number = slideNumber(round, slide) ?? ''
+    return slide.title
+      ? t('imageSlideTitled', { number, title: slide.title })
+      : t('imageSlide', { number })
+  }
+  // Alleen een getal zegt niets naast de plek in de lijst; andere tekst blijft zoals hij is.
+  if (slide.layout === 'number' && /^\d+$/.test(slide.title ?? ''))
+    return t('numberSlide', { number: slide.title! })
+  return slide.title || slide.body || t('emptySlide')
+}
+
+/**
  * Wat vorige en volgende bedienen (← →, een presenter-clicker, de afstandsbediening): in een
  * antwoordenronde de antwoorden, in een ronde met fragmenten de fragmenten, anders de slides.
  */

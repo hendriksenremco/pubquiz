@@ -53,6 +53,9 @@ describe('teksten van de show', () => {
       const mac = LIVE_MESSAGES.in(locale)
       const phone = REMOTE_MESSAGES.in(locale)
       for (const key of same) expect(mac(key), `${locale}: ${key}`).toBe(phone(key))
+      // Slides: "Geen slide in beeld" (noSlide) is op de telefoon de lege preview.
+      expect(mac('slides'), `${locale}: slides`).toBe(phone('slides'))
+      expect(mac('noSlide'), `${locale}: noSlide`).toBe(phone('noSlideButton'))
       // De knoppen van de reeks (FragmentPad); "Volgende" heet op de telefoon `skip`, naast vorige en volgende.
       const pad = FRAGMENT_PAD_MESSAGES.in(locale)
       const pairs = [
