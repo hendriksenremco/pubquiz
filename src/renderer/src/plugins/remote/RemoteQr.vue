@@ -8,7 +8,7 @@ import { REMOTE_QR_MESSAGES } from './messages'
 
 /**
  * De QR-code die een telefoon of tablet naar de afstandsbediening brengt, met het adres en wie er
- * verbonden is. "Nieuwe code" sluit alle telefoons met de oude code buiten. Main duwt een nieuw
+ * verbonden is. "Vernieuw code" sluit alle telefoons met de oude code buiten. Main duwt een nieuw
  * adres (ander netwerk) en elk apparaat dat verbindt.
  */
 const api = window.pubquiz

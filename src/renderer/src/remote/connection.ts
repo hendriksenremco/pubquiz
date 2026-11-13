@@ -3,7 +3,7 @@ import { pickLocale } from '@shared/i18n'
 import type { RemoteAction, RemoteResult, RemoteView } from '@shared/remote'
 import { REMOTE_MESSAGES } from './messages'
 
-/** `denied`: de sleutel klopt niet (meer), bv. na "Nieuwe code" op de Mac. */
+/** `denied`: de sleutel klopt niet (meer), bv. na "Vernieuw code" op de Mac. */
 export type LinkState = 'connecting' | 'open' | 'lost' | 'denied'
 
 const RETRY_MS = 2000
