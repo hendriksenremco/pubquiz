@@ -71,10 +71,14 @@ test('de show bedienen met een telefoon via de QR-code', async () => {
     const preview = phone.getByLabel('Voorbeeld van de slide')
     await expect(phone.locator('h1')).toHaveText('Hierna: Ronde 1: algemeen')
     await expect(phone.getByRole('button', { name: 'Volgende', exact: true })).toBeDisabled()
+    const notes = phone.getByRole('region', { name: 'Notities' })
+    await expect(notes).toHaveCount(0)
     await phone.getByRole('button', { name: /Volgende ronde/ }).click()
     await expect(macRound).toContainText('Ronde 1: algemeen')
     await expect(phone.locator('h1')).toHaveText('Ronde 1: algemeen')
     await expect(phone.getByText('Slide 1 van 3')).toBeVisible()
+    // De notities bij de ronde, zoals onder de rondes op de Mac.
+    await expect(notes).toContainText('Vragen staan op papier. Antwoorden: zie map.')
     await expect(preview).toContainText('Algemene kennis')
     const nextSlide = phone.getByRole('button', { name: 'Volgende slide' })
     // De naam staat op de knop zelf, niet alleen voor een schermlezer.
@@ -99,6 +103,7 @@ test('de show bedienen met een telefoon via de QR-code', async () => {
     await phone.getByRole('button', { name: /Volgende ronde/ }).click()
     await expect(macRound).toContainText('Ronde 2: muziek')
     await expect(phone.getByText('8 fragmenten', { exact: true })).toBeVisible()
+    await expect(notes).toContainText('Speel de 8 fragmenten; achtergrond staat op pauze.')
     await expect(phone.getByRole('button', { name: 'Vorig fragment' })).toBeDisabled()
     await phone.getByRole('button', { name: 'Volgend fragment' }).click()
     await expect(frag(1)).toHaveClass(/on/)
