@@ -119,7 +119,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
       >
         <span class="dot" aria-hidden="true" />
         <span class="grow round-text">
-          <span class="round-title" :title="roundTitle(r, locale)">{{
+          <span class="round-title hyphenate" :title="roundTitle(r, locale)">{{
             roundTitle(r, locale)
           }}</span>
           <span v-if="r.id === state.activeRoundId" class="round-tag">{{ t('now') }}</span>
@@ -129,7 +129,9 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
     </aside>
 
     <main class="center scroll">
-      <h2 class="now-title">{{ round ? roundTitle(round, locale) : t('betweenRounds') }}</h2>
+      <h2 class="now-title hyphenate">
+        {{ round ? roundTitle(round, locale) : t('betweenRounds') }}
+      </h2>
 
       <section class="screens">
         <figure v-for="slot in quiz.screens" :key="slot.id" class="screen">

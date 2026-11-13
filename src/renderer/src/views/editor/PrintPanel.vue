@@ -68,7 +68,7 @@ async function save(doc: FormDoc) {
           <label v-for="r in rounds" :key="r.id" class="tile option">
             <input v-model="chosen" type="checkbox" :value="r.id" />
             <span class="grow">
-              <span class="option-title">{{ roundTitle(r, locale) }}</span>
+              <span class="option-title hyphenate">{{ roundTitle(r, locale) }}</span>
               <span class="option-hint">{{ itemSummary(r, locale) }}</span>
             </span>
           </label>

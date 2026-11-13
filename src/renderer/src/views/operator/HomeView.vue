@@ -81,7 +81,7 @@ function reveal(q: RecentQuiz) {
         <QuizCover :quiz="latest" class="hero-cover" />
         <div class="hero-text">
           <span class="kicker">{{ latest.tour ? t('startHere') : t('lastOpened') }}</span>
-          <h1 class="hero-title">{{ latest.title }}</h1>
+          <h1 class="hero-title hyphenate">{{ latest.title }}</h1>
           <p class="muted hero-meta">
             {{ contents(latest)
             }}<template v-if="latest.modifiedAt">. {{ edited(latest) }}</template>
@@ -238,7 +238,6 @@ function reveal(q: RecentQuiz) {
   margin-top: 4px;
   font: 750 46px/1.06 var(--display);
   letter-spacing: -0.03em;
-  overflow-wrap: anywhere;
 }
 
 .hero-meta {
