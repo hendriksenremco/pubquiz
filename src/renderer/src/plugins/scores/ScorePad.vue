@@ -35,7 +35,12 @@ const totals = computed(
         <thead>
           <tr>
             <th class="team">{{ t('team') }}</th>
-            <th v-for="r in rounds" :key="r.id" class="round" :title="roundTitle(r, locale)">
+            <th
+              v-for="r in rounds"
+              :key="r.id"
+              class="round hyphenate"
+              :title="roundTitle(r, locale)"
+            >
               {{ roundTitle(r, locale) }}
             </th>
             <th class="total">{{ t('total') }}</th>
@@ -81,7 +86,6 @@ th {
 th.round {
   min-width: 80px;
   white-space: normal;
-  overflow-wrap: anywhere;
   vertical-align: bottom;
 }
 td {

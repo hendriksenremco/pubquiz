@@ -298,7 +298,7 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
           <MediaThumb v-for="a in t.mosaic" :key="a.id" :asset="a" class="mosaic-cell" />
           <Icon v-if="!t.mosaic.length" name="folder" :size="34" class="folder-icon" />
         </span>
-        <span class="folder-name">{{ t.folder.name }}</span>
+        <span class="folder-name hyphenate">{{ t.folder.name }}</span>
         <span class="folder-meta">{{ plural(t.count) }}</span>
       </button>
     </section>
@@ -528,7 +528,6 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
 .folder-name {
   max-width: 100%;
   font-weight: 600;
-  overflow-wrap: anywhere;
 }
 
 .folder-meta {

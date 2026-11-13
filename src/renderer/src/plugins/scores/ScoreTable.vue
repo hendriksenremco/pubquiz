@@ -80,7 +80,7 @@ async function clear() {
               <th
                 v-for="round in rounds"
                 :key="round.id"
-                class="round"
+                class="round hyphenate"
                 :title="roundTitle(round, locale)"
               >
                 {{ roundTitle(round, locale) }}
@@ -158,7 +158,6 @@ th {
 th.round {
   min-width: 80px;
   white-space: normal;
-  overflow-wrap: anywhere;
   vertical-align: bottom;
 }
 td {
