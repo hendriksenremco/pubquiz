@@ -219,6 +219,30 @@ test('live: eerst de vraag, afbeelding of het fragment, dan het antwoord', async
   await expect(beamer.locator('.overlay')).toHaveCount(0)
   await expect(stopOnPhone).toHaveCount(0)
 
+  // Eén vraag kiezen op de telefoon, zoals een tik bij Antwoorden op de Mac: eerst de vraag, nog
+  // eens tikken toont het antwoord, en nog eens verbergt het weer.
+  const phoneTiles = phone.locator('.frag')
+  await expect(phoneTiles).toHaveCount(await tiles.count())
+  await expect(phoneTiles.nth(0)).toContainText('Canberra')
+  await phoneTiles.nth(0).click()
+  await expect(beamer.locator('.slide.layout-question .body')).toHaveText(
+    'Wat is de hoofdstad van Australië?'
+  )
+  await expect(beamer.locator('.overlay')).toHaveCount(0)
+  await expect(tiles.nth(0)).toHaveClass(/\bon\b/)
+  await expect(phoneTiles.nth(0)).toHaveAttribute('aria-pressed', 'true')
+  await expect(phoneTiles.nth(0)).toContainText('vraag in beeld')
+  await phoneTiles.nth(0).click()
+  await expect(beamer.locator('.overlay.answer.bottom .ov-answer')).toHaveText('Canberra')
+  await expect(phoneTiles.nth(0)).toContainText('antwoord in beeld')
+  await expect(phone.locator('.group-title').first()).toHaveText('Ronde 1: algemeen')
+  // De tegels midden in beeld, met het kopje van de ronde erboven.
+  await phoneTiles.nth(0).evaluate((el) => el.scrollIntoView({ block: 'center' }))
+  await snap(phone, 'test-results/remote-phone-answers.png')
+  await phoneTiles.nth(0).click()
+  await expect(beamer.locator('.overlay')).toHaveCount(0)
+  await expect(phoneTiles.nth(0)).toContainText('vraag in beeld')
+
   await operator.getByRole('button', { name: 'Stop show' }).click()
   await confirmIn(operator, 'Stop show')
   await expect.poll(() => app.windows().some((w) => w.url().includes('#/screen/'))).toBe(false)

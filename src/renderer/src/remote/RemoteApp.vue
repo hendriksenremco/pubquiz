@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { computed, onMounted, provide, watchEffect } from 'vue'
+import type { RemoteAnswer } from '@shared/remote'
 import { stepNames as namesOf } from '@shared/resolve'
 import Icon from '../components/Icon.vue'
 import SlideView from '../components/SlideView.vue'
 import { ASSET_URL } from '../lib/media'
 import { PHONE_PLUGINS } from '../plugins/phone'
 import { connect, imageUrl, link, locale, send, t, toast, view } from './connection'
+import { ANSWER_NOUNS } from './messages'
 
 /**
  * De afstandsbediening op een telefoon of tablet: de slide die in beeld staat, vorige en volgende
@@ -19,6 +21,7 @@ const step = computed(() => view.value?.step ?? null)
 const screen = computed(() => view.value?.screen ?? null)
 const sequence = computed(() => view.value?.sequence?.status ?? null)
 const fragments = computed(() => view.value?.fragments ?? [])
+const answers = computed(() => view.value?.answers ?? [])
 provide(ASSET_URL, imageUrl)
 
 const plugins = computed(() =>
@@ -62,6 +65,25 @@ const heading = computed(() => {
     round.value?.title ?? (v.nextRound ? say('upNext', { title: v.nextRound }) : say('lastRound'))
   )
 })
+
+/** Zoals AnswersPad op de Mac: wat er van deze vraag in beeld staat, of dat hij gedaan is. */
+function answerState(a: RemoteAnswer): string {
+  const say = t.value
+  switch (a.state) {
+    case 'playing':
+      return say('playing')
+    case 'answer':
+      return say('answerShown')
+    case 'shown':
+      return a.noun === 'fragment'
+        ? say('numberShown')
+        : say('nounShown', { noun: say(ANSWER_NOUNS[a.noun]) })
+    case 'done':
+      return say('finished')
+    default:
+      return '\u00a0'
+  }
+}
 
 // Voor de voorleesfunctie en het afbreken van woorden.
 watchEffect(() => (document.documentElement.lang = locale.value))
@@ -162,12 +184,39 @@ onMounted(connect)
         </button>
       </section>
 
-      <!-- Alleen als er een antwoord(stap) in beeld staat, zoals bij Antwoorden op de Mac. -->
-      <section v-if="view?.answering" class="pair" :aria-label="t('answers')">
-        <button class="tile toggle" :disabled="!live" @click="send({ type: 'stopAnswers' })">
+      <!-- Alleen in een antwoordenronde, zoals Antwoorden op de Mac: Stop antwoorden zodra er een
+           stap in beeld staat, en per ronde de vragen, afbeeldingen en fragmenten om te kiezen. -->
+      <section v-if="view?.answering || answers.length" class="pair" :aria-label="t('answers')">
+        <button
+          v-if="view?.answering"
+          class="tile toggle"
+          :disabled="!live"
+          @click="send({ type: 'stopAnswers' })"
+        >
           <Icon name="stop" :size="22" />
           <span class="tile-label">{{ t('stopAnswers') }}</span>
         </button>
+        <template v-for="(a, i) in answers" :key="a.id">
+          <span v-if="a.round !== answers[i - 1]?.round" class="group-title">{{ a.round }}</span>
+          <!-- Tikken zet hem in beeld (een fragment speelt opnieuw), nog eens tikken toont of
+               verbergt het antwoord. -->
+          <button
+            class="tile frag"
+            :class="{ active: a.on, played: a.state === 'done' }"
+            :aria-pressed="a.on"
+            :disabled="!live"
+            @click="send({ type: 'answer', id: a.id, revealed: a.on && !a.revealed })"
+          >
+            <span class="tile-label"
+              ><span class="frag-num">{{ a.number }}</span
+              ><span class="frag-noun">{{ t(ANSWER_NOUNS[a.noun]) }}</span></span
+            >
+            <span class="frag-answer" :class="{ missing: !a.answer }">{{
+              a.answer || t('noAnswer')
+            }}</span>
+            <span class="tile-sub">{{ answerState(a) }}</span>
+          </button>
+        </template>
       </section>
 
       <!-- Alleen in een ronde met fragmenten: dezelfde knoppen als bij Fragmenten op de Mac. -->
@@ -497,7 +546,8 @@ h1 {
 
 .pair {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  /* minmax(0, …): een lang antwoord kort zichzelf af in plaats van de kolom op te rekken. */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -614,6 +664,35 @@ button:disabled {
 
 .frag.played {
   opacity: 0.55;
+}
+
+/* Antwoorden: per ronde een kopje over de hele breedte, zoals op de Mac. */
+.group-title {
+  grid-column: 1 / -1;
+  margin-top: 4px;
+  padding: 0 2px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.frag-noun {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.frag-answer {
+  max-width: 100%;
+  overflow: hidden;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.frag-answer.missing {
+  color: var(--warn);
+  font-weight: 500;
 }
 
 /* Wat Volgende gaat spelen, zoals op de Mac: een stippellijn in amber. */

@@ -61,6 +61,7 @@ describe('remoteView', () => {
       sequence: null,
       fragments: [],
       answering: false,
+      answers: [],
       plugins: []
     })
   })
@@ -358,6 +359,52 @@ describe('remoteCommand', () => {
     expect(remoteCommand(quiz, showing, stop)).toEqual({ type: 'answers', action: 'stop' })
     expect(remoteCommand(quiz, before, stop)).toBeNull()
     expect(remoteCommand(quiz, live({ activeRoundId: first.id }), stop)).toBeNull()
+  })
+
+  it('één antwoord kiezen: in beeld zetten, dan het antwoord tonen of verbergen', () => {
+    const { quiz, first, music, answers, live } = setup()
+    const [one, two] = music.fragments
+    const question = first.slides[1]
+    const state = live({
+      activeRoundId: answers.id,
+      answer: { roundId: answers.id, index: 1, revealed: false },
+      fragment: { key: 'k', roundId: answers.id, fragmentId: two.id, startedAt: 0, duration: 10 },
+      answered: [question.id, one.id]
+    })
+    const list = remoteView(quiz, state).answers
+    expect(list.map((a) => [a.round, a.number, a.noun, a.answer, a.state, a.on])).toEqual([
+      ['Ronde 1', 1, 'vraag', 'Lima', 'done', false],
+      ['Ronde 2: muziek', 1, 'fragment', '', 'shown', true],
+      ['Ronde 2: muziek', 2, 'fragment', '', 'playing', false],
+      ['Ronde 2: muziek', 3, 'fragment', '', null, false]
+    ])
+    // Het fragment in beeld speelt opnieuw: dan staat er Speelt, maar hij blijft in beeld.
+    const replay = { ...state, fragment: { ...state.fragment!, fragmentId: one.id } }
+    expect(remoteView(quiz, replay).answers[1]).toMatchObject({ state: 'playing', on: true })
+    const revealed = live({
+      activeRoundId: answers.id,
+      answer: { roundId: answers.id, index: 0, revealed: true }
+    })
+    expect(remoteView(quiz, revealed).answers[0]).toMatchObject({
+      state: 'answer',
+      on: true,
+      revealed: true
+    })
+    expect(remoteView(quiz, live({ activeRoundId: first.id })).answers).toEqual([])
+    expect(remoteView(quiz, live()).answers).toEqual([])
+
+    const pick = (s: ShowState, id: string, revealed: boolean) =>
+      remoteCommand(quiz, s, { type: 'answer', id, revealed })
+    // Een andere vraag: eerst zonder antwoord; twee keer tikken mag.
+    expect(pick(state, question.id, false)).toEqual({ type: 'answerAt', index: 0 })
+    expect(pick(state, question.id, true)).toBeNull()
+    // De vraag in beeld: het antwoord tonen, of weer verbergen.
+    expect(pick(state, one.id, true)).toEqual({ type: 'answerAt', index: 1 })
+    expect(pick(state, one.id, false)).toBeNull()
+    expect(pick(revealed, question.id, false)).toEqual({ type: 'answerAt', index: 0 })
+    expect(pick(revealed, question.id, true)).toBeNull()
+    expect(pick(state, 'onbekend', false)).toBeNull()
+    expect(pick(live({ activeRoundId: first.id }), question.id, false)).toBeNull()
   })
 
   it('weigert onbekende acties', () => {
