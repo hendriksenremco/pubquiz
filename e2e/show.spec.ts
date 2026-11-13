@@ -242,7 +242,7 @@ test('beeld- en geluidknoppen zijn terug te draaien', async () => {
   ).toHaveAttribute('title', /^Alleen .+ op zwart$/)
   await expect(
     operator.locator('.live-controls').getByRole('button', { name: /Beeld op zwart/ })
-  ).toHaveAttribute('title', 'Alle schermen op zwart')
+  ).toHaveAttribute('title', 'Alle schermen op zwart (B)')
   await operator
     .locator('.live-controls')
     .getByRole('button', { name: /Beeld op zwart/ })
