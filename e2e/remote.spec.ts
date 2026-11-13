@@ -154,6 +154,7 @@ test('de show bedienen met een telefoon via de QR-code', async () => {
 
     // De reeks: dezelfde knoppen als bij Fragmenten op de Mac.
     const reeks = phone.getByRole('region', { name: 'Fragmenten' })
+    await expect(reeks.locator('.slides-title')).toHaveText('Fragmenten')
     const pad = operator.locator('.pad', { has: operator.locator('.frag') })
     await reeks.getByRole('button', { name: 'Speel reeks' }).click()
     await expect(pad.getByRole('button', { name: /Pauzeer/ })).toBeVisible()

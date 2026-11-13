@@ -274,6 +274,7 @@ onMounted(connect)
       <!-- Alleen in een antwoordenronde, zoals Antwoorden op de Mac: Stop antwoorden zodra er een
            stap in beeld staat, en per ronde de vragen, afbeeldingen en fragmenten om te kiezen. -->
       <section v-if="view?.answering || answers.length" class="pair" :aria-label="t('answers')">
+        <span class="slides-title">{{ t('answers') }}</span>
         <button
           v-if="view?.answering"
           class="tile toggle"
@@ -300,6 +301,7 @@ onMounted(connect)
               ><span class="frag-num">{{ a.number }}</span
               ><span class="frag-noun">{{ t(ANSWER_NOUNS[a.noun]) }}</span></span
             >
+            <span v-if="a.question" class="frag-question">{{ a.question }}</span>
             <span class="frag-answer" :class="{ missing: !a.answer }">{{
               a.answer || t('noAnswer')
             }}</span>
@@ -310,6 +312,7 @@ onMounted(connect)
 
       <!-- Alleen in een ronde met fragmenten: dezelfde knoppen als bij Fragmenten op de Mac. -->
       <section v-if="sequence" class="pair" :aria-label="t('fragments')">
+        <span class="slides-title">{{ t('fragments') }}</span>
         <template v-if="sequence === 'idle'">
           <button
             class="tile toggle"
@@ -908,6 +911,17 @@ button:disabled {
   font-weight: 600;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+.frag-question {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.35;
+  max-width: 100%;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .frag-answer.missing {
