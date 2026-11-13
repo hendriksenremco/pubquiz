@@ -186,6 +186,8 @@ test('de show bedienen met een telefoon via de QR-code', async () => {
     await tegel.click()
     await expect(frag(2)).not.toHaveClass(/on/)
     await expect(tegel).toHaveAttribute('aria-pressed', 'false')
+    // Terug naar boven, zoals de schermen hierna altijd gemaakt zijn.
+    await phone.evaluate(() => window.scrollTo(0, 0))
 
     // Op de Mac dezelfde knoppen als op de telefoon.
     await mac.getByRole('button', { name: /Vorige ronde/ }).click()
