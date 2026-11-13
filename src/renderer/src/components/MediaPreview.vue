@@ -281,7 +281,7 @@ onBeforeUnmount(() => {
   visibility: hidden;
 }
 
-/* Even breed bij Speel af en Pauzeer: dan verspringt de balk ernaast niet. */
+/* Even breed bij Speel, Luister en Pauzeer: dan verspringt de balk ernaast niet. */
 .toggle {
   min-width: 112px;
   height: 36px;

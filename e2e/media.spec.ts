@@ -150,7 +150,7 @@ test('speelt een video af als voorbeeld', async () => {
   await operator.locator('.folder', { hasText: 'Loops' }).click()
   const tile = operator.locator('.tile-item').first()
   // De knop staat altijd in beeld en zegt in tekst wat hij doet.
-  await tile.getByRole('button', { name: 'Speel af' }).click()
+  await tile.getByRole('button', { name: 'Speel', exact: true }).click()
   await expect(tile.locator('.frame')).toHaveClass(/playing/)
   await expect
     .poll(() => tile.locator('video').evaluate((v: HTMLVideoElement) => v.paused))
@@ -159,7 +159,7 @@ test('speelt een video af als voorbeeld', async () => {
 
   await tile.getByRole('button', { name: 'Stop' }).click()
   await expect(tile.locator('.frame')).not.toHaveClass(/playing/)
-  await expect(tile.locator('.play')).toHaveText('Speel af')
+  await expect(tile.locator('.play')).toHaveText('Speel')
   await operator.locator('.crumb').click()
 })
 
@@ -168,7 +168,7 @@ test('toont een bestand groot als voorbeeld en bladert verder', async () => {
   const names = await operator.locator('.tile-item .name').allTextContents()
   expect(names).toHaveLength(3)
   const tile = operator.locator('.tile-item').first()
-  await tile.getByRole('button', { name: 'Speel af' }).click()
+  await tile.getByRole('button', { name: 'Speel', exact: true }).click()
 
   // Het grote voorbeeld neemt het over: de tegel stopt, het voorbeeld speelt met geluid.
   await tile.getByRole('button', { name: 'Voorbeeld', exact: true }).click()
@@ -189,7 +189,7 @@ test('toont een bestand groot als voorbeeld en bladert verder', async () => {
   expect(await video.evaluate((v: HTMLVideoElement) => v.controls)).toBe(false)
   await dialog.getByRole('button', { name: 'Pauzeer' }).click()
   await expect.poll(() => video.evaluate((v: HTMLVideoElement) => v.paused)).toBe(true)
-  await expect(dialog.getByRole('button', { name: 'Speel af' })).toBeVisible()
+  await expect(dialog.getByRole('button', { name: 'Speel', exact: true })).toBeVisible()
   await dialog.getByLabel('Positie').fill('4')
   await expect
     .poll(() => video.evaluate((v: HTMLVideoElement) => Math.round(v.currentTime)))
