@@ -226,6 +226,7 @@ test('de show bedienen met een telefoon via de QR-code', async () => {
     const countdown = phone.locator('.preview .countdown')
     await expect(countdown).toBeVisible()
     await expect(countdown).toContainText('Nog')
+    await countdown.evaluate((el) => el.scrollIntoView({ block: 'center' }))
     await snap(phone, 'test-results/remote-phone-timer.png')
     await phone.getByRole('button', { name: 'Stop aftellen' }).click()
     await expect(toolbar.getByRole('button', { name: /^Aftellen/ })).toBeVisible()
