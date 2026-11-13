@@ -15,11 +15,18 @@ import {
   adjacentRound,
   allBlack,
   answerItems,
+  channelVolume,
+  findAsset,
   type AnswerItem,
   type AnswerNoun,
   loopActive,
+  musicStatus,
+  type MusicStatus,
+  resolveAudio,
   resolveScreen,
   restartRound,
+  screenHasSound,
+  screenVolume,
   slideLabel,
   stepCommand,
   stepTarget,
@@ -112,8 +119,31 @@ export interface RemoteView {
    * Antwoorden op de Mac; leeg = dit is geen antwoordenronde.
    */
   answers: RemoteAnswer[]
+  /** Geluid, zoals rechts in de show op de Mac; null = er is geen quiz open. */
+  sound: RemoteSound | null
   /** Plug-ins die aan staan en knoppen op de telefoon hebben (`remoteActions`), met hun status. */
   plugins: RemotePlugin[]
+}
+
+/** Geluid op de telefoon: de achtergrondmuziek aan of uit, en het volume per kanaal en scherm. */
+export interface RemoteSound {
+  /** De achtergrondmuziek van de quiz; null = de quiz heeft er geen. */
+  music: { name: string | null; status: MusicStatus } | null
+  levels: RemoteLevel[]
+}
+
+/**
+ * Eén schuifje bij Geluid: een geluidskanaal, of het videogeluid van een scherm dat ergens in de
+ * quiz een video met geluid speelt.
+ */
+export interface RemoteLevel {
+  id: string
+  name: string
+  kind: 'channel' | 'screen'
+  /** 0 tot 1. */
+  volume: number
+  /** Alleen bij videogeluid: stil (nu geen geluid) of zachter (er speelt een fragment). */
+  status: 'silent' | 'ducked' | null
 }
 
 /** Eén ronde in de lijst Rondes op de telefoon: tikken start hem. */
@@ -223,6 +253,14 @@ export const RemoteActionSchema = z.discriminatedUnion('type', [
   }),
   /** Eén slide van de ronde in beeld zetten, zoals een tik bij Slides op de Mac; -1 = Geen slide. */
   z.object({ type: z.literal('slide'), index: z.number().int().min(-1).max(999) }),
+  /** Muziek aan of uit, zoals bij Geluid op de Mac; het fragment speelt door. */
+  z.object({ type: z.literal('music'), on: z.boolean() }),
+  /** Het volume van een kanaal of van het videogeluid van een scherm, zoals bij Geluid op de Mac. */
+  z.object({
+    type: z.literal('volume'),
+    id: z.string().max(64),
+    volume: z.number().min(0).max(1)
+  }),
   /** Fragmenten opnieuw: alle fragmenten van de ronde weer ongespeeld. */
   z.object({ type: z.literal('resetPlayed') }),
   /** Eén fragment van de ronde spelen of stoppen, zoals een tik op dat fragment op de Mac. */
@@ -311,6 +349,7 @@ export function remoteView(
     fragments: quiz && round ? remoteFragments(quiz, round, state) : [],
     answering: !!round && answering(round, state),
     answers: quiz && round ? remoteAnswers(quiz, round, state, locale) : [],
+    sound: quiz ? remoteSound(quiz, state) : null,
     plugins: quiz ? plugins : []
   }
 }
@@ -370,6 +409,14 @@ export function remoteCommand(
       if (action.index === -1 && !round.slides.length) return null
       return action.index === state.slideIndex ? null : { type: 'setSlide', index: action.index }
     }
+    case 'music':
+      if (!quiz.background || action.on === state.backgroundEnabled) return null
+      return { type: 'toggleBackground' }
+    case 'volume': {
+      const level = remoteLevels(quiz, state).find((l) => l.id === action.id)
+      if (!level || level.volume === action.volume) return null
+      return { type: 'setVolume', id: action.id, volume: action.volume }
+    }
     case 'resetPlayed':
       return activeRound(quiz, state)?.fragments.length ? { type: 'resetPlayed' } : null
     case 'fragment': {
@@ -398,6 +445,43 @@ export function remoteCommand(
     case 'plugin':
       return null
   }
+}
+
+/** Geluid zoals Mixer het toont op de Mac. */
+function remoteSound(quiz: Quiz, state: ShowState): RemoteSound {
+  const bg = quiz.background
+  // In de show de muziek van nu: een ronde kan een ander nummer spelen.
+  const assetId = resolveAudio(quiz, state).background?.assetId ?? bg?.assetId
+  return {
+    music: bg
+      ? { name: findAsset(quiz, assetId)?.name ?? null, status: musicStatus(quiz, state) }
+      : null,
+    levels: remoteLevels(quiz, state)
+  }
+}
+
+/** De kanalen, en de schermen die ergens in de quiz een video met geluid spelen. */
+function remoteLevels(quiz: Quiz, state: ShowState): RemoteLevel[] {
+  const channels = quiz.channels.map((c): RemoteLevel => ({
+    id: c.id,
+    name: c.name,
+    kind: 'channel',
+    volume: channelVolume(quiz, state, c.id),
+    status: null
+  }))
+  const screens = quiz.screens
+    .filter((slot) => screenHasSound(quiz, slot.id))
+    .map((slot): RemoteLevel => {
+      const sound = resolveScreen(quiz, state, slot.id).sound
+      return {
+        id: slot.id,
+        name: slot.name,
+        kind: 'screen',
+        volume: screenVolume(state, slot.id),
+        status: !sound ? 'silent' : sound.ducked ? 'ducked' : null
+      }
+    })
+  return [...channels, ...screens]
 }
 
 /** De rondes zoals de lijst links in de show op de Mac ze toont, met Nu en Hierna. */

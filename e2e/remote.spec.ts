@@ -233,6 +233,23 @@ test('de show bedienen met een telefoon via de QR-code', async () => {
     await expect(macFrame(1)).not.toHaveClass(/black/)
     await expect(tvBar).toHaveAttribute('aria-pressed', 'false')
 
+    // Geluid, zoals rechts in de show op de Mac: de muziek aan of uit, en het volume per kanaal.
+    const sound = phone.getByRole('region', { name: 'Geluid' })
+    const macSound = operator.getByRole('region', { name: 'Geluid' })
+    await expect(sound.getByText('Speelt')).toBeVisible()
+    await sound.getByRole('button', { name: 'Muziek uit' }).click()
+    await expect(macSound.getByRole('button', { name: 'Muziek aan' })).toBeVisible()
+    await expect(sound.getByText('Uit', { exact: true })).toBeVisible()
+    await sound.getByRole('button', { name: 'Muziek aan' }).click()
+    await expect(macSound.getByRole('button', { name: 'Muziek uit' })).toBeVisible()
+    await sound.getByRole('slider', { name: 'Volume Zaal' }).fill('0.3')
+    await expect(macSound.getByRole('slider', { name: 'Volume Zaal' })).toHaveValue('0.3')
+    await expect(sound.getByText('30%')).toBeVisible()
+    await sound.evaluate((el) => el.scrollIntoView({ block: 'center' }))
+    await snap(phone, 'test-results/remote-phone-sound.png')
+    await macSound.getByRole('slider', { name: 'Volume Zaal' }).fill('0.9')
+    await expect(sound.getByText('90%')).toBeVisible()
+
     // Elke ronde met één tik, zoals de lijst Rondes links in de show op de Mac.
     const roundList = phone.getByRole('region', { name: 'Alle rondes' })
     const roundTile = (name: string) => roundList.getByRole('button', { name: new RegExp(name) })

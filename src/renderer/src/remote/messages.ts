@@ -68,7 +68,18 @@ export const REMOTE_MESSAGES = defineMessages(
     numberShown: 'nummer in beeld',
     nounShown: '{noun} in beeld',
     finished: '✓ gedaan',
-    noAnswer: 'Geen antwoord ingevuld'
+    noAnswer: 'Geen antwoord ingevuld',
+    sound: 'Geluid',
+    background: 'Achtergrondmuziek',
+    none: 'Geen',
+    off: 'Uit',
+    pausedByRound: 'Stil (ronde)',
+    ducked: 'Zachter',
+    silent: 'Stil',
+    turnOff: 'Muziek uit',
+    turnOn: 'Muziek aan',
+    videoSound: 'Videogeluid {name}',
+    channelVolume: 'Volume {name}'
   },
   {
     en: {
@@ -133,7 +144,18 @@ export const REMOTE_MESSAGES = defineMessages(
       numberShown: 'number on screen',
       nounShown: '{noun} on screen',
       finished: '✓ done',
-      noAnswer: 'No answer filled in'
+      noAnswer: 'No answer filled in',
+      sound: 'Sound',
+      background: 'Background music',
+      none: 'None',
+      off: 'Off',
+      pausedByRound: 'Silent (round)',
+      ducked: 'Softer',
+      silent: 'Silent',
+      turnOff: 'Music off',
+      turnOn: 'Music on',
+      videoSound: 'Video sound {name}',
+      channelVolume: 'Volume {name}'
     }
   }
 )

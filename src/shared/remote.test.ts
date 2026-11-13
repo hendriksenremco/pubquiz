@@ -491,6 +491,71 @@ describe('remoteCommand', () => {
     expect(pick(live({ activeRoundId: first.id }), question.id, false)).toBeNull()
   })
 
+  it('Geluid: de muziek, haar stand en het volume per kanaal en scherm met videogeluid', () => {
+    const { quiz, first, music, live } = setup()
+    const [room, clips] = quiz.channels
+    const [beamer] = quiz.screens
+    expect(remoteView(quiz, live()).sound).toEqual({
+      music: null,
+      levels: [
+        { id: room.id, name: room.name, kind: 'channel', volume: room.volume, status: null },
+        { id: clips.id, name: clips.name, kind: 'channel', volume: clips.volume, status: null }
+      ]
+    })
+    expect(remoteView(null, createShowState()).sound).toBeNull()
+
+    quiz.assets.push(
+      { id: 'bg', kind: 'audio', file: 'media/bg.mp3', name: 'Kroegmuziek.mp3' },
+      { id: 'clip', kind: 'video', file: 'media/clip.mp4', name: 'Loop.mp4' }
+    )
+    quiz.background = { assetId: 'bg', channelId: room.id, volume: 0.8, duckTo: 0.3 }
+    beamer.default = { type: 'video', assetId: 'clip', volume: 1 }
+    const state = live({ volumes: { [room.id]: 0.5 } })
+    const sound = remoteView(quiz, state).sound!
+    expect(sound.music).toEqual({ name: 'Kroegmuziek.mp3', status: 'playing' })
+    expect(sound.levels.map((l) => [l.id, l.kind, l.volume, l.status])).toEqual([
+      [room.id, 'channel', 0.5, null],
+      [clips.id, 'channel', clips.volume, null],
+      [beamer.id, 'screen', 1, null]
+    ])
+
+    // Een fragment speelt: muziek en videogeluid zachter. Uitgezet: Uit.
+    const fragment = {
+      key: 'k',
+      roundId: music.id,
+      fragmentId: music.fragments[0].id,
+      startedAt: 0,
+      duration: 10
+    }
+    const playing = live({ activeRoundId: first.id, fragment })
+    expect(remoteView(quiz, playing).sound!.music!.status).toBe('ducked')
+    expect(remoteView(quiz, playing).sound!.levels[2].status).toBe('ducked')
+    expect(remoteView(quiz, live({ backgroundEnabled: false })).sound!.music!.status).toBe('off')
+
+    // Muziek aan of uit is een stand; zonder muziek in de quiz kan het niet.
+    expect(remoteCommand(quiz, state, { type: 'music', on: false })).toEqual({
+      type: 'toggleBackground'
+    })
+    expect(remoteCommand(quiz, state, { type: 'music', on: true })).toBeNull()
+    const off = live({ backgroundEnabled: false })
+    expect(remoteCommand(quiz, off, { type: 'music', on: true })).toEqual({
+      type: 'toggleBackground'
+    })
+
+    // Volume: alleen van een kanaal of een scherm met videogeluid, en alleen als het verandert.
+    const volume = (id: string, v: number) =>
+      remoteCommand(quiz, state, { type: 'volume', id, volume: v })
+    expect(volume(clips.id, 0.4)).toEqual({ type: 'setVolume', id: clips.id, volume: 0.4 })
+    expect(volume(beamer.id, 0.2)).toEqual({ type: 'setVolume', id: beamer.id, volume: 0.2 })
+    expect(volume(room.id, 0.5)).toBeNull()
+    expect(volume('onbekend', 0.5)).toBeNull()
+    quiz.background = null
+    expect(remoteCommand(quiz, off, { type: 'music', on: true })).toBeNull()
+    expect(RemoteActionSchema.safeParse({ type: 'volume', id: 'x', volume: 1.5 }).success).toBe(
+      false
+    )
+  })
+
   it('weigert onbekende acties', () => {
     expect(RemoteActionSchema.safeParse({ type: 'stopShow' }).success).toBe(false)
     expect(RemoteActionSchema.safeParse({ type: 'slide', direction: 'next' }).success).toBe(false)

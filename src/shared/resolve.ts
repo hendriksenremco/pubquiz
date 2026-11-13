@@ -447,6 +447,24 @@ export function resolveAudio(quiz: Quiz, state: ShowState): ResolvedAudio {
   }
 }
 
+/**
+ * Hoe de achtergrondmuziek erbij staat, zoals bij Geluid op de Mac en de telefoon: geen muziek in
+ * de quiz, uitgezet, stil door de ronde, zachter (ducking) of hij speelt.
+ */
+export type MusicStatus = 'none' | 'off' | 'silent' | 'ducked' | 'playing'
+
+export function musicStatus(quiz: Quiz, state: ShowState): MusicStatus {
+  const bg = resolveAudio(quiz, state).background
+  if (!bg) return 'none'
+  if (!state.backgroundEnabled) return 'off'
+  if (!bg.playing) return 'silent'
+  return bg.ducked ? 'ducked' : 'playing'
+}
+
+/** De muziek klinkt (amber), of is stil (grijs). */
+export const musicAudible = (status: MusicStatus): boolean =>
+  status === 'ducked' || status === 'playing'
+
 function resolveBackground(quiz: Quiz, state: ShowState): ResolvedBackground | null {
   const bg = quiz.background
   if (!bg) return null

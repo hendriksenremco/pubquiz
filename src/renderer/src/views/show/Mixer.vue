@@ -3,6 +3,8 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import {
   channelVolume,
   findAsset,
+  musicAudible,
+  musicStatus,
   resolveAudio,
   resolveScreen,
   screenHasSound,
@@ -19,7 +21,7 @@ import { vFill } from '../../lib/fill'
 import { percent } from '../../lib/format'
 import { locale } from '../../lib/locale'
 import { useSession } from '../../stores/session'
-import { MIXER_MESSAGES } from './live-messages'
+import { MIXER_MESSAGES, MUSIC_STATUS } from './live-messages'
 
 const t = MIXER_MESSAGES.in(locale)
 const api = window.pubquiz
@@ -31,12 +33,8 @@ const backgroundName = computed(() => findAsset(quiz.value, background.value?.as
 // Amber als de muziek klinkt, grijs als hij stil is; zoals "Speelt" op de telefoon.
 // Stil door de ronde is zo bedoeld, dus geen waarschuwing.
 const backgroundStatus = computed(() => {
-  const bg = background.value
-  if (!bg) return { text: t('none'), cls: '' }
-  if (!session.state.backgroundEnabled) return { text: t('off'), cls: '' }
-  if (!bg.playing) return { text: t('pausedByRound'), cls: '' }
-  if (bg.ducked) return { text: t('ducked'), cls: 'pill-accent' }
-  return { text: t('playing'), cls: 'pill-accent' }
+  const status = musicStatus(quiz.value, session.state)
+  return { text: t(MUSIC_STATUS[status]), cls: musicAudible(status) ? 'pill-accent' : '' }
 })
 
 function setVolume(id: string, event: Event) {
