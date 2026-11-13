@@ -39,7 +39,9 @@ export const REMOTE_MESSAGES = defineMessages(
     muteOn: 'Geluid uit',
     muteOff: 'Geluid aan',
     timerOn: 'Aftellen',
-    timerOff: 'Stop aftellen'
+    timerOff: 'Stop aftellen',
+    loopPause: 'Pauzeer wisselen',
+    loopResume: 'Hervat wisselen'
   },
   {
     en: {
@@ -76,7 +78,9 @@ export const REMOTE_MESSAGES = defineMessages(
       muteOn: 'Mute',
       muteOff: 'Unmute',
       timerOn: 'Countdown',
-      timerOff: 'Stop countdown'
+      timerOff: 'Stop countdown',
+      loopPause: 'Pause auto-advance',
+      loopResume: 'Resume auto-advance'
     }
   }
 )
