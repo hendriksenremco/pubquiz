@@ -310,6 +310,16 @@ describe('remoteCommand', () => {
     expect(status(elsewhere)).toBe('idle')
     expect(remoteView(quiz, live({ activeRoundId: first.id })).sequence).toBeNull()
 
+    // Wat er naast Fragmenten staat, zoals op de Mac.
+    music.autoplay.gapSeconds = 5
+    const stepOf = (state: ShowState) => remoteView(quiz, state).sequence?.step
+    expect(stepOf(idle)).toBeNull()
+    expect(stepOf(elsewhere)).toBeNull()
+    expect(stepOf(playing)).toEqual({ kind: 'playing', number: 1 })
+    expect(stepOf(last)).toEqual({ kind: 'last', number: 3 })
+    expect(stepOf(gap)).toEqual({ kind: 'gap', number: 2, until: 5000, seconds: 5 })
+    expect(stepOf(paused)).toEqual({ kind: 'paused', number: 2 })
+
     const command = (state: ShowState, action: 'start' | 'pause' | 'resume' | 'skip' | 'stop') =>
       remoteCommand(quiz, state, { type: 'sequence', action })
     expect(command(idle, 'start')).toEqual({ type: 'autoplay', action: 'start' })
@@ -349,6 +359,7 @@ describe('remoteCommand', () => {
         label: 'Liedje 1',
         answer: null,
         playing: false,
+        ends: null,
         played: true,
         upcoming: false
       },
@@ -358,6 +369,7 @@ describe('remoteCommand', () => {
         label: 'Liedje 2',
         answer: 'Artiest 2',
         playing: true,
+        ends: { at: 10000, seconds: 10 },
         played: false,
         upcoming: false
       },
@@ -367,10 +379,18 @@ describe('remoteCommand', () => {
         label: 'Liedje 3',
         answer: null,
         playing: false,
+        ends: null,
         played: false,
         upcoming: true
       }
     ])
+    // De lengte is nog niet bekend: dan geen resterende tijd, alleen Speelt.
+    const unknown = live({
+      activeRoundId: music.id,
+      ...playing,
+      fragment: { ...playing.fragment, duration: null }
+    })
+    expect(remoteView(quiz, unknown).fragments[1].ends).toBeNull()
     expect(remoteView(quiz, live({ activeRoundId: first.id })).fragments).toEqual([])
     expect(remoteView(quiz, live()).fragments).toEqual([])
 

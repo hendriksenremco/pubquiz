@@ -108,8 +108,10 @@ export interface RemoteView {
   /**
    * De fragmentenreeks (Speel reeks op de Mac, A); null = deze ronde heeft geen fragmenten.
    * `paused` is ook het laatste fragment van een reeks die daarna stopt: dan staat er Hervat.
+   * `step`: wat er naast Fragmenten op de Mac staat ("Reeks: fragment 3"); null = de reeks loopt
+   * niet in deze ronde.
    */
-  sequence: { status: RemoteSequence } | null
+  sequence: { status: RemoteSequence; step: RemoteSequenceStep | null } | null
   /**
    * De fragmenten van de ronde, om er één te kiezen zoals bij Fragmenten op de Mac; leeg = deze
    * ronde heeft geen fragmenten.
@@ -186,10 +188,25 @@ export interface RemoteFragment {
   /** Het antwoord bij dit fragment, zoals op de Mac; null als het niet is ingevuld. */
   answer: string | null
   playing: boolean
+  /**
+   * Alleen als het speelt en de lengte bekend is: wanneer het afgelopen is (klok van de Mac, ms) en
+   * hoe lang het duurt (s), voor de resterende tijd zoals op de Mac ("-0:12"). De telefoon telt nooit
+   * verder terug dan `seconds`, ook als zijn klok wat afwijkt.
+   */
+  ends: { at: number; seconds: number } | null
   played: boolean
   /** Speelt bij Volgende (→), als vorige en volgende door de fragmenten gaan. */
   upcoming: boolean
 }
+
+/**
+ * Waar de reeks is, zoals naast Fragmenten op de Mac: het fragment dat speelt (`last`: daarna stopt
+ * de reeks), het volgende dat over een paar seconden begint (`gap`, tot `until` op de klok van de
+ * Mac, hooguit `seconds`), of het volgende na een pauze. `number` telt vanaf 1.
+ */
+export type RemoteSequenceStep =
+  | { kind: 'playing' | 'last' | 'paused'; number: number }
+  | { kind: 'gap'; number: number; until: number; seconds: number }
 
 /**
  * Eén vraag, afbeelding of fragment in een antwoordenronde op de telefoon: tikken zet hem in beeld,
@@ -357,7 +374,9 @@ export function remoteView(
     loop: round?.slideLoopSeconds
       ? { paused: state.loopPaused, seconds: round.slideLoopSeconds, until: state.loopUntil }
       : null,
-    sequence: round?.fragments.length ? { status: sequenceOf(round, state) } : null,
+    sequence: round?.fragments.length
+      ? { status: sequenceOf(round, state), step: sequenceStep(round, state) }
+      : null,
     fragments: quiz && round ? remoteFragments(quiz, round, state) : [],
     answering: !!round && answering(round, state),
     answers: quiz && round ? remoteAnswers(quiz, round, state, locale) : [],
@@ -550,6 +569,21 @@ export function sequenceOf(round: Round, state: ShowState): RemoteSequence {
   return 'running'
 }
 
+/** Wat FragmentPad naast Fragmenten zet ("Reeks: fragment 3 over 4 s"), voor de telefoon. */
+function sequenceStep(round: Round, state: ShowState): RemoteSequenceStep | null {
+  const a = state.autoplay
+  if (a.status === 'idle' || a.roundId !== round.id) return null
+  if (a.status === 'playing') return { kind: a.holdAfter ? 'last' : 'playing', number: a.index + 1 }
+  if (a.status === 'gap')
+    return {
+      kind: 'gap',
+      number: a.nextIndex + 1,
+      until: a.until,
+      seconds: round.autoplay.gapSeconds
+    }
+  return { kind: 'paused', number: a.nextIndex + 1 }
+}
+
 /** De fragmenten zoals FragmentPad ze toont: wat speelt, wat gespeeld is en wat → gaat spelen. */
 function remoteFragments(quiz: Quiz, round: Round, state: ShowState): RemoteFragment[] {
   const ids = round.fragments.map((f) => f.id)
@@ -559,12 +593,17 @@ function remoteFragments(quiz: Quiz, round: Round, state: ShowState): RemoteFrag
       : null
   return round.fragments.map((f, i) => {
     const playing = state.fragment?.fragmentId === f.id
+    const duration = playing ? state.fragment?.duration : null
     return {
       id: f.id,
       number: i + 1,
       label: f.label,
       answer: f.answer || null,
       playing,
+      ends:
+        state.fragment && duration
+          ? { at: state.fragment.startedAt + duration * 1000, seconds: duration }
+          : null,
       played: !playing && state.played.includes(f.id),
       upcoming: next === i
     }
