@@ -46,7 +46,8 @@ describe('teksten van de show', () => {
       'timerOff',
       'loopPause',
       'loopResume',
-      'betweenRounds'
+      'betweenRounds',
+      'notes'
     ] as const
     for (const locale of LOCALES) {
       const mac = LIVE_MESSAGES.in(locale)

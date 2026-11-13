@@ -184,6 +184,12 @@ onMounted(connect)
         </button>
       </section>
 
+      <!-- De notities bij de ronde, zoals onder de rondes op de Mac. -->
+      <section v-if="view?.notes" class="notes" :aria-label="t('notes')">
+        <span class="eyebrow">{{ t('notes') }}</span>
+        <p>{{ view.notes }}</p>
+      </section>
+
       <!-- Alleen in een antwoordenronde, zoals Antwoorden op de Mac: Stop antwoorden zodra er een
            stap in beeld staat, en per ronde de vragen, afbeeldingen en fragmenten om te kiezen. -->
       <section v-if="view?.answering || answers.length" class="pair" :aria-label="t('answers')">
@@ -518,6 +524,20 @@ h1 {
 .empty {
   color: var(--faint);
   font-size: 13px;
+}
+
+.notes {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 2px;
+}
+
+.notes p {
+  font-size: 16px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
 }
 
 .step-text {

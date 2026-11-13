@@ -62,6 +62,8 @@ export interface RemoteView {
   nextRound: string | null
   /** De ronde die "Ronde opnieuw" start. */
   restartRound: string | null
+  /** De notities voor de presentator bij de ronde die loopt, zoals onder de rondes op de Mac. */
+  notes: string | null
   /** Wat vorige en volgende nu bedienen; null = er loopt geen ronde. */
   step: RemoteStep | null
   /** De slide die nu in beeld staat (ook bij beeld op zwart), voor de preview. */
@@ -231,6 +233,7 @@ export function remoteView(
     prevRound: titleOf(quiz && adjacentRound(quiz, state, 'prev'), locale),
     nextRound: titleOf(quiz && adjacentRound(quiz, state, 'next'), locale),
     restartRound: titleOf(quiz && restartRound(quiz, state), locale),
+    notes: round?.hostNotes?.trim() || null,
     step: quiz && round ? remoteStep(quiz, round, state, locale) : null,
     screen: quiz ? onScreen(quiz, state) : null,
     screens: !!quiz?.screens.length,

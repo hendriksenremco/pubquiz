@@ -45,6 +45,7 @@ describe('remoteView', () => {
       prevRound: null,
       nextRound: 'Ronde 2: muziek',
       restartRound: 'Ronde 1',
+      notes: null,
       step: {
         target: 'slides',
         label: 'Slide 2 van 2',
@@ -64,6 +65,17 @@ describe('remoteView', () => {
       answers: [],
       plugins: []
     })
+  })
+
+  it('geeft de notities van de ronde die loopt mee, zoals onder de rondes op de Mac', () => {
+    const { quiz, first, live } = setup()
+    first.hostNotes = '  Let op: vraag 3 is een strikvraag.\n'
+    expect(remoteView(quiz, live({ activeRoundId: first.id })).notes).toBe(
+      'Let op: vraag 3 is een strikvraag.'
+    )
+    expect(remoteView(quiz, live({ lastRoundId: first.id })).notes).toBeNull()
+    first.hostNotes = '   '
+    expect(remoteView(quiz, live({ activeRoundId: first.id })).notes).toBeNull()
   })
 
   it('tussen twee rondes: geen stappen, en de vorige is de ronde van net', () => {
