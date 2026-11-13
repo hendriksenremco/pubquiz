@@ -51,7 +51,7 @@ const options = computed((): SelectOption[] => [
       group: g.label
     }))
   ),
-  { value: IMPORT, label: t('importFile') }
+  { value: IMPORT, label: t('importMedia') }
 ])
 
 async function onChange(value: string | undefined) {

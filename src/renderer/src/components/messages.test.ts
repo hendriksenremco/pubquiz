@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { placeholders } from '@shared/i18n'
 import { COMPONENT_MESSAGES } from './messages'
+import { MEDIA_MESSAGES } from '../views/editor/editor-messages'
 
 describe('teksten van de algemene onderdelen', () => {
   it('hebben in elke taal dezelfde waarden als in het Nederlands', () => {
@@ -24,6 +25,12 @@ describe('teksten van de algemene onderdelen', () => {
     for (const locale of ['nl', 'en'] as const) {
       const t = COMPONENT_MESSAGES.in(locale)
       expect(t('videoVolume').toLowerCase()).toContain(t('videoSound').toLowerCase())
+    }
+  })
+
+  it('noemt importeren in de mediakiezers zoals de knop in Media', () => {
+    for (const locale of ['nl', 'en'] as const) {
+      expect(COMPONENT_MESSAGES.in(locale)('importMedia')).toBe(MEDIA_MESSAGES.in(locale)('import'))
     }
   })
 })
