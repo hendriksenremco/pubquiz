@@ -236,7 +236,8 @@ test('live: eerst de vraag, afbeelding of het fragment, dan het antwoord', async
   await expect(beamer.locator('.overlay.answer.bottom .ov-answer')).toHaveText('Canberra')
   await expect(phoneTiles.nth(0)).toContainText('antwoord in beeld')
   await expect(phone.locator('.group-title').first()).toHaveText('Ronde 1: algemeen')
-  await phone.locator('.group-title').first().scrollIntoViewIfNeeded()
+  // De tegels midden in beeld, met het kopje van de ronde erboven.
+  await phoneTiles.nth(0).evaluate((el) => el.scrollIntoView({ block: 'center' }))
   await snap(phone, 'test-results/remote-phone-answers.png')
   await phoneTiles.nth(0).click()
   await expect(beamer.locator('.overlay')).toHaveCount(0)
