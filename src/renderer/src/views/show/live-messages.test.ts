@@ -94,6 +94,12 @@ describe('teksten van de show', () => {
       ] as const
       for (const key of answerKeys) expect(answers(key), `${locale}: ${key}`).toBe(phone(key))
       expect(answers('nounShown', { noun: 'x' })).toBe(phone('nounShown', { noun: 'x' }))
+      // Wat er naast Antwoorden staat.
+      expect(answers('notShown'), `${locale}: notShown`).toBe(phone('answersNotShown'))
+      for (const key of ['itemQuestion', 'itemImage', 'itemFragment'] as const)
+        expect(answers(key, { number: 3 }), `${locale}: ${key}`).toBe(phone(key, { number: 3 }))
+      for (const key of ['statusAnswer', 'statusNumber', 'statusShown'] as const)
+        expect(answers(key, { item: 'x' }), `${locale}: ${key}`).toBe(phone(key, { item: 'x' }))
       // Geluid (Mixer): de muziek, haar stand en de schuifjes.
       const mixer = MIXER_MESSAGES.in(locale)
       const soundKeys = [

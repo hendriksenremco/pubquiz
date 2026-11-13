@@ -127,6 +127,11 @@ export interface RemoteView {
    * Antwoorden op de Mac; leeg = dit is geen antwoordenronde.
    */
   answers: RemoteAnswer[]
+  /**
+   * Een antwoordenronde zonder scherm voor de antwoorden (Ronde → Antwoorden in de editor): er komt
+   * niets van in beeld. Op de Mac staat dan Niet in beeld naast Antwoorden.
+   */
+  answersOffScreen: boolean
   /** Geluid, zoals rechts in de show op de Mac; null = er is geen quiz open. */
   sound: RemoteSound | null
   /** Plug-ins die aan staan en knoppen op de telefoon hebben (`remoteActions`), met hun status. */
@@ -380,6 +385,8 @@ export function remoteView(
     fragments: quiz && round ? remoteFragments(quiz, round, state) : [],
     answering: !!round && answering(round, state),
     answers: quiz && round ? remoteAnswers(quiz, round, state, locale) : [],
+    answersOffScreen:
+      !!quiz && !!round && !round.fragmentScreens.length && answerItems(quiz, round).length > 0,
     sound: quiz ? remoteSound(quiz, state) : null,
     plugins: quiz ? plugins : []
   }

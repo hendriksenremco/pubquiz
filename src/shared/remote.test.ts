@@ -493,6 +493,19 @@ describe('remoteCommand', () => {
     expect(remoteCommand(quiz, live({ activeRoundId: first.id }), stop)).toBeNull()
   })
 
+  it('meldt een antwoordenronde zonder scherm voor de antwoorden, zoals Niet in beeld op de Mac', () => {
+    const { quiz, first, answers, live } = setup()
+    const state = live({ activeRoundId: answers.id })
+    expect(answers.fragmentScreens.length).toBeGreaterThan(0)
+    expect(remoteView(quiz, state).answersOffScreen).toBe(false)
+    answers.fragmentScreens = []
+    expect(remoteView(quiz, state).answersOffScreen).toBe(true)
+    // Een gewone ronde zonder scherm voor de antwoorden heeft geen Antwoorden.
+    first.fragmentScreens = []
+    expect(remoteView(quiz, live({ activeRoundId: first.id })).answersOffScreen).toBe(false)
+    expect(remoteView(quiz, live()).answersOffScreen).toBe(false)
+  })
+
   it('één antwoord kiezen: in beeld zetten, dan het antwoord tonen of verbergen', () => {
     const { quiz, first, music, answers, live } = setup()
     const [one, two] = music.fragments
