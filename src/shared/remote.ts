@@ -73,9 +73,17 @@ export interface RemoteView {
   timer: boolean
   /** De slides van de ronde wisselen vanzelf (L op de Mac); null = deze ronde heeft dat niet. */
   loop: { paused: boolean } | null
+  /**
+   * De fragmentenreeks (Speel reeks op de Mac, A); null = deze ronde heeft geen fragmenten.
+   * `paused` is ook het laatste fragment van een reeks die daarna stopt: dan staat er Hervat.
+   */
+  sequence: { status: RemoteSequence } | null
   /** Plug-ins die aan staan en knoppen op de telefoon hebben (`remoteActions`), met hun status. */
   plugins: RemotePlugin[]
 }
+
+/** Hoe de reeks erbij staat, zoals de knoppen op de Mac hem tonen. */
+export type RemoteSequence = 'idle' | 'running' | 'paused'
 
 /** Eén plug-in op de telefoon; het onderdeel ervoor staat in src/renderer/src/plugins/phone.ts. */
 export type RemotePlugin = { [Id in PluginId]: { id: Id; status: PluginStatus<Id> } }[PluginId]
@@ -107,6 +115,13 @@ export const RemoteActionSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('timer'), on: z.boolean() }),
   /** Het vanzelf wisselen van de slides (L) pauzeren of hervatten; alleen in zo'n ronde. */
   z.object({ type: z.literal('slideLoop'), paused: z.boolean() }),
+  /** De fragmentenreeks (A en S op de Mac); alleen als dat kan in de stand van de reeks. */
+  z.object({
+    type: z.literal('sequence'),
+    action: z.enum(['start', 'pause', 'resume', 'skip', 'stop'])
+  }),
+  /** Fragmenten opnieuw: alle fragmenten van de ronde weer ongespeeld. */
+  z.object({ type: z.literal('resetPlayed') }),
   /**
    * Een actie van een plug-in, bv. het licht kiezen. Main controleert hem met de definitie van die
    * plug-in, en alleen wat in zijn `remoteActions` staat, mag.
@@ -164,6 +179,7 @@ export function remoteView(
     muted: !state.backgroundEnabled,
     timer: state.timer !== null,
     loop: round?.slideLoopSeconds ? { paused: state.loopPaused } : null,
+    sequence: round?.fragments.length ? { status: sequenceOf(round, state) } : null,
     plugins: quiz ? plugins : []
   }
 }
@@ -198,9 +214,30 @@ export function remoteCommand(
       if (!activeRound(quiz, state)?.slideLoopSeconds || action.paused === state.loopPaused)
         return null
       return { type: 'slideLoop', paused: action.paused }
+    case 'sequence': {
+      const round = activeRound(quiz, state)
+      if (!round?.fragments.length) return null
+      const allowed: Record<RemoteSequence, string[]> = {
+        idle: ['start'],
+        running: ['pause', 'skip', 'stop'],
+        paused: ['resume', 'skip', 'stop']
+      }
+      if (!allowed[sequenceOf(round, state)].includes(action.action)) return null
+      return { type: 'autoplay', action: action.action }
+    }
+    case 'resetPlayed':
+      return activeRound(quiz, state)?.fragments.length ? { type: 'resetPlayed' } : null
     case 'plugin':
       return null
   }
+}
+
+/** De stand van de reeks in deze ronde, zoals FragmentPad hem toont: Speel reeks, Pauzeer of Hervat. */
+export function sequenceOf(round: Round, state: ShowState): RemoteSequence {
+  const a = state.autoplay
+  if (a.status === 'idle' || a.roundId !== round.id) return 'idle'
+  if (a.status === 'paused' || (a.status === 'playing' && a.holdAfter)) return 'paused'
+  return 'running'
 }
 
 /** Ook voor de knoppen op de Mac, zodat die hetzelfde tonen en kunnen. */

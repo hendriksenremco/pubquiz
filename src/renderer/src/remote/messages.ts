@@ -41,7 +41,14 @@ export const REMOTE_MESSAGES = defineMessages(
     timerOn: 'Aftellen',
     timerOff: 'Stop aftellen',
     loopPause: 'Pauzeer wisselen',
-    loopResume: 'Hervat wisselen'
+    loopResume: 'Hervat wisselen',
+    fragments: 'Fragmenten',
+    playSequence: 'Speel reeks',
+    pause: 'Pauzeer',
+    resume: 'Hervat',
+    skip: 'Volgende',
+    stopSequence: 'Stop reeks',
+    reset: 'Fragmenten opnieuw'
   },
   {
     en: {
@@ -80,7 +87,14 @@ export const REMOTE_MESSAGES = defineMessages(
       timerOn: 'Countdown',
       timerOff: 'Stop countdown',
       loopPause: 'Pause auto-advance',
-      loopResume: 'Resume auto-advance'
+      loopResume: 'Resume auto-advance',
+      fragments: 'Clips',
+      playSequence: 'Play sequence',
+      pause: 'Pause',
+      resume: 'Resume',
+      skip: 'Next',
+      stopSequence: 'Stop sequence',
+      reset: 'Restart clips'
     }
   }
 )
