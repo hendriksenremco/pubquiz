@@ -68,6 +68,13 @@ export const REMOTE_MESSAGES = defineMessages(
     sequencePaused: 'Reeks gepauzeerd, volgende: fragment {number}',
     answers: 'Antwoorden',
     stopAnswers: 'Stop antwoorden',
+    answersNotShown: 'Niet in beeld',
+    itemQuestion: 'Vraag {number}',
+    itemImage: 'Afbeelding {number}',
+    itemFragment: 'Fragment {number}',
+    statusAnswer: '{item}: antwoord in beeld',
+    statusNumber: '{item}: nummer in beeld',
+    statusShown: '{item} in beeld',
     nounQuestion: 'vraag',
     nounImage: 'afbeelding',
     nounFragment: 'fragment',
@@ -151,6 +158,13 @@ export const REMOTE_MESSAGES = defineMessages(
       sequencePaused: 'Sequence paused, next: clip {number}',
       answers: 'Answers',
       stopAnswers: 'Stop answers',
+      answersNotShown: 'Not on screen',
+      itemQuestion: 'Question {number}',
+      itemImage: 'Picture {number}',
+      itemFragment: 'Clip {number}',
+      statusAnswer: '{item}: answer on screen',
+      statusNumber: '{item}: number on screen',
+      statusShown: '{item} on screen',
       nounQuestion: 'question',
       nounImage: 'picture',
       nounFragment: 'clip',
@@ -179,4 +193,11 @@ export const ANSWER_NOUNS = {
   vraag: 'nounQuestion',
   afbeelding: 'nounImage',
   fragment: 'nounFragment'
+} as const satisfies Record<AnswerNoun, string>
+
+/** Dezelfde, met nummer ("Vraag 3"), voor wat er naast Antwoorden staat. */
+export const ANSWER_ITEMS = {
+  vraag: 'itemQuestion',
+  afbeelding: 'itemImage',
+  fragment: 'itemFragment'
 } as const satisfies Record<AnswerNoun, string>

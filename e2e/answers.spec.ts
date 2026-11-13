@@ -252,9 +252,16 @@ test('live: eerst de vraag, afbeelding of het fragment, dan het antwoord', async
   await expect(tiles.nth(0)).toHaveClass(/\bon\b/)
   await expect(phoneTiles.nth(0)).toHaveAttribute('aria-pressed', 'true')
   await expect(phoneTiles.nth(0)).toContainText('vraag in beeld')
+  // Naast het kopje staat wat er in beeld staat, met dezelfde tekst als naast Antwoorden op de Mac.
+  const phoneStatus = phone.getByRole('region', { name: 'Antwoorden' }).locator('.title-status')
+  const macStatus = operator.locator('.answers .card-head .pill-accent')
+  await expect(phoneStatus).toHaveText('Vraag 1 in beeld')
+  await expect(macStatus).toHaveText('Vraag 1 in beeld')
   await phoneTiles.nth(0).click()
   await expect(beamer.locator('.overlay.answer.bottom .ov-answer')).toHaveText('Canberra')
   await expect(phoneTiles.nth(0)).toContainText('antwoord in beeld')
+  await expect(phoneStatus).toHaveText('Vraag 1: antwoord in beeld')
+  await expect(macStatus).toHaveText('Vraag 1: antwoord in beeld')
   await expect(phone.locator('.group-title').first()).toHaveText('Ronde 1: algemeen')
   // De tegels midden in beeld, met het kopje van de ronde erboven.
   await phoneTiles.nth(0).evaluate((el) => el.scrollIntoView({ block: 'center' }))

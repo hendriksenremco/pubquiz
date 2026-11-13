@@ -11,7 +11,7 @@ import { useNow } from '../lib/use-now'
 import { MUSIC_STATUS } from '../views/show/live-messages'
 import { PHONE_PLUGINS } from '../plugins/phone'
 import { connect, imageUrl, link, locale, send, t, toast, view } from './connection'
-import { ANSWER_NOUNS } from './messages'
+import { ANSWER_ITEMS, ANSWER_NOUNS } from './messages'
 
 /**
  * De afstandsbediening op een telefoon of tablet: de slide die in beeld staat, vorige en volgende
@@ -80,6 +80,20 @@ function fragmentState(f: RemoteFragment): string {
   return f.played ? say('played') : '\u00a0'
 }
 const answers = computed(() => view.value?.answers ?? [])
+
+/**
+ * Zoals naast Antwoorden op de Mac: wat er in beeld staat ("Vraag 3: antwoord in beeld"), of Niet in
+ * beeld als de ronde geen scherm voor de antwoorden heeft.
+ */
+const answersText = computed(() => {
+  const say = t.value
+  if (view.value?.answersOffScreen) return say('answersNotShown')
+  const a = answers.value.find((a) => a.on)
+  if (!a) return null
+  const item = say(ANSWER_ITEMS[a.noun], { number: a.number })
+  if (a.revealed) return say('statusAnswer', { item })
+  return say(a.noun === 'fragment' ? 'statusNumber' : 'statusShown', { item })
+})
 const roundList = computed(() => view.value?.roundList ?? [])
 const screenList = computed(() => view.value?.screenList ?? [])
 const sound = computed(() => {
@@ -342,7 +356,16 @@ onMounted(connect)
       <!-- Alleen in een antwoordenronde, zoals Antwoorden op de Mac: Stop antwoorden zodra er een
            stap in beeld staat, en per ronde de vragen, afbeeldingen en fragmenten om te kiezen. -->
       <section v-if="view?.answering || answers.length" class="pair" :aria-label="t('answers')">
-        <span class="slides-title">{{ t('answers') }}</span>
+        <!-- Wat er in beeld staat, rechts naast het kopje, zoals naast Antwoorden op de Mac. -->
+        <span class="slides-title" :class="{ 'with-status': answersText }"
+          >{{ t('answers')
+          }}<span
+            v-if="answersText"
+            class="title-status"
+            :class="{ warn: view?.answersOffScreen }"
+            >{{ answersText }}</span
+          ></span
+        >
         <button
           v-if="view?.answering"
           class="tile toggle"
@@ -969,6 +992,11 @@ button:disabled {
   color: var(--faint);
   font-weight: 500;
   font-variant-numeric: tabular-nums;
+}
+
+/* Zoals de oranje pil Niet in beeld op de Mac. */
+.title-status.warn {
+  color: var(--warn);
 }
 
 .frag-noun {
