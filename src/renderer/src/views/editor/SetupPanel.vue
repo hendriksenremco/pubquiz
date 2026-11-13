@@ -144,28 +144,29 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
         </div>
         <div class="sound">
           <div class="tile bg">
-            <button
-              class="art"
-              :class="{ playing: preview.playingId.value === 'background' }"
-              :disabled="!bgAsset"
-              @click="preview.toggle('background', bgAsset)"
-            >
-              <Icon
-                :name="
-                  preview.playingId.value === 'background' ? 'stop' : bgAsset ? 'play' : 'music'
-                "
-                :size="22"
-              />
-              {{ preview.playingId.value === 'background' ? t('stop') : t('listen') }}
-            </button>
             <div class="bg-main">
               <span class="tile-title">{{ t('background') }}</span>
-              <MediaPicker
-                v-model="backgroundAsset"
-                :kinds="['audio']"
-                :placeholder="t('chooseMusic')"
-                class="quiet-select"
-              />
+              <div class="bg-pick">
+                <button
+                  v-if="bgAsset"
+                  type="button"
+                  class="btn btn-sm listen"
+                  :class="{ 'btn-primary': preview.playingId.value === 'background' }"
+                  @click="preview.toggle('background', bgAsset)"
+                >
+                  <Icon
+                    :name="preview.playingId.value === 'background' ? 'stop' : 'play'"
+                    :size="12"
+                  />
+                  {{ preview.playingId.value === 'background' ? t('stop') : t('listen') }}
+                </button>
+                <MediaPicker
+                  v-model="backgroundAsset"
+                  :kinds="['audio']"
+                  :placeholder="t('chooseMusic')"
+                  class="quiet-select"
+                />
+              </div>
               <template v-if="quiz.background">
                 <label class="slider">
                   <span>{{ t('volume') }}</span>
@@ -396,39 +397,24 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
 }
 
 .bg {
-  display: flex;
-  gap: 18px;
   padding: 16px;
 }
 
-.art {
-  flex-shrink: 0;
-  display: grid;
-  place-items: center;
-  align-content: center;
-  gap: 6px;
-  width: 112px;
-  height: 112px;
-  border: 0;
-  border-radius: var(--radius-lg);
-  background: var(--surface-3);
-  color: var(--text);
-  font-size: 12px;
-  cursor: pointer;
+.bg-pick {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.art:hover:not(:disabled) {
-  background: var(--surface-4);
+.bg-pick .quiet-select {
+  flex: 1;
+  min-width: 0;
 }
 
-.art:disabled {
-  color: var(--muted);
-  cursor: default;
-}
-
-.art.playing {
-  outline: 2px solid var(--accent);
-  outline-offset: 3px;
+/* Even breed bij Luister en Stop, zoals in de lijst met fragmenten. */
+.listen {
+  flex: none;
+  min-width: 76px;
 }
 
 .bg-main {
