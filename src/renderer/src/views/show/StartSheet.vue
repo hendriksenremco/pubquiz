@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { mediaUrl } from '@shared/ipc'
 import { sameDisplayName } from '@shared/airplay'
-import { answerItems, findBrokenReferences, screenHasSound } from '@shared/resolve'
+import { answersWithoutScreen, findBrokenReferences, screenHasSound } from '@shared/resolve'
 import { roundTitle } from '@shared/quiz-messages'
 import type { HardwareMapping, ScreenTarget } from '@shared/types'
 import Icon from '../../components/Icon.vue'
@@ -266,13 +266,11 @@ const problems = computed(() => {
       })
     }
   }
-  for (const r of quiz.value.rounds) {
-    if (answerItems(quiz.value, r).length && !r.fragmentScreens.length) {
-      list.push({
-        level: 'warning',
-        text: t('answersScreen', { round: roundTitle(r, locale) })
-      })
-    }
+  for (const { round, number } of answersWithoutScreen(quiz.value)) {
+    list.push({
+      level: 'warning',
+      text: t('answersScreen', { number, round: roundTitle(round, locale) })
+    })
   }
   if (quiz.value.rounds.length === 0) list.push({ level: 'warning', text: t('noRounds') })
   return list
@@ -412,7 +410,7 @@ const savedAt = computed(() =>
         <PluginSlot name="startSheet" />
 
         <ul v-if="problems.length" class="problems">
-          <li v-for="p in problems" :key="p.text" :class="p.level">{{ p.text }}</li>
+          <li v-for="(p, i) in problems" :key="i" :class="p.level">{{ p.text }}</li>
         </ul>
 
         <footer class="foot">

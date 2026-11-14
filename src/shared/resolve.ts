@@ -377,6 +377,21 @@ export function answerItems(quiz: Quiz, round: Round): AnswerItem[] {
     .flatMap(roundItems)
 }
 
+/**
+ * Antwoordenrondes waarvan de antwoorden op geen enkel scherm van de quiz komen, met hun nummer
+ * (twee rondes heten vaak allebei "Antwoorden"). Zonder schermen leeg: dan valt er bij de ronde
+ * niets te kiezen, en zegt Start show al dat de quiz geen schermen heeft.
+ */
+export function answersWithoutScreen(quiz: Quiz): { round: Round; number: number }[] {
+  if (!quiz.screens.length) return []
+  return quiz.rounds.flatMap((round, i) =>
+    answerItems(quiz, round).length &&
+    !round.fragmentScreens.some((id) => quiz.screens.some((s) => s.id === id))
+      ? [{ round, number: i + 1 }]
+      : []
+  )
+}
+
 /** De vragen, afbeeldingen en fragmenten van één ronde, genummerd zoals de teams ze zien. */
 export function roundItems(round: Round): AnswerItem[] {
   return [

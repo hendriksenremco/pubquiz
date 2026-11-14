@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { createShowState } from './factory'
 import {
+  answersWithoutScreen,
   findAssetUsages,
   findBrokenReferences,
   resolveAudio,
@@ -430,5 +431,45 @@ describe('roundNotes', () => {
     expect(roundNotes({ ...round, hostNotes: ' \n ' })).toBeNull()
     expect(roundNotes({ ...round, hostNotes: undefined })).toBeNull()
     expect(roundNotes(null)).toBeNull()
+  })
+})
+
+describe('answersWithoutScreen', () => {
+  function withAnswers(fragmentScreens: string[][]): Quiz {
+    const quiz = makeQuiz()
+    const base = quiz.rounds[1]
+    for (const screens of fragmentScreens) {
+      quiz.rounds.push({
+        ...base,
+        id: `a${quiz.rounds.length}`,
+        title: 'Antwoorden',
+        fragments: [],
+        fragmentScreens: screens,
+        answersFor: ['r2']
+      })
+    }
+    return quiz
+  }
+
+  it('noemt elke antwoordenronde zonder scherm met haar nummer, ook bij dezelfde naam', () => {
+    const quiz = withAnswers([[], ['beamer'], []])
+    expect(answersWithoutScreen(quiz).map((r) => [r.round.id, r.number])).toEqual([
+      ['a3', 4],
+      ['a5', 6]
+    ])
+  })
+
+  it('telt een scherm dat niet meer bestaat niet mee', () => {
+    expect(answersWithoutScreen(withAnswers([['weg']])).map((r) => r.number)).toEqual([4])
+  })
+
+  it('zegt niets als de quiz geen schermen heeft', () => {
+    const quiz = withAnswers([[]])
+    quiz.screens = []
+    expect(answersWithoutScreen(quiz)).toEqual([])
+  })
+
+  it('slaat rondes over die geen antwoorden langslopen', () => {
+    expect(answersWithoutScreen(makeQuiz())).toEqual([])
   })
 })
