@@ -232,6 +232,8 @@ function save(mapping: HardwareMapping) {
 
 const problems = computed(() => {
   const list: { level: 'error' | 'warning'; text: string }[] = []
+  // Zonder rondes is er niets te tonen: dat staat bovenaan, en heet zoals bij Schermen en Geluid.
+  if (quiz.value.rounds.length === 0) list.push({ level: 'warning', text: t('noRounds') })
   for (const p of findBrokenReferences(quiz.value, locale)) list.push({ level: 'error', text: p })
   for (const name of missingMedia.value)
     list.push({ level: 'error', text: t('fileMissing', { name }) })
@@ -272,7 +274,6 @@ const problems = computed(() => {
       text: t('answersScreen', { number, round: roundTitle(round, locale) })
     })
   }
-  if (quiz.value.rounds.length === 0) list.push({ level: 'warning', text: t('noRounds') })
   return list
 })
 
