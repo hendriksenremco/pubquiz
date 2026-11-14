@@ -121,8 +121,11 @@ function reveal(q: RecentQuiz) {
 
     <section v-if="latest" class="body">
       <div class="section-head">
-        <h3>{{ t('quizzes') }}</h3>
-        <span class="grow" />
+        <!-- Zonder andere quizzen geen lege kop "Quizzen": dan blijven alleen de knoppen. -->
+        <template v-if="others.length">
+          <h3>{{ t('quizzes') }}</h3>
+          <span class="grow" />
+        </template>
         <Popover :width="280">
           <template #trigger="{ open, toggle }">
             <button class="btn btn-ghost btn-sm" :class="{ active: open }" @click="toggle">
