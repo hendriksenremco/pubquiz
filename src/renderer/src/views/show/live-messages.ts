@@ -315,7 +315,7 @@ export const START_MESSAGES = defineMessages(
     noSpeakers: '{name}: display zonder speakers, het videogeluid gaat naar de systeemstandaard',
     outputMissing: '{name}: uitgang niet gevonden, het geluid gaat naar de systeemstandaard',
     answersScreen:
-      '“{round}”: de antwoorden komen op geen enkel scherm. Kies er een bij Ronde → Antwoorden',
+      'Ronde {number}, “{round}”: de antwoorden komen op geen enkel scherm. Kies er een bij Ronde → Antwoorden',
     noRounds: 'De quiz heeft nog geen rondes'
   },
   {
@@ -361,7 +361,7 @@ export const START_MESSAGES = defineMessages(
       noSpeakers: '{name}: display without speakers, the video sound goes to the system default',
       outputMissing: '{name}: output not found, the sound goes to the system default',
       answersScreen:
-        '“{round}”: the answers aren’t on any screen. Choose one under Round → Answers',
+        'Round {number}, “{round}”: the answers aren’t on any screen. Choose one under Round → Answers',
       noRounds: 'The quiz has no rounds yet'
     }
   }
