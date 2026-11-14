@@ -232,6 +232,28 @@ for (const locale of ['nl', 'en'] as const) {
       expect(await name.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true)
       expect((await operator.locator('.traffic-space').boundingBox())!.width).toBe(64)
       await check('show-slides')
+      // Met → schuift de strook mee: de laatste slide staat dan helemaal in beeld, en met ← de
+      // eerste weer.
+      const strip = operator.locator('.slides-section .slides')
+      const slides = strip.locator('.slide')
+      const inStrip = (slide: Locator) =>
+        slide.evaluate((el) => {
+          const box = el.getBoundingClientRect()
+          const view = el.parentElement!.getBoundingClientRect()
+          return box.left >= view.left && box.right <= view.right
+        })
+      expect(await strip.evaluate((el) => el.scrollWidth > el.clientWidth)).toBe(true)
+      expect(await inStrip(slides.last())).toBe(false)
+      const count = await slides.count()
+      for (let i = 0; i < count; i++) {
+        if (await slides.last().evaluate((el) => el.classList.contains('on'))) break
+        await operator.keyboard.press('ArrowRight')
+      }
+      await expect(slides.last()).toHaveClass(/\bon\b/)
+      await expect.poll(() => inStrip(slides.last())).toBe(true)
+      for (let i = 0; i < count; i++) await operator.keyboard.press('ArrowLeft')
+      await expect(slides.first()).toHaveClass(/\bon\b/)
+      await expect.poll(() => inStrip(slides.first())).toBe(true)
       await operator.locator('.rounds .round').nth(1).click()
       await check('show-fragments')
       await operator.locator('.rounds .round').last().click()

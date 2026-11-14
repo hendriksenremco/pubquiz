@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { roundTitle } from '@shared/quiz-messages'
 import { roundNotes, slideLabel } from '@shared/resolve'
 import Icon from '../../components/Icon.vue'
 import ScreenStage from '../../components/ScreenStage.vue'
 import { useLiveControls } from '../../lib/live-controls'
+import { scrollToShow } from '../../lib/scroll'
 import { locale } from '../../lib/locale'
 import { useNow } from '../../lib/use-now'
 import PluginSlot from '../../plugins/PluginSlot.vue'
@@ -43,6 +44,27 @@ const {
 
 // Zoals op de telefoon: zonder witruimte eromheen, en geen blok als er alleen witruimte staat.
 const notes = computed(() => roundNotes(round.value))
+
+/**
+ * De strook met slides schuift mee met de slide die in beeld is: met → kom je anders voorbij wat
+ * er in de strook past, en zie je niet meer welke slide er staat.
+ */
+const slideStrip = ref<HTMLElement | null>(null)
+watch(
+  () => [round.value?.id, state.value.slideIndex],
+  () => {
+    const strip = slideStrip.value
+    const on = strip?.querySelector<HTMLElement>('.slide.on')
+    if (!strip || !on) return
+    const left = scrollToShow(
+      { left: strip.scrollLeft, width: strip.clientWidth },
+      { left: on.offsetLeft, width: on.offsetWidth },
+      8
+    )
+    if (left !== null) strip.scrollTo({ left, behavior: 'smooth' })
+  },
+  { flush: 'post' }
+)
 
 // Tussen twee rondes zegt de kop wat er hierna komt, zoals op de telefoon; "Tussen twee rondes"
 // staat dan al boven de pijlen.
@@ -174,7 +196,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
             </button>
           </template>
         </div>
-        <div class="slides">
+        <div ref="slideStrip" class="slides">
           <button
             class="slide"
             :class="{ on: state.slideIndex === -1 }"
@@ -435,6 +457,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 }
 
 .slides {
+  position: relative;
   display: flex;
   gap: 8px;
   overflow-x: auto;
