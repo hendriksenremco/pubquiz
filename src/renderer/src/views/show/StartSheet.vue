@@ -318,7 +318,7 @@ const savedAt = computed(() =>
   <Teleport to="body">
     <div class="backdrop" @pointerdown.self="emit('close')">
       <section class="sheet" role="dialog" aria-modal="true" :aria-label="t('title')">
-        <h2>{{ t('title') }}</h2>
+        <h2 class="dialog-title">{{ t('title') }}</h2>
 
         <div v-if="recovery" class="recovery">
           <p class="grow">
@@ -458,10 +458,6 @@ const savedAt = computed(() =>
   background: var(--surface-2);
   box-shadow: 0 30px 80px rgba(3, 6, 14, 0.6);
   animation: drop 0.18s ease;
-}
-
-h2 {
-  font-size: 20px;
 }
 
 .recovery {
