@@ -133,7 +133,10 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
           </div>
           <figcaption class="row">
             <span class="grow screen-name" :title="slot.name">{{ slot.name }}</span>
+            <!-- Alleen bij twee of meer schermen, zoals op de telefoon: bij één doet Beeld op zwart
+                 in de werkbalk hetzelfde. -->
             <button
+              v-if="quiz.screens.length > 1"
               class="btn btn-ghost btn-sm"
               :class="{ active: state.blackout.includes(slot.id) }"
               :title="
