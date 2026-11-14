@@ -458,6 +458,12 @@ input[type='number']::-webkit-outer-spin-button {
   margin-bottom: 12px;
 }
 
+/* Quiz-instellingen: een tegel met weinig erin is even breed als Achtergrondmuziek,
+   de linkerkolom bij Geluid (1,2fr naast 1fr, 16px ertussen). */
+.tile-narrow {
+  width: calc((100% - 16px) * 1.2 / 2.2);
+}
+
 .section-head .count {
   color: var(--faint);
   font-size: 13px;

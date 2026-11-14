@@ -137,7 +137,7 @@ async function clear() {
 .scores {
   display: grid;
   gap: 12px;
-  padding: 14px 16px;
+  padding: 16px;
 }
 .empty {
   margin: 0;

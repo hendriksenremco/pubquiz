@@ -257,7 +257,7 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
         <div class="section-head">
           <h3>{{ t('show') }}</h3>
         </div>
-        <div class="tile show-tile">
+        <div class="tile tile-narrow show-tile">
           <span class="tile-title">{{ t('timer') }}</span>
           <span class="timer-row">
             <input
@@ -307,8 +307,7 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-width: 520px;
-  padding: 16px 18px;
+  padding: 16px;
 }
 
 .timer-row {
