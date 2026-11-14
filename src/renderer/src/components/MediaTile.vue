@@ -166,12 +166,4 @@ figcaption {
   gap: 2px;
   margin-left: -8px;
 }
-
-.actions .btn {
-  color: var(--muted);
-}
-
-.actions .btn:hover {
-  color: var(--text);
-}
 </style>
