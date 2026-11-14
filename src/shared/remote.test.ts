@@ -45,6 +45,32 @@ describe('remoteStep', () => {
     expect(at({ roundId: answers.id, index: 3, revealed: true })[1]).toBe('Volgende stap')
   })
 
+  it('herhaalt een standaardnaam van een fragment niet onder de pijlen', () => {
+    const { quiz, music, answers, live } = setup()
+    music.fragments[0].label = 'Fragment 1'
+    music.fragments[1].label = 'Clip 2'
+    music.fragments[2].label = 'Fragment 1'
+    const at = (index: number) =>
+      remoteStep(
+        quiz,
+        music,
+        live({ activeRoundId: music.id, lastFragmentId: music.fragments[index].id })
+      )
+    expect(at(0)).toMatchObject({ label: 'Fragment 1 van 3', text: null })
+    expect(at(1)).toMatchObject({ label: 'Fragment 2 van 3', text: null })
+    // "Fragment 1" op plek 3 is een eigen naam: die zegt iets.
+    expect(at(2)).toMatchObject({ label: 'Fragment 3 van 3', text: 'Fragment 1' })
+    const answer = remoteStep(
+      quiz,
+      answers,
+      live({
+        activeRoundId: answers.id,
+        answer: { roundId: answers.id, index: 1, revealed: false }
+      })
+    )
+    expect(answer).toMatchObject({ label: 'Fragment 1, Ronde 2: muziek', text: null })
+  })
+
   it('noemt ← en → anders naar slides of fragmenten', () => {
     const { quiz, first, music, live } = setup()
     expect(remoteStep(quiz, first, live()).names).toEqual(['Vorige slide', 'Volgende slide'])

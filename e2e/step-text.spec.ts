@@ -41,3 +41,12 @@ test('onder de pijlen staat de vraag om voor te lezen, zoals op de telefoon', as
   await operator.locator('.slides .slide', { hasText: 'Geen slide' }).click()
   await expect(control.locator('.step-text')).toHaveCount(0)
 })
+
+test('een fragment met zijn standaardnaam staat er niet nog eens onder', async () => {
+  // Ronde 2 van de fixture heeft fragmenten met de naam die de app gaf ("Fragment 1").
+  await operator.locator('.rounds .round').nth(1).click()
+  await operator.locator('.pad .frag').first().click()
+  const control = operator.locator('.side .control')
+  await expect(control.locator('.label').first()).toHaveText('Fragment 1 van 8')
+  await expect(control.locator('.step-text')).toHaveCount(0)
+})

@@ -1,4 +1,4 @@
-import { defineMessages, type Locale } from './i18n'
+import { defineMessages, LOCALES, type Locale } from './i18n'
 
 /**
  * Namen die de app zelf aan een nieuwe quiz geeft: schermen, kanalen, rondes, vragen en
@@ -33,6 +33,15 @@ export const NAME_MESSAGES = defineMessages(
     }
   }
 )
+
+/**
+ * Heeft het fragment nog de naam die de app het gaf ("Fragment 3" of "Clip 3", in welke taal de quiz
+ * ook gemaakt is)? Dan zegt de naam niets meer dan het nummer.
+ */
+export function isDefaultFragmentName(label: string, number: number): boolean {
+  const name = label.trim()
+  return LOCALES.some((locale) => name === NAME_MESSAGES.in(locale)('fragment', { number }))
+}
 
 /** Een ronde zonder titel, in de bediening op de Mac en de telefoon (niet op de schermen). */
 export const TITLE_MESSAGES = defineMessages(

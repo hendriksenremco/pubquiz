@@ -8,7 +8,7 @@ import type { Locale } from './i18n'
 import type { ShowCommand } from './ipc'
 import { adjacentFragment } from './autoplay'
 import { action, definePlugin, typeOnly } from './plugin'
-import { roundTitle } from './quiz-messages'
+import { isDefaultFragmentName, roundTitle } from './quiz-messages'
 import type { PluginId, PluginStatus } from './plugins'
 import {
   activeRound,
@@ -697,7 +697,9 @@ export function remoteStep(
         number: item.number,
         round: roundTitle(item.round, locale)
       }),
-      text: item.slide ? questionText(item.slide) : (item.fragment?.label ?? null),
+      text: item.slide
+        ? questionText(item.slide)
+        : item.fragment && fragmentText(item.fragment.label, item.number),
       answer: current.revealed ? item.answer || item.fragment?.label || '—' : null,
       playing: playing(item.fragment?.id),
       prev: true,
@@ -713,7 +715,7 @@ export function remoteStep(
       label: fragment
         ? t('fragmentOf', { number: ids.indexOf(fragment.id) + 1, total: ids.length })
         : t('fragments', { count: ids.length }),
-      text: fragment?.label ?? null,
+      text: fragment ? fragmentText(fragment.label, ids.indexOf(fragment.id) + 1) : null,
       playing: playing(fragment?.id),
       prev: adjacentFragment(ids, state.lastFragmentId, 'prev') !== null,
       next: adjacentFragment(ids, state.lastFragmentId, 'next') !== null
@@ -733,6 +735,14 @@ export function remoteStep(
     prev: state.slideIndex > -1,
     next: state.slideIndex < count - 1 || loopActive(round, state.slideIndex)
   }
+}
+
+/**
+ * De naam van een fragment onder de pijlen, om het te herkennen. Een standaardnaam ("Fragment 3")
+ * staat al in het label erboven ("Fragment 3 van 8"), dus die valt weg.
+ */
+function fragmentText(label: string, number: number): string | null {
+  return label.trim() && !isDefaultFragmentName(label, number) ? label : null
 }
 
 /** Wat → doet als het antwoord in beeld staat: naar het volgende ding om langs te lopen. */
