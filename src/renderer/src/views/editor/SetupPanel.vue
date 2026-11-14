@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { createChannel, createScreenSlot } from '@shared/factory'
+import { deleteScreen, screenUsedByRounds } from '@shared/screen-slots'
 import { DEFAULT_TIMER_SECONDS, findAsset } from '@shared/resolve'
 import type { Background } from '@shared/types'
 import ContentChip from '../../components/ContentChip.vue'
@@ -49,23 +50,13 @@ async function removeScreen(id: string) {
   if (!slot) return
   const ok = await ask({
     title: t('removeScreenTitle', { name: slot.name }),
-    message: t('removeScreenMessage'),
+    // Zoals bij een ronde: alleen zeggen wat er nog meer verdwijnt als er iets is.
+    message: screenUsedByRounds(quiz.value, id) ? t('removeScreenMessage') : undefined,
     confirm: t('removeScreen'),
     icon: 'trash',
     danger: true
   })
-  if (!ok) return
-  quiz.value.screens = quiz.value.screens.filter((s) => s.id !== id)
-  for (const round of quiz.value.rounds) {
-    delete round.screens[id]
-    round.mutedScreens = round.mutedScreens.filter((t) => t !== id)
-    round.fragmentScreens = round.fragmentScreens.filter((t) => t !== id)
-    for (const slide of round.slides) {
-      if (slide.targetScreens === 'all') continue
-      slide.targetScreens = slide.targetScreens.filter((t) => t !== id)
-      if (slide.targetScreens.length === 0) slide.targetScreens = 'all'
-    }
-  }
+  if (ok) deleteScreen(quiz.value, id)
 }
 
 function addChannel() {
