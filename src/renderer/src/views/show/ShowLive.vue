@@ -224,6 +224,13 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
             {{ stepNames[1] }}
           </button>
         </div>
+        <!-- Zoals onder de pijlen op de telefoon: de vraag om voor te lezen (ook als er alleen het
+             nummer in beeld staat) en, in een antwoordenronde, het antwoord zodra het in beeld is. -->
+        <p v-if="stepView?.text" class="step-text">{{ stepView.text }}</p>
+        <p v-if="stepView?.answer" class="step-answer">
+          <span class="step-answer-label">{{ t('answer') }}</span
+          >{{ stepView.answer }}
+        </p>
         <div class="pair">
           <button class="btn tile" :disabled="!prevRound" @click="send({ type: 'prevRound' })">
             <span class="tile-label"><Icon name="left" :size="14" />{{ t('prevRound') }}</span>
@@ -524,6 +531,33 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
   font-size: 12px;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+.step-text {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: pre-line;
+  user-select: text;
+}
+
+.step-answer {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 650;
+  user-select: text;
+}
+
+.step-answer-label {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .notes-section {
