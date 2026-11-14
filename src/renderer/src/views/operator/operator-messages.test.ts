@@ -47,7 +47,9 @@ describe('teksten van de werkbalk en de dialogen', () => {
 
   it('vraagt bij afsluiten tijdens de show zoals bij Stop show: een vraag als titel', () => {
     const t = OPERATOR_MESSAGES.in('nl')
-    expect(t('quitTitle')).toBe('QuizNote afsluiten?')
+    // Zoals Show stoppen? met Stop show: de knop heet zoals het menu, Stop QuizNote.
+    expect(t('quitTitle')).toBe('QuizNote stoppen?')
+    expect(t('quit')).toBe('Stop QuizNote')
     expect(t('quitMessage')).toBe('De show loopt nog. De schermen gaan uit en de muziek stopt.')
     expect(OPERATOR_MESSAGES.in('en')('quitTitle')).toBe('Quit QuizNote?')
   })

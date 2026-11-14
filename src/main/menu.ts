@@ -16,13 +16,13 @@ export function buildMenu(controller: AppController): void {
         { type: 'separator' },
         { label: t('settings'), accelerator: 'CmdOrCtrl+,', click: () => send('settings') },
         { type: 'separator' },
-        { role: 'services' },
+        { role: 'services', label: t('services') },
         { type: 'separator' },
-        { role: 'hide' },
-        { role: 'hideOthers' },
-        { role: 'unhide' },
+        { role: 'hide', label: t('hide', { app: app.name }) },
+        { role: 'hideOthers', label: t('hideOthers') },
+        { role: 'unhide', label: t('showAll') },
         { type: 'separator' },
-        { role: 'quit' }
+        { role: 'quit', label: t('quit', { app: app.name }) }
       ]
     },
     {
@@ -45,26 +45,35 @@ export function buildMenu(controller: AppController): void {
         { label: t('undo'), accelerator: 'CmdOrCtrl+Z', click: () => send('undo') },
         { label: t('redo'), accelerator: 'Shift+CmdOrCtrl+Z', click: () => send('redo') },
         { type: 'separator' },
-        { role: 'cut' },
-        { role: 'copy' },
-        { role: 'paste' },
-        { role: 'selectAll' }
+        { role: 'cut', label: t('cut') },
+        { role: 'copy', label: t('copy') },
+        { role: 'paste', label: t('paste') },
+        { role: 'selectAll', label: t('selectAll') }
       ]
     },
     {
       label: t('view'),
       submenu: [
-        { role: 'reload' },
-        ...(app.isPackaged ? [] : [{ role: 'toggleDevTools' } as const]),
+        { role: 'reload', label: t('reload') },
+        ...(app.isPackaged ? [] : [{ role: 'toggleDevTools', label: t('devTools') } as const]),
         { type: 'separator' },
-        { role: 'resetZoom' },
-        { role: 'zoomIn' },
-        { role: 'zoomOut' },
+        { role: 'resetZoom', label: t('actualSize') },
+        { role: 'zoomIn', label: t('zoomIn') },
+        { role: 'zoomOut', label: t('zoomOut') },
         { type: 'separator' },
-        { role: 'togglefullscreen' }
+        { role: 'togglefullscreen', label: t('fullScreen') }
       ]
     },
-    { role: 'windowMenu' }
+    {
+      role: 'windowMenu',
+      label: t('window'),
+      submenu: [
+        { role: 'minimize', label: t('minimize') },
+        { role: 'zoom', label: t('zoom') },
+        { type: 'separator' },
+        { role: 'front', label: t('front') }
+      ]
+    }
   ]
   Menu.setApplicationMenu(Menu.buildFromTemplate(template))
 }
