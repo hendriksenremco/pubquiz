@@ -144,6 +144,11 @@ test('de show bedienen met een telefoon via de QR-code', async () => {
     await expect(operator.locator('.frag.on')).toHaveCount(0)
     await phone.getByRole('button', { name: 'Volgend fragment' }).click()
     await expect(frag(1)).toHaveClass(/on/)
+    // Tijdens de ronde herhalen Ronde opnieuw en Einde ronde de naam niet: die staat al als kop.
+    for (const name of [/Ronde opnieuw/, /Einde ronde/]) {
+      await expect(phone.getByRole('button', { name })).not.toContainText('Ronde 2: muziek')
+      await expect(mac.getByRole('button', { name })).not.toContainText('Ronde 2: muziek')
+    }
 
     // Na Einde ronde start Ronde opnieuw de ronde van net; hier met dezelfde knop op de Mac.
     await phone.getByRole('button', { name: /Einde ronde/ }).click()
