@@ -49,7 +49,7 @@ async function save(doc: FormDoc) {
 <template>
   <div class="print">
     <header class="head">
-      <h2>{{ t('title') }}</h2>
+      <h2 class="page-title">{{ t('title') }}</h2>
     </header>
 
     <p v-if="!rounds.length" class="tile empty muted">
@@ -111,11 +111,6 @@ async function save(doc: FormDoc) {
 
 .head {
   margin-bottom: 28px;
-}
-
-.head h2 {
-  font: 700 32px/1.1 var(--display);
-  letter-spacing: -0.02em;
 }
 
 .empty {

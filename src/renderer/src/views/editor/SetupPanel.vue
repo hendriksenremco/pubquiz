@@ -301,8 +301,6 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
 <style scoped>
 .page-title {
   margin-bottom: -12px;
-  font: 700 30px/1.15 var(--display);
-  letter-spacing: -0.02em;
 }
 
 .show-tile {

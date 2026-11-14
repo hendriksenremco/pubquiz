@@ -196,7 +196,7 @@ const empty = computed(() => !props.round.slides.length && !props.round.fragment
         <TitleField
           id="round-title"
           v-model="round.title"
-          class="round-title"
+          class="page-title"
           :aria-label="t('roundTitle')"
         />
 
@@ -395,11 +395,6 @@ const empty = computed(() => !props.round.slides.length && !props.round.fragment
   max-width: 820px;
   margin: 0 auto;
   padding: 32px 40px 80px;
-}
-
-.round-title {
-  font: 700 30px/1.15 var(--display);
-  letter-spacing: -0.02em;
 }
 
 .part {

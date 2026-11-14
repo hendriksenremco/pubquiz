@@ -269,6 +269,14 @@ input.quiet {
   color: var(--faint);
 }
 
+/* De titel bovenaan een pagina in de editor: een ronde, Quiz-instellingen, Media (en een map) en
+   Afdrukken. Overal even groot, zodat geen pagina luider of stiller begint dan de andere.
+   Na .quiet, want een titel is vaak een stil veld (TitleField). */
+.page-title {
+  font: 700 30px/1.15 var(--display);
+  letter-spacing: -0.02em;
+}
+
 .field {
   display: flex;
   flex-direction: column;
