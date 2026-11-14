@@ -79,7 +79,7 @@ function click(id: string) {
           <Icon name="pause" :size="14" /> {{ t('pause') }} <span class="kbd">A</span>
         </button>
         <button class="btn btn-sm" @click="autoplay('skip')">
-          <Icon name="next" :size="14" /> {{ t('next') }} <span class="kbd">S</span>
+          <Icon name="next" :size="14" /> {{ t('skip') }} <span class="kbd">S</span>
         </button>
         <button class="btn btn-sm" @click="autoplay('stop')">
           <Icon name="stop" :size="14" /> {{ t('stopSequence') }}

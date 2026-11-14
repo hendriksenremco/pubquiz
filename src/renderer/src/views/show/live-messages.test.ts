@@ -61,14 +61,14 @@ describe('teksten van de show', () => {
       // Slides: "Geen slide in beeld" (noSlide) is op de telefoon de lege preview.
       expect(mac('slides'), `${locale}: slides`).toBe(phone('slides'))
       expect(mac('noSlide'), `${locale}: noSlide`).toBe(phone('noSlideButton'))
-      // De knoppen van de reeks (FragmentPad); "Volgende" heet op de telefoon `skip`, naast vorige en volgende.
+      // De knoppen van de reeks (FragmentPad).
       const pad = FRAGMENT_PAD_MESSAGES.in(locale)
       const pairs = [
         ['title', 'fragments'],
         ['playSequence', 'playSequence'],
         ['pause', 'pause'],
         ['resume', 'resume'],
-        ['next', 'skip'],
+        ['skip', 'skip'],
         ['stopSequence', 'stopSequence'],
         ['reset', 'reset'],
         ['upNext', 'upNextFragment'],
