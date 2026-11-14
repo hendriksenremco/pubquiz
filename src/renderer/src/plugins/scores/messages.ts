@@ -13,12 +13,10 @@ export const SCORE_TABLE_MESSAGES = defineMessages(
     removeTeam: 'Verwijder team',
     removeTeamTitle: 'Team “{name}” verwijderen?',
     removeTeamMessage: 'De punten van dit team verdwijnen ook.',
-    remove: 'Verwijder',
     points: 'Punten van {team} in {round}',
     clearPoints: 'Wis punten',
     clearTitle: 'Alle punten wissen?',
-    clearMessage: 'De teams blijven staan. Handig voor een nieuwe avond met dezelfde quiz.',
-    clear: 'Wis'
+    clearMessage: 'De teams blijven staan. Handig voor een nieuwe avond met dezelfde quiz.'
   },
   {
     en: {
@@ -32,12 +30,10 @@ export const SCORE_TABLE_MESSAGES = defineMessages(
       removeTeam: 'Delete team',
       removeTeamTitle: 'Delete team “{name}”?',
       removeTeamMessage: "This team's points are removed too.",
-      remove: 'Delete',
       points: 'Points for {team} in {round}',
       clearPoints: 'Clear points',
       clearTitle: 'Clear all points?',
-      clearMessage: 'The teams stay. Handy for a new night with the same quiz.',
-      clear: 'Clear'
+      clearMessage: 'The teams stay. Handy for a new night with the same quiz.'
     }
   }
 )

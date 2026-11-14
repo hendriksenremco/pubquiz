@@ -50,7 +50,7 @@ async function removeScreen(id: string) {
   const ok = await ask({
     title: t('removeScreenTitle', { name: slot.name }),
     message: t('removeScreenMessage'),
-    confirm: t('remove'),
+    confirm: t('removeScreen'),
     icon: 'trash',
     danger: true
   })

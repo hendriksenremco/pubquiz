@@ -46,7 +46,7 @@ async function remove(teamId: string, name: string) {
   const ok = await ask({
     title: t('removeTeamTitle', { name }),
     message: t('removeTeamMessage'),
-    confirm: t('remove'),
+    confirm: t('removeTeam'),
     icon: 'trash',
     danger: true
   })
@@ -57,7 +57,7 @@ async function clear() {
   const ok = await ask({
     title: t('clearTitle'),
     message: t('clearMessage'),
-    confirm: t('clear'),
+    confirm: t('clearPoints'),
     icon: 'trash',
     danger: true
   })

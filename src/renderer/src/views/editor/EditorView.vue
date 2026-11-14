@@ -85,7 +85,7 @@ async function remove(id: string) {
   if (!r) return
   const ok = await ask({
     title: t('removeRound', { title: roundTitle(r, locale) }),
-    confirm: t('remove'),
+    confirm: t('removeRoundButton'),
     icon: 'trash',
     danger: true
   })
