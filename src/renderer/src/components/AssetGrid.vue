@@ -9,7 +9,7 @@ import Icon from './Icon.vue'
 import MediaThumb from './MediaThumb.vue'
 import { COMPONENT_MESSAGES } from './messages'
 
-/** Kies een video of afbeelding op beeld, met een tegel om iets nieuws te importeren. */
+/** Kies een video of afbeelding op beeld, met een knop eronder om iets nieuws te importeren. */
 const props = defineProps<{ kind: Extract<MediaKind, 'video' | 'image'> }>()
 const model = defineModel<string | undefined>()
 const emit = defineEmits<{ picked: [assetId: string] }>()
@@ -33,7 +33,7 @@ async function importNew() {
 </script>
 
 <template>
-  <div class="grid">
+  <div v-if="groups.length" class="grid">
     <template v-for="g in groups" :key="g.folder?.id ?? 'root'">
       <div v-if="showHeaders" class="group">
         <Icon :name="g.folder ? 'folder' : 'images'" :size="13" />
@@ -52,11 +52,10 @@ async function importNew() {
         <span class="cell-name">{{ a.name }}</span>
       </button>
     </template>
-    <button type="button" class="cell add" @click="importNew">
-      <span class="cell-thumb add-thumb"><Icon name="download" /></span>
-      <span class="cell-name">{{ t('importMedia') }}</span>
-    </button>
   </div>
+  <button type="button" class="menu-item import" @click="importNew">
+    <Icon name="download" /> {{ t('importMedia') }}
+  </button>
 </template>
 
 <style scoped>
@@ -113,15 +112,7 @@ async function importNew() {
   text-overflow: ellipsis;
 }
 
-.add {
-  color: var(--muted);
-}
-
-.add-thumb {
-  display: grid;
-  place-items: center;
-  border-radius: 5px;
-  background: transparent;
-  box-shadow: inset 0 0 0 1.5px var(--line-strong);
+.grid + .import {
+  margin-top: 6px;
 }
 </style>
