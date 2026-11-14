@@ -177,7 +177,9 @@ defineExpose({ importRounds })
           @drop.prevent.stop="dragging && onRoundDrop(r.id)"
         >
           <span class="num mono">{{ i + 1 }}</span>
-          <span class="round-title grow">{{ roundTitle(r, locale) }}</span>
+          <span class="round-title grow" :title="roundTitle(r, locale)">{{
+            roundTitle(r, locale)
+          }}</span>
         </div>
         <Popover :width="250">
           <template #trigger="{ open, toggle }">
