@@ -4,6 +4,14 @@ Doe dit als laatste stap na elke afgeronde taak: een samengevoegde pull request,
 
 Het dashboard is https://claude.ai/artifact/Y6MdgVytSjnrMr7CkYa1zF (type Dashboard). Alleen de datasets `activiteit`, `todos` en `prs` krijgen nieuwe bestanden. Raak de pagina en de andere datasets niet aan.
 
+**Stap 1: de bestanden maken.** Doe dat met het script, niet met de hand:
+
+```sh
+node scripts/dashboard-data.mjs [map]   # standaard: <tmp>/quiznote-dashboard
+```
+
+Het schrijft `activiteit.json`, `todos.json` en `prs.json` met `gh`, volgens de regels hieronder. Er staat geen tijdstip van maken in: is er niets gebeurd, dan is de uitvoer gelijk aan de vorige keer. Verandert een regel hieronder, verander dan ook het script en `scripts/dashboard-data.test.mjs`.
+
 **activiteit.json**: alles van de laatste 30 dagen in `hendriksenremco/pubquiz` en `hendriksenremco/pubquiz-site`, nieuwste eerst, hooguit 60 rijen. Elke rij is `{"id", "tijd" (ISO, UTC), "wanneer" (Europe/Amsterdam, bv. "1 nov 09:12"), "soort", "wat", "door", "resultaat"}`.
 
 - **Release**: elke GitHub Release van pubquiz, plus een eventuele release-repo uit de workflows.
