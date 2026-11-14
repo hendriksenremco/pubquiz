@@ -143,8 +143,9 @@ function addFragments(assets: MediaAsset[]) {
   select('fragment', added[0].id)
 }
 
-async function fromFiles(close: () => void) {
-  close()
+// Zonder mappen in Media is importeren de enige keuze: dan geen popover, maar meteen het venster.
+async function fromFiles(close?: () => void) {
+  close?.()
   const assets = await importFiles()
   addImages(assets)
   addFragments(assets)
@@ -227,7 +228,12 @@ const empty = computed(() => !props.round.slides.length && !props.round.fragment
           </button>
           <Popover :width="260">
             <template #trigger="{ open, toggle }">
-              <button class="btn add" :class="{ active: open }" @click="toggle">
+              <button
+                class="btn add"
+                :class="{ active: open }"
+                :title="imageFolders.length ? undefined : t('fromFiles')"
+                @click="imageFolders.length ? toggle() : fromFiles()"
+              >
                 <Icon name="plus" :size="14" /> {{ t('addImages') }}
               </button>
             </template>
@@ -252,7 +258,12 @@ const empty = computed(() => !props.round.slides.length && !props.round.fragment
           </Popover>
           <Popover :width="260">
             <template #trigger="{ open, toggle }">
-              <button class="btn add" :class="{ active: open }" @click="toggle">
+              <button
+                class="btn add"
+                :class="{ active: open }"
+                :title="audioFolders.length ? undefined : t('fromFiles')"
+                @click="audioFolders.length ? toggle() : fromFiles()"
+              >
                 <Icon name="plus" :size="14" /> {{ t('addFragments') }}
               </button>
             </template>
