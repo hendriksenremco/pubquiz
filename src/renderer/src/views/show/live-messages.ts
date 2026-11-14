@@ -55,18 +55,9 @@ export const LIVE_MESSAGES = defineMessages(
     keyArrowsFragments: 'Vorig of volgend fragment',
     keyArrowsSlides: 'Vorige of volgende slide',
     keyEnter: 'Enter',
-    keyNextRound: 'Start de volgende ronde',
-    keyRestart: 'Begin de ronde opnieuw',
-    keyEnd: 'Beëindig de ronde',
     keyFragment: 'Speel een fragment',
     keySpace: 'Spatie',
-    keyStopFragment: 'Stop het fragment',
-    keyAutoplay: 'Speel, pauzeer of hervat de reeks',
-    keySkip: 'Sla over, naar het volgende fragment in de reeks',
-    keyBlackout: 'Beeld op zwart of terug',
-    keyMute: 'Geluid uit of aan',
-    keyLoop: 'Pauzeer of hervat het vanzelf wisselen van de slides',
-    keyTimer: 'Start of stop het aftellen'
+    keyStopFragment: 'Stop het fragment'
   },
   {
     en: {
@@ -115,18 +106,9 @@ export const LIVE_MESSAGES = defineMessages(
       keyArrowsFragments: 'Previous or next clip',
       keyArrowsSlides: 'Previous or next slide',
       keyEnter: 'Return',
-      keyNextRound: 'Start the next round',
-      keyRestart: 'Restart the round from the beginning',
-      keyEnd: 'End the round',
       keyFragment: 'Play a clip',
       keySpace: 'Space',
-      keyStopFragment: 'Stop the clip',
-      keyAutoplay: 'Play, pause or resume the sequence',
-      keySkip: 'Skip to the next clip in the sequence',
-      keyBlackout: 'Black out or screens back',
-      keyMute: 'Mute or unmute',
-      keyLoop: 'Pause or resume auto-advancing the slides',
-      keyTimer: 'Start or stop the countdown'
+      keyStopFragment: 'Stop the clip'
     }
   }
 )

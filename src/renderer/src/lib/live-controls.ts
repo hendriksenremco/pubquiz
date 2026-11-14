@@ -11,12 +11,16 @@ import {
   stepTarget,
   timerSeconds
 } from '@shared/resolve'
-import { LIVE_MESSAGES } from '../views/show/live-messages'
+import { FRAGMENT_PAD_MESSAGES, LIVE_MESSAGES } from '../views/show/live-messages'
 import { useSession } from '../stores/session'
 import { ask } from './confirm'
 import { locale } from './locale'
 
 const t = LIVE_MESSAGES.in(locale)
+const tPad = FRAGMENT_PAD_MESSAGES.in(locale)
+
+/** Twee namen van één knop, zoals hij heet als hij aan of uit staat: "Beeld op zwart / Beeld terug". */
+const both = (...names: string[]) => names.join(' / ')
 
 /**
  * Bediening van de live show, gedeeld door de werkbalk en de sneltoetsen van ShowLive. Dezelfde
@@ -93,19 +97,23 @@ export function useLiveControls() {
     slides: 'keyArrowsSlides'
   } as const
 
+  /**
+   * Sneltoetsen: bij een toets met een knop staat de naam van die knop, zodat je hem in de werkbalk
+   * of de zijbalk terugvindt.
+   */
   const shortcuts = computed((): [string, string][] => [
     ['← →', t(ARROWS[arrows.value])],
-    [t('keyEnter'), t('keyNextRound')],
-    ['R', t('keyRestart')],
-    ['E', t('keyEnd')],
+    [t('keyEnter'), t('nextRound')],
+    ['R', t('restartRound')],
+    ['E', t('endRound')],
     ['1–9', t('keyFragment')],
     [t('keySpace'), t('keyStopFragment')],
-    ['A', t('keyAutoplay')],
-    ['S', t('keySkip')],
-    ['B', t('keyBlackout')],
-    ['M', t('keyMute')],
-    ['L', t('keyLoop')],
-    ['T', t('keyTimer')]
+    ['A', both(tPad('playSequence'), tPad('pause'), tPad('resume'))],
+    ['S', tPad('skip')],
+    ['B', both(t('blackoutOn'), t('blackoutOff'))],
+    ['M', both(t('muteOn'), t('muteOff'))],
+    ['L', both(t('loopPause'), t('loopResume'))],
+    ['T', both(t('timerOn'), t('timerOff'))]
   ])
 
   return {
