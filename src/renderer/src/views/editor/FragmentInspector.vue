@@ -173,8 +173,7 @@ function remove() {
       >
         <Icon name="right" :size="14" class="turn" /> {{ t('moveDown') }}
       </button>
-      <span class="grow" />
-      <button class="btn btn-ghost btn-sm" @click="remove">
+      <button class="btn btn-ghost btn-sm remove" @click="remove">
         <Icon name="trash" :size="14" /> {{ t('remove') }}
       </button>
     </footer>
@@ -230,5 +229,10 @@ function remove() {
 
 .turn {
   transform: rotate(90deg);
+}
+
+/* Verwijderen staat rechts, zoals Verwijder ronde; ook als hij naar een eigen regel zakt. */
+.remove {
+  margin-left: auto;
 }
 </style>
