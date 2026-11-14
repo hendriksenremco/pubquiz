@@ -177,7 +177,9 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
             @click="send({ type: 'setSlide', index: i })"
           >
             <span class="slide-kind">{{ i + 1 }}</span>
-            <span class="slide-text">{{ slideLabel(round, s, locale) }}</span>
+            <span class="slide-text" :title="slideLabel(round, s, locale)">{{
+              slideLabel(round, s, locale)
+            }}</span>
           </button>
         </div>
       </section>
