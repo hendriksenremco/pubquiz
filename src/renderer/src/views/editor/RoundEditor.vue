@@ -417,13 +417,15 @@ const empty = computed(() => !props.round.slides.length && !props.round.fragment
 .add-bar {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  /* Krap genoeg dat de vier knoppen ook in het kleinste venster op één regel passen. */
+  gap: 6px;
   margin-top: -8px;
   padding-left: 10px;
 }
 
 .add {
   height: 30px;
+  padding: 0 11px;
   border-radius: 999px;
   background: var(--surface-2);
   font-weight: 550;
