@@ -49,17 +49,12 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
   gap: 14px;
   width: min(480px, 100%);
   max-height: calc(100vh - 48px);
-  padding: 22px 22px 18px;
+  padding: 24px 24px 20px;
   border-radius: var(--radius-xl);
   background: var(--surface-2);
   box-shadow:
     0 0 0 1px var(--line-strong),
     0 30px 80px rgba(3, 6, 14, 0.6);
-}
-
-.dialog-title {
-  font-size: 19px;
-  line-height: 1.25;
 }
 
 .dialog-body {

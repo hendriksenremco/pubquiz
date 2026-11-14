@@ -277,6 +277,12 @@ input.quiet {
   letter-spacing: -0.02em;
 }
 
+/* De titel van een dialoog en van het venster Show voorbereiden: overal even groot. */
+.dialog-title {
+  font-size: 20px;
+  line-height: 1.25;
+}
+
 .field {
   display: flex;
   flex-direction: column;
