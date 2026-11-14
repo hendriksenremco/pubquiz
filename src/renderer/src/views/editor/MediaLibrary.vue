@@ -246,12 +246,13 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
       <h2 v-else class="page-title">{{ t('title') }}</h2>
 
       <span class="grow" />
-      <div class="filters">
+      <div class="segmented filters" role="group" :aria-label="t('filter')">
         <button
           v-for="f in FILTERS"
           :key="f.value"
-          class="btn btn-sm"
-          :class="filter === f.value ? 'active' : 'btn-ghost'"
+          type="button"
+          :class="{ on: filter === f.value }"
+          :aria-pressed="filter === f.value"
           @click="filter = f.value"
         >
           {{ f.label }}
@@ -445,9 +446,10 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
   flex: none;
 }
 
-.filters {
-  display: flex;
-  gap: 2px;
+/* Het filter is zo breed als zijn woorden, niet als de kop. */
+.filters > button {
+  flex: none;
+  padding: 0 10px;
 }
 
 .grid {
