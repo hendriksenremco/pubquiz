@@ -314,6 +314,9 @@ test('bladert met de pijltjes door de fragmenten', async () => {
   const help = operator.getByRole('button', { name: 'Sneltoetsen' })
   await help.click()
   await expect(operator.locator('.shortcuts')).toContainText('Vorig of volgend fragment')
+  // Bij een toets met een knop staat de naam van die knop.
+  await expect(operator.locator('.shortcuts')).toContainText('Beeld op zwart / Beeld terug')
+  await snap(operator, 'test-results/show-shortcuts.png')
   await help.click()
   await expect(operator.locator('.shortcuts')).toHaveCount(0)
   await expect(frag(3)).toHaveClass(/upcoming/)
