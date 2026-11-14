@@ -66,7 +66,8 @@ function click(id: string) {
       <h3 class="grow">{{ t('title') }}</h3>
       <span v-if="status" class="pill pill-accent">{{ status }}</span>
       <template v-if="sequence === 'idle'">
-        <button class="btn btn-primary btn-sm" @click="autoplay('start')">
+        <!-- Een gewone knop, zoals op de telefoon: amber is voor Volgend fragment. -->
+        <button class="btn btn-sm" @click="autoplay('start')">
           <Icon name="play" :size="14" /> {{ t('playSequence') }} <span class="kbd">A</span>
         </button>
       </template>
