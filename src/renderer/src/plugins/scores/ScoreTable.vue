@@ -67,8 +67,13 @@ async function clear() {
 
 <template>
   <section data-testid="score-table">
+    <!-- Voeg team toe rechts in de kop, zoals Voeg scherm toe bij Schermen. -->
     <div class="section-head">
       <h3>{{ t('title') }}</h3>
+      <span class="grow" />
+      <button class="btn btn-ghost btn-sm" @click="add">
+        <Icon name="plus" :size="14" /> {{ t('addTeam') }}
+      </button>
     </div>
     <div class="tile scores">
       <p v-if="!scores.teams.length" class="muted empty">{{ t('empty') }}</p>
@@ -119,11 +124,8 @@ async function clear() {
           </tbody>
         </table>
       </div>
-      <div class="actions">
-        <button class="btn btn-sm" @click="add">
-          <Icon name="plus" :size="14" /> {{ t('addTeam') }}
-        </button>
-        <button v-if="hasPoints" class="btn btn-sm" @click="clear">
+      <div v-if="hasPoints" class="actions">
+        <button class="btn btn-sm" @click="clear">
           <Icon name="trash" :size="14" /> {{ t('clearPoints') }}
         </button>
       </div>
