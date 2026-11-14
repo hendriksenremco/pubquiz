@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { outputLabel, screenSoundOutput, screenSoundRoute, type AudioOutput } from './audio-devices'
 
 const outputs: AudioOutput[] = [
-  { deviceId: 'default', label: 'Systeemstandaard (MacBook Pro-luidsprekers)' },
+  { deviceId: 'default', label: 'Systeemstandaard: MacBook Pro-luidsprekers' },
   { deviceId: 'mbp', label: 'MacBook Pro-luidsprekers (Built-in)' },
   { deviceId: 'lg', label: 'LG TV SSCR2 (HDMI)' },
   { deviceId: 'usb', label: 'USB Audio CODEC (USB)' }
@@ -65,13 +65,13 @@ describe('screenSoundRoute', () => {
 
 describe('outputLabel', () => {
   const outputs: AudioOutput[] = [
-    { deviceId: 'default', label: 'System default (MacBook Pro Speakers)' },
+    { deviceId: 'default', label: 'System default: MacBook Pro Speakers' },
     { deviceId: 'abc', label: 'USB Audio' }
   ]
 
   it('noemt de systeemstandaard in de taal van nu, niet zoals main hem bewaarde', () => {
     const stored = { deviceId: 'default', label: 'Systeemstandaard' }
-    expect(outputLabel(stored, outputs, 'en')).toBe('System default (MacBook Pro Speakers)')
+    expect(outputLabel(stored, outputs, 'en')).toBe('System default: MacBook Pro Speakers')
     expect(outputLabel(stored, [], 'en')).toBe('System default')
     expect(outputLabel(undefined, [], 'nl')).toBe('Systeemstandaard')
   })
