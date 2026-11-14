@@ -117,7 +117,7 @@ test('acties staan zichtbaar in beeld, niet achter drie stippen', async () => {
   await operator.getByRole('tab', { name: 'Ronde' }).click()
   await snap(operator, 'test-results/round-actions.png')
   await operator.getByRole('button', { name: 'Verwijder ronde' }).click()
-  await confirmIn(operator, 'Verwijder')
+  await confirmIn(operator, 'Verwijder ronde')
   await expect(rounds).toHaveCount(4)
 
   await operator.getByRole('button', { name: /^Media/ }).click()

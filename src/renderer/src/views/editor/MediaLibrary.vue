@@ -113,7 +113,7 @@ async function removeFolder() {
   const ok = await ask({
     title: t('removeFolderTitle', { name: f.name }),
     message: t('removeFolderMessage'),
-    confirm: t('remove'),
+    confirm: t('removeFolder'),
     icon: 'trash'
   })
   if (!ok) return

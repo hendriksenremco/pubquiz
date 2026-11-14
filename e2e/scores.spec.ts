@@ -89,13 +89,13 @@ test('teams en punten per ronde bij Quiz-instellingen, via de plug-in Tussenstan
 
     // Een team weghalen, met zijn punten.
     await table.getByRole('button', { name: 'Verwijder team' }).nth(1).click()
-    await confirmIn(operator, 'Verwijder')
+    await confirmIn(operator, 'Verwijder team')
     await expect(names).toHaveCount(2)
     await expect.poll(() => JSON.stringify(saved())).not.toContain('Quizzly')
 
     // Punten wissen: de teams blijven.
     await table.getByRole('button', { name: 'Wis punten' }).click()
-    await confirmIn(operator, 'Wis')
+    await confirmIn(operator, 'Wis punten')
     await expect(table.locator('td.total')).toHaveText(['0', '0'])
     await expect(table.getByRole('button', { name: 'Wis punten' })).toHaveCount(0)
     await expect.poll(() => saved()?.points).toEqual({})
