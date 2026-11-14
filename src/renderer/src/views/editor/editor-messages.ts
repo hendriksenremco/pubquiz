@@ -453,6 +453,7 @@ export const SETUP_MESSAGES = defineMessages(
     newScreen: 'Scherm {number}',
     removeScreen: 'Verwijder scherm',
     removeScreenTitle: 'Scherm “{name}” verwijderen?',
+    /** Alleen als een ronde of slide iets voor dit scherm instelt (screenUsedByRounds). */
     removeScreenMessage: 'De instellingen van rondes voor dit scherm verdwijnen ook.',
     shows: 'Toont',
     addScreen: 'Voeg scherm toe',

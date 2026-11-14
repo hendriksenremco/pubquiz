@@ -107,6 +107,16 @@ test('acties staan zichtbaar in beeld, niet achter drie stippen', async () => {
   await operator.waitForTimeout(300)
   await snap(operator, 'test-results/quiz-actions.png')
 
+  // Een nieuw scherm dat nog nergens gebruikt wordt: alleen de vraag, zoals bij een lege ronde.
+  const removeScreen = operator.getByRole('button', { name: 'Verwijder scherm' })
+  await operator.getByRole('button', { name: 'Voeg scherm toe' }).click()
+  await expect(removeScreen).toHaveCount(3)
+  await removeScreen.last().click()
+  await expect(operator.getByRole('dialog')).toContainText('Scherm “Scherm 3” verwijderen?')
+  await expect(operator.getByRole('dialog')).not.toContainText('verdwijnen ook')
+  await confirmIn(operator, 'Verwijder scherm')
+  await expect(removeScreen).toHaveCount(2)
+
   // Ronde dupliceren en verwijderen, onderaan de instellingen van de ronde.
   const rounds = operator.locator('.sidebar .round')
   await rounds.first().click()
