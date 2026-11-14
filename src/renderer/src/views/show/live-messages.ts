@@ -12,6 +12,9 @@ export const LIVE_MESSAGES = defineMessages(
     now: 'Nu',
     upNext: 'Hierna',
     betweenRounds: 'Tussen twee rondes',
+    /** De kop tussen twee rondes, zoals op de telefoon. */
+    upNextTitle: 'Hierna: {title}',
+    lastRound: 'Dit was de laatste ronde',
     slides: 'Slides',
     noSlide: 'Geen slide',
     loopPaused: 'Wisselen gepauzeerd',
@@ -71,6 +74,8 @@ export const LIVE_MESSAGES = defineMessages(
       now: 'Now',
       upNext: 'Up next',
       betweenRounds: 'Between rounds',
+      upNextTitle: 'Up next: {title}',
+      lastRound: 'That was the last round',
       slides: 'Slides',
       noSlide: 'No slide',
       loopPaused: 'Auto-advance paused',
