@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted } from 'vue'
 import { roundTitle } from '@shared/quiz-messages'
-import { slideLabel } from '@shared/resolve'
+import { roundNotes, slideLabel } from '@shared/resolve'
 import Icon from '../../components/Icon.vue'
 import ScreenStage from '../../components/ScreenStage.vue'
 import { useLiveControls } from '../../lib/live-controls'
@@ -40,6 +40,9 @@ const {
   toggleLoop,
   toggleTimer
 } = useLiveControls()
+
+// Zoals op de telefoon: zonder witruimte eromheen, en geen blok als er alleen witruimte staat.
+const notes = computed(() => roundNotes(round.value))
 
 // Tussen twee rondes zegt de kop wat er hierna komt, zoals op de telefoon; "Tussen twee rondes"
 // staat dan al boven de pijlen.
@@ -279,9 +282,9 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
         </div>
       </section>
 
-      <section v-if="round?.hostNotes" class="notes-section">
+      <section v-if="notes" class="notes-section" :aria-label="t('notes')">
         <span class="label">{{ t('notes') }}</span>
-        <p class="notes">{{ round.hostNotes }}</p>
+        <p class="notes">{{ notes }}</p>
       </section>
 
       <span class="grow" />
@@ -595,6 +598,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
   font-size: 14px;
   line-height: 1.5;
   white-space: pre-wrap;
+  overflow-wrap: break-word;
   user-select: text;
 }
 </style>

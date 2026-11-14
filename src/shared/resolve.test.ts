@@ -5,6 +5,7 @@ import {
   findBrokenReferences,
   resolveAudio,
   resolveScreen,
+  roundNotes,
   screenHasSound
 } from './resolve'
 import type { Quiz, ShowState } from './types'
@@ -417,5 +418,17 @@ describe('referenties', () => {
     expect(findBrokenReferences(quiz, 'en')).toEqual([
       'Round “Muziek”, Fragment 1, picture with the answer: file missing'
     ])
+  })
+})
+
+describe('roundNotes', () => {
+  it('trims whitespace and hides notes with only whitespace, like the phone', () => {
+    const round = makeQuiz().rounds[0]
+    expect(roundNotes({ ...round, hostNotes: '\n  Lees langzaam voor.\n\n' })).toBe(
+      'Lees langzaam voor.'
+    )
+    expect(roundNotes({ ...round, hostNotes: ' \n ' })).toBeNull()
+    expect(roundNotes({ ...round, hostNotes: undefined })).toBeNull()
+    expect(roundNotes(null)).toBeNull()
   })
 })

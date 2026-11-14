@@ -79,6 +79,9 @@ test('de show bedienen met een telefoon via de QR-code', async () => {
     await expect(phone.getByText('Slide 1 van 3')).toBeVisible()
     // De notities bij de ronde, zoals onder de rondes op de Mac.
     await expect(notes).toContainText('Vragen staan op papier. Antwoorden: zie map.')
+    await expect(operator.getByRole('region', { name: 'Notities' })).toContainText(
+      'Vragen staan op papier. Antwoorden: zie map.'
+    )
     await expect(preview).toContainText('Algemene kennis')
     const nextSlide = phone.getByRole('button', { name: 'Volgende slide' })
     // De naam staat op de knop zelf, niet alleen voor een schermlezer.
