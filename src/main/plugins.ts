@@ -15,7 +15,7 @@ import {
   type PluginStatus,
   type PluginStatuses
 } from '@shared/plugins'
-import type { Notice, Quiz, ShowState } from '@shared/types'
+import type { HardwareMapping, Notice, Quiz, ShowState } from '@shared/types'
 import { MagicHomePlugin } from './magichome'
 import { StatusBoard } from './plugin-status'
 import { appLocale } from './locale'
@@ -34,6 +34,8 @@ export interface PluginHost<Id extends PluginId> {
   mediaFile(file: string): string | null
   /** De titel van de geopende quiz zoals de bediening hem toont (quizTitle); null = geen quiz. */
   quizName(): string | null
+  /** Hoe de schermen en kanalen van de geopende quiz op deze Mac gekoppeld zijn (Start show). */
+  hardware(): HardwareMapping
   /**
    * Zijn status voor de vensters, de telefoons en de andere plug-ins. Mag vaak: alleen een echte
    * verandering gaat weg, en hooguit een paar keer per seconde (StatusBoard).
@@ -71,6 +73,8 @@ export interface MainPlugin<Id extends PluginId> {
   readonly actions: ActionHandlers<Id>
   /** Een andere plug-in heeft een nieuwe status. */
   statusChanged?(id: PluginId): void
+  /** De koppeling van schermen en kanalen is veranderd (host.hardware). */
+  hardwareChanged?(): void
   /** Uitgezet, of de app stopt. */
   stop(): void
 }
@@ -109,7 +113,7 @@ export class Plugins {
   constructor(
     private readonly host: Pick<
       PluginHost<PluginId>,
-      'notify' | 'command' | 'mediaFile' | 'quizName'
+      'notify' | 'command' | 'mediaFile' | 'quizName' | 'hardware'
     > & {
       saveConfig(id: PluginId, config: Record<string, unknown>): void
       /** Naar alle vensters; null = de plug-in staat uit. */
@@ -143,6 +147,10 @@ export class Plugins {
 
   update(quiz: Quiz | null, state: ShowState): void {
     for (const plugin of this.running.values()) plugin.update(quiz, state)
+  }
+
+  hardwareChanged(): void {
+    for (const plugin of this.running.values()) plugin.hardwareChanged?.()
   }
 
   /**
@@ -189,6 +197,7 @@ export class Plugins {
       command: this.host.command,
       mediaFile: this.host.mediaFile,
       quizName: this.host.quizName,
+      hardware: this.host.hardware,
       publish: (status) => {
         if (this.running.has(id)) this.board.publish(id, status)
       },

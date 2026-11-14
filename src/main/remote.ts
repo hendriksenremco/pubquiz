@@ -134,6 +134,11 @@ export class RemotePlugin implements MainPlugin<'remote'> {
     this.schedule()
   }
 
+  /** Een scherm ging op Uit of weer aan: zijn videogeluid verdwijnt of komt terug bij Geluid. */
+  hardwareChanged(): void {
+    this.schedule()
+  }
+
   /** Het adres voor de QR-code en wie er verbonden is; main stuurt alleen een verandering. */
   private async publishLink(): Promise<void> {
     const generation = this.generation
@@ -320,7 +325,10 @@ export class RemotePlugin implements MainPlugin<'remote'> {
       const status = this.host.status(id)
       return status === null ? [] : [{ id, status } as RemotePluginView]
     })
-    const view = remoteView(this.quiz, this.state, plugins, this.options.locale)
+    const off = Object.entries(this.host.hardware().screens)
+      .filter(([, target]) => target?.kind === 'off')
+      .map(([id]) => id)
+    const view = remoteView(this.quiz, this.state, plugins, this.options.locale, off)
     // Een lege titel heet op de telefoon net als op de Mac naar de map (quizTitle).
     return this.quiz ? { ...view, quiz: this.host.quizName() ?? view.quiz } : view
   }

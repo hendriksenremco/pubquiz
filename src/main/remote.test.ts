@@ -7,7 +7,7 @@ import { afterEach, describe, expect, it, vi, type Mock } from 'vitest'
 import { createQuiz, createRound, createShowState, createSlide } from '@shared/factory'
 import type { Locale } from '@shared/i18n'
 import type { RemoteLink, RemoteView } from '@shared/remote'
-import type { ShowState } from '@shared/types'
+import type { HardwareMapping, ShowState } from '@shared/types'
 import type { PluginConfig } from '@shared/plugins'
 import type { PluginHost } from './plugins'
 import { lanAddress, RemotePlugin } from './remote'
@@ -33,6 +33,7 @@ async function setup(light: unknown = null, locale?: Locale) {
   const host = {
     mediaFile: (file: string) => join(dir, 'quiz', file),
     quizName: vi.fn((): string | null => 'Kroegquiz'),
+    hardware: vi.fn((): HardwareMapping => ({ screens: {}, audio: {}, screenSound: {} })),
     notify: vi.fn(),
     command: vi.fn(),
     saveConfig: vi.fn((config: PluginConfig<'remote'>) => plugin!.configure(config)),
@@ -174,6 +175,28 @@ describe('RemotePlugin', () => {
     expect(await events.next()).toMatchObject({ quiz: null })
     plugin.update(quiz, live())
     expect(await events.next()).toMatchObject({ quiz: 'Vrijdag' })
+    await events.cancel()
+  })
+
+  it('laat het videogeluid weg van een scherm dat op deze Mac op Uit staat, zoals de Mac', async () => {
+    const { host, plugin, quiz, live, api } = await setup()
+    quiz.assets.push({ id: 'loop', kind: 'video', file: 'media/loop.mp4', name: 'loop.mp4' })
+    const [beamer] = quiz.screens
+    beamer.default = { type: 'video', assetId: 'loop', volume: 1 }
+    const events = await subscribe(api('/api/events'))
+    await events.next()
+    plugin.update(quiz, live())
+    const screenLevels = (view: RemoteView) =>
+      view.sound!.levels.filter((l) => l.kind === 'screen').map((l) => l.id)
+    expect(screenLevels(await events.next())).toEqual([beamer.id])
+
+    host.hardware.mockReturnValue({
+      screens: { [beamer.id]: { kind: 'off' } },
+      audio: {},
+      screenSound: {}
+    })
+    plugin.hardwareChanged()
+    expect(screenLevels(await events.next())).toEqual([])
     await events.cancel()
   })
 
@@ -339,6 +362,7 @@ describe('RemotePlugin tijdens het ontwikkelen', () => {
       saveConfig: vi.fn(),
       mediaFile: vi.fn(),
       quizName: vi.fn(() => null),
+      hardware: vi.fn(() => ({ screens: {}, audio: {}, screenSound: {} })),
       publish: vi.fn(),
       status: vi.fn(() => null),
       act: vi.fn(async () => null),
