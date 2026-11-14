@@ -237,7 +237,8 @@ export const ROUND_MESSAGES = defineMessages(
     seconds: 'seconden',
     timer: 'Aftellen',
     timerLabel: 'Seconden aftellen met T in deze ronde',
-    timerQuiz: 'Met T in de show. Leeg: {seconds} seconden, zoals bij de quiz.',
+    timerQuiz:
+      'Na een vraag, met T of de knop Aftellen. Leeg: {seconds} seconden, zoals bij de quiz.',
     answers: 'Antwoorden',
     answersOn: 'Antwoorden van andere rondes langslopen',
     missingAnswers:
@@ -301,7 +302,8 @@ export const ROUND_MESSAGES = defineMessages(
       seconds: 'seconds',
       timer: 'Countdown',
       timerLabel: 'Seconds to count down with T in this round',
-      timerQuiz: 'With T in the show. Empty: {seconds} seconds, as set for the quiz.',
+      timerQuiz:
+        'After a question, with T or the Countdown button. Empty: {seconds} seconds, as set for the quiz.',
       answers: 'Answers',
       answersOn: 'Go through the answers of other rounds',
       missingAnswers:
