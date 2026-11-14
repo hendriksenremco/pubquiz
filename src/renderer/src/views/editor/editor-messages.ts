@@ -335,6 +335,8 @@ export const EDITOR_MESSAGES = defineMessages(
     setup: 'Quiz-instellingen',
     copyTitle: '{title} (kopie)',
     removeRound: 'Ronde “{title}” verwijderen?',
+    /** Zoals bij een scherm, map of team: wat er nog meer verdwijnt, en wat blijft. */
+    removeRoundMessage: 'De slides en fragmenten verdwijnen ook. De bestanden blijven in Media.',
     /** Zoals de knop in de inspector die de vraag opent (ROUND_MESSAGES.remove). */
     removeRoundButton: 'Verwijder ronde',
     dropHere: 'Laat los om toe te voegen',
@@ -363,6 +365,7 @@ export const EDITOR_MESSAGES = defineMessages(
       setup: 'Quiz settings',
       copyTitle: '{title} (copy)',
       removeRound: 'Delete round “{title}”?',
+      removeRoundMessage: 'Its slides and clips are removed too. The files stay in Media.',
       removeRoundButton: 'Delete round',
       dropHere: 'Drop to add',
       addedOne: '1 file added to Media',

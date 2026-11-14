@@ -85,6 +85,8 @@ async function remove(id: string) {
   if (!r) return
   const ok = await ask({
     title: t('removeRound', { title: roundTitle(r, locale) }),
+    // Een lege ronde verliest niets: dan alleen de vraag.
+    message: r.slides.length || r.fragments.length ? t('removeRoundMessage') : undefined,
     confirm: t('removeRoundButton'),
     icon: 'trash',
     danger: true
