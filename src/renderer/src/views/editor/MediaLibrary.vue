@@ -333,8 +333,15 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
           {{ preview.playingId.value === a.id ? t('stop') : t('listen') }}
         </button>
         <span class="name grow">{{ a.name }}</span>
-        <span v-if="findAssetUsages(quiz, a.id).length" class="used">{{ t('used') }}</span>
+        <!-- Eerst de duur, dan "in gebruik", zoals onder een video of afbeelding. Een
+             ongebruikt geluid houdt de ruimte vrij, zodat de duur onder elkaar blijft. -->
         <span class="meta mono">{{ formatTime(a.duration) }}</span>
+        <span
+          class="used"
+          :class="{ unused: !findAssetUsages(quiz, a.id).length }"
+          :aria-hidden="!findAssetUsages(quiz, a.id).length"
+          >{{ t('used') }}</span
+        >
         <button class="btn btn-ghost btn-sm" @click="previewId = a.id">
           <Icon name="eye" :size="14" /> {{ t('preview') }}
         </button>
@@ -586,6 +593,10 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
   /* Grijs, zoals de duur ernaast: amber is in Media alleen wat gekozen is of speelt. */
   color: var(--muted);
   font-size: 12px;
+}
+
+.used.unused {
+  visibility: hidden;
 }
 
 .tips {
