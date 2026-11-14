@@ -217,13 +217,13 @@ test('live: eerst de vraag, afbeelding of het fragment, dan het antwoord', async
   await operator.waitForTimeout(400)
   await snap(operator, 'test-results/answers-live.png')
 
-  // Vorige en volgende staan alleen in de zijbalk; het blok zegt wat → hierna doet.
-  await expect(operator.locator('.answers .next-step')).toContainText('Volgende afbeelding')
+  // Vorige en volgende staan alleen in de zijbalk, en de knop → zegt wat hij doet, op de Mac en
+  // op de telefoon; de kop van Antwoorden herhaalt dat niet, zoals op de telefoon.
   await expect(operator.locator('.answers').getByRole('button', { name: 'Vorige' })).toHaveCount(0)
-  // De knop → in de zijbalk en op de telefoon heet net zo.
+  await expect(operator.locator('.answers')).not.toContainText('Volgende afbeelding')
+  await expect(operator.getByRole('button', { name: 'Volgende afbeelding' })).toBeVisible()
   await expect(phone.getByRole('button', { name: 'Volgende afbeelding' })).toBeVisible()
   await operator.getByRole('button', { name: 'Volgende afbeelding' }).click()
-  await expect(operator.locator('.answers .next-step')).toContainText('Toon antwoord')
   await expect(operator.getByRole('button', { name: 'Toon antwoord' })).toBeVisible()
   await expect(phone.getByRole('button', { name: 'Toon antwoord' })).toBeVisible()
 

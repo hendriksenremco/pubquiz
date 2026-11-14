@@ -2,7 +2,6 @@
 import { computed } from 'vue'
 import type { ShowCommand } from '@shared/ipc'
 import { roundTitle } from '@shared/quiz-messages'
-import { remoteStep } from '@shared/remote'
 import { answerItems, findAsset, type AnswerItem } from '@shared/resolve'
 import type { Round } from '@shared/types'
 import Icon from '../../components/Icon.vue'
@@ -37,13 +36,6 @@ const groups = computed(() => {
   return list
 })
 
-/**
- * Wat → hierna doet, zoals de knop in de zijbalk en op de telefoon heet; null aan het eind.
- */
-const nextLabel = computed(() => {
-  const step = remoteStep(session.quiz!, props.round, session.state, locale)
-  return step.next ? step.names[1] : null
-})
 const status = computed(() => {
   const a = answer.value
   const item = a ? items.value[a.index] : undefined
@@ -89,8 +81,6 @@ const imageOf = (item: Item) => findAsset(session.quiz!, item.slide?.imageAssetI
         >{{ t('notShown') }}</span
       >
       <span v-else-if="status" class="pill pill-accent">{{ status }}</span>
-      <!-- De toets achter de tekst, zoals bij Hierna → in Fragmenten en Speel reeks A. -->
-      <span v-if="nextLabel" class="next-step">{{ nextLabel }} <span class="kbd">→</span></span>
       <button
         v-if="answer"
         class="btn btn-sm"
@@ -137,14 +127,6 @@ const imageOf = (item: Item) => findAsset(session.quiz!, item.slide?.imageAssetI
 </template>
 
 <style scoped>
-.next-step {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: var(--muted);
-}
-
 .groups {
   display: flex;
   flex-direction: column;
