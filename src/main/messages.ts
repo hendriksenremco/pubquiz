@@ -7,11 +7,20 @@ import { FORMAT_MESSAGES } from '@shared/quiz-messages'
  * de meldingen in de app. Zonder Electron, zodat de tests ze kunnen lezen.
  */
 
-/** De menubalk. Wat macOS zelf vertaalt (knippen, plakken, venster …) staat er niet in. */
+/**
+ * De menubalk. Ook de standaardonderdelen (knippen, plakken, venster …): Electron geeft die
+ * alleen Engelse namen, en macOS vertaalt ze niet. De Engelse zijn die van Electron.
+ */
 export const MENU_MESSAGES = defineMessages(
   {
     about: 'Over {app}',
     settings: 'Instellingen…',
+    services: 'Voorzieningen',
+    hide: 'Verberg {app}',
+    hideOthers: 'Verberg andere',
+    showAll: 'Toon alles',
+    /** Zo heet ook de knop als je tijdens de show afsluit (OPERATOR_MESSAGES.quit). */
+    quit: 'Stop {app}',
     file: 'Archief',
     newQuiz: 'Nieuwe quiz…',
     openQuiz: 'Open quiz…',
@@ -22,12 +31,31 @@ export const MENU_MESSAGES = defineMessages(
     edit: 'Wijzig',
     undo: 'Herstel',
     redo: 'Opnieuw',
-    view: 'Weergave'
+    cut: 'Knip',
+    copy: 'Kopieer',
+    paste: 'Plak',
+    selectAll: 'Selecteer alles',
+    view: 'Weergave',
+    reload: 'Laad opnieuw',
+    devTools: 'Ontwikkelaarstools',
+    actualSize: 'Werkelijke grootte',
+    zoomIn: 'Zoom in',
+    zoomOut: 'Zoom uit',
+    fullScreen: 'Schermvullende weergave',
+    window: 'Venster',
+    minimize: 'Minimaliseer',
+    zoom: 'Zoom',
+    front: 'Breng alles naar voren'
   },
   {
     en: {
       about: 'About {app}',
       settings: 'Settings…',
+      services: 'Services',
+      hide: 'Hide {app}',
+      hideOthers: 'Hide Others',
+      showAll: 'Show All',
+      quit: 'Quit {app}',
       file: 'File',
       newQuiz: 'New Quiz…',
       openQuiz: 'Open Quiz…',
@@ -38,7 +66,21 @@ export const MENU_MESSAGES = defineMessages(
       edit: 'Edit',
       undo: 'Undo',
       redo: 'Redo',
-      view: 'View'
+      cut: 'Cut',
+      copy: 'Copy',
+      paste: 'Paste',
+      selectAll: 'Select All',
+      view: 'View',
+      reload: 'Reload',
+      devTools: 'Toggle Developer Tools',
+      actualSize: 'Actual Size',
+      zoomIn: 'Zoom In',
+      zoomOut: 'Zoom Out',
+      fullScreen: 'Toggle Full Screen',
+      window: 'Window',
+      minimize: 'Minimize',
+      zoom: 'Zoom',
+      front: 'Bring All to Front'
     }
   }
 )

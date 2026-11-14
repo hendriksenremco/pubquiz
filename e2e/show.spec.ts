@@ -376,11 +376,25 @@ test('stoppen en afsluiten vragen het eerst, in een venster van de app', async (
   await app.evaluate(({ BrowserWindow }) => {
     for (const w of BrowserWindow.getAllWindows()) w.webContents.send('pq:confirm-quit')
   })
-  const quit = operator.getByRole('dialog', { name: 'QuizNote afsluiten?' })
-  await expect(quit.getByRole('button', { name: 'Sluit af' })).toBeVisible()
+  // De knop heet zoals het menu-onderdeel.
+  const quit = operator.getByRole('dialog', { name: 'QuizNote stoppen?' })
+  await expect(quit.getByRole('button', { name: 'Stop QuizNote' })).toBeVisible()
   await operator.keyboard.press('Escape')
   await expect(quit).toHaveCount(0)
   await expect(operator.locator('.live')).toBeVisible()
+  // Het menu is helemaal Nederlands. Ongebouwd heet de app "Electron"; gebouwd staat er dus
+  // Stop QuizNote, zoals de knop.
+  const { name, menu } = await app.evaluate(({ app, Menu }) => ({
+    name: app.getName(),
+    menu: Menu.getApplicationMenu()!.items.map((item) => ({
+      label: item.label,
+      items: (item.submenu?.items ?? []).map((sub) => sub.label).filter(Boolean)
+    }))
+  }))
+  expect(menu[0].items).toContain(`Stop ${name}`)
+  expect(menu[0].items).toContain('Verberg andere')
+  expect(menu.find((m) => m.label === 'Wijzig')?.items).toContain('Plak')
+  expect(menu.find((m) => m.label === 'Venster')?.items).toContain('Minimaliseer')
 })
 
 test('stop show sluit de schermen', async () => {

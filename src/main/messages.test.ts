@@ -10,6 +10,7 @@ import {
   NOTICE_MESSAGES,
   NoticeError
 } from './messages'
+import { OPERATOR_MESSAGES } from '../renderer/src/views/operator/operator-messages'
 
 function samePlaceholders<Key extends string>(book: MessageBook<Key>) {
   const { nl, ...others } = book.messages
@@ -27,6 +28,16 @@ describe('teksten van main', () => {
     samePlaceholders(NOTICE_MESSAGES)
     samePlaceholders(MAGICHOME_ERRORS)
     samePlaceholders(AI_ERRORS)
+  })
+})
+
+describe('het menu', () => {
+  it('noemt afsluiten zoals de knop als je tijdens de show afsluit', () => {
+    for (const locale of ['nl', 'en'] as const) {
+      expect(MENU_MESSAGES.in(locale)('quit', { app: 'QuizNote' })).toBe(
+        OPERATOR_MESSAGES.in(locale)('quit')
+      )
+    }
   })
 })
 
