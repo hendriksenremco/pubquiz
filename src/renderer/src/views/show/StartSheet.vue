@@ -336,72 +336,74 @@ const savedAt = computed(() =>
           </button>
         </div>
 
-        <div class="group">
-          <div class="group-head">
-            <span class="label grow">{{ t('screens') }}</span>
-            <button class="btn btn-ghost btn-sm" @click="api.identifyDisplays()">
-              <Icon name="monitor" :size="14" /> {{ t('identify') }}
-            </button>
-          </div>
-          <template v-for="slot in quiz.screens" :key="slot.id">
-            <div class="line screen">
-              <span class="name" :title="slot.name">{{ slot.name }}</span>
-              <Select
-                class="grow screen-target"
-                :aria-label="t('screenShowsOn', { name: slot.name })"
-                :model-value="screenValue(session.hardware.screens[slot.id])"
-                :options="screenOptions(slot.id)"
-                @update:model-value="setScreen(slot.id, $event!)"
-              />
-            </div>
-            <div v-if="pendingAirPlay(slot.id)" class="note airplay-hint">
-              <span class="grow">
-                {{ t('airplayScreenHint', { name: pendingAirPlay(slot.id)! }) }}
-              </span>
-              <button class="btn btn-ghost btn-sm" @click="api.openAirPlaySettings('screen')">
-                <Icon name="monitor" :size="14" /> {{ t('openDisplays') }}
+        <!-- Eén raster voor schermen en geluid: alle keuzelijsten even breed, Speel testtoon in een eigen kolom. -->
+        <div class="rows">
+          <div class="group">
+            <div class="group-head">
+              <span class="label grow">{{ t('screens') }}</span>
+              <button class="btn btn-ghost btn-sm" @click="api.identifyDisplays()">
+                <Icon name="monitor" :size="14" /> {{ t('identify') }}
               </button>
             </div>
-            <div v-if="hasSound(slot.id)" class="line sub">
-              <span class="name muted">{{ t('videoSound') }}</span>
-              <Select
-                class="grow sound-target"
-                :aria-label="t('videoSoundVia', { name: slot.name })"
-                :model-value="soundValue(slot.id)"
-                :options="soundOptions(slot.id)"
-                @update:model-value="setSound(slot.id, $event!)"
-              />
-            </div>
-          </template>
-          <p v-if="!quiz.screens.length" class="muted">{{ t('noScreens') }}</p>
-        </div>
+            <template v-for="slot in quiz.screens" :key="slot.id">
+              <div class="line screen">
+                <span class="name" :title="slot.name">{{ slot.name }}</span>
+                <Select
+                  class="screen-target"
+                  :aria-label="t('screenShowsOn', { name: slot.name })"
+                  :model-value="screenValue(session.hardware.screens[slot.id])"
+                  :options="screenOptions(slot.id)"
+                  @update:model-value="setScreen(slot.id, $event!)"
+                />
+              </div>
+              <div v-if="pendingAirPlay(slot.id)" class="note airplay-hint">
+                <span class="grow">
+                  {{ t('airplayScreenHint', { name: pendingAirPlay(slot.id)! }) }}
+                </span>
+                <button class="btn btn-ghost btn-sm" @click="api.openAirPlaySettings('screen')">
+                  <Icon name="monitor" :size="14" /> {{ t('openDisplays') }}
+                </button>
+              </div>
+              <div v-if="hasSound(slot.id)" class="line sub">
+                <span class="name muted">{{ t('videoSound') }}</span>
+                <Select
+                  class="sound-target"
+                  :aria-label="t('videoSoundVia', { name: slot.name })"
+                  :model-value="soundValue(slot.id)"
+                  :options="soundOptions(slot.id)"
+                  @update:model-value="setSound(slot.id, $event!)"
+                />
+              </div>
+            </template>
+            <p v-if="!quiz.screens.length" class="muted span">{{ t('noScreens') }}</p>
+          </div>
 
-        <div class="group">
-          <div class="group-head">
-            <span class="label grow">{{ t('sound') }}</span>
-          </div>
-          <div v-for="c in quiz.channels" :key="c.id" class="line channel">
-            <span class="name" :title="c.name">{{ c.name }}</span>
-            <Select
-              class="grow"
-              :aria-label="t('outputFor', { name: c.name })"
-              :model-value="audioValue(c.id)"
-              :options="audioOptions(c.id)"
-              @update:model-value="setAudio(c.id, $event!)"
-            />
-            <button class="btn btn-ghost btn-sm" @click="api.testTone(c.id)">
-              <Icon name="volume" :size="14" /> {{ t('testTone') }}
-            </button>
-          </div>
-          <div v-if="airplaySpeakers.length" class="note airplay-hint">
-            <span class="grow">
-              {{
-                t('airplaySpeakerHint', { names: airplaySpeakers.map((a) => a.name).join(', ') })
-              }}
-            </span>
-            <button class="btn btn-ghost btn-sm" @click="api.openAirPlaySettings('audio')">
-              <Icon name="volume" :size="14" /> {{ t('openSound') }}
-            </button>
+          <div class="group">
+            <div class="group-head">
+              <span class="label grow">{{ t('sound') }}</span>
+            </div>
+            <div v-for="c in quiz.channels" :key="c.id" class="line channel">
+              <span class="name" :title="c.name">{{ c.name }}</span>
+              <Select
+                :aria-label="t('outputFor', { name: c.name })"
+                :model-value="audioValue(c.id)"
+                :options="audioOptions(c.id)"
+                @update:model-value="setAudio(c.id, $event!)"
+              />
+              <button class="btn btn-ghost btn-sm" @click="api.testTone(c.id)">
+                <Icon name="volume" :size="14" /> {{ t('testTone') }}
+              </button>
+            </div>
+            <div v-if="airplaySpeakers.length" class="note airplay-hint">
+              <span class="grow">
+                {{
+                  t('airplaySpeakerHint', { names: airplaySpeakers.map((a) => a.name).join(', ') })
+                }}
+              </span>
+              <button class="btn btn-ghost btn-sm" @click="api.openAirPlaySettings('audio')">
+                <Icon name="volume" :size="14" /> {{ t('openSound') }}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -469,10 +471,20 @@ const savedAt = computed(() =>
   background: var(--warn-soft);
 }
 
+.rows {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr) max-content;
+  column-gap: 12px;
+  row-gap: 2px;
+}
+
 .group {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  display: contents;
+}
+
+.group-head,
+.span {
+  grid-column: 1 / -1;
 }
 
 .group-head {
@@ -482,16 +494,19 @@ const savedAt = computed(() =>
   margin-bottom: 2px;
 }
 
+.group + .group .group-head {
+  margin-top: 20px;
+}
+
 .line {
-  display: flex;
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
   align-items: center;
-  gap: 12px;
   min-height: 42px;
 }
 
 .name {
-  flex: none;
-  width: 110px;
   font-size: 14px;
   white-space: nowrap;
   overflow: hidden;
@@ -504,10 +519,10 @@ const savedAt = computed(() =>
 }
 
 .note {
+  grid-column: 2 / -1;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding-left: 122px;
   color: var(--muted);
   font-size: 12px;
 }
