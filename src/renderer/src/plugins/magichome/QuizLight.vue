@@ -17,7 +17,7 @@ const quiz = computed(() => session.quiz!)
     <div class="section-head">
       <h3>{{ t('light') }}</h3>
     </div>
-    <div class="tile light">
+    <div class="tile tile-narrow light">
       <span class="muted">{{ t('quizDefault') }}</span>
       <LightPicker
         :label="t('quizLabel')"
@@ -36,6 +36,6 @@ const quiz = computed(() => session.quiz!)
   grid-template-columns: 84px minmax(0, 320px);
   align-items: center;
   gap: 10px;
-  padding: 14px 16px;
+  padding: 16px;
 }
 </style>
