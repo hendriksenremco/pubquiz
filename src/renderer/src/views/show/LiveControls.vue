@@ -15,6 +15,7 @@ const {
   timerLength,
   toggleTimer,
   allBlack,
+  hasScreens,
   toggleBlackout,
   muted,
   toggleSound,
@@ -39,6 +40,7 @@ const {
     <button
       class="btn"
       :class="{ alert: allBlack }"
+      :disabled="!hasScreens"
       :title="allBlack ? t('blackoutOffHint') : t('blackoutOnHint')"
       @click="toggleBlackout()"
     >

@@ -49,6 +49,8 @@ export function useLiveControls() {
   const restartable = computed(() => restartRound(quiz.value, state.value))
 
   const allBlack = computed(() => isAllBlack(quiz.value, state.value))
+  /** Zonder schermen is er niets op zwart te zetten; de telefoon zet de knop dan ook uit. */
+  const hasScreens = computed(() => quiz.value.screens.length > 0)
   function toggleBlackout(screenId?: string) {
     const on = screenId ? !state.value.blackout.includes(screenId) : !allBlack.value
     send({ type: 'blackout', screenId, on })
@@ -128,6 +130,7 @@ export function useLiveControls() {
     stepView,
     stepNames,
     allBlack,
+    hasScreens,
     toggleBlackout,
     muted,
     toggleSound,
