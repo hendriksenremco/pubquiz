@@ -207,7 +207,10 @@ test('tijdens een show past de AI de lopende quiz niet aan en wisselt hij niet v
 
 test('vanaf het dashboard koppel je QuizNote in één keer aan Claude Desktop', async () => {
   await operator.getByRole('button', { name: 'Quizzen' }).click()
-  await operator.locator('.new-tile').click()
+  await operator
+    .locator('.section-head')
+    .getByRole('button', { name: 'Nieuwe quiz', exact: true })
+    .click()
   await operator.getByRole('button', { name: 'Met je AI…' }).click()
   const dialog = operator.getByRole('dialog', { name: 'Nieuwe quiz met je AI' })
   await expect(dialog.locator('.snippet')).toContainText('mcp.js')

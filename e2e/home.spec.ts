@@ -195,7 +195,10 @@ test('nieuwe quiz: alleen een naam, de app maakt zelf de map aan', async () => {
   const dialog = operator.getByRole('dialog')
   const newQuizMenu = async () => {
     await operator.getByRole('button', { name: 'Quizzen' }).click()
-    await operator.locator('.new-tile').click()
+    await operator
+      .locator('.section-head')
+      .getByRole('button', { name: 'Nieuwe quiz', exact: true })
+      .click()
   }
   try {
     // Lege quiz.
@@ -218,7 +221,10 @@ test('nieuwe quiz: alleen een naam, de app maakt zelf de map aan', async () => {
     await dialog.getByRole('button', { name: 'Annuleer' }).click()
 
     // Op basis van de demo: rondes mee, fragmenten en hun liedjes niet.
-    await operator.locator('.new-tile').click()
+    await operator
+      .locator('.section-head')
+      .getByRole('button', { name: 'Nieuwe quiz', exact: true })
+      .click()
     await operator.locator('.popover-panel').getByRole('button', { name: 'Demo-pubquiz' }).click()
     await expect(dialog.getByLabel('Naam')).toHaveValue('Demo-pubquiz (nieuw)')
     await operator.waitForTimeout(300)

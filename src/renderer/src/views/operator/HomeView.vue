@@ -123,21 +123,10 @@ function reveal(q: RecentQuiz) {
       <div class="section-head">
         <h3>{{ t('quizzes') }}</h3>
         <span class="grow" />
-        <button class="btn btn-ghost btn-sm" @click="api.openQuiz()">
-          <Icon name="folder" :size="14" /> {{ t('openQuiz') }}
-        </button>
-        <button class="btn btn-ghost btn-sm" @click="api.importZip()">
-          <Icon name="download" :size="14" /> {{ t('importZip') }}
-        </button>
-      </div>
-
-      <div class="grid">
-        <Popover :width="280" block>
-          <template #trigger="{ toggle }">
-            <button class="new-tile" @click="toggle">
-              <span class="new-art"><Icon name="plus" :size="26" /></span>
-              <span class="card-title">{{ t('newQuiz') }}</span>
-              <span class="card-meta">{{ t('newQuizHint') }}</span>
+        <Popover :width="280">
+          <template #trigger="{ open, toggle }">
+            <button class="btn btn-ghost btn-sm" :class="{ active: open }" @click="toggle">
+              <Icon name="plus" :size="14" /> {{ t('newQuiz') }}
             </button>
           </template>
           <template #default="{ close }">
@@ -159,7 +148,15 @@ function reveal(q: RecentQuiz) {
             </button>
           </template>
         </Popover>
+        <button class="btn btn-ghost btn-sm" @click="api.openQuiz()">
+          <Icon name="folder" :size="14" /> {{ t('openQuiz') }}
+        </button>
+        <button class="btn btn-ghost btn-sm" @click="api.importZip()">
+          <Icon name="download" :size="14" /> {{ t('importZip') }}
+        </button>
+      </div>
 
+      <div class="grid">
         <div
           v-for="q in others"
           :key="q.path"
@@ -264,8 +261,7 @@ function reveal(q: RecentQuiz) {
   gap: 24px 18px;
 }
 
-.card,
-.new-tile {
+.card {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -279,14 +275,12 @@ function reveal(q: RecentQuiz) {
   cursor: pointer;
 }
 
-.card :deep(.cover),
-.new-art {
+.card :deep(.cover) {
   margin-bottom: 8px;
   transition: box-shadow 0.12s;
 }
 
-.card:hover :deep(.cover),
-.new-tile:hover .new-art {
+.card:hover :deep(.cover) {
   box-shadow: 0 0 0 2px var(--surface-4);
 }
 
@@ -305,19 +299,6 @@ function reveal(q: RecentQuiz) {
 
 .card.missing :deep(.cover) {
   opacity: 0.45;
-}
-
-.new-art {
-  display: grid;
-  place-items: center;
-  aspect-ratio: 16 / 9;
-  border-radius: var(--radius-lg);
-  box-shadow: inset 0 0 0 1.5px var(--line-strong);
-  color: var(--accent);
-}
-
-.new-tile:hover .new-art {
-  background: var(--surface-1);
 }
 
 .card-title {
