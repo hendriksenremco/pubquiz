@@ -487,7 +487,7 @@ onMounted(connect)
             ><span class="frag-num">{{ f.number }}</span
             ><span class="frag-label">{{ f.label }}</span></span
           >
-          <span v-if="f.answer" class="frag-answer">{{ f.answer }}</span>
+          <span v-if="f.answer" class="frag-answer quiet">{{ f.answer }}</span>
           <span class="tile-sub" :data-volatile="f.playing || undefined">{{
             fragmentState(f)
           }}</span>
@@ -1106,6 +1106,14 @@ button:disabled {
   max-width: 100%;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+}
+
+/* Bij een fragment is het antwoord bijzaak, grijs en kleiner, zoals in de show op de Mac. Bij een
+   antwoordenronde blijft het vet: daar is het de hoofdzaak. */
+.frag-answer.quiet {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
 }
 
 .frag-answer.missing {
