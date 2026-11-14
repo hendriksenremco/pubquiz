@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { createFragment, createQuiz, createRound, createShowState, createSlide } from './factory'
 import type { Light } from './light'
-import { remoteCommand, remoteView, RemoteActionSchema } from './remote'
+import { remoteCommand, remoteStep, remoteView, RemoteActionSchema } from './remote'
 import type { ShowState } from './types'
 
 const RED: Light = { type: 'color', color: '#ff0000' }
@@ -29,6 +29,28 @@ function setup() {
   })
   return { quiz, first, music, answers, live }
 }
+
+describe('remoteStep', () => {
+  it('noemt → in een antwoordenronde naar wat hij doet, zoals AnswersPad', () => {
+    const { quiz, answers, live } = setup()
+    const at = (answer: ShowState['answer'], locale: 'nl' | 'en' = 'nl') =>
+      remoteStep(quiz, answers, live({ activeRoundId: answers.id, answer }), locale).names
+    expect(at(null)).toEqual(['Vorige stap', 'Start antwoorden'])
+    expect(at({ roundId: answers.id, index: 0, revealed: false })).toEqual([
+      'Vorige stap',
+      'Toon antwoord'
+    ])
+    expect(at({ roundId: answers.id, index: 0, revealed: true })[1]).toBe('Volgend fragment')
+    expect(at({ roundId: answers.id, index: 0, revealed: true }, 'en')[1]).toBe('Next clip')
+    expect(at({ roundId: answers.id, index: 3, revealed: true })[1]).toBe('Volgende stap')
+  })
+
+  it('noemt ← en → anders naar slides of fragmenten', () => {
+    const { quiz, first, music, live } = setup()
+    expect(remoteStep(quiz, first, live()).names).toEqual(['Vorige slide', 'Volgende slide'])
+    expect(remoteStep(quiz, music, live(), 'en').names).toEqual(['Previous clip', 'Next clip'])
+  })
+})
 
 describe('remoteView', () => {
   it('toont de ronde, de slide in beeld met de vraag, en waar je heen kunt', () => {

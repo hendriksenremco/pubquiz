@@ -132,11 +132,6 @@ export const ANSWERS_MESSAGES = defineMessages(
     title: 'Antwoorden',
     notShown: 'Niet in beeld',
     notShownHint: 'Kies in de editor een scherm, bij Ronde → Antwoorden',
-    start: 'Start antwoorden',
-    reveal: 'Toon antwoord',
-    nextQuestion: 'Volgende vraag',
-    nextImage: 'Volgende afbeelding',
-    nextFragment: 'Volgend fragment',
     stop: 'Stop antwoorden',
     stopHint: 'Nummer en antwoord uit beeld',
     nounQuestion: 'vraag',
@@ -163,11 +158,6 @@ export const ANSWERS_MESSAGES = defineMessages(
       title: 'Answers',
       notShown: 'Not on screen',
       notShownHint: 'Choose a screen in the editor, under Round → Answers',
-      start: 'Start answers',
-      reveal: 'Show answer',
-      nextQuestion: 'Next question',
-      nextImage: 'Next picture',
-      nextFragment: 'Next clip',
       stop: 'Stop answers',
       stopHint: 'Number and answer off the screen',
       nounQuestion: 'question',
@@ -192,11 +182,11 @@ export const ANSWERS_MESSAGES = defineMessages(
   }
 )
 
-/** Per soort antwoord: hoe hij heet, met en zonder nummer, en wat → dan doet. */
+/** Per soort antwoord: hoe hij heet, met en zonder nummer. Wat → doet: remoteStep. */
 export const ANSWER_NOUNS = {
-  vraag: { noun: 'nounQuestion', item: 'itemQuestion', next: 'nextQuestion' },
-  afbeelding: { noun: 'nounImage', item: 'itemImage', next: 'nextImage' },
-  fragment: { noun: 'nounFragment', item: 'itemFragment', next: 'nextFragment' }
+  vraag: { noun: 'nounQuestion', item: 'itemQuestion' },
+  afbeelding: { noun: 'nounImage', item: 'itemImage' },
+  fragment: { noun: 'nounFragment', item: 'itemFragment' }
 } as const satisfies Record<AnswerNoun, Record<string, string>>
 
 /**

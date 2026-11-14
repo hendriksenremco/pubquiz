@@ -213,8 +213,12 @@ test('live: eerst de vraag, afbeelding of het fragment, dan het antwoord', async
   // Vorige en volgende staan alleen in de zijbalk; het blok zegt wat → hierna doet.
   await expect(operator.locator('.answers .next-step')).toContainText('Volgende afbeelding')
   await expect(operator.locator('.answers').getByRole('button', { name: 'Vorige' })).toHaveCount(0)
-  await operator.getByRole('button', { name: 'Volgende stap' }).click()
+  // De knop → in de zijbalk en op de telefoon heet net zo.
+  await expect(phone.getByRole('button', { name: 'Volgende afbeelding' })).toBeVisible()
+  await operator.getByRole('button', { name: 'Volgende afbeelding' }).click()
   await expect(operator.locator('.answers .next-step')).toContainText('Toon antwoord')
+  await expect(operator.getByRole('button', { name: 'Toon antwoord' })).toBeVisible()
+  await expect(phone.getByRole('button', { name: 'Toon antwoord' })).toBeVisible()
 
   // Stop antwoorden staat ook op de telefoon, met dezelfde naam.
   const stopOnPhone = phone.getByRole('button', { name: 'Stop antwoorden' })

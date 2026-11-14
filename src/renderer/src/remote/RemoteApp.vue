@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, provide, reactive, watchEffect } from 'vue'
 import type { RemoteAnswer, RemoteFragment, RemoteLevel } from '@shared/remote'
-import { musicAudible, stepNames as namesOf } from '@shared/resolve'
+import { musicAudible } from '@shared/resolve'
 import Icon from '../components/Icon.vue'
 import SlideView from '../components/SlideView.vue'
 import { vFill } from '../lib/fill'
@@ -126,9 +126,7 @@ const plugins = computed(() =>
   })
 )
 
-const stepNames = computed(() =>
-  step.value ? namesOf(step.value.target, locale.value) : [t.value('prev'), t.value('next')]
-)
+const stepNames = computed(() => step.value?.names ?? [t.value('prev'), t.value('next')])
 
 const status = computed(() => {
   const say = t.value

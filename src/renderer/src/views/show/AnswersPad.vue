@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import type { ShowCommand } from '@shared/ipc'
 import { roundTitle } from '@shared/quiz-messages'
+import { remoteStep } from '@shared/remote'
 import { answerItems, findAsset, type AnswerItem } from '@shared/resolve'
 import type { Round } from '@shared/types'
 import Icon from '../../components/Icon.vue'
@@ -36,13 +37,12 @@ const groups = computed(() => {
   return list
 })
 
-/** Wat → hierna doet; null aan het eind. De knoppen zelf staan in de zijbalk van de show. */
+/**
+ * Wat → hierna doet, zoals de knop in de zijbalk en op de telefoon heet; null aan het eind.
+ */
 const nextLabel = computed(() => {
-  const a = answer.value
-  if (!a) return t('start')
-  if (!a.revealed) return t('reveal')
-  const next = items.value[a.index + 1]
-  return next ? t(ANSWER_NOUNS[next.noun].next) : null
+  const step = remoteStep(session.quiz!, props.round, session.state, locale)
+  return step.next ? step.names[1] : null
 })
 const status = computed(() => {
   const a = answer.value

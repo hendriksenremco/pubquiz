@@ -38,7 +38,7 @@ export function useLiveControls() {
   const stepView = computed(() =>
     round.value ? remoteStep(quiz.value, round.value, state.value, locale) : null
   )
-  const stepNames = computed(() => namesOf(arrows.value, locale))
+  const stepNames = computed(() => stepView.value?.names ?? namesOf(arrows.value, locale))
 
   const prevRound = computed(() => adjacentRound(quiz.value, state.value, 'prev'))
   const nextRound = computed(() => adjacentRound(quiz.value, state.value, 'next'))
