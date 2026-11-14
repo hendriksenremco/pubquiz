@@ -233,7 +233,7 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
                 :title="c.name"
                 :aria-label="t('channelName')"
               />
-              <button class="btn btn-ghost btn-sm del" @click="removeChannel(c.id)">
+              <button class="btn btn-ghost btn-sm" @click="removeChannel(c.id)">
                 <Icon name="trash" :size="14" /> {{ t('removeChannel') }}
               </button>
               <div class="channel-level">
@@ -333,7 +333,6 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
 
 .remove-screen {
   flex: none;
-  color: var(--muted);
 }
 
 .body {
@@ -484,9 +483,5 @@ const bgAsset = computed(() => findAsset(quiz.value, quiz.value.background?.asse
 .channel-volume {
   width: 100%;
   min-width: 0;
-}
-
-.del {
-  color: var(--muted);
 }
 </style>

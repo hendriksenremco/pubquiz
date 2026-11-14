@@ -381,7 +381,6 @@ function setAnswersFor(roundId: string, on: boolean) {
 .renumber {
   align-self: flex-start;
   margin-left: -8px;
-  color: var(--muted);
 }
 
 .foot {
