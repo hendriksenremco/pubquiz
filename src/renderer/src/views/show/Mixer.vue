@@ -59,6 +59,10 @@ const soundScreens = computed(() =>
     })
 )
 
+const hasSound = computed(
+  () => !!quiz.value.background || quiz.value.channels.length > 0 || soundScreens.value.length > 0
+)
+
 // De uitgangen van deze Mac, om te zeggen waar het videogeluid echt heen gaat (zoals ScreenApp).
 const outputs = ref<AudioOutput[]>([])
 async function refreshOutputs() {
@@ -83,10 +87,12 @@ function deviceLabel(slotId: string): string {
 </script>
 
 <template>
-  <section class="mixer" :aria-label="t('sound')">
+  <!-- Zoals Geluid op de telefoon: zonder achtergrondmuziek geen regel Achtergrondmuziek, en zonder
+       muziek, kanalen of schermen met geluid geen Geluid. -->
+  <section v-if="hasSound" class="mixer" :aria-label="t('sound')">
     <span class="label">{{ t('sound') }}</span>
     <div class="stack">
-      <div class="bg">
+      <div v-if="quiz.background" class="bg">
         <div class="row">
           <span class="label grow">{{ t('background') }}</span>
           <span class="pill" :class="backgroundStatus.cls">{{ backgroundStatus.text }}</span>
@@ -94,11 +100,7 @@ function deviceLabel(slotId: string): string {
         <div v-if="backgroundName" class="bg-name" :title="backgroundName">
           {{ backgroundName }}
         </div>
-        <button
-          v-if="quiz.background"
-          class="btn btn-sm"
-          @click="api.command({ type: 'toggleBackground' })"
-        >
+        <button class="btn btn-sm" @click="api.command({ type: 'toggleBackground' })">
           <Icon :name="session.state.backgroundEnabled ? 'volume-off' : 'volume'" :size="14" />
           {{ session.state.backgroundEnabled ? t('turnOff') : t('turnOn') }}
         </button>
