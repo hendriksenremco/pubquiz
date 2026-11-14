@@ -224,7 +224,12 @@ function remove() {
   display: flex;
   flex-wrap: wrap;
   gap: 2px;
-  margin: 0 -8px;
+  margin: 0 -6px;
+}
+
+/* Smaller dan een gewone kleine knop, zodat Omhoog, Omlaag en Verwijder op één regel passen. */
+.foot .btn {
+  padding: 0 6px;
 }
 
 .turn {
