@@ -177,6 +177,10 @@ test('live: eerst de vraag, afbeelding of het fragment, dan het antwoord', async
   await expect(beamer.locator('.overlay')).toHaveCount(0)
   await operator.keyboard.press('ArrowRight')
   await expect(beamer.locator('.overlay.answer.bottom .ov-answer')).toHaveText('Canberra')
+  // Op de Mac onder de pijlen, zoals op de telefoon: de vraag en het antwoord.
+  const control = operator.locator('.side .control')
+  await expect(control.locator('.step-text')).toHaveText('Wat is de hoofdstad van Australië?')
+  await expect(control.locator('.step-answer')).toContainText('Canberra')
   await expect(beamer.locator('.overlay .ov-context')).toHaveText('Ronde 1: algemeen, vraag 1')
   await expect(tv.locator('.overlay')).toHaveCount(0)
   await beamer.waitForTimeout(700)
