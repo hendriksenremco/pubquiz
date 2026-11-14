@@ -294,6 +294,14 @@ export function slideNumber(round: Round, slide: Slide): number | null {
 }
 
 /**
+ * De notities bij een ronde zoals de show ze toont, op de Mac en de telefoon: zonder witruimte
+ * eromheen; null = geen blok Notities.
+ */
+export function roundNotes(round: Round | null | undefined): string | null {
+  return round?.hostNotes?.trim() || null
+}
+
+/**
  * Korte naam van een slide in de lijst Slides van de show, op de Mac en de telefoon: een
  * afbeelding met zijn nummer, een nummerslide met alleen een getal als "Nummer 2", anders de tekst.
  */
