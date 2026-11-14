@@ -243,7 +243,7 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
       >
         <Icon name="left" :size="18" /> {{ t('title') }}
       </button>
-      <h2 v-else>{{ t('title') }}</h2>
+      <h2 v-else class="page-title">{{ t('title') }}</h2>
 
       <span class="grow" />
       <div class="filters">
@@ -269,7 +269,7 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
       <TitleField
         ref="folderTitle"
         v-model="folder.name"
-        class="folder-title"
+        class="folder-title page-title"
         :aria-label="t('folderName')"
       />
       <span class="count">{{ plural(assetsIn(quiz, folder.id).length) }}</span>
@@ -433,7 +433,6 @@ function onSoundDragStart(event: DragEvent, asset: MediaAsset) {
   width: auto;
   min-width: 4ch;
   margin-right: 0;
-  font: 650 22px/1.25 var(--display);
 }
 
 .count {
