@@ -10,7 +10,12 @@ import { REMOTE_QR_MESSAGES } from './messages'
  * De QR-code die een telefoon of tablet naar de afstandsbediening brengt, met het adres en wie er
  * verbonden is. "Vernieuw code" sluit alle telefoons met de oude code buiten. Main duwt een nieuw
  * adres (ander netwerk) en elk apparaat dat verbindt.
+ *
+ * `scanHint`: de zin "Scan met de camera…" onder de code. Alleen in de popover van de show; bij
+ * Instellingen zegt de uitleg van de plug-in er vlak boven al hetzelfde.
  */
+defineProps<{ scanHint?: boolean }>()
+
 const api = window.pubquiz
 const session = useSession()
 const t = REMOTE_QR_MESSAGES.in(locale)
@@ -52,7 +57,7 @@ const devices = computed(() => {
         <rect :width="qr.size" :height="qr.size" fill="#fff" />
         <path :d="modules" fill="#000" />
       </svg>
-      <p class="muted tip">
+      <p v-if="scanHint" class="muted tip">
         {{ t('scan') }}
       </p>
       <p class="url mono" data-volatile :title="link.url">{{ link.url }}</p>
