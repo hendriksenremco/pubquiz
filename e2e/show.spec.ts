@@ -147,6 +147,9 @@ test('wisselt scherm tijdens een ronde en valt daarna terug', async () => {
   await operator.keyboard.press('e')
   await expect.poll(() => activeVideo(beamer)).toContain('default-loop.mp4')
   await expect(beamer.locator('.slide')).toHaveCount(0)
+  // Tussen twee rondes zegt de kop wat er hierna komt, zoals op de telefoon.
+  const third = (await operator.locator('.rounds .round .round-title').nth(2).textContent())!
+  await expect(operator.locator('.now-title')).toHaveText(`Hierna: ${third.trim()}`)
 })
 
 test('vult het scherm met de achtergrond en houdt de inhoud 16:9', async () => {

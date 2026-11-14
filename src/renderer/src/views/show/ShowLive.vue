@@ -41,6 +41,14 @@ const {
   toggleTimer
 } = useLiveControls()
 
+// Tussen twee rondes zegt de kop wat er hierna komt, zoals op de telefoon; "Tussen twee rondes"
+// staat dan al boven de pijlen.
+const heading = computed(() => {
+  if (round.value) return roundTitle(round.value, locale)
+  const next = nextRound.value
+  return next ? t('upNextTitle', { title: roundTitle(next, locale) }) : t('lastRound')
+})
+
 // Slide-loop: de timer loopt in main; hier alleen tonen en pauzeren.
 const now = useNow(250, () => state.value.loopUntil !== null)
 const loopText = computed(() => {
@@ -115,7 +123,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 
     <main class="center scroll">
       <h2 class="now-title hyphenate">
-        {{ round ? roundTitle(round, locale) : t('betweenRounds') }}
+        {{ heading }}
       </h2>
 
       <section class="screens">
