@@ -6,13 +6,14 @@ import type { AudioTarget, ScreenTarget } from '@shared/types'
 export const AUDIO_DEVICE_MESSAGES = defineMessages(
   {
     systemDefault: 'Systeemstandaard',
-    systemDefaultNamed: 'Systeemstandaard ({name})',
+    // Met een dubbele punt: de naam van een uitgang heeft zelf vaak haakjes, "Speakers (Built-in)".
+    systemDefaultNamed: 'Systeemstandaard: {name}',
     output: 'Uitgang {number}'
   },
   {
     en: {
       systemDefault: 'System default',
-      systemDefaultNamed: 'System default ({name})',
+      systemDefaultNamed: 'System default: {name}',
       output: 'Output {number}'
     }
   }
