@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { channelUses } from '@shared/channels'
 import { createChannel, createScreenSlot } from '@shared/factory'
 import { deleteScreen, screenUsedByRounds } from '@shared/screen-slots'
 import { DEFAULT_TIMER_SECONDS, findAsset } from '@shared/resolve'
@@ -65,9 +66,10 @@ function addChannel() {
   )
 }
 
-function removeChannel(id: string) {
-  let used = quiz.value.background?.channelId === id ? 1 : 0
-  for (const r of quiz.value.rounds) used += r.fragments.filter((f) => f.channelId === id).length
+async function removeChannel(id: string) {
+  const channel = quiz.value.channels.find((c) => c.id === id)
+  if (!channel) return
+  const used = channelUses(quiz.value, id)
   if (used > 0) {
     session.notify({
       level: 'warning',
@@ -75,7 +77,14 @@ function removeChannel(id: string) {
     })
     return
   }
-  quiz.value.channels = quiz.value.channels.filter((c) => c.id !== id)
+  // Zoals bij een scherm en een ronde: eerst vragen.
+  const ok = await ask({
+    title: t('removeChannelTitle', { name: channel.name }),
+    confirm: t('removeChannel'),
+    icon: 'trash',
+    danger: true
+  })
+  if (ok) quiz.value.channels = quiz.value.channels.filter((c) => c.id !== id)
 }
 
 const backgroundAsset = computed({

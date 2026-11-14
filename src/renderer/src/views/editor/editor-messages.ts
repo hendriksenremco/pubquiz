@@ -473,6 +473,7 @@ export const SETUP_MESSAGES = defineMessages(
     newChannel: 'Kanaal {number}',
     channelName: 'Naam van het kanaal',
     removeChannel: 'Verwijder kanaal',
+    removeChannelTitle: 'Kanaal “{name}” verwijderen?',
     channelInUse:
       'Dit kanaal wordt nog {count}× gebruikt. Zet de achtergrondmuziek en fragmenten eerst op een ander kanaal.',
     noChannel: 'Voeg eerst een geluidskanaal toe.',
@@ -513,6 +514,7 @@ export const SETUP_MESSAGES = defineMessages(
       newChannel: 'Channel {number}',
       channelName: 'Channel name',
       removeChannel: 'Delete channel',
+      removeChannelTitle: 'Delete channel “{name}”?',
       channelInUse:
         'This channel is still used {count}×. Move the background music and clips to another channel first.',
       noChannel: 'Add a sound channel first.',

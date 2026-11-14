@@ -117,6 +117,18 @@ test('acties staan zichtbaar in beeld, niet achter drie stippen', async () => {
   await confirmIn(operator, 'Verwijder scherm')
   await expect(removeScreen).toHaveCount(2)
 
+  // Een nieuw geluidskanaal: ook eerst de vraag, zoals bij een scherm.
+  const removeChannel = operator.getByRole('button', { name: 'Verwijder kanaal' })
+  const channels = await removeChannel.count()
+  await operator.getByRole('button', { name: 'Voeg kanaal toe' }).click()
+  await expect(removeChannel).toHaveCount(channels + 1)
+  await removeChannel.last().click()
+  await expect(operator.getByRole('dialog')).toContainText(
+    `Kanaal “Kanaal ${channels + 1}” verwijderen?`
+  )
+  await confirmIn(operator, 'Verwijder kanaal')
+  await expect(removeChannel).toHaveCount(channels)
+
   // Ronde dupliceren en verwijderen, onderaan de instellingen van de ronde.
   const rounds = operator.locator('.sidebar .round')
   await rounds.first().click()
