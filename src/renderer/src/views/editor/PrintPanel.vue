@@ -114,7 +114,7 @@ async function save(doc: FormDoc) {
 }
 
 .empty {
-  padding: 20px;
+  padding: 16px;
 }
 
 .cols {
@@ -134,7 +134,8 @@ async function save(doc: FormDoc) {
   display: flex;
   gap: 12px;
   align-items: flex-start;
-  padding: 14px 16px;
+  /* Dezelfde binnenmarge als de tegels bij Quiz-instellingen. */
+  padding: 16px;
 }
 
 .option {
