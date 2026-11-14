@@ -21,7 +21,7 @@ const t = REMOTE_QR_MESSAGES.in(locale)
         <Icon name="phone" :size="15" /> {{ t('phone') }}
       </button>
     </template>
-    <RemoteQr class="panel" />
+    <RemoteQr class="panel" scan-hint />
   </Popover>
 </template>
 
