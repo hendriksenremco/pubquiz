@@ -181,6 +181,7 @@ test('live: eerst de vraag, afbeelding of het fragment, dan het antwoord', async
   const control = operator.locator('.side .control')
   await expect(control.locator('.step-text')).toHaveText('Wat is de hoofdstad van Australië?')
   await expect(control.locator('.step-answer')).toContainText('Canberra')
+  await expect(control.locator('.step-playing')).toHaveCount(0)
   await expect(beamer.locator('.overlay .ov-context')).toHaveText('Ronde 1: algemeen, vraag 1')
   await expect(tv.locator('.overlay')).toHaveCount(0)
   await beamer.waitForTimeout(700)
@@ -192,6 +193,8 @@ test('live: eerst de vraag, afbeelding of het fragment, dan het antwoord', async
   await expect(beamer.locator('.overlay.fragment .ov-number')).toHaveText('1')
   await expect(beamer.locator('.overlay.fragment .ov-context')).toHaveText('Ronde 2: muziek')
   await expect.poll(async () => (await audio(app)).fragment).not.toBeNull()
+  // Naast de stap boven de pijlen, zoals op de telefoon.
+  await expect(control.locator('.step-playing')).toHaveText('Speelt')
   await tiles.nth(2).click()
   await expect(beamer.locator('.overlay.answer:not(.bottom) .ov-answer')).toHaveText('Antwoord 1')
 
