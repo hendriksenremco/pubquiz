@@ -117,6 +117,11 @@ test('acties staan zichtbaar in beeld, niet achter drie stippen', async () => {
   await operator.getByRole('tab', { name: 'Ronde' }).click()
   await snap(operator, 'test-results/round-actions.png')
   await operator.getByRole('button', { name: 'Verwijder ronde' }).click()
+  // De vraag zegt wat er verdwijnt en wat blijft, zoals bij een scherm of een map.
+  await expect(operator.getByRole('dialog')).toContainText(
+    'De slides en fragmenten verdwijnen ook. De bestanden blijven in Media.'
+  )
+  await snap(operator, 'test-results/round-remove-confirm.png')
   await confirmIn(operator, 'Verwijder ronde')
   await expect(rounds).toHaveCount(4)
 
