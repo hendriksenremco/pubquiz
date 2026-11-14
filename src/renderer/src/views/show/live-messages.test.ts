@@ -72,7 +72,8 @@ describe('teksten van de show', () => {
         ['stopSequence', 'stopSequence'],
         ['reset', 'reset'],
         ['upNext', 'upNextFragment'],
-        ['played', 'played']
+        ['played', 'played'],
+        ['playing', 'playing']
       ] as const
       for (const [mac, tel] of pairs) expect(pad(mac), `${locale}: ${mac}`).toBe(phone(tel))
       // Waar de reeks is, naast Fragmenten.
@@ -91,7 +92,8 @@ describe('teksten van de show', () => {
         'answerShown',
         'numberShown',
         'finished',
-        'noAnswer'
+        'noAnswer',
+        'playing'
       ] as const
       for (const key of answerKeys) expect(answers(key), `${locale}: ${key}`).toBe(phone(key))
       expect(answers('nounShown', { noun: 'x' })).toBe(phone('nounShown', { noun: 'x' }))

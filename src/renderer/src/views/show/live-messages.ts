@@ -143,7 +143,7 @@ export const ANSWERS_MESSAGES = defineMessages(
     statusAnswer: '{item}: antwoord in beeld',
     statusNumber: '{item}: nummer in beeld',
     statusShown: '{item} in beeld',
-    playing: 'speelt…',
+    playing: 'Speelt',
     answerShown: 'antwoord in beeld',
     numberShown: 'nummer in beeld',
     nounShown: '{noun} in beeld',
@@ -169,7 +169,7 @@ export const ANSWERS_MESSAGES = defineMessages(
       statusAnswer: '{item}: answer on screen',
       statusNumber: '{item}: number on screen',
       statusShown: '{item} on screen',
-      playing: 'playing…',
+      playing: 'Playing',
       answerShown: 'answer on screen',
       numberShown: 'number on screen',
       nounShown: '{noun} on screen',
@@ -208,7 +208,7 @@ export const FRAGMENT_PAD_MESSAGES = defineMessages(
     sequenceLast: 'Reeks: fragment {number} (stopt hierna)',
     sequenceGap: 'Reeks: fragment {number} over {seconds} s',
     sequencePaused: 'Reeks gepauzeerd, volgende: fragment {number}',
-    playing: 'speelt…',
+    playing: 'Speelt',
     played: '✓ gespeeld'
   },
   {
@@ -226,7 +226,7 @@ export const FRAGMENT_PAD_MESSAGES = defineMessages(
       sequenceLast: 'Sequence: clip {number} (stops after this)',
       sequenceGap: 'Sequence: clip {number} in {seconds} s',
       sequencePaused: 'Sequence paused, next: clip {number}',
-      playing: 'playing…',
+      playing: 'Playing',
       played: '✓ played'
     }
   }
