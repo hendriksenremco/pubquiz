@@ -316,7 +316,7 @@ export const START_MESSAGES = defineMessages(
     outputMissing: '{name}: uitgang niet gevonden, het geluid gaat naar de systeemstandaard',
     answersScreen:
       'Ronde {number}, “{round}”: de antwoorden komen op geen enkel scherm. Kies er een bij Ronde → Antwoorden',
-    noRounds: 'De quiz heeft nog geen rondes'
+    noRounds: 'Deze quiz heeft nog geen rondes'
   },
   {
     en: {
@@ -362,7 +362,7 @@ export const START_MESSAGES = defineMessages(
       outputMissing: '{name}: output not found, the sound goes to the system default',
       answersScreen:
         'Round {number}, “{round}”: the answers aren’t on any screen. Choose one under Round → Answers',
-      noRounds: 'The quiz has no rounds yet'
+      noRounds: 'This quiz has no rounds yet'
     }
   }
 )
