@@ -87,6 +87,7 @@ export class AppController {
     command: (command) => this.show.handle(command),
     publishStatus: (id, status) => this.broadcast(IPC.pluginStatus, [id, status]),
     quizName: () => this.quizName,
+    hardware: () => this.hardware,
     mediaFile: (file) => {
       const location = locateMedia(mediaUrl(file), {
         current: () => this.quizDir,
@@ -202,7 +203,7 @@ export class AppController {
     if (this.recovery && this.recovery.quizDir !== dir) this.recovery = null
 
     this.broadcast(IPC.quiz, [quiz, dir])
-    this.broadcast(IPC.hardware, [this.hardware])
+    this.broadcastHardware()
     this.operator?.setTitle(this.windowTitle)
 
     const missing = await findMissingMedia(dir, quiz)
@@ -330,7 +331,7 @@ export class AppController {
     this.saves.clean()
     this.hardware = { screens: {}, audio: {}, screenSound: {} }
     this.broadcast(IPC.quiz, [null, null])
-    this.broadcast(IPC.hardware, [this.hardware])
+    this.broadcastHardware()
     this.operator?.setTitle(this.windowTitle)
   }
 
@@ -551,7 +552,7 @@ export class AppController {
     if (!this.quiz) return
     this.hardware = mapping
     this.settings.saveMapping(this.quiz, mapping)
-    this.broadcast(IPC.hardware, [mapping])
+    this.broadcastHardware()
     if (this.live) this.syncScreens(true)
   }
 
@@ -649,7 +650,13 @@ export class AppController {
     }
     if (JSON.stringify(next) === JSON.stringify(this.hardware)) return
     this.hardware = next
-    this.broadcast(IPC.hardware, [next])
+    this.broadcastHardware()
+  }
+
+  /** Naar de vensters en de plug-ins (de telefoon laat het videogeluid van een scherm op Uit weg). */
+  private broadcastHardware(): void {
+    this.broadcast(IPC.hardware, [this.hardware])
+    this.plugins.hardwareChanged()
   }
 
   private syncScreens(reportMissing: boolean): void {

@@ -624,6 +624,9 @@ describe('remoteCommand', () => {
       [clips.id, 'channel', clips.volume, null],
       [beamer.id, 'screen', 1, null]
     ])
+    // Staat de beamer op deze Mac op Uit, dan geen videogeluid, zoals bij Geluid op de Mac.
+    const offLevels = remoteView(quiz, state, [], 'nl', [beamer.id]).sound!.levels
+    expect(offLevels.map((l) => l.id)).toEqual([room.id, clips.id])
 
     // Een fragment speelt: muziek en videogeluid zachter. Uitgezet: Uit.
     const fragment = {

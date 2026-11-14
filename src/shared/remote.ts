@@ -349,12 +349,16 @@ export type RemoteResult = { ok: true } | { ok: false; error: string }
 const titleOf = (round: Round | null | undefined, locale: Locale): string | null =>
   round ? roundTitle(round, locale) : null
 
-/** `plugins`: de plug-ins voor de telefoon; zonder quiz toont hij ze niet. */
+/**
+ * `plugins`: de plug-ins voor de telefoon; zonder quiz toont hij ze niet. `offScreens`: de schermen
+ * die op deze Mac op Uit staan (Start show); hun videogeluid staat niet bij Geluid, zoals op de Mac.
+ */
 export function remoteView(
   quiz: Quiz | null,
   state: ShowState,
   plugins: RemotePlugin[] = [],
-  locale: Locale = 'nl'
+  locale: Locale = 'nl',
+  offScreens: readonly string[] = []
 ): RemoteView {
   const round = quiz ? activeRound(quiz, state) : null
   return {
@@ -402,7 +406,7 @@ export function remoteView(
     answers: quiz && round ? remoteAnswers(quiz, round, state, locale) : [],
     answersOffScreen:
       !!quiz && !!round && !round.fragmentScreens.length && answerItems(quiz, round).length > 0,
-    sound: quiz ? remoteSound(quiz, state) : null,
+    sound: quiz ? remoteSound(quiz, state, offScreens) : null,
     plugins: quiz ? plugins : []
   }
 }
@@ -501,7 +505,7 @@ export function remoteCommand(
 }
 
 /** Geluid zoals Mixer het toont op de Mac. */
-function remoteSound(quiz: Quiz, state: ShowState): RemoteSound {
+function remoteSound(quiz: Quiz, state: ShowState, offScreens: readonly string[]): RemoteSound {
   const bg = quiz.background
   // In de show de muziek van nu: een ronde kan een ander nummer spelen.
   const assetId = resolveAudio(quiz, state).background?.assetId ?? bg?.assetId
@@ -509,12 +513,19 @@ function remoteSound(quiz: Quiz, state: ShowState): RemoteSound {
     music: bg
       ? { name: findAsset(quiz, assetId)?.name ?? null, status: musicStatus(quiz, state) }
       : null,
-    levels: remoteLevels(quiz, state)
+    levels: remoteLevels(quiz, state, offScreens)
   }
 }
 
-/** De kanalen, en de schermen die ergens in de quiz een video met geluid spelen. */
-function remoteLevels(quiz: Quiz, state: ShowState): RemoteLevel[] {
+/**
+ * De kanalen, en de schermen die ergens in de quiz een video met geluid spelen en niet op Uit
+ * staan.
+ */
+function remoteLevels(
+  quiz: Quiz,
+  state: ShowState,
+  offScreens: readonly string[] = []
+): RemoteLevel[] {
   const channels = quiz.channels.map((c): RemoteLevel => ({
     id: c.id,
     name: c.name,
@@ -523,7 +534,7 @@ function remoteLevels(quiz: Quiz, state: ShowState): RemoteLevel[] {
     status: null
   }))
   const screens = quiz.screens
-    .filter((slot) => screenHasSound(quiz, slot.id))
+    .filter((slot) => screenHasSound(quiz, slot.id) && !offScreens.includes(slot.id))
     .map((slot): RemoteLevel => {
       const sound = resolveScreen(quiz, state, slot.id).sound
       return {
