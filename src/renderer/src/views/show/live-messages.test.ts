@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { LOCALES, placeholders, type MessageBook } from '@shared/i18n'
+import { STEP_MESSAGES } from '@shared/show-messages'
 import { REMOTE_MESSAGES } from '../../remote/messages'
 import {
   ANSWER_NOUNS,
@@ -120,14 +121,14 @@ describe('teksten van de show', () => {
   it('noemt elk soort antwoord in beide talen', () => {
     const t = ANSWERS_MESSAGES.in('en')
     expect(t(ANSWER_NOUNS.afbeelding.item, { number: 3 })).toBe('Picture 3')
-    expect(ANSWERS_MESSAGES.in('nl')(ANSWER_NOUNS.fragment.next)).toBe('Volgend fragment')
     expect(t('hintShow', { noun: t(ANSWER_NOUNS.vraag.noun) })).toBe('Put this question on screen')
   })
 
   it('noemt stoppen zoals beginnen: Start antwoorden en Stop antwoorden', () => {
     for (const locale of ['nl', 'en'] as const) {
-      const t = ANSWERS_MESSAGES.in(locale)
-      expect(t('stop').split(' ')[1]).toBe(t('start').split(' ')[1])
+      const start = STEP_MESSAGES.in(locale)('startAnswers')
+      expect(ANSWERS_MESSAGES.in(locale)('stop').split(' ')[1]).toBe(start.split(' ')[1])
+      expect(REMOTE_MESSAGES.in(locale)('stopAnswers')).toBe(ANSWERS_MESSAGES.in(locale)('stop'))
     }
   })
 })

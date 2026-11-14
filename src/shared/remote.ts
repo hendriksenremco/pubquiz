@@ -29,6 +29,7 @@ import {
   screenVolume,
   slideLabel,
   stepCommand,
+  stepNames,
   stepTarget,
   type StepTarget
 } from './resolve'
@@ -266,6 +267,11 @@ export interface RemoteStep {
   playing: boolean
   prev: boolean
   next: boolean
+  /**
+   * Hoe ← en → heten. In een antwoordenronde zegt → wat hij doet: Start antwoorden, Toon antwoord
+   * of Volgende vraag; anders zie stepNames.
+   */
+  names: readonly [prev: string, next: string]
 }
 
 export const RemoteActionSchema = z.discriminatedUnion('type', [
@@ -641,18 +647,40 @@ export function remoteStep(
 ): RemoteStep {
   const t = STEP_MESSAGES.in(locale)
   const target = stepTarget(quiz, round)
-  const base = { target, text: null, answer: null, playing: false }
+  const base = {
+    target,
+    text: null,
+    answer: null,
+    playing: false,
+    names: stepNames(target, locale)
+  }
   const playing = (id: string | undefined) => !!id && state.fragment?.fragmentId === id
 
   if (target === 'answers') {
     const items = answerItems(quiz, round)
     const current = state.answer?.roundId === round.id ? state.answer : null
     const item = current ? items[current.index] : undefined
+    const [prevName, nextName] = base.names
     if (!current || !item) {
-      return { ...base, label: t('answersToGo', { count: items.length }), prev: false, next: true }
+      return {
+        ...base,
+        label: t('answersToGo', { count: items.length }),
+        prev: false,
+        next: true,
+        names: [prevName, t('startAnswers')]
+      }
     }
+    const following = items[current.index + 1]
     return {
       ...base,
+      names: [
+        prevName,
+        !current.revealed
+          ? t('revealAnswer')
+          : following
+            ? t(NEXT_ANSWER[following.noun])
+            : nextName
+      ],
       label: t(ANSWER_LABELS[item.noun], {
         number: item.number,
         round: roundTitle(item.round, locale)
@@ -694,6 +722,13 @@ export function remoteStep(
     next: state.slideIndex < count - 1 || loopActive(round, state.slideIndex)
   }
 }
+
+/** Wat → doet als het antwoord in beeld staat: naar het volgende ding om langs te lopen. */
+const NEXT_ANSWER = {
+  vraag: 'nextQuestion',
+  afbeelding: 'nextImage',
+  fragment: 'nextFragment'
+} as const satisfies Record<AnswerItem['noun'], string>
 
 const ANSWER_LABELS = {
   vraag: 'answerQuestion',

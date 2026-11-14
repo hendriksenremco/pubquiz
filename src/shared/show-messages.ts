@@ -3,7 +3,7 @@ import type { AnswerNoun } from './resolve'
 
 /**
  * Teksten over de show die main en shared maken, voor de Mac en de telefoon: hoe vorige en
- * volgende heten (`stepNames`), waar je staat (`remoteStep`) en de korte naam van een slide in de
+ * volgende heten (`stepNames`, en in een antwoordenronde `remoteStep`), waar je staat (`remoteStep`) en de korte naam van een slide in de
  * lijst Slides (`slideLabel`).
  */
 export const STEP_MESSAGES = defineMessages(
@@ -14,6 +14,10 @@ export const STEP_MESSAGES = defineMessages(
     nextFragment: 'Volgend fragment',
     prevStep: 'Vorige stap',
     nextStep: 'Volgende stap',
+    startAnswers: 'Start antwoorden',
+    revealAnswer: 'Toon antwoord',
+    nextQuestion: 'Volgende vraag',
+    nextImage: 'Volgende afbeelding',
     answersToGo: '{count} om na te lopen',
     answerQuestion: 'Vraag {number}, {round}',
     answerImage: 'Afbeelding {number}, {round}',
@@ -36,6 +40,10 @@ export const STEP_MESSAGES = defineMessages(
       nextFragment: 'Next clip',
       prevStep: 'Previous step',
       nextStep: 'Next step',
+      startAnswers: 'Start answers',
+      revealAnswer: 'Show answer',
+      nextQuestion: 'Next question',
+      nextImage: 'Next picture',
       answersToGo: '{count} to go through',
       answerQuestion: 'Question {number}, {round}',
       answerImage: 'Picture {number}, {round}',
