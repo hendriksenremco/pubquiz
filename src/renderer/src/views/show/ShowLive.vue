@@ -203,7 +203,13 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 
     <aside class="side scroll">
       <section class="control" :aria-label="t('controls')">
-        <span class="label">{{ stepView?.label ?? t('betweenRounds') }}</span>
+        <!-- Speelt het fragment van deze stap, dan staat dat ernaast, zoals op de telefoon. -->
+        <div class="row">
+          <span class="label grow">{{ stepView?.label ?? t('betweenRounds') }}</span>
+          <span v-if="stepView?.playing" class="step-playing"
+            ><span class="dot" />{{ t('playing') }}</span
+          >
+        </div>
         <div class="pair">
           <button
             class="btn key"
@@ -531,6 +537,22 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
   font-size: 12px;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+.step-playing {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.step-playing .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
 }
 
 .step-text {

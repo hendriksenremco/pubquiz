@@ -32,6 +32,8 @@ export const LIVE_MESSAGES = defineMessages(
     endRoundHint: 'Schermen en muziek terug naar de standaard (E)',
     notes: 'Notities',
     answer: 'Antwoord',
+    /** Naast de stap boven de pijlen, als het fragment van die stap speelt; zoals op de telefoon. */
+    playing: 'Speelt',
     blackoutOn: 'Beeld op zwart',
     blackoutOff: 'Beeld terug',
     blackoutOnHint: 'Alle schermen op zwart (B)',
@@ -85,6 +87,7 @@ export const LIVE_MESSAGES = defineMessages(
       endRoundHint: 'Screens and music back to the default (E)',
       notes: 'Notes',
       answer: 'Answer',
+      playing: 'Playing',
       blackoutOn: 'Black out',
       blackoutOff: 'Screens back',
       blackoutOnHint: 'All screens to black (B)',
