@@ -91,7 +91,9 @@ function deviceLabel(slotId: string): string {
           <span class="label grow">{{ t('background') }}</span>
           <span class="pill" :class="backgroundStatus.cls">{{ backgroundStatus.text }}</span>
         </div>
-        <div v-if="backgroundName" class="bg-name">{{ backgroundName }}</div>
+        <div v-if="backgroundName" class="bg-name" :title="backgroundName">
+          {{ backgroundName }}
+        </div>
         <button
           v-if="quiz.background"
           class="btn btn-sm"

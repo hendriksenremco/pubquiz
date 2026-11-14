@@ -147,7 +147,7 @@ function reveal(q: RecentQuiz) {
               @click="createFrom(q, close)"
             >
               <QuizCover :quiz="q" class="mini-cover" />
-              <span class="grow template-title">{{ q.title }}</span>
+              <span class="grow template-title" :title="q.title">{{ q.title }}</span>
             </button>
           </template>
         </Popover>
