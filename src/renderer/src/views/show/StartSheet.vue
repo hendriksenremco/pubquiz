@@ -394,6 +394,8 @@ const savedAt = computed(() =>
                 <Icon name="volume" :size="14" /> {{ t('testTone') }}
               </button>
             </div>
+            <!-- Zoals bij Schermen: geen lege kop als de quiz geen kanalen heeft. -->
+            <p v-if="!quiz.channels.length" class="muted span">{{ t('noChannels') }}</p>
             <div v-if="airplaySpeakers.length" class="note airplay-hint">
               <span class="grow">
                 {{
