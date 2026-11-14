@@ -486,7 +486,7 @@ onMounted(connect)
         >
           <span class="tile-label"
             ><span class="frag-num">{{ f.number }}</span
-            ><span class="frag-label">{{ f.label }}</span></span
+            ><span v-if="f.label" class="frag-label">{{ f.label }}</span></span
           >
           <span v-if="f.answer" class="frag-answer quiet">{{ f.answer }}</span>
           <span class="tile-sub" :data-volatile="f.playing || undefined">{{

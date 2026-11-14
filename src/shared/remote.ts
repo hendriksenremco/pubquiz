@@ -8,7 +8,7 @@ import type { Locale } from './i18n'
 import type { ShowCommand } from './ipc'
 import { adjacentFragment } from './autoplay'
 import { action, definePlugin, typeOnly } from './plugin'
-import { isDefaultFragmentName, roundTitle } from './quiz-messages'
+import { fragmentName, roundTitle } from './quiz-messages'
 import type { PluginId, PluginStatus } from './plugins'
 import {
   activeRound,
@@ -195,7 +195,8 @@ export interface RemoteSlide {
 export interface RemoteFragment {
   id: string
   number: number
-  label: string
+  /** Een eigen naam; null bij een standaardnaam ("Fragment 3"), want het nummer staat er al. */
+  label: string | null
   /** Het antwoord bij dit fragment, zoals op de Mac; null als het niet is ingevuld. */
   answer: string | null
   playing: boolean
@@ -637,7 +638,7 @@ function remoteFragments(quiz: Quiz, round: Round, state: ShowState): RemoteFrag
     return {
       id: f.id,
       number: i + 1,
-      label: f.label,
+      label: fragmentName(f.label, i + 1),
       answer: f.answer || null,
       playing,
       ends:
@@ -699,7 +700,7 @@ export function remoteStep(
       }),
       text: item.slide
         ? questionText(item.slide)
-        : item.fragment && fragmentText(item.fragment.label, item.number),
+        : item.fragment && fragmentName(item.fragment.label, item.number),
       answer: current.revealed ? item.answer || item.fragment?.label || '—' : null,
       playing: playing(item.fragment?.id),
       prev: true,
@@ -715,7 +716,7 @@ export function remoteStep(
       label: fragment
         ? t('fragmentOf', { number: ids.indexOf(fragment.id) + 1, total: ids.length })
         : t('fragments', { count: ids.length }),
-      text: fragment ? fragmentText(fragment.label, ids.indexOf(fragment.id) + 1) : null,
+      text: fragment ? fragmentName(fragment.label, ids.indexOf(fragment.id) + 1) : null,
       playing: playing(fragment?.id),
       prev: adjacentFragment(ids, state.lastFragmentId, 'prev') !== null,
       next: adjacentFragment(ids, state.lastFragmentId, 'next') !== null
@@ -735,14 +736,6 @@ export function remoteStep(
     prev: state.slideIndex > -1,
     next: state.slideIndex < count - 1 || loopActive(round, state.slideIndex)
   }
-}
-
-/**
- * De naam van een fragment onder de pijlen, om het te herkennen. Een standaardnaam ("Fragment 3")
- * staat al in het label erboven ("Fragment 3 van 8"), dus die valt weg.
- */
-function fragmentText(label: string, number: number): string | null {
-  return label.trim() && !isDefaultFragmentName(label, number) ? label : null
 }
 
 /** Wat → doet als het antwoord in beeld staat: naar het volgende ding om langs te lopen. */

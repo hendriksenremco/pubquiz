@@ -45,6 +45,8 @@ test('onder de pijlen staat de vraag om voor te lezen, zoals op de telefoon', as
 test('een fragment met zijn standaardnaam staat er niet nog eens onder', async () => {
   // Ronde 2 van de fixture heeft fragmenten met de naam die de app gaf ("Fragment 1").
   await operator.locator('.rounds .round').nth(1).click()
+  // Ook op de kaart zelf niet: daar staat het grote nummer al.
+  await expect(operator.locator('.pad .frag .frag-label')).toHaveCount(0)
   await operator.locator('.pad .frag').first().click()
   const control = operator.locator('.side .control')
   await expect(control.locator('.label').first()).toHaveText('Fragment 1 van 8')

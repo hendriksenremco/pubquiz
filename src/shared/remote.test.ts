@@ -440,6 +440,15 @@ describe('remoteCommand', () => {
       fragment: { ...playing.fragment, duration: null }
     })
     expect(remoteView(quiz, unknown).fragments[1].ends).toBeNull()
+    // Een standaardnaam zegt niets meer dan het nummer; een eigen naam blijft.
+    one.label = 'Fragment 1'
+    two.label = 'Clip 2'
+    three.label = 'Fragment 1'
+    expect(remoteView(quiz, state).fragments.map((f) => f.label)).toEqual([
+      null,
+      null,
+      'Fragment 1'
+    ])
     expect(remoteView(quiz, live({ activeRoundId: first.id })).fragments).toEqual([])
     expect(remoteView(quiz, live()).fragments).toEqual([])
 
