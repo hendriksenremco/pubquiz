@@ -102,7 +102,7 @@ function onListKey(event: KeyboardEvent) {
         @click="open ? toggle() : openList(toggle)"
         @keydown="onTriggerKey($event, open, toggle)"
       >
-        <span class="value" :class="{ placeholder: !selected }">
+        <span class="value" :class="{ placeholder: !selected }" :title="selected?.label">
           {{ selected?.label ?? placeholder }}
         </span>
         <Icon name="chevron" :size="14" class="chevron" />
@@ -121,7 +121,7 @@ function onListKey(event: KeyboardEvent) {
           :disabled="row.option.disabled"
           @click="choose(row.option)"
         >
-          <span class="grow label">{{ row.option.label }}</span>
+          <span class="grow label" :title="row.option.label">{{ row.option.label }}</span>
           <Icon v-if="row.option.value === model" name="check" :size="14" />
         </button>
       </template>
