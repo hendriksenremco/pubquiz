@@ -288,8 +288,10 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
             <span class="tile-label"
               ><Icon name="restart" :size="13" />{{ t('restartRound') }}</span
             >
+            <!-- Tijdens een ronde staat zijn naam al als kop; alleen tussen rondes zegt de naam
+                 welke ronde opnieuw begint. Zo ook op de telefoon. -->
             <span class="tile-sub">{{
-              restartable ? roundTitle(restartable, locale) : '\u00a0'
+              restartable && !round ? roundTitle(restartable, locale) : '\u00a0'
             }}</span>
           </button>
           <button
@@ -299,7 +301,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
             @click="send({ type: 'endRound' })"
           >
             <span class="tile-label">{{ t('endRound') }}<Icon name="end" :size="12" /></span>
-            <span class="tile-sub">{{ round ? roundTitle(round, locale) : '\u00a0' }}</span>
+            <span class="tile-sub">&nbsp;</span>
           </button>
         </div>
       </section>

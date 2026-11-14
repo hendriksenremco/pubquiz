@@ -316,11 +316,13 @@ onMounted(connect)
           @click="send({ type: 'restartRound' })"
         >
           <span class="tile-label"><Icon name="restart" :size="15" />{{ t('restartRound') }}</span>
-          <span class="tile-sub">{{ view?.restartRound ?? '\u00a0' }}</span>
+          <!-- Tijdens een ronde staat zijn naam al bovenaan; alleen tussen rondes zegt de naam
+               welke ronde opnieuw begint. Zo ook op de Mac. -->
+          <span class="tile-sub">{{ (!round && view?.restartRound) || '\u00a0' }}</span>
         </button>
         <button class="tile end" :disabled="!live || !round" @click="send({ type: 'endRound' })">
           <span class="tile-label">{{ t('endRound') }}<Icon name="end" :size="14" /></span>
-          <span class="tile-sub">{{ round?.title ?? '\u00a0' }}</span>
+          <span class="tile-sub">&nbsp;</span>
         </button>
       </section>
 
