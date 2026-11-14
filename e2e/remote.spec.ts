@@ -70,7 +70,7 @@ test('de show bedienen met een telefoon via de QR-code', async () => {
     // Rondes en slides, met een voorbeeld van de slide die in beeld staat.
     const preview = phone.getByLabel('Voorbeeld van de slide')
     await expect(phone.locator('h1')).toHaveText('Hierna: Ronde 1: algemeen')
-    await expect(phone.getByRole('button', { name: 'Volgende', exact: true })).toBeDisabled()
+    await expect(phone.getByRole('button', { name: 'Volgende slide', exact: true })).toBeDisabled()
     const notes = phone.getByRole('region', { name: 'Notities' })
     await expect(notes).toHaveCount(0)
     await phone.getByRole('button', { name: /Volgende ronde/ }).click()
@@ -334,7 +334,7 @@ test('de show bedienen met een telefoon via de QR-code', async () => {
     await confirmIn(operator, 'Stop show')
     const after = await openRemote(app, renewed, PHONE)
     await expect(after.locator('h1')).toHaveText('Start de show op de Mac')
-    await expect(after.getByRole('button', { name: 'Volgende', exact: true })).toBeDisabled()
+    await expect(after.getByRole('button', { name: 'Volgende slide', exact: true })).toBeDisabled()
     await expect(after.locator('.status')).toHaveText('Niet live')
   } finally {
     await app.close()
