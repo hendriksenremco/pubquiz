@@ -34,7 +34,8 @@ Doe per run **één** ding, in deze volgorde:
    - het label `vraag`, `eerst-vragen` of `later` heeft;
    - op een beslissing van Remco wacht (een open issue met `beslissing` waar het naar verwijst);
    - echte apparatuur, signeren of macOS nodig heeft om af te ronden;
-   - al in een open pull request zit (`Closes #…`).
+   - al in een open pull request zit (`Closes #…`);
+   - #94 (statusdashboard): dat wacht op #98, want de agent heeft de Artifact-tools nog niet.
 
    Zet een opmerking op het issue als je begint. Maak een issue in één run af als dat kan, ook als dat meerdere commits of een grotere pull request wordt; liever één pull request met `Closes #…` dan vijf kleine. Past het echt niet in één run: doe een zo groot mogelijk deel als eigen pull request (`Part of #…`) en schrijf in een opmerking op het issue wat er nog over is.
 
