@@ -36,6 +36,8 @@ sudo loginctl enable-linger "$USER"
 
 ## Gebruik
 
+Pauzeren zonder de server: zet een bestand `agent/PAUZE` op master. Dan start de agent geen runs meer (ook geen eigen pull requests); weghalen zet hem weer aan.
+
 ```sh
 systemctl --user status quiznote-agent        # draait hij?
 ls ~/quiznote-agent/logs/                     # wat hij deed
