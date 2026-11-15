@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { adjacentFragment, autoplayCountdown } from '@shared/autoplay'
 import type { AutoplayAction, ShowCommand } from '@shared/ipc'
+import { fragmentName } from '@shared/quiz-messages'
 import { sequenceOf } from '@shared/remote'
 import type { Round } from '@shared/types'
 import Icon from '../../components/Icon.vue'
@@ -107,7 +108,8 @@ function click(id: string) {
         @click="click(f.id)"
       >
         <span class="frag-num mono">{{ i + 1 }}</span>
-        <span class="frag-label">{{ f.label }}</span>
+        <!-- Een standaardnaam ("Fragment 3") zegt niets meer dan het grote nummer erboven. -->
+        <span v-if="fragmentName(f.label, i + 1)" class="frag-label">{{ f.label }}</span>
         <span v-if="f.answer" class="frag-answer">{{ f.answer }}</span>
         <span v-if="playing?.fragmentId === f.id" class="frag-time mono" data-volatile>
           {{ remaining !== null ? `-${formatTime(remaining)}` : t('playing') }}

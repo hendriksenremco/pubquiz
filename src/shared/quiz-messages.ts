@@ -43,6 +43,14 @@ export function isDefaultFragmentName(label: string, number: number): boolean {
   return LOCALES.some((locale) => name === NAME_MESSAGES.in(locale)('fragment', { number }))
 }
 
+/**
+ * De naam van een fragment naast zijn nummer in de bediening (onder de pijlen, op de kaarten in de
+ * show). Een standaardnaam ("Fragment 3") zegt niets meer dan het nummer, dus die valt weg: null.
+ */
+export function fragmentName(label: string, number: number): string | null {
+  return label.trim() && !isDefaultFragmentName(label, number) ? label : null
+}
+
 /** Een ronde zonder titel, in de bediening op de Mac en de telefoon (niet op de schermen). */
 export const TITLE_MESSAGES = defineMessages(
   { untitledRound: 'Naamloze ronde' },
