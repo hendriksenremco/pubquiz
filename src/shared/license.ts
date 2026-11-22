@@ -3,32 +3,31 @@ import type { HardwareMapping, Quiz } from './types'
 /**
  * QuizNote Pro (issue #384): freemium. Gratis is alles voor een gewone pubquiz met één scherm en
  * één geluidsuitgang; Pro voegt meer schermen en uitgangen, de plug-ins en de AI-koppeling toe.
- * Betalen en licentiecodes lopen via Lemon Squeezy (issue #385). Zonder eigen server: de app
- * activeert een code één keer online en werkt daarna `OFFLINE_DAYS` dagen zonder internet.
+ * Betalen loopt via Stripe; de licentieserver op quiznote.app (`functions/` in de site-repo) maakt
+ * de codes en vraagt Stripe of een abonnement loopt. De app activeert een code één keer online en
+ * werkt daarna `OFFLINE_DAYS` dagen zonder internet.
  */
 
 /**
- * De winkel en het product bij Lemon Squeezy (issue #385). Zolang `storeId` 0 is, staat alles
- * open: zo kan de code al mee zonder dat iemand iets kwijtraakt. Deze ids zijn niet geheim; ze
- * staan toch in de app.
+ * Pro staat pas aan als de winkel live is (Stripe geverifieerd, de licentieserver gedeployd).
+ * Tot dan staat alles open: zo kan de code al mee zonder dat iemand iets kwijtraakt.
  */
-const STORE = { storeId: 0, productId: 0 }
+const STORE_LIVE = false
 
-/** PUBQUIZ_LICENSE_STORE=<store-id>:<product-id>: een nepwinkel voor de tests (alleen in main). */
-function store(): { storeId: number; productId: number } {
+/** PUBQUIZ_LICENSE_READY=1: de winkel aan, voor de tests (alleen in main). */
+function testReady(): boolean {
   const env = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process
     ?.env
-  const [storeId, productId] = (env?.['PUBQUIZ_LICENSE_STORE'] ?? '').split(':').map(Number)
-  return storeId && productId ? { storeId, productId } : STORE
+  return env?.['PUBQUIZ_LICENSE_READY'] === '1'
 }
 
 export const LICENSE_STORE = {
-  ...store(),
-  /** De pagina met de prijzen en de knop om te kopen. */
+  ready: STORE_LIVE || testReady(),
+  /** De pagina met de prijzen en de knoppen om te kopen. */
   buyUrl: 'https://quiznote.app/pro'
 }
 
-export const storeReady = (store: { storeId: number } = LICENSE_STORE) => store.storeId > 0
+export const storeReady = (store: { ready: boolean } = LICENSE_STORE) => store.ready
 
 /** Zo lang werkt Pro zonder dat de app de code opnieuw heeft kunnen controleren. */
 export const OFFLINE_DAYS = 30
@@ -44,12 +43,12 @@ export type LicenseStatus = 'active' | 'inactive' | 'expired' | 'disabled'
 /** Wat de app per Mac van een geactiveerde code bewaart (in settings.json). */
 export interface StoredLicense {
   key: string
-  /** De activatie van deze Mac bij Lemon Squeezy; nodig om te controleren en weg te halen. */
+  /** De activatie van deze Mac bij de licentieserver; nodig om te controleren en weg te halen. */
   instanceId: string
   status: LicenseStatus
-  /** Laatste geslaagde controle bij Lemon Squeezy (ms sinds epoch). */
+  /** Laatste geslaagde controle bij de licentieserver (ms sinds epoch). */
   checkedAt: number
-  /** Einde van de code volgens Lemon Squeezy; null = loopt door zolang het abonnement loopt. */
+  /** Einde van de code volgens Stripe; null = loopt door zolang het abonnement loopt. */
   expiresAt: number | null
 }
 

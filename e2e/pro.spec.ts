@@ -5,48 +5,37 @@ import type { AddressInfo } from 'net'
 import { join } from 'path'
 import { launch, snap, tempDir } from './helpers'
 
-/** Doet zich voor als de License API van Lemon Squeezy; alleen GOED-1234 is een geldige code. */
-async function fakeLemonSqueezy(): Promise<{ server: Server; url: string }> {
-  const meta = { store_id: 7, product_id: 42 }
+/** Doet zich voor als de licentieserver op quiznote.app; alleen QNP-GOED-1234 is een geldige code. */
+async function fakeLicenseServer(): Promise<{ server: Server; url: string }> {
   const server = createServer((req, res) => {
     let body = ''
     req.on('data', (chunk) => (body += chunk))
     req.on('end', () => {
-      const key = new URLSearchParams(body).get('license_key')
+      const { key } = JSON.parse(body || '{}') as { key?: string }
       const action = req.url?.split('/').pop()
       res.setHeader('Content-Type', 'application/json')
-      if (key !== 'GOED-1234') {
-        res.statusCode = 404
-        res.end(JSON.stringify({ activated: false, valid: false, error: 'license_key not found.' }))
+      if (key !== 'QNP-GOED-1234') {
+        res.statusCode = action === 'activate' ? 404 : 200
+        res.end(
+          JSON.stringify(action === 'activate' ? { error: 'invalid' } : { status: 'disabled' })
+        )
       } else if (action === 'activate') {
-        res.end(
-          JSON.stringify({
-            activated: true,
-            license_key: { status: 'active', expires_at: null },
-            instance: { id: 'mac-1' },
-            meta
-          })
-        )
+        res.end(JSON.stringify({ instanceId: 'mac-1', status: 'active', expiresAt: null }))
+      } else if (action === 'validate') {
+        res.end(JSON.stringify({ status: 'active', expiresAt: null }))
       } else {
-        res.end(
-          JSON.stringify({
-            valid: true,
-            deactivated: true,
-            license_key: { status: 'active' },
-            meta
-          })
-        )
+        res.end(JSON.stringify({ deactivated: true }))
       }
     })
   })
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
   const { port } = server.address() as AddressInfo
-  return { server, url: `http://127.0.0.1:${port}/v1/licenses` }
+  return { server, url: `http://127.0.0.1:${port}/api/licenses` }
 }
 
 test('Pro: zonder code gratis, met een code aan, en gratis tijd voor wie de app al gebruikte', async () => {
-  const { server, url } = await fakeLemonSqueezy()
-  const env = { PUBQUIZ_LICENSE_STORE: '7:42', PUBQUIZ_LICENSE_URL: url }
+  const { server, url } = await fakeLicenseServer()
+  const env = { PUBQUIZ_LICENSE_READY: '1', PUBQUIZ_LICENSE_URL: url }
   try {
     // Een nieuwe Mac: gratis, en de plug-ins zijn Pro.
     const { app, operator } = await launch(tempDir('pro'), undefined, env)
@@ -62,7 +51,7 @@ test('Pro: zonder code gratis, met een code aan, en gratis tijd voor wie de app 
     await settings.getByRole('button', { name: 'Zet Pro aan' }).click()
     await expect(settings.getByText(/Deze code werkt niet/)).toBeVisible()
 
-    await key.fill('GOED-1234')
+    await key.fill('QNP-GOED-1234')
     await settings.getByRole('button', { name: 'Zet Pro aan' }).click()
     await expect(settings.getByText('Pro staat aan met code …1234.')).toBeVisible()
     await expect(remote).toBeEnabled()

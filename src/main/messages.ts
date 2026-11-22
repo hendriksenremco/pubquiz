@@ -165,7 +165,7 @@ export const NOTICE_MESSAGES = defineMessages(
     folderWithoutMedia: '{name} (geen media)',
     formNotLoading: 'het formulier laadt niet',
     updateReady: 'QuizNote {version} staat klaar en wordt geïnstalleerd als je de app afsluit',
-    licenseInvalid: 'Deze code werkt niet. Controleer hem, of kijk in de mail van je aankoop.',
+    licenseInvalid: 'Deze code werkt niet. Controleer hem op de bedankpagina van je aankoop.',
     licenseNotPro: 'Deze code hoort niet bij QuizNote Pro',
     licenseLimit:
       'Deze code is al op het maximale aantal Macs in gebruik. Haal hem eerst van een andere Mac af.',
@@ -217,7 +217,7 @@ export const NOTICE_MESSAGES = defineMessages(
       folderWithoutMedia: '{name} (no media)',
       formNotLoading: 'the form does not load',
       updateReady: 'QuizNote {version} is ready and will be installed when you quit the app',
-      licenseInvalid: 'This key does not work. Check it, or look in the email of your purchase.',
+      licenseInvalid: 'This key does not work. Check it on the thank-you page of your purchase.',
       licenseNotPro: 'This key is not for QuizNote Pro',
       licenseLimit:
         'This key is already in use on the maximum number of Macs. Remove it from another Mac first.',
