@@ -36,6 +36,11 @@ git config --add credential.helper ''
 git config --add credential.helper '!gh auth git-credential'
 git remote set-url origin https://github.com/hendriksenremco/pubquiz.git
 git fetch --prune origin
+# Commits op master die niet op GitHub staan, gooit de reset hieronder weg. Bewaar ze eerst.
+if [ "$(git rev-list --count refs/heads/master --not --remotes 2>/dev/null || echo 0)" -gt 0 ]; then
+  mkdir -p "$DIR/gered"
+  git bundle create -q "$DIR/gered/pubquiz-master-$(date +%F_%H%M).bundle" refs/heads/master --not --remotes || true
+fi
 git checkout -q -f master
 git reset -q --hard origin/master
 git clean -qfd -e node_modules
@@ -73,6 +78,24 @@ MELDING="$(grep -m1 -oP '^MELDING: \K.*' "$LOG" || true)"
 [ -n "$MELDING" ] && notify "$MELDING"
 if grep -qiE 'usage limit|rate limit|limit reached|requires usage credits|out of (usage|credits)' "$LOG" && [ -z "$LIMIT_ISSUE" ]; then
   notify "De agent staat stil: gebruikslimiet van Claude bereikt. Hij probeert het over een uur opnieuw."
+fi
+
+# Werk dat niet op GitHub staat (een geweigerde push, iets niet gecommit) meldt het script zelf,
+# wat de agent ook schrijft. Eén melding per nieuwe situatie; de commits gaan als bundle naar gered/.
+git -C "$REPO" show origin/master:agent/unpushed.sh >"$DIR/unpushed.sh" 2>/dev/null || true
+if [ -s "$DIR/unpushed.sh" ]; then
+  git -C "$DIR/pubquiz-site" fetch -q --prune origin 2>/dev/null || true
+  NIET_GEPUSHT="$(for clone in "$REPO" "$DIR/pubquiz-site"; do bash "$DIR/unpushed.sh" "$clone"; done)"
+  if [ -z "$NIET_GEPUSHT" ]; then
+    rm -f "$DIR/.niet-gepusht"
+  elif [ "$NIET_GEPUSHT" != "$(cat "$DIR/.niet-gepusht" 2>/dev/null)" ]; then
+    printf '%s\n' "$NIET_GEPUSHT" >"$DIR/.niet-gepusht"
+    for clone in "$REPO" "$DIR/pubquiz-site"; do bash "$DIR/unpushed.sh" "$clone" --bundle "$DIR/gered" >/dev/null; done
+    MEER=$(( $(printf '%s\n' "$NIET_GEPUSHT" | wc -l) - 1 ))
+    notify "Werk staat niet op GitHub: $(printf '%s\n' "$NIET_GEPUSHT" | head -1)$([ "$MEER" -gt 0 ] && echo " (en nog $MEER)"). Zie ~/quiznote-agent/gered en de log."
+    echo "NIET GEPUSHT:" >>"$LOG"
+    printf '%s\n' "$NIET_GEPUSHT" >>"$LOG"
+  fi
 fi
 
 # Logs van meer dan 30 dagen weg.
