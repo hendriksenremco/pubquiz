@@ -125,6 +125,44 @@ export const SETTINGS_MESSAGES = defineMessages(
   }
 )
 
+/** QuizNote Pro bij Instellingen (issue #384). */
+export const PRO_MESSAGES = defineMessages(
+  {
+    title: 'QuizNote Pro',
+    free: 'Gratis: één scherm en één geluidsuitgang. Met Pro: meer schermen en uitgangen, de plug-ins en de AI-koppeling.',
+    active: 'Pro staat aan met code …{hint}.',
+    activeUntil: 'Pro staat aan met code …{hint}, tot {date}.',
+    early: 'Je hebt Pro gratis tot {date}, omdat je QuizNote al gebruikte. Dank je!',
+    expired: 'Je abonnement is verlopen.',
+    disabled: 'Deze code is niet meer geldig.',
+    offline: 'QuizNote kon je code al 30 dagen niet controleren. Maak verbinding met internet.',
+    keyLabel: 'Licentiecode',
+    keyPlaceholder: 'Plak de code uit de mail van je aankoop',
+    activate: 'Zet Pro aan',
+    buy: 'Koop Pro',
+    remove: 'Haal code van deze Mac',
+    proOnly: 'Pro'
+  },
+  {
+    en: {
+      title: 'QuizNote Pro',
+      free: 'Free: one screen and one sound output. With Pro: more screens and outputs, the plug-ins and the AI connection.',
+      active: 'Pro is on with key …{hint}.',
+      activeUntil: 'Pro is on with key …{hint}, until {date}.',
+      early: 'You have Pro for free until {date}, because you already used QuizNote. Thank you!',
+      expired: 'Your subscription has expired.',
+      disabled: 'This key is no longer valid.',
+      offline: 'QuizNote has not been able to check your key for 30 days. Connect to the internet.',
+      keyLabel: 'License key',
+      keyPlaceholder: 'Paste the key from your purchase email',
+      activate: 'Turn on Pro',
+      buy: 'Buy Pro',
+      remove: 'Remove key from this Mac',
+      proOnly: 'Pro'
+    }
+  }
+)
+
 /** De vraag bij de eerste start en de uitleg bij Instellingen: anoniem meten (issue #40). */
 export const ANALYTICS_MESSAGES = defineMessages(
   {

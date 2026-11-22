@@ -42,6 +42,9 @@ const api: PubquizApi = {
   pluginAct: (id, name, input) => ipcRenderer.invoke(IPC.pluginAct, id, name, input),
 
   setAnalytics: (consent) => ipcRenderer.invoke(IPC.setAnalytics, consent),
+  activateLicense: (key) => ipcRenderer.invoke(IPC.activateLicense, key),
+  deactivateLicense: () => ipcRenderer.invoke(IPC.deactivateLicense),
+  openProPage: () => ipcRenderer.invoke(IPC.openProPage),
   reportError: (report) => ipcRenderer.send(IPC.reportError, report),
 
   audioEvent: (event) => ipcRenderer.send(IPC.audioEvent, event),
@@ -53,6 +56,7 @@ const api: PubquizApi = {
   onDisplays: (cb) => subscribe(IPC.displays, cb),
   onAirPlay: (cb) => subscribe(IPC.airplay, cb),
   onPlugins: (cb) => subscribe(IPC.plugins, cb),
+  onPro: (cb) => subscribe(IPC.pro, cb),
   onPluginStatus: (cb) => subscribe(IPC.pluginStatus, cb),
   onNotice: (cb) => subscribe(IPC.notice, cb),
   onSaved: (cb) => subscribe(IPC.saved, cb),

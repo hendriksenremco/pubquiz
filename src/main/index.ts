@@ -104,11 +104,15 @@ app.whenReady().then(async () => {
   app.setAboutPanelOptions(aboutPanelOptions(app.name, app.getVersion()))
   buildMenu(ctl)
   // AI-assistenten praten via de MCP-server (src/mcp) over deze socket met de app.
+  // De AI-koppeling hoort bij QuizNote Pro (issue #384); zonder Pro krijgt de AI uitleg terug.
   bridge = new AgentBridge(join(app.getPath('userData'), 'mcp.sock'), (tool, input) =>
-    handleAgent(ctl, tool, input)
+    ctl.pro.pro
+      ? handleAgent(ctl, tool, input)
+      : Promise.reject(new Error(NOTICE_MESSAGES.in(appLocale())('proNeededAi')))
   )
   await bridge.start().catch((err) => console.error('AI-koppeling starten mislukt', err))
   ctl.airplay.start()
+  ctl.startLicenseChecks()
 
   await ctl.installTour(tourSource())
 
@@ -161,6 +165,7 @@ app.on('before-quit', (event) => {
   ctl.airplay.stop()
   ctl.plugins.stop()
   ctl.analytics?.stop()
+  ctl.stopLicenseChecks()
   bridge?.stop()
   void Promise.all([ctl.flushSave(), ctl.analytics?.whenSaved()]).finally(() => app.quit())
 })
@@ -270,6 +275,11 @@ function registerIpc(ctl: AppController): void {
   ipcMain.handle(IPC.setAnalytics, (_e, consent: unknown) => {
     if (typeof consent === 'boolean') ctl.setAnalytics(consent)
   })
+  ipcMain.handle(IPC.activateLicense, (_e, key: unknown) =>
+    typeof key === 'string' ? ctl.activateLicense(key) : null
+  )
+  ipcMain.handle(IPC.deactivateLicense, () => ctl.deactivateLicense())
+  ipcMain.handle(IPC.openProPage, () => ctl.openProPage())
   ipcMain.on(IPC.reportError, (_e, input: unknown) => {
     const report = reportFrom(input)
     if (report) ctl.analytics?.captureError(report, 'renderer')

@@ -12,7 +12,21 @@ import {
   type RecoveryInfo,
   type Snapshot
 } from '@shared/ipc'
-import { PLUGIN_OFF, PLUGINS, type PluginId, type PluginSetting } from '@shared/plugins'
+import {
+  CHECK_EVERY_MS,
+  LICENSE_STORE,
+  limitMapping,
+  needsPro,
+  proState,
+  type ProState
+} from '@shared/license'
+import {
+  PLUGIN_OFF,
+  PLUGINS,
+  type PluginId,
+  type PluginSetting,
+  type PluginSettings
+} from '@shared/plugins'
 import { QuizSchema } from '@shared/quiz-schema'
 import { findRound } from '@shared/resolve'
 import { ROUND_FILE_EXT, type RoundImport } from '@shared/round-file'
@@ -41,6 +55,7 @@ import {
 import { appLocale } from './locale'
 import { locateMedia } from './media-path'
 import { DIALOG_MESSAGES, errorText, NoticeError, NOTICE_MESSAGES, TOUR_MESSAGES } from './messages'
+import { LicenseClient } from './license'
 import { renderFormPdf } from './pdf'
 import { Plugins } from './plugins'
 import { SaveQueue } from './save-queue'
@@ -87,7 +102,7 @@ export class AppController {
     command: (command) => this.show.handle(command),
     publishStatus: (id, status) => this.broadcast(IPC.pluginStatus, [id, status]),
     quizName: () => this.quizName,
-    hardware: () => this.hardware,
+    hardware: () => this.effectiveHardware,
     mediaFile: (file) => {
       const location = locateMedia(mediaUrl(file), {
         current: () => this.quizDir,
@@ -107,7 +122,107 @@ export class AppController {
     readonly legacyLibraryDirs: readonly string[] = []
   ) {
     this.screens.watch((change, display) => this.onDisplayChange(change, display))
-    this.plugins.apply(settings.plugins, null, this.show.current)
+    this.plugins.apply(this.activePlugins, null, this.show.current)
+  }
+
+  // ── QuizNote Pro (issue #384) ─────────────────────────────────────────────────
+
+  readonly licenses = new LicenseClient()
+  private licenseTimer: ReturnType<typeof setInterval> | null = null
+
+  get pro(): ProState {
+    return proState({
+      license: this.settings.license,
+      earlyUntil: this.settings.earlyUntil,
+      now: Date.now()
+    })
+  }
+
+  /** Wat de show gebruikt: zonder Pro het eerste scherm en één geluidsuitgang. */
+  private get effectiveHardware(): HardwareMapping {
+    return this.quiz ? limitMapping(this.quiz, this.hardware, this.pro.pro) : this.hardware
+  }
+
+  /** De plug-ins die echt aan staan: zonder Pro geen. Wat iemand aanzette, blijft bewaard. */
+  private get activePlugins(): PluginSettings {
+    if (this.pro.pro) return this.settings.plugins
+    return Object.fromEntries(
+      Object.entries(this.settings.plugins).map(([id, setting]) => [
+        id,
+        { ...setting, enabled: false }
+      ])
+    )
+  }
+
+  /** Zet een code aan op deze Mac. Geeft een foutmelding in de taal van de app, of null. */
+  async activateLicense(key: string): Promise<string | null> {
+    const trimmed = key.trim()
+    if (!trimmed) return this.t('licenseInvalid')
+    try {
+      const license = await this.licenses.activate(trimmed, 'QuizNote (Mac)')
+      if (this.settings.license && this.settings.license.key !== trimmed) {
+        await this.licenses.deactivate(this.settings.license)
+      }
+      this.settings.setLicense(license)
+      this.proChanged()
+      return null
+    } catch (err) {
+      return this.failed(err)
+    }
+  }
+
+  async deactivateLicense(): Promise<void> {
+    const license = this.settings.license
+    if (!license) return
+    await this.licenses.deactivate(license)
+    this.settings.setLicense(null)
+    this.proChanged()
+  }
+
+  openProPage(): Promise<void> {
+    return shell.openExternal(LICENSE_STORE.buyUrl)
+  }
+
+  /** Bij het starten en daarna elke dag: de code stil opnieuw controleren. */
+  startLicenseChecks(): void {
+    void this.checkLicense()
+    this.licenseTimer ??= setInterval(() => void this.checkLicense(), CHECK_EVERY_MS)
+  }
+
+  stopLicenseChecks(): void {
+    if (this.licenseTimer) clearInterval(this.licenseTimer)
+    this.licenseTimer = null
+  }
+
+  async checkLicense(now = Date.now()): Promise<void> {
+    const license = this.settings.license
+    if (!license || now - license.checkedAt < CHECK_EVERY_MS) return
+    const before = this.pro.pro
+    try {
+      const checked = await this.licenses.validate(license, now)
+      if (!checked) return // geen internet: de oude controle geldt nog even
+      this.settings.setLicense(checked)
+    } catch {
+      // Een code van een ander product: niet langer geldig.
+      this.settings.setLicense({ ...license, status: 'disabled', checkedAt: now })
+    }
+    if (before !== this.pro.pro || !this.pro.pro) this.proChanged()
+  }
+
+  /** Pro ging aan of uit: vensters, plug-ins en schermen bijwerken. */
+  private proChanged(): void {
+    this.broadcast(IPC.pro, [this.pro])
+    this.broadcast(IPC.plugins, [this.activePlugins])
+    this.plugins.apply(this.activePlugins, this.quiz, this.show.current)
+    this.broadcastHardware()
+    if (this.live) this.syncScreens(true)
+  }
+
+  /** Zonder Pro, en de quiz gebruikt meer dan Gratis: één keer melden wat de show dan doet. */
+  private noticeLimits(): void {
+    if (this.quiz && !this.pro.pro && needsPro(this.quiz, this.hardware)) {
+      this.notify('info', this.t('proLimited'))
+    }
   }
 
   get mediaRoot(): string | null {
@@ -163,15 +278,16 @@ export class AppController {
       quiz: this.quiz,
       quizDir: this.quizDir,
       state: this.show.current,
-      hardware: this.hardware,
+      hardware: this.effectiveHardware,
       displays: listDisplays(),
       recent: this.settings.recent,
       recovery: this.recoveryInfo(),
       libraryDir: this.libraryDir,
       airplay: this.airplay.list,
-      plugins: this.settings.plugins,
+      plugins: this.activePlugins,
       pluginStatus: this.plugins.statuses(),
       analytics: this.analytics ? this.settings.analyticsConsent : false,
+      pro: this.pro,
       dirty: this.saves.dirty
     }
   }
@@ -532,10 +648,11 @@ export class AppController {
     this.recovery = null
     this.show.start(restore)
     this.syncScreens(true)
+    this.noticeLimits()
     this.analytics?.capture('show_started', {
       resumed: Boolean(restore),
       ...quizShape(this.quiz),
-      plugins: PLUGINS.filter((p) => this.settings.plugins[p.id]?.enabled).map((p) => p.id)
+      plugins: PLUGINS.filter((p) => this.activePlugins[p.id]?.enabled).map((p) => p.id)
     })
   }
 
@@ -572,8 +689,8 @@ export class AppController {
   setPlugin(id: PluginId, setting: PluginSetting): void {
     if (!PLUGINS.some((p) => p.id === id)) return
     this.settings.setPlugin(id, setting)
-    this.broadcast(IPC.plugins, [this.settings.plugins])
-    this.plugins.apply(this.settings.plugins, this.quiz, this.show.current)
+    this.broadcast(IPC.plugins, [this.activePlugins])
+    this.plugins.apply(this.activePlugins, this.quiz, this.show.current)
   }
 
   audioEvent(event: AudioEngineEvent): void {
@@ -655,12 +772,12 @@ export class AppController {
 
   /** Naar de vensters en de plug-ins (de telefoon laat het videogeluid van een scherm op Uit weg). */
   private broadcastHardware(): void {
-    this.broadcast(IPC.hardware, [this.hardware])
+    this.broadcast(IPC.hardware, [this.effectiveHardware])
     this.plugins.hardwareChanged()
   }
 
   private syncScreens(reportMissing: boolean): void {
-    const missing = this.screens.sync(this.quiz, this.hardware, this.live)
+    const missing = this.screens.sync(this.quiz, this.effectiveHardware, this.live)
     if (reportMissing) {
       for (const slot of missing) {
         this.notify('warning', this.t('screenMissing', { name: slot.name }))

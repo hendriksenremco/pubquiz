@@ -3,6 +3,7 @@ import { computed, ref, shallowRef, watch } from 'vue'
 import { createShowState } from '@shared/factory'
 import type { AirPlayDevice } from '@shared/airplay'
 import type { RecoveryInfo } from '@shared/ipc'
+import type { ProState } from '@shared/license'
 import {
   pluginEnabled,
   type PluginId,
@@ -40,6 +41,14 @@ export const useSession = defineStore('session', () => {
   const ready = ref(false)
   /** Toestemming voor anoniem meten; null = nog niet gevraagd. */
   const analytics = ref<boolean | null>(false)
+  /** QuizNote Pro op deze Mac (issue #384). */
+  const pro = shallowRef<ProState>({
+    pro: true,
+    source: 'open',
+    keyHint: null,
+    until: null,
+    problem: null
+  })
 
   const live = computed(() => state.value.live)
 
@@ -187,6 +196,7 @@ export const useSession = defineStore('session', () => {
     plugins.value = snap.plugins
     pluginStatus.value = snap.pluginStatus
     analytics.value = snap.analytics
+    pro.value = snap.pro
 
     api.onQuiz((q, dir) => {
       applyRemoteQuiz(q, dir)
@@ -198,6 +208,7 @@ export const useSession = defineStore('session', () => {
     api.onDisplays((d) => (displays.value = d))
     api.onAirPlay((d) => (airplay.value = d))
     api.onPlugins((p) => (plugins.value = p))
+    api.onPro((p) => (pro.value = p))
     api.onPluginStatus(setPluginStatus)
     api.onSaved((d) => (dirty.value = d))
     api.onNotice((n) => notify(n))
@@ -223,6 +234,7 @@ export const useSession = defineStore('session', () => {
     plugins,
     pluginStatus,
     analytics,
+    pro,
     notices,
     ready,
     live,

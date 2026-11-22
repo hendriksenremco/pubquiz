@@ -5,13 +5,15 @@ import Icon from '../../components/Icon.vue'
 import { locale } from '../../lib/locale'
 import { RENDERER_PLUGINS } from '../../plugins'
 import { useSession } from '../../stores/session'
-import { ANALYTICS_MESSAGES, SETTINGS_MESSAGES } from './operator-messages'
+import { ANALYTICS_MESSAGES, PRO_MESSAGES, SETTINGS_MESSAGES } from './operator-messages'
+import ProSettings from './ProSettings.vue'
 
 /** Instellingen van de app op deze Mac: welke plug-ins aan staan, met hun eigen instellingen. */
 const emit = defineEmits<{ close: [] }>()
 const session = useSession()
 const t = SETTINGS_MESSAGES.in(locale)
 const ta = ANALYTICS_MESSAGES.in(locale)
+const tp = PRO_MESSAGES.in(locale)
 
 const settingsOf = (id: PluginId) => RENDERER_PLUGINS.find((p) => p.id === id)?.slots.settings
 
@@ -22,6 +24,11 @@ function toggle(id: PluginId, enabled: boolean) {
 
 <template>
   <Dialog :title="t('title')" @close="emit('close')">
+    <!-- Pas zichtbaar als de winkel er is; tot dan staat alles open (issue #384). -->
+    <div v-if="session.pro.source !== 'open'" class="group">
+      <span class="label">{{ tp('title') }}</span>
+      <ProSettings />
+    </div>
     <div class="group">
       <span class="label">{{ t('plugins') }}</span>
       <div v-for="p in PLUGINS" :key="p.id" class="plugin">
@@ -29,10 +36,14 @@ function toggle(id: PluginId, enabled: boolean) {
           <input
             type="checkbox"
             :checked="session.pluginOn(p.id)"
+            :disabled="!session.pro.pro"
             @change="toggle(p.id, ($event.target as HTMLInputElement).checked)"
           />
           <span class="grow">
-            <span class="name">{{ p.text[locale].name }}</span>
+            <span class="name">
+              {{ p.text[locale].name }}
+              <span v-if="!session.pro.pro" class="pro-chip">{{ tp('proOnly') }}</span>
+            </span>
             <span class="muted description">{{ p.text[locale].description }}</span>
           </span>
         </label>
@@ -101,6 +112,16 @@ function toggle(id: PluginId, enabled: boolean) {
 .name {
   display: block;
   font-weight: 600;
+}
+
+.pro-chip {
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 650;
 }
 
 .description {
