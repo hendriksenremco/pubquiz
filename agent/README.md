@@ -45,3 +45,5 @@ systemctl --user disable --now quiznote-agent # stoppen
 ```
 
 De clone in `~/quiznote-agent/pubquiz` is alleen voor de agent: elke run zet hem terug op `master`. Werk er zelf niet in.
+
+**Werk dat niet op GitHub staat.** Na elke run kijkt `run.sh` met `agent/unpushed.sh` in `~/quiznote-agent/pubquiz` en `~/quiznote-agent/pubquiz-site` naar commits die op geen enkele remote-branch staan en naar wijzigingen die niet gecommit zijn, bijvoorbeeld na een geweigerde push. Dan komt er een pushmelding, wat de agent zelf ook schrijft: één keer per nieuwe situatie (`~/quiznote-agent/.niet-gepusht`). De commits gaan als bundle naar `~/quiznote-agent/gered/`; ook commits op `master` die de reset aan het begin van een run zou weggooien. Terughalen: `git fetch <bundle> <branch>:<branch>`.
