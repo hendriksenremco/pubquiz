@@ -210,6 +210,13 @@ Plug-ins zijn optionele extra's. Je zet ze per Mac aan of uit bij Instellingen (
 
 Nieuwe optionele koppelingen, zoals Spotify of YouTube, volgen hetzelfde patroon.
 
+## QuizNote Pro (issue #384)
+
+- Freemium (besluit 22 november 2026): gratis is één scherm en alle geluidskanalen op één uitgang; Pro (€6,99 per maand of €59 per jaar) geeft meer schermen en uitgangen, de plug-ins en de AI-koppeling.
+- `src/shared/license.ts`: `proState` (code, 30 dagen offline, gratis tijd), `limitMapping` (wat de show zonder Pro gebruikt; er verdwijnt niets uit de quiz). `src/main/license.ts`: de client voor de licentieserver op quiznote.app/api (Stripe, `functions/` in de site-repo). De controller past het toe op de koppeling, de plug-ins en de AI-koppeling.
+- Wie al instellingen had voordat de winkel aan ging, krijgt 90 dagen Pro gratis (`earlyUntil` in settings.json).
+- **Zolang `STORE_LIVE` false is, staat alles open** en toont Instellingen geen Pro. Zet hem pas aan als Stripe live staat en de licentieserver gedeployd is (issue #385). Tests: `PUBQUIZ_LICENSE_READY=1` en `PUBQUIZ_LICENSE_URL` (nepserver in `e2e/pro.spec.ts`).
+
 ## Anoniem meten (issue #40)
 
 - PostHog, alleen met toestemming: `src/main/analytics.ts` (versturen en wachtrij), `src/shared/analytics.ts` (sleutel, `quizShape`, `scrub`). Nooit quizinhoud, bestandsnamen, media of IP-adressen.

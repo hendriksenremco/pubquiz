@@ -1,5 +1,6 @@
 import type { AirPlayDevice } from './airplay'
 import type { ErrorReport } from './analytics'
+import type { ProState } from './license'
 import type { FormOptions } from './forms'
 import type {
   ActionInput,
@@ -76,6 +77,8 @@ export interface Snapshot {
   pluginStatus: PluginStatuses
   /** Anoniem meten: true of false als het gevraagd is, null = nog vragen (zie issue #40). */
   analytics: boolean | null
+  /** QuizNote Pro op deze Mac (issue #384). */
+  pro: ProState
 }
 
 export interface RecoveryInfo {
@@ -188,6 +191,12 @@ export interface PubquizApi {
 
   /** Toestemming voor anoniem meten geven of intrekken (voor deze Mac). */
   setAnalytics(consent: boolean): Promise<void>
+  /** Zet een code van QuizNote Pro aan op deze Mac; geeft een foutmelding of null. */
+  activateLicense(key: string): Promise<string | null>
+  /** Haalt de code van deze Mac af, zodat hij op een andere Mac kan. */
+  deactivateLicense(): Promise<void>
+  /** Opent de pagina met de prijzen van QuizNote Pro. */
+  openProPage(): Promise<void>
   /** Een onverwerkte fout in een venster; gaat alleen weg met toestemming. */
   reportError(report: ErrorReport): void
 
@@ -200,6 +209,7 @@ export interface PubquizApi {
   onDisplays(cb: (displays: DisplayInfo[]) => void): () => void
   onAirPlay(cb: (devices: AirPlayDevice[]) => void): () => void
   onPlugins(cb: (plugins: PluginSettings) => void): () => void
+  onPro(cb: (pro: ProState) => void): () => void
   /** Een plug-in heeft een nieuwe status; null = hij staat uit. */
   onPluginStatus(cb: (id: PluginId, status: unknown) => void): () => void
   onNotice(cb: (notice: Notice) => void): () => void
@@ -242,6 +252,10 @@ export const IPC = {
   plugins: 'pq:plugins',
   pluginStatus: 'pq:plugin-status',
   setAnalytics: 'pq:set-analytics',
+  activateLicense: 'pq:activate-license',
+  deactivateLicense: 'pq:deactivate-license',
+  openProPage: 'pq:open-pro-page',
+  pro: 'pq:pro',
   reportError: 'pq:report-error',
   audioEvent: 'pq:audio-event',
   audioCommand: 'pq:audio-command',

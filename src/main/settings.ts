@@ -2,6 +2,7 @@ import { randomUUID } from 'crypto'
 import { join } from 'path'
 import { promises as fs } from 'fs'
 import { sameDisplayName } from '@shared/airplay'
+import { DAY_MS, EARLY_DAYS, storeReady, type StoredLicense } from '@shared/license'
 import type { PluginId, PluginSetting, PluginSettings } from '@shared/plugins'
 import type {
   AudioTarget,
@@ -33,6 +34,13 @@ interface SettingsData {
    * toestemming wordt ingetrokken, zodat een nieuwe toestemming niet aan de oude vastzit.
    */
   analytics: { consent: boolean; id: string | null } | null
+  /** De code van QuizNote Pro op deze Mac (issue #384); null = geen. */
+  license: StoredLicense | null
+  /**
+   * Gratis Pro tot dit moment, voor wie de app al gebruikte voordat Pro er was. Ontbreekt = nog
+   * niet bepaald (de winkel was er nog niet); null = geen gratis tijd.
+   */
+  earlyUntil?: number | null
 }
 
 export interface RecoveryData {
@@ -53,17 +61,38 @@ export class Settings {
     private data: SettingsData
   ) {}
 
-  static async load(dir: string): Promise<Settings> {
+  static async load(dir: string, now = Date.now(), ready = storeReady()): Promise<Settings> {
     const stored = await readJson<Partial<SettingsData>>(join(dir, 'settings.json'))
-    return new Settings(dir, {
+    const settings = new Settings(dir, {
       recent: stored?.recent ?? [],
       screens: stored?.screens ?? {},
       audio: stored?.audio ?? {},
       screenSound: stored?.screenSound ?? {},
       tourDir: stored?.tourDir ?? null,
       plugins: stored?.plugins ?? {},
-      analytics: stored?.analytics ?? null
+      analytics: stored?.analytics ?? null,
+      license: stored?.license ?? null,
+      ...(stored && 'earlyUntil' in stored ? { earlyUntil: stored.earlyUntil ?? null } : {})
     })
+    // De eerste start met de winkel aan: wie al instellingen had, gebruikte de app al voor Pro.
+    if (ready && settings.data.earlyUntil === undefined) {
+      settings.data.earlyUntil = stored ? now + EARLY_DAYS * DAY_MS : null
+      void settings.save()
+    }
+    return settings
+  }
+
+  get license(): StoredLicense | null {
+    return this.data.license
+  }
+
+  setLicense(license: StoredLicense | null): void {
+    this.data.license = license
+    void this.save()
+  }
+
+  get earlyUntil(): number | null {
+    return this.data.earlyUntil ?? null
   }
 
   get recent(): string[] {

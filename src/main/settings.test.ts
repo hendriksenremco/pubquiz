@@ -142,3 +142,49 @@ describe('Settings.analytics', () => {
     }
   })
 })
+
+describe('Settings: QuizNote Pro', () => {
+  it('geeft wie al instellingen had gratis Pro, pas als de winkel er is, en een nieuwe Mac niet', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'pubquiz-pro-'))
+    try {
+      const day = 24 * 3600_000
+      const old = join(dir, 'oud')
+      mkdirSync(old)
+      writeFileSync(join(old, 'settings.json'), JSON.stringify({ recent: ['/q/a'] }))
+
+      // Zonder winkel: nog niets bepaald, de tijd loopt nog niet.
+      expect((await Settings.load(old, 1000, false)).earlyUntil).toBeNull()
+      const early = await Settings.load(old, 1000, true)
+      expect(early.earlyUntil).toBe(1000 + 90 * day)
+      await early.whenSaved()
+      // Daarna blijft de datum staan.
+      expect((await Settings.load(old, 5000, true)).earlyUntil).toBe(1000 + 90 * day)
+
+      const fresh = await Settings.load(join(dir, 'nieuw'), 1000, true)
+      expect(fresh.earlyUntil).toBeNull()
+      await fresh.whenSaved()
+      expect((await Settings.load(join(dir, 'nieuw'), 2000, true)).earlyUntil).toBeNull()
+    } finally {
+      rmSync(dir, { recursive: true, force: true })
+    }
+  })
+
+  it('bewaart de code', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'pubquiz-pro-'))
+    try {
+      const settings = await Settings.load(dir)
+      const license = {
+        key: 'K',
+        instanceId: 'i',
+        status: 'active' as const,
+        checkedAt: 1,
+        expiresAt: null
+      }
+      settings.setLicense(license)
+      await settings.whenSaved()
+      expect((await Settings.load(dir)).license).toEqual(license)
+    } finally {
+      rmSync(dir, { recursive: true, force: true })
+    }
+  })
+})

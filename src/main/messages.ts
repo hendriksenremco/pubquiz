@@ -164,7 +164,17 @@ export const NOTICE_MESSAGES = defineMessages(
     roundDownloadFailed: 'Rondebestand ophalen mislukt: {error}',
     folderWithoutMedia: '{name} (geen media)',
     formNotLoading: 'het formulier laadt niet',
-    updateReady: 'QuizNote {version} staat klaar en wordt geïnstalleerd als je de app afsluit'
+    updateReady: 'QuizNote {version} staat klaar en wordt geïnstalleerd als je de app afsluit',
+    licenseInvalid: 'Deze code werkt niet. Controleer hem op de bedankpagina van je aankoop.',
+    licenseNotPro: 'Deze code hoort niet bij QuizNote Pro',
+    licenseLimit:
+      'Deze code is al op het maximale aantal Macs in gebruik. Haal hem eerst van een andere Mac af.',
+    licenseExpired: 'Je abonnement op QuizNote Pro is verlopen',
+    licenseOffline:
+      'Geen verbinding met de licentieserver. Probeer het opnieuw als je internet hebt.',
+    proLimited:
+      'Zonder QuizNote Pro speelt de show op het eerste scherm en gaat al het geluid naar één uitgang',
+    proNeededAi: 'De AI-koppeling hoort bij QuizNote Pro. Zet Pro aan bij Instellingen in QuizNote.'
   },
   {
     en: {
@@ -206,7 +216,17 @@ export const NOTICE_MESSAGES = defineMessages(
       roundDownloadFailed: 'Could not download the round file: {error}',
       folderWithoutMedia: '{name} (no media)',
       formNotLoading: 'the form does not load',
-      updateReady: 'QuizNote {version} is ready and will be installed when you quit the app'
+      updateReady: 'QuizNote {version} is ready and will be installed when you quit the app',
+      licenseInvalid: 'This key does not work. Check it on the thank-you page of your purchase.',
+      licenseNotPro: 'This key is not for QuizNote Pro',
+      licenseLimit:
+        'This key is already in use on the maximum number of Macs. Remove it from another Mac first.',
+      licenseExpired: 'Your QuizNote Pro subscription has expired',
+      licenseOffline: 'No connection to the license server. Try again when you are online.',
+      proLimited:
+        'Without QuizNote Pro the show plays on the first screen and all sound goes to one output',
+      proNeededAi:
+        'The AI connection is part of QuizNote Pro. Turn on Pro in the QuizNote settings.'
     }
   }
 )
